@@ -5,18 +5,6 @@
 //  Created by Jigish Patel on 1/22/13.
 //  Copyright 2013 Jigish Patel. All rights reserved.
 //
-//  This program is free software: you can redistribute it and/or modify
-//  it under the terms of the GNU General Public License as published by
-//  the Free Software Foundation, either version 3 of the License, or
-//  (at your option) any later version.
-//
-//  This program is distributed in the hope that it will be useful,
-//  but WITHOUT ANY WARRANTY; without even the implied warranty of
-//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//  GNU General Public License for more details.
-//
-//  You should have received a copy of the GNU General Public License
-//  along with this program.  If not, see http://www.gnu.org/licenses
 
 #import "JSOperation.h"
 #import "JSController.h"
@@ -38,7 +26,7 @@
   return self;
 }
 
-- (id)initWithFunction:(WebScriptObject *)_function {
+- (id)initWithFunction:(JSValue *)_function {
   self = [super init];
   if (self) {
     [self setOpName:@"js"];
@@ -58,22 +46,23 @@
   return success;
 }
 
-- (BOOL)doOperation {
-  SlateLogger(@"----------------- Begin JS Operation -----------------");
-  AccessibilityWrapper *aw = [[AccessibilityWrapper alloc] init];
-  ScreenWrapper *sw = [[ScreenWrapper alloc] init];
-  BOOL success = NO;
-  if (![aw inited]) aw = nil;
-  success = [self doOperationWithAccessibilityWrapper:aw screenWrapper:sw];
-  SlateLogger(@"-----------------  End JS Operation  -----------------");
-  return success;
-}
-
 - (BOOL)testOperation {
-  return function != nil && [@"function" isEqualToString:[[JSController getInstance] jsTypeof:function]];
+  return YES;
 }
 
-+ (JSOperation *)jsOperationWithFunction:(WebScriptObject*)function {
+- (BOOL)testOperationWithAccessibilityWrapper:(AccessibilityWrapper *)aw screenWrapper:(ScreenWrapper *)sw {
+  return YES;
+}
+
+- (NSArray *)requiredOptions {
+  return [NSArray array];
+}
+
+- (void)parseOption:(NSString *)name value:(id)value {
+  // empty
+}
+
++ (JSOperation *)jsOperationWithFunction:(JSValue *)function {
   return [[JSOperation alloc] initWithFunction:function];
 }
 

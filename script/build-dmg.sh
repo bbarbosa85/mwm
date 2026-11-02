@@ -1,0 +1,53 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Script directory and project root
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
+
+CONFIGURATION="${1:-Release}"
+DMG_NAME="Slate.dmg"
+OUTPUT_DIR="${ROOT_DIR}/build"
+STAGING_DIR="/tmp/slate_dmg_staging_$$"
+
+echo "==> Building Slate (${CONFIGURATION})..."
+cd "${ROOT_DIR}"
+xcodebuild -scheme Slate \
+           -configuration "${CONFIGURATION}" \
+           -derivedDataPath /tmp/SlateDerivedData \
+           build
+
+APP_PATH="${ROOT_DIR}/tmp/Slate.dst/Applications/Slate.app"
+if [ ! -d "${APP_PATH}" ]; then
+  APP_PATH="/tmp/SlateDerivedData/Build/Products/${CONFIGURATION}/Slate.app"
+fi
+
+if [ ! -d "${APP_PATH}" ]; then
+  echo "Error: Slate.app not found at ${APP_PATH}" >&2
+  exit 1
+fi
+
+echo "==> Preparing DMG staging directory..."
+rm -rf "${STAGING_DIR}"
+mkdir -p "${STAGING_DIR}"
+cp -R "${APP_PATH}" "${STAGING_DIR}/Slate.app"
+echo "==> Signing Slate.app bundle with ad-hoc signature..."
+codesign --force --deep --sign - "${STAGING_DIR}/Slate.app"
+ln -s /Applications "${STAGING_DIR}/Applications"
+
+mkdir -p "${OUTPUT_DIR}"
+DMG_PATH="${OUTPUT_DIR}/${DMG_NAME}"
+rm -f "${DMG_PATH}"
+
+echo "==> Creating DMG: ${DMG_PATH}..."
+hdiutil create -volname "Slate" \
+               -srcfolder "${STAGING_DIR}" \
+               -ov \
+               -format UDZO \
+               "${DMG_PATH}"
+
+rm -rf "${STAGING_DIR}"
+
+echo "==> Successfully created DMG:"
+ls -lh "${DMG_PATH}"
+

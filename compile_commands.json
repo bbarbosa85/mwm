@@ -1,0 +1,692 @@
+[
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/StringTokenizer.m",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/StringTokenizer.m"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/JSOperation.m",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/JSOperation.m"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/Layout.m",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/Layout.m"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/Constants.m",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/Constants.m"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/SwitchView.m",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/SwitchView.m"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/ActivateSnapshotOperation.m",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/ActivateSnapshotOperation.m"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/ConfigurationHelperView.m",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/ConfigurationHelperView.m"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/JSApplicationWrapper.m",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/JSApplicationWrapper.m"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/SnapshotList.m",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/SnapshotList.m"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/SnapshotOperation.m",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/SnapshotOperation.m"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/NSString+Levenshtein.m",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/NSString+Levenshtein.m"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/ShellUtils.m",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/ShellUtils.m"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/HintView.m",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/HintView.m"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/GridView.m",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/GridView.m"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/ResizeOperation.m",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/ResizeOperation.m"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/SwitchWindow.m",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/SwitchWindow.m"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/Binding.m",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/Binding.m"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/SlateAppDelegate.m",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/SlateAppDelegate.m"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/ShellOperation.m",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/ShellOperation.m"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/Operation.m",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/Operation.m"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/NudgeOperation.m",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/NudgeOperation.m"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/GridCellView.m",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/GridCellView.m"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/ChainOperation.m",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/ChainOperation.m"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/WindowInfoView.m",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/WindowInfoView.m"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/UndoOperation.m",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/UndoOperation.m"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/ScreenWrapper.m",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/ScreenWrapper.m"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/SwitchAppView.m",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/SwitchAppView.m"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/DeleteSnapshotOperation.m",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/DeleteSnapshotOperation.m"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/JSController.m",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/JSController.m"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/NSString+Indicies.m",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/NSString+Indicies.m"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/MathUtils.m",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/MathUtils.m"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/JSScreenWrapper.m",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/JSScreenWrapper.m"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/SlateConfig.m",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/SlateConfig.m"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/FocusOperation.m",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/FocusOperation.m"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/ScreenState.m",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/ScreenState.m"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/Snapshot.m",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/Snapshot.m"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/SwitchAppQuittingOverlayView.m",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/SwitchAppQuittingOverlayView.m"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/ThrowOperation.m",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/ThrowOperation.m"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/main.m",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/main.m"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/SwitchOperation.m",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/SwitchOperation.m"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/GridWindow.m",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/GridWindow.m"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/JSWrapperUtils.m",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/JSWrapperUtils.m"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/ExpressionPoint.m",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/ExpressionPoint.m"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/JSOperationWrapper.m",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/JSOperationWrapper.m"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/HintOperation.m",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/HintOperation.m"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/CornerOperation.m",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/CornerOperation.m"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/HintWindow.m",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/HintWindow.m"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/PushOperation.m",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/PushOperation.m"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/LayoutOperation.m",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/LayoutOperation.m"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/SequenceOperation.m",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/SequenceOperation.m"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/ApplicationOptions.m",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/ApplicationOptions.m"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/VisibilityOperation.m",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/VisibilityOperation.m"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/MoveOperation.m",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/MoveOperation.m"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/RelaunchOperation.m",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/RelaunchOperation.m"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/NSFileManager+ApplicationSupport.m",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/NSFileManager+ApplicationSupport.m"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/RunningApplications.m",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/RunningApplications.m"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/WindowSnapshot.m",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/WindowSnapshot.m"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/JSInfoWrapper.m",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/JSInfoWrapper.m"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/JSWindowWrapper.m",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/JSWindowWrapper.m"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/AccessibilityWrapper.m",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/AccessibilityWrapper.m"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/WindowState.m",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/WindowState.m"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/GridOperation.m",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/GridOperation.m"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/SlateTests/TestNSString+Levenshtein.m",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests/TestNSString+Levenshtein.m"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/SlateTests/TestShellUtils.m",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests/TestShellUtils.m"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/SlateTests/SlateTests.m",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests/SlateTests.m"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/SlateTests/TestMathUtils.m",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests/TestMathUtils.m"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/SlateTests/TestExpressionPoint.m",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests/TestExpressionPoint.m"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/SlateTests/TestNSString+Indicies.m",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests/TestNSString+Indicies.m"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/SlateTests/TestStringTokenizer.m",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests/TestStringTokenizer.m"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c-header -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/SlateLogger.h",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/SlateLogger.h"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c-header -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/ThrowOperation.h",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/ThrowOperation.h"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c-header -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/SwitchAppQuittingOverlayView.h",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/SwitchAppQuittingOverlayView.h"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c-header -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/LayoutOperation.h",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/LayoutOperation.h"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c-header -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/PushOperation.h",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/PushOperation.h"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c-header -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/HintWindow.h",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/HintWindow.h"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c-header -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/CornerOperation.h",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/CornerOperation.h"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c-header -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/HintOperation.h",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/HintOperation.h"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c-header -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/JSOperationWrapper.h",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/JSOperationWrapper.h"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c-header -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/ExpressionPoint.h",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/ExpressionPoint.h"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c-header -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/JSWrapperUtils.h",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/JSWrapperUtils.h"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c-header -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/GridWindow.h",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/GridWindow.h"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c-header -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/SwitchOperation.h",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/SwitchOperation.h"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c-header -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/NSFileManager+ApplicationSupport.h",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/NSFileManager+ApplicationSupport.h"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c-header -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/RelaunchOperation.h",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/RelaunchOperation.h"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c-header -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/MoveOperation.h",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/MoveOperation.h"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c-header -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/VisibilityOperation.h",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/VisibilityOperation.h"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c-header -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/SequenceOperation.h",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/SequenceOperation.h"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c-header -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/ApplicationOptions.h",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/ApplicationOptions.h"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c-header -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/GridOperation.h",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/GridOperation.h"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c-header -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/WindowState.h",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/WindowState.h"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c-header -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/AccessibilityWrapper.h",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/AccessibilityWrapper.h"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c-header -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/JSWindowWrapper.h",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/JSWindowWrapper.h"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c-header -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/WindowSnapshot.h",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/WindowSnapshot.h"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c-header -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/JSInfoWrapper.h",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/JSInfoWrapper.h"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c-header -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/RunningApplications.h",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/RunningApplications.h"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c-header -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/SwitchView.h",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/SwitchView.h"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c-header -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/Constants.h",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/Constants.h"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c-header -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/Layout.h",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/Layout.h"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c-header -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/JSOperation.h",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/JSOperation.h"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c-header -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/StringTokenizer.h",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/StringTokenizer.h"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c-header -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/ResizeOperation.h",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/ResizeOperation.h"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c-header -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/GridView.h",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/GridView.h"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c-header -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/HintView.h",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/HintView.h"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c-header -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/ShellUtils.h",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/ShellUtils.h"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c-header -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/NSString+Levenshtein.h",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/NSString+Levenshtein.h"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c-header -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/SnapshotOperation.h",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/SnapshotOperation.h"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c-header -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/JSApplicationWrapper.h",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/JSApplicationWrapper.h"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c-header -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/SnapshotList.h",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/SnapshotList.h"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c-header -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/ActivateSnapshotOperation.h",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/ActivateSnapshotOperation.h"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c-header -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/ConfigurationHelperView.h",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/ConfigurationHelperView.h"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c-header -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/ScreenWrapper.h",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/ScreenWrapper.h"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c-header -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/SwitchAppView.h",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/SwitchAppView.h"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c-header -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/UndoOperation.h",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/UndoOperation.h"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c-header -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/ChainOperation.h",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/ChainOperation.h"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c-header -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/WindowInfoView.h",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/WindowInfoView.h"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c-header -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/GridCellView.h",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/GridCellView.h"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c-header -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/NudgeOperation.h",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/NudgeOperation.h"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c-header -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/ShellOperation.h",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/ShellOperation.h"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c-header -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/Operation.h",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/Operation.h"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c-header -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/SlateAppDelegate.h",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/SlateAppDelegate.h"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c-header -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/SwitchWindow.h",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/SwitchWindow.h"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c-header -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/Binding.h",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/Binding.h"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c-header -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/Snapshot.h",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/Snapshot.h"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c-header -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/ScreenState.h",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/ScreenState.h"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c-header -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/FocusOperation.h",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/FocusOperation.h"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c-header -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/SlateConfig.h",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/SlateConfig.h"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c-header -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/JSScreenWrapper.h",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/JSScreenWrapper.h"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c-header -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/MathUtils.h",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/MathUtils.h"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c-header -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/NSString+Indicies.h",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/NSString+Indicies.h"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c-header -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/DeleteSnapshotOperation.h",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/DeleteSnapshotOperation.h"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c-header -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/Slate/JSController.h",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/Slate/JSController.h"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c-header -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/SlateTests/TestNSString+Indicies.h",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests/TestNSString+Indicies.h"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c-header -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/SlateTests/TestStringTokenizer.h",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests/TestStringTokenizer.h"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c-header -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/SlateTests/TestNSString+Levenshtein.h",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests/TestNSString+Levenshtein.h"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c-header -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/SlateTests/TestExpressionPoint.h",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests/TestExpressionPoint.h"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c-header -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/SlateTests/TestMathUtils.h",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests/TestMathUtils.h"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c-header -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/SlateTests/SlateTests.h",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests/SlateTests.h"
+  },
+  {
+    "directory": "/Users/brunobarbosa/Projetos/mwm/mwm",
+    "command": "clang -x objective-c-header -fobjc-arc -target arm64-apple-macos12.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/Users/brunobarbosa/Projetos/mwm/mwm/Slate -I/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -F/Applications/Xcode.app/Contents/Developer/Library/Frameworks -c /Users/brunobarbosa/Projetos/mwm/mwm/SlateTests/TestShellUtils.h",
+    "file": "/Users/brunobarbosa/Projetos/mwm/mwm/SlateTests/TestShellUtils.h"
+  }
+]

@@ -9,7 +9,7 @@
 	<key>CFBundleIconFile</key>
 	<string>icon.icns</string>
 	<key>CFBundleIdentifier</key>
-	<string>com.slate.${PRODUCT_NAME:rfc1034identifier}</string>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
@@ -34,7 +34,9 @@
 	<string>MainMenu</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
-	<key>SUFeedURL</key>
-	<string>https://www.ninjamonkeysoftware.com/slate/appcast.xml</string>
+	<key>NSAppleEventsUsageDescription</key>
+	<string>Slate needs access to Apple Events to control application windows.</string>
+	<key>NSSystemAdministrationUsageDescription</key>
+	<string>Slate requires accessibility permissions to manage window sizes and positions.</string>
 </dict>
 </plist>

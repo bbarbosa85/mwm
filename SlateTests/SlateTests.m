@@ -19,27 +19,36 @@
 //  along with this program.  If not, see http://www.gnu.org/licenses
 
 #import "SlateTests.h"
-
+#import "JSController.h"
+#import "Operation.h"
 
 @implementation SlateTests
 
 - (void)setUp
 {
     [super setUp];
-
-    // Set-up code here.
 }
 
 - (void)tearDown
 {
-    // Tear-down code here.
-
     [super tearDown];
 }
 
 - (void)testExample
 {
-    STAssertTrue(true, @"Unit tests are not implemented yet in SlateTests");
+    XCTAssertTrue(true, @"Basic sanity check");
+}
+
+- (void)testJavaScriptCoreEvaluation
+{
+    JSController *jsc = [[JSController alloc] init];
+    XCTAssertNotNil(jsc, @"JSController should instantiate");
+    id res = [jsc run:@"1 + 2"];
+    XCTAssertEqual([res integerValue], (NSInteger)3, @"1 + 2 should equal 3");
+
+    id op = [jsc run:@"slate.operation('push', { 'direction': 'left', 'style': 'bar' });"];
+    XCTAssertNotNil(op, @"slate.operation should return non-nil");
+    XCTAssertTrue([op isKindOfClass:[Operation class]], @"Should return an Operation");
 }
 
 @end

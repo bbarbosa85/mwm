@@ -5,22 +5,10 @@
 //  Created by Jigish Patel on 1/21/13.
 //  Copyright 2013 Jigish Patel. All rights reserved.
 //
-//  This program is free software: you can redistribute it and/or modify
-//  it under the terms of the GNU General Public License as published by
-//  the Free Software Foundation, either version 3 of the License, or
-//  (at your option) any later version.
-//
-//  This program is distributed in the hope that it will be useful,
-//  but WITHOUT ANY WARRANTY; without even the implied warranty of
-//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//  GNU General Public License for more details.
-//
-//  You should have received a copy of the GNU General Public License
-//  along with this program.  If not, see http://www.gnu.org/licenses
 
 #import "JSInfoWrapper.h"
 #import "ScreenWrapper.h"
-#import <WebKit/WebKit.h>
+#import <JavaScriptCore/JavaScriptCore.h>
 #import "JSWindowWrapper.h"
 #import "JSApplicationWrapper.h"
 #import "AccessibilityWrapper.h"
@@ -35,7 +23,6 @@
 @synthesize sw, aw;
 
 static JSInfoWrapper *_instance = nil;
-static NSDictionary *jsiwJsMethods;
 
 + (JSInfoWrapper *)getInstance {
   @synchronized([JSInfoWrapper class]) {
@@ -50,7 +37,6 @@ static NSDictionary *jsiwJsMethods;
   if (self) {
     [self setAw:[[AccessibilityWrapper alloc] init]];
     [self setSw:[[ScreenWrapper alloc] init]];
-    [JSInfoWrapper setJsMethods];
   }
   return self;
 }
@@ -60,7 +46,6 @@ static NSDictionary *jsiwJsMethods;
   if (self) {
     [self setAw:_aw];
     [self setSw:_sw];
-    [JSInfoWrapper setJsMethods];
   }
   return self;
 }
@@ -83,8 +68,8 @@ static NSDictionary *jsiwJsMethods;
   if (p == nil) { return nil; }
   AXUIElementRef win = [AccessibilityWrapper windowUnderPoint:[p pointValue]];
   if (win == nil || win == NULL) { return nil; }
-  AXUIElementRef app = [AccessibilityWrapper applicationForElement:win];
-  AccessibilityWrapper *_aw = [[AccessibilityWrapper alloc] initWithApp:app window:win];
+  AXUIElementRef aRef = [AccessibilityWrapper applicationForElement:win];
+  AccessibilityWrapper *_aw = [[AccessibilityWrapper alloc] initWithApp:aRef window:win];
   return [[JSWindowWrapper alloc] initWithAccessibilityWrapper:_aw screenWrapper:sw];
 }
 
@@ -105,8 +90,12 @@ static NSDictionary *jsiwJsMethods;
 
 - (void)eachApp:(id)func {
   for (NSRunningApplication *runningApp in [RunningApplications getInstance]) {
-    [[JSController getInstance] runFunction:func withArg:[[JSApplicationWrapper alloc] initWithRunningApplication:runningApp
-                                                                                                    screenWrapper:sw]];
+    JSApplicationWrapper *appWrapper = [[JSApplicationWrapper alloc] initWithRunningApplication:runningApp screenWrapper:sw];
+    if ([func isKindOfClass:[JSValue class]]) {
+      [(JSValue *)func callWithArguments:@[appWrapper]];
+    } else {
+      [[JSController getInstance] runFunction:func withArg:appWrapper];
+    }
   }
 }
 
@@ -174,50 +163,23 @@ static NSDictionary *jsiwJsMethods;
 
 - (void)eachScreen:(id)func {
   for (NSInteger i = 0; i < [sw getScreenCount]; i++) {
-    [[JSController getInstance] runFunction:func withArg:[[JSScreenWrapper alloc] initWithScreenId:i
-                                                                                     screenWrapper:sw]];
+    JSScreenWrapper *screenWrapper = [[JSScreenWrapper alloc] initWithScreenId:i screenWrapper:sw];
+    if ([func isKindOfClass:[JSValue class]]) {
+      [(JSValue *)func callWithArguments:@[screenWrapper]];
+    } else {
+      [[JSController getInstance] runFunction:func withArg:screenWrapper];
+    }
   }
 }
 
 - (id)jsMethods {
-  NSMutableArray *methods = [[jsiwJsMethods allValues] mutableCopy];
-  [methods removeObject:@"jsMethods"];
-  return [[JSController getInstance] marshall:methods];
-}
-
-+ (void)setJsMethods {
-  if (jsiwJsMethods == nil) {
-    jsiwJsMethods = @{
-      NSStringFromSelector(@selector(window)): @"window",
-      NSStringFromSelector(@selector(app)): @"app",
-      NSStringFromSelector(@selector(screen)): @"screen",
-      NSStringFromSelector(@selector(eachApp:)): @"eachApp",
-      NSStringFromSelector(@selector(eapp:)): @"eapp",
-      NSStringFromSelector(@selector(windowUnderPoint:)): @"windowUnderPoint",
-      NSStringFromSelector(@selector(wup:)): @"wup",
-      NSStringFromSelector(@selector(isRectOffScreen:)): @"isRectOffScreen",
-      NSStringFromSelector(@selector(rectoff:)): @"rectoff",
-      NSStringFromSelector(@selector(isPointOffScreen:)): @"isPointOffScreen",
-      NSStringFromSelector(@selector(pntoff:)): @"pntoff",
-      NSStringFromSelector(@selector(screenForRef:)): @"screenForRef",
-      NSStringFromSelector(@selector(screenr:)): @"screenr",
-      NSStringFromSelector(@selector(screenCount)): @"screenCount",
-      NSStringFromSelector(@selector(screenc)): @"screenc",
-      NSStringFromSelector(@selector(screenUnderPoint:)): @"screenUnderPoint",
-      NSStringFromSelector(@selector(sup:)): @"sup",
-      NSStringFromSelector(@selector(eachScreen:)): @"eachScreen",
-      NSStringFromSelector(@selector(escreen:)): @"escreen",
-      NSStringFromSelector(@selector(jsMethods)): @"jsMethods",
-    };
-  }
-}
-
-+ (BOOL)isSelectorExcludedFromWebScript:(SEL)sel {
-  return [jsiwJsMethods objectForKey:NSStringFromSelector(sel)] == NULL;
-}
-
-+ (NSString *)webScriptNameForSelector:(SEL)sel {
-  return [jsiwJsMethods objectForKey:NSStringFromSelector(sel)];
+  return @[
+    @"window", @"app", @"screen", @"eachApp", @"eapp",
+    @"windowUnderPoint", @"wup", @"isRectOffScreen", @"rectoff",
+    @"isPointOffScreen", @"pntoff", @"screenForRef", @"screenr",
+    @"screenCount", @"screenc", @"screenUnderPoint", @"sup",
+    @"eachScreen", @"escreen"
+  ];
 }
 
 @end

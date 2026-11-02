@@ -1,7 +1,16 @@
 //
-// Prefix header for all source files of the 'SlateTests' target in the 'SlateTests' project
+// Prefix header for all source files of the 'SlateTests' target in the 'Slate' project
 //
 
 #ifdef __OBJC__
     #import <Cocoa/Cocoa.h>
+    #import <XCTest/XCTest.h>
+    #define SenTestCase XCTestCase
+    #define STAssertEquals(a, b, ...) XCTAssertEqual((a), (b), __VA_ARGS__)
+    #define STAssertEqualsWithAccuracy(a, b, accuracy, ...) XCTAssertEqualWithAccuracy((a), (b), (accuracy), __VA_ARGS__)
+    #define STAssertTrue(a, ...) XCTAssertTrue((a), __VA_ARGS__)
+    #define STAssertFalse(a, ...) XCTAssertFalse((a), __VA_ARGS__)
+    #define STAssertNil(a, ...) XCTAssertNil((a), __VA_ARGS__)
+    #define STAssertNotNil(a, ...) XCTAssertNotNil((a), __VA_ARGS__)
+    #define STFail(...) XCTFail(__VA_ARGS__)
 #endif

@@ -5,18 +5,6 @@
 //  Created by Jigish Patel on 1/21/13.
 //  Copyright 2013 Jigish Patel. All rights reserved.
 //
-//  This program is free software: you can redistribute it and/or modify
-//  it under the terms of the GNU General Public License as published by
-//  the Free Software Foundation, either version 3 of the License, or
-//  (at your option) any later version.
-//
-//  This program is distributed in the hope that it will be useful,
-//  but WITHOUT ANY WARRANTY; without even the implied warranty of
-//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//  GNU General Public License for more details.
-//
-//  You should have received a copy of the GNU General Public License
-//  along with this program.  If not, see http://www.gnu.org/licenses
 
 #import "JSWindowWrapper.h"
 #import "AccessibilityWrapper.h"
@@ -30,8 +18,6 @@
 
 @implementation JSWindowWrapper
 
-static NSDictionary *jswwJsMethods;
-
 @synthesize aw;
 @synthesize sw;
 
@@ -40,7 +26,6 @@ static NSDictionary *jswwJsMethods;
   if (self) {
     [self setAw:[[AccessibilityWrapper alloc] init]];
     [self setSw:[[ScreenWrapper alloc] init]];
-    [JSWindowWrapper setJsMethods];
   }
   return self;
 }
@@ -50,7 +35,6 @@ static NSDictionary *jswwJsMethods;
   if (self) {
     [self setAw:_aw];
     [self setSw:_sw];
-    [JSWindowWrapper setJsMethods];
   }
   return self;
 }
@@ -159,42 +143,6 @@ static NSDictionary *jswwJsMethods;
     }
   }
   return NO;
-}
-
-+ (void)setJsMethods {
-  if (jswwJsMethods == nil) {
-    jswwJsMethods = @{
-      NSStringFromSelector(@selector(title)): @"title",
-      NSStringFromSelector(@selector(topLeft)): @"topLeft",
-      NSStringFromSelector(@selector(tl)): @"tl",
-      NSStringFromSelector(@selector(size)): @"size",
-      NSStringFromSelector(@selector(rect)): @"rect",
-      NSStringFromSelector(@selector(pid)): @"pid",
-      NSStringFromSelector(@selector(focus)): @"focus",
-      NSStringFromSelector(@selector(isMinimizedOrHidden)): @"isMinimizedOrHidden",
-      NSStringFromSelector(@selector(hidden)): @"hidden",
-      NSStringFromSelector(@selector(isMovable)): @"isMovable",
-      NSStringFromSelector(@selector(movable)): @"movable",
-      NSStringFromSelector(@selector(isResizable)): @"isResizable",
-      NSStringFromSelector(@selector(resizable)): @"resizable",
-      NSStringFromSelector(@selector(isMain)): @"isMain",
-      NSStringFromSelector(@selector(main)): @"main",
-      NSStringFromSelector(@selector(move:)): @"move",
-      NSStringFromSelector(@selector(resize:)): @"resize",
-      NSStringFromSelector(@selector(screen)): @"screen",
-      NSStringFromSelector(@selector(doOperation:options:)): @"doOperation",
-      NSStringFromSelector(@selector(doop:options:)): @"doop",
-      NSStringFromSelector(@selector(app)): @"app",
-    };
-  }
-}
-
-+ (BOOL)isSelectorExcludedFromWebScript:(SEL)sel {
-  return [jswwJsMethods objectForKey:NSStringFromSelector(sel)] == NULL;
-}
-
-+ (NSString *)webScriptNameForSelector:(SEL)sel {
-  return [jswwJsMethods objectForKey:NSStringFromSelector(sel)];
 }
 
 @end

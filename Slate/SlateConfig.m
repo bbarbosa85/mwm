@@ -28,7 +28,7 @@
 #import "StringTokenizer.h"
 #import "Snapshot.h"
 #import "SnapshotList.h"
-#import "JSONKit.h"
+
 #import "SlateLogger.h"
 #import "NSFileManager+ApplicationSupport.h"
 #import "NSString+Indicies.h"
@@ -127,7 +127,7 @@ static SlateConfig *_instance = nil;
 
 + (NSAlert *)warningAlertWithKeyEquivalents:(NSArray *)titles {
   NSAlert *alert = [[NSAlert alloc] init];
-  [alert setAlertStyle:NSWarningAlertStyle];
+  [alert setAlertStyle:NSAlertStyleWarning];
   for (NSString *title in titles) {
     [[alert addButtonWithTitle:title] setKeyEquivalent:[[title substringToIndex: 1] lowercaseString]];
   }
@@ -393,11 +393,12 @@ static SlateConfig *_instance = nil;
 }
 
 - (BOOL)loadSnapshots {
-  NSString *fileString = [NSString stringWithContentsOfURL:[SlateConfig snapshotsFile] encoding:NSUTF8StringEncoding error:nil];
-  if (fileString == nil || [fileString isEqualToString:EMPTY])
+  NSData *fileData = [NSData dataWithContentsOfURL:[SlateConfig snapshotsFile]];
+  if (fileData == nil || [fileData length] == 0)
     return YES;
-  id iShouldBeADictionary = [fileString objectFromJSONString];
-  if (![iShouldBeADictionary isKindOfClass:[NSDictionary class]]) return NO;
+  NSError *jsonErr = nil;
+  id iShouldBeADictionary = [NSJSONSerialization JSONObjectWithData:fileData options:0 error:&jsonErr];
+  if (jsonErr != nil || ![iShouldBeADictionary isKindOfClass:[NSDictionary class]]) return NO;
   NSDictionary *snapshotsDict = iShouldBeADictionary;
   [self snapshotsFromDictionary:snapshotsDict];
   return YES;
@@ -492,10 +493,13 @@ static SlateConfig *_instance = nil;
   NSDictionary *snapshotDict = [self snapshotsToDictionary];
 
   // Get NSData from NSDictionary
-  NSData *jsonData = [snapshotDict JSONData];
+  NSError *jsonErr = nil;
+  NSData *jsonData = [NSJSONSerialization dataWithJSONObject:snapshotDict options:0 error:&jsonErr];
 
   // Save NSData to file
-  [jsonData writeToURL:[SlateConfig snapshotsFile] atomically:YES];
+  if (jsonData != nil && jsonErr == nil) {
+    [jsonData writeToURL:[SlateConfig snapshotsFile] atomically:YES];
+  }
 }
 
 - (void)addSnapshot:(Snapshot *)snapshot name:(NSString *)name saveToDisk:(BOOL)saveToDisk isStack:(BOOL)isStack stackSize:(NSUInteger)stackSize {

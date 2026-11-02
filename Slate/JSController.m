@@ -4,18 +4,6 @@
 //
 //  Created by Alex Morega on 2013-01-16.
 //
-//  This program is free software: you can redistribute it and/or modify
-//  it under the terms of the GNU General Public License as published by
-//  the Free Software Foundation, either version 3 of the License, or
-//  (at your option) any later version.
-//
-//  This program is distributed in the hope that it will be useful,
-//  but WITHOUT ANY WARRANTY; without even the implied warranty of
-//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//  GNU General Public License for more details.
-//
-//  You should have received a copy of the GNU General Public License
-//  along with this program.  If not, see http://www.gnu.org/licenses
 
 #import "JSController.h"
 #import "Binding.h"
@@ -31,11 +19,11 @@
 
 @implementation JSController
 
+@synthesize context;
 @synthesize functions;
 @synthesize eventCallbacks;
 
 static JSController *_instance = nil;
-static NSDictionary *jscJsMethods;
 
 - (JSController *) init {
   self = [super init];
@@ -43,20 +31,17 @@ static NSDictionary *jscJsMethods;
     inited = NO;
     self.functions = [NSMutableDictionary dictionary];
     self.eventCallbacks = [NSMutableDictionary dictionary];
-    webView = [[WebView alloc] init];
-    [JSController setJsMethods];
   }
   return self;
 }
 
 - (id)run:(NSString*)code {
-	NSString* script = [NSString stringWithFormat:@"try { %@ } catch (___ex___) { 'EXCEPTION: '+___ex___; }", code];
-	id data = [scriptObject evaluateWebScript:script];
-	if(![data isMemberOfClass:[WebUndefined class]]) {
-		SlateLogger(@"%@", data);
-    if ([data isKindOfClass:[NSString class]] && [data hasPrefix:@"EXCEPTION: "]) {
-      @throw([NSException exceptionWithName:@"JavaScript Error" reason:data userInfo:nil]);
-    }
+  [self initializeWebView];
+  JSValue *data = [context evaluateScript:code];
+  if (context.exception) {
+    NSString *reason = [context.exception toString];
+    context.exception = nil;
+    @throw([NSException exceptionWithName:@"JavaScript Error" reason:reason userInfo:nil]);
   }
   return [self unmarshall:data];
 }
@@ -65,56 +50,67 @@ static NSDictionary *jscJsMethods;
   return [NSString stringWithFormat:@"javascript:function[%ld]", [functions count]];
 }
 
-- (NSString *)addCallableFunction:(WebScriptObject *)function {
+- (NSString *)addCallableFunction:(JSValue *)function {
   NSString *key = [self genFuncKey];
   [functions setObject:function forKey:key];
   return key;
 }
 
 - (id)runCallableFunction:(NSString *)key {
-  WebScriptObject *func = [functions objectForKey:key];
+  JSValue *func = [functions objectForKey:key];
   if (func == nil) { return nil; }
   return [self runFunction:func];
 }
 
-- (id)runFunction:(WebScriptObject *)function {
-  [scriptObject setValue:function forKey:@"_slate_callback"];
-  return [self run:@"window._slate_callback();"];
+- (id)runFunction:(JSValue *)function {
+  if (function == nil || [function isUndefined] || [function isNull]) return nil;
+  JSValue *res = [function callWithArguments:@[]];
+  return [self unmarshall:res];
 }
 
-- (id)runFunction:(WebScriptObject *)function withArg:(id)arg {
-  [scriptObject setValue:function forKey:@"_slate_callback"];
-  [scriptObject setValue:arg forKey:@"_slate_callback_arg"];
-  return [self run:@"window._slate_callback(window._slate_callback_arg);"];
+- (id)runFunction:(JSValue *)function withArg:(id)arg {
+  if (function == nil || [function isUndefined] || [function isNull]) return nil;
+  id mArg = [self marshall:arg];
+  JSValue *res = [function callWithArguments:(mArg ? @[mArg] : @[])];
+  return [self unmarshall:res];
 }
 
-- (id)runFunction:(WebScriptObject *)function withArg:(id)arg secondArg:(id)arg2 {
-  [scriptObject setValue:function forKey:@"_slate_callback"];
-  [scriptObject setValue:arg forKey:@"_slate_callback_arg"];
-  [scriptObject setValue:arg2 forKey:@"_slate_callback_arg2"];
-  return [self run:@"window._slate_callback(window._slate_callback_arg, window._slate_callback_arg2);"];
+- (id)runFunction:(JSValue *)function withArg:(id)arg secondArg:(id)arg2 {
+  if (function == nil || [function isUndefined] || [function isNull]) return nil;
+  id m1 = [self marshall:arg];
+  id m2 = [self marshall:arg2];
+  NSMutableArray *args = [NSMutableArray array];
+  if (m1) [args addObject:m1];
+  if (m2) [args addObject:m2];
+  JSValue *res = [function callWithArguments:args];
+  return [self unmarshall:res];
 }
 
 - (BOOL)runFile:(NSString*)path {
-  NSError *err;
+  NSError *err = nil;
   NSString *fileString = [NSString stringWithContentsOfFile:path encoding:NSUTF8StringEncoding error:&err];
-  if(err == nil && fileString != nil && fileString != NULL) {
-    [self run:fileString];
+  if (err == nil && fileString != nil) {
+    [context evaluateScript:fileString];
+    if (context.exception) {
+      NSString *reason = [context.exception toString];
+      context.exception = nil;
+      @throw([NSException exceptionWithName:@"JavaScript Error" reason:reason userInfo:nil]);
+    }
     return YES;
   }
   return NO;
 }
 
-- (void)setInfo {
-  [scriptObject setValue:[JSInfoWrapper getInstance] forKey:@"_info"];
-}
-
 - (void)initializeWebView {
   if (inited) { return; }
-  [[webView mainFrame] loadHTMLString:@"" baseURL:NULL];
-  scriptObject = [webView windowScriptObject];
-  [scriptObject setValue:self forKey:@"_controller"];
-  [self setInfo];
+  context = [[JSContext alloc] init];
+  context.exceptionHandler = ^(JSContext *ctx, JSValue *exception) {
+    SlateLogger(@"JavaScript Exception: %@", exception);
+  };
+  context[@"window"] = context.globalObject;
+  context[@"_controller"] = self;
+  context[@"_info"] = [JSInfoWrapper getInstance];
+
   @try {
     [self runFile:[[NSBundle mainBundle] pathForResource:@"underscore" ofType:@"js"]];
     [self runFile:[[NSBundle mainBundle] pathForResource:@"utils" ofType:@"js"]];
@@ -149,7 +145,7 @@ static NSDictionary *jscJsMethods;
   return NO;
 }
 
-- (void)configFunction:(NSString *)key callback:(WebScriptObject *)callback {
+- (void)configFunction:(NSString *)key callback:(JSValue *)callback {
   NSString *fkey = [self addCallableFunction:callback];
   [[[SlateConfig getInstance] configs] setValue:[NSString stringWithFormat:@"_javascript_::%@", fkey] forKey:key];
 }
@@ -158,7 +154,7 @@ static NSDictionary *jscJsMethods;
   [[[SlateConfig getInstance] configs] setValue:[NSString stringWithFormat:@"%@", callback] forKey:key];
 }
 
-- (void)bindFunction:(NSString *)hotkey callback:(WebScriptObject *)callback repeat:(id)_repeat {
+- (void)bindFunction:(NSString *)hotkey callback:(JSValue *)callback repeat:(id)_repeat {
   JSOperation *op = [JSOperation jsOperationWithFunction:callback];
   BOOL repeat = NO;
   if (_repeat != nil && ([_repeat isKindOfClass:[NSNumber class]] || [_repeat isKindOfClass:[NSValue class]] || [_repeat isKindOfClass:[NSString class]])) {
@@ -204,8 +200,9 @@ static NSDictionary *jscJsMethods;
   }
 }
 
-- (NSString *)layout:(NSString *)name hash:(WebScriptObject *)hash {
+- (NSString *)layout:(NSString *)name hash:(id)hash {
   NSMutableDictionary *dict = [[self unmarshall:hash] mutableCopy];
+  if (![dict isKindOfClass:[NSDictionary class]]) return nil;
   for (NSString *app in [dict allKeys]) {
     id tmpDict = [dict objectForKey:app];
     if (![tmpDict isKindOfClass:[NSDictionary class]]) {
@@ -218,24 +215,17 @@ static NSDictionary *jscJsMethods;
     id _operations = [appDict objectForKey:OPT_OPERATIONS];
     NSMutableArray *ops = [NSMutableArray array];
     if ([_operations isKindOfClass:[Operation class]]) {
-      // this is an operation wrapper
       [ops addObject:_operations];
-    } else if ([_operations isKindOfClass:[WebScriptObject class]]) {
-      // this is a function
+    } else if ([_operations isKindOfClass:[JSValue class]]) {
       Operation *op = [JSOperation jsOperationWithFunction:_operations];
-      if (op == nil) { continue; }
-      [ops addObject:op];
+      if (op != nil) { [ops addObject:op]; }
     } else if ([_operations isKindOfClass:[NSArray class]]) {
-      // array of operations and/or functions
       for (id obj in _operations) {
         if ([obj isKindOfClass:[Operation class]]) {
-          // this is an operation key
           [ops addObject:obj];
-        } else if ([obj isKindOfClass:[WebScriptObject class]]) {
-          // this is a function
+        } else if ([obj isKindOfClass:[JSValue class]]) {
           Operation *op = [JSOperation jsOperationWithFunction:obj];
-          if (op == nil) { continue; }
-          [ops addObject:op];
+          if (op != nil) { [ops addObject:op]; }
         }
       }
     }
@@ -247,37 +237,37 @@ static NSDictionary *jscJsMethods;
   return name;
 }
 
-- (void)default:(id)config toAction:(id)_action {
+- (void)defaultAction:(id)config toAction:(id)_action {
   id screenConfig = [self unmarshall:config];
-  if ([screenConfig isKindOfClass:[NSNumber class]] || [screenConfig isKindOfClass:[NSValue class]] || [screenConfig isKindOfClass:[NSString class]]) {
-    // count
-  } else if ([screenConfig isKindOfClass:[NSArray class]]) {
-    // resolutions
-  } else {
-    // wtf?
+  if (![screenConfig isKindOfClass:[NSNumber class]] && ![screenConfig isKindOfClass:[NSValue class]] &&
+      ![screenConfig isKindOfClass:[NSString class]] && ![screenConfig isKindOfClass:[NSArray class]]) {
     return;
   }
   id action = [self unmarshall:_action];
   id name = nil;
   if ([action isKindOfClass:[NSString class]]) {
     name = action;
-  } else if ([action isKindOfClass:[WebScriptObject class]]) {
+  } else if ([action isKindOfClass:[JSValue class]]) {
     name = [JSOperation jsOperationWithFunction:action];
   } else {
-    // wtf?
     return;
   }
   [[SlateConfig getInstance] addDefault:screenConfig layout:name];
 }
 
-- (NSString *)shell:(NSString *)commandAndArgs wait:(NSNumber *)wait path:(NSString *)path {
-  if ([path isMemberOfClass:[WebUndefined class]]) {
-    return [ShellUtils run:commandAndArgs wait:[wait boolValue] path:nil];
+- (NSString *)shell:(NSString *)commandAndArgs wait:(id)wait path:(id)path {
+  BOOL shouldWait = NO;
+  if (wait != nil && ![wait isKindOfClass:[NSNull class]]) {
+    shouldWait = [wait boolValue];
   }
-  return [ShellUtils run:commandAndArgs wait:[wait boolValue] path:path];
+  NSString *targetPath = nil;
+  if (path != nil && [path isKindOfClass:[NSString class]]) {
+    targetPath = path;
+  }
+  return [ShellUtils run:commandAndArgs wait:shouldWait path:targetPath];
 }
 
-- (JSOperationWrapper *)operation:(NSString *)name options:(WebScriptObject *)opts {
+- (JSOperationWrapper *)operation:(NSString *)name options:(id)opts {
   @try {
     return [JSOperationWrapper operation:name options:opts];
   } @catch (NSException *ex) {
@@ -332,7 +322,7 @@ static NSDictionary *jscJsMethods;
          [what isEqualToString:@"screenConfigurationChanged"];
 }
 
-- (void)on:(NSString *)what do:(WebScriptObject *)callback {
+- (void)on:(NSString *)what do:(JSValue *)callback {
   if (![self isValidEvent:what]) {
     SlateLogger(@"   ERROR: Invalid Event %@",what);
     NSAlert *alert = [SlateConfig warningAlertWithKeyEquivalents: [NSArray arrayWithObjects:@"Quit", @"Skip", nil]];
@@ -359,127 +349,84 @@ static NSDictionary *jscJsMethods;
 - (void)runCallbacks:(NSString *)what payload:(id)payload {
   NSArray *callbacks = [[self eventCallbacks] objectForKey:what];
   if (callbacks == nil || [callbacks count] == 0) { return; }
-  for (WebScriptObject *callback in callbacks) {
+  for (JSValue *callback in callbacks) {
     [self runFunction:callback withArg:what secondArg:payload];
   }
 }
 
-- (WebScriptObject *)getJsArray:(NSArray *)arr {
-  id type = [scriptObject callWebScriptMethod:@"_array_with_" withArguments:arr];
-  if (![type isKindOfClass:[WebScriptObject class]]) {
-    return nil;
-  }
-  return type;
-}
-
-- (WebScriptObject *)getJsArray {
-  id type = [scriptObject callWebScriptMethod:@"_array_" withArguments:[NSArray array]];
-  if ([type isKindOfClass:[WebScriptObject class]]) {
-    return type;
-  }
-  return nil;
-}
-
-- (WebScriptObject *)getJsHash {
-  id type = [scriptObject callWebScriptMethod:@"_hash_" withArguments:[NSArray array]];
-  if ([type isKindOfClass:[WebScriptObject class]]) {
-    return type;
-  }
-  return nil;
-}
-
 - (id)marshall:(id)obj {
   if (obj == nil) {
-    return [WebUndefined undefined];
+    return [JSValue valueWithUndefinedInContext:context];
   }
-  if ([obj isKindOfClass:[NSString class]] || [obj isKindOfClass:[NSValue class]] ||
-      [obj isKindOfClass:[NSNumber class]]) {
+  if ([obj isKindOfClass:[JSValue class]]) {
     return obj;
   }
-  if ([obj isKindOfClass:[NSDictionary class]]) {
-    WebScriptObject *hash = [self getJsHash];
-    for (NSString *key in [obj allKeys]) {
-      [hash setValue:[obj objectForKey:key] forKey:key];
-    }
-    return hash;
-  }
-  if ([obj isKindOfClass:[NSArray class]]) {
-    WebScriptObject *arr = [self getJsArray:obj];
-    return arr;
-  }
-  return nil;
+  return [JSValue valueWithObject:obj inContext:context];
 }
 
 - (id)unmarshall:(id)obj {
-  if (obj == nil || [obj isMemberOfClass:[WebUndefined class]]) {
+  if (obj == nil) {
     return nil;
+  }
+  if ([obj isKindOfClass:[JSValue class]]) {
+    JSValue *val = (JSValue *)obj;
+    if ([val isUndefined] || [val isNull]) return nil;
+    if ([val isBoolean]) return [NSNumber numberWithBool:[val toBool]];
+    if ([val isNumber]) return [val toNumber];
+    if ([val isString]) return [val toString];
+    if ([val isArray]) {
+      NSArray *arr = [val toArray];
+      NSMutableArray *res = [NSMutableArray arrayWithCapacity:[arr count]];
+      for (id item in arr) {
+        id u = [self unmarshall:item];
+        if (u) [res addObject:u];
+      }
+      return res;
+    }
+    id nativeObj = [val toObject];
+    if ([nativeObj isKindOfClass:[JSOperationWrapper class]]) {
+      return [nativeObj op];
+    }
+    if ([nativeObj isKindOfClass:[JSScreenWrapper class]] || [nativeObj isKindOfClass:[JSApplicationWrapper class]]) {
+      return [nativeObj toString];
+    }
+    NSString *type = [self jsTypeof:val];
+    if ([@"function" isEqualToString:type]) {
+      return val;
+    }
+    if ([val isObject]) {
+      NSDictionary *dict = [val toDictionary];
+      NSMutableDictionary *res = [NSMutableDictionary dictionaryWithCapacity:[dict count]];
+      for (NSString *key in [dict allKeys]) {
+        id u = [self unmarshall:[dict objectForKey:key]];
+        if (u) [res setObject:u forKey:key];
+      }
+      return res;
+    }
+    return [val toObject];
   }
   if ([obj isKindOfClass:[JSOperationWrapper class]]) {
     return [obj op];
   }
-  if ([obj isKindOfClass:[NSString class]] || [obj isKindOfClass:[NSValue class]] ||
-      [obj isKindOfClass:[NSNumber class]]) {
-    return obj;
-  }
-  if ([obj isKindOfClass:[JSScreenWrapper class]] || [obj isKindOfClass:[JSApplicationWrapper class]]) {
-    return [obj toString];
-  }
-  if ([obj isKindOfClass:[WebScriptObject class]]) {
-    return [self jsToSomething:obj];
-  }
-  return nil;
+  return obj;
 }
 
-- (id)jsToSomething:(WebScriptObject *)obj {
-  if (obj == nil) { return nil; }
-  NSString *type = [self jsTypeof:obj];
-  if (type == nil) { return nil; }
-  if ([type isEqualToString:@"array"]) {
-    return [self jsToArray:obj];
-  }
-  if ([type isEqualToString:@"function"]) {
-    return obj;
-  }
-  if ([type isEqualToString:@"object"]) {
-    return [self jsToDictionary:obj];
-  }
-  // nothing else should be here, primitives become NSString or NSValue or NSNumber
-  return nil;
-}
-
-- (NSString *)jsTypeof:(WebScriptObject *)obj {
-  id type = [scriptObject callWebScriptMethod:@"_typeof_" withArguments:[NSArray arrayWithObjects:obj, nil]];
-  if ([type isKindOfClass:[NSString class]]) {
-    return type; // should be a string
+- (NSString *)jsTypeof:(id)obj {
+  if ([obj isKindOfClass:[JSValue class]]) {
+    JSValue *val = (JSValue *)obj;
+    if ([val isString]) return @"string";
+    if ([val isArray]) return @"array";
+    if ([val isNumber]) return @"number";
+    if ([val isBoolean]) return @"boolean";
+    if ([val isUndefined]) return @"undefined";
+    if ([val isNull]) return @"null";
+    if ([val isObject]) {
+      JSValue *typeOfFunc = [context evaluateScript:@"(function(x) { return typeof x; })"];
+      JSValue *res = [typeOfFunc callWithArguments:@[val]];
+      return [res toString];
+    }
   }
   return @"unknown";
-}
-
-- (NSArray *)jsToArray:(WebScriptObject *)obj {
-  UInt16 count = [[obj valueForKey:@"length"] unsignedIntValue];
-  NSMutableArray *a = [NSMutableArray array];
-  for (UInt16 i = 0; i < count; i++) {
-    id item = [obj webScriptValueAtIndex:i];
-    if (item == nil || [item isMemberOfClass:[WebUndefined class]]) {
-      continue;
-    }
-    [a addObject:[self unmarshall:item]];
-  }
-  return a;
-}
-
-- (NSDictionary *)jsToDictionary:(WebScriptObject *)obj {
-  NSMutableDictionary *ret = [NSMutableDictionary dictionary];
-  if (obj == nil || [obj isMemberOfClass:[WebUndefined class]]) { return ret; }
-  id keys = [scriptObject callWebScriptMethod:@"_keys_" withArguments:[NSArray arrayWithObjects:obj, nil]];
-  NSArray *keyArr = [self jsToArray:keys];
-  for(NSUInteger i = 0; i < [keyArr count]; i++) {
-    NSString* key = [keyArr objectAtIndex:i];
-    id ele = [obj valueForKey:key];
-    if (ele == nil || [ele isMemberOfClass:[WebUndefined class]]) { continue; }
-    [ret setObject:[self unmarshall:ele] forKey:key];
-  }
-  return ret;
 }
 
 + (JSController *)getInstance {
@@ -488,32 +435,6 @@ static NSDictionary *jscJsMethods;
       _instance = [[[JSController class] alloc] init];
     return _instance;
   }
-}
-
-+ (void)setJsMethods {
-  jscJsMethods = @{
-    NSStringFromSelector(@selector(log:)): @"log",
-    NSStringFromSelector(@selector(bindFunction:callback:repeat:)): @"bindFunction",
-    NSStringFromSelector(@selector(bindNative:callback:repeat:)): @"bindNative",
-    NSStringFromSelector(@selector(configFunction:callback:)): @"configFunction",
-    NSStringFromSelector(@selector(configNative:callback:)): @"configNative",
-    NSStringFromSelector(@selector(doOperation:options:)): @"doOperation",
-    NSStringFromSelector(@selector(operation:options:)): @"operation",
-    NSStringFromSelector(@selector(operationFromString:)): @"operationFromString",
-    NSStringFromSelector(@selector(source:)): @"source",
-    NSStringFromSelector(@selector(layout:hash:)): @"layout",
-    NSStringFromSelector(@selector(default:toAction:)): @"default",
-    NSStringFromSelector(@selector(shell:wait:path:)): @"shell",
-    NSStringFromSelector(@selector(on:do:)): @"on",
-  };
-}
-
-+ (BOOL)isSelectorExcludedFromWebScript:(SEL)sel {
-  return [jscJsMethods objectForKey:NSStringFromSelector(sel)] == NULL;
-}
-
-+ (NSString *)webScriptNameForSelector:(SEL)sel {
-  return [jscJsMethods objectForKey:NSStringFromSelector(sel)];
 }
 
 @end

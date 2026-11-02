@@ -18,6 +18,8 @@
 //  You should have received a copy of the GNU General Public License
 //  along with this program.  If not, see http://www.gnu.org/licenses
 
+#import <Cocoa/Cocoa.h>
+
 extern NSString *const SNAPSHOTS_FILE;
 
 #define MODAL_BEGIN_ID 20000;

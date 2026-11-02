@@ -48,6 +48,7 @@
 
     NSData *data;
     data = [file readDataToEndOfFile];
+    [task waitUntilExit];
 
     NSString *string;
     string = [[NSString alloc] initWithData: data encoding: NSUTF8StringEncoding];
@@ -78,9 +79,10 @@
 
   [task launch];
   if (wait){
+    NSData *data = [file readDataToEndOfFile];
     [task waitUntilExit];
     SlateLogger(@"SHELL RESULT:");
-    SlateLogger([[NSString alloc] initWithData:[file readDataToEndOfFile] encoding:NSUTF8StringEncoding]);
+    SlateLogger(@"%@", [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding]);
   }
   return task;
 }
@@ -114,11 +116,11 @@
 
   [task launch];
   if (!wait) return nil;
-  [task waitUntilExit];
   NSData *data = [file readDataToEndOfFile];
+  [task waitUntilExit];
   NSString *res = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
   SlateLogger(@"SHELL RESULT:");
-  SlateLogger(res);
+  SlateLogger(@"%@", res);
   return res;
 }
 

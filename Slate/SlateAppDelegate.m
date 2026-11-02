@@ -32,7 +32,37 @@
 #import "SwitchOperation.h"
 #import "RunningApplications.h"
 #import "GridOperation.h"
-#import <Sparkle/SUUpdater.h>
+// Sparkle replacement stub for NIB compatibility
+@interface SUUpdater : NSObject
+@property (nonatomic, assign) BOOL automaticallyChecksForUpdates;
+@property (nonatomic, assign) BOOL automaticallyDownloadsUpdates;
+@property (nonatomic, assign) NSTimeInterval updateCheckInterval;
+@property (nonatomic, copy) NSURL *feedURL;
++ (SUUpdater *)sharedUpdater;
+- (IBAction)checkForUpdates:(id)sender;
+@end
+@implementation SUUpdater
++ (SUUpdater *)sharedUpdater {
+  static SUUpdater *updater = nil;
+  static dispatch_once_t onceToken;
+  dispatch_once(&onceToken, ^{
+    updater = [[SUUpdater alloc] init];
+  });
+  return updater;
+}
+- (id)valueForUndefinedKey:(NSString *)key {
+  return nil;
+}
+- (void)setValue:(id)value forUndefinedKey:(NSString *)key {
+  // no-op for Sparkle bindings in NIB
+}
+- (IBAction)checkForUpdates:(id)sender {
+  NSAlert *alert = [[NSAlert alloc] init];
+  [alert setMessageText:@"Check for Updates"];
+  [alert setInformativeText:@"Please check the GitHub repository at https://github.com/jigish/slate for the latest updates."];
+  [alert runModal];
+}
+@end
 
 @implementation SlateAppDelegate
 
@@ -60,15 +90,10 @@ static EventHandlerRef modifiersEvent;
 }
 
 - (IBAction)relaunch {
-  NSString *launcherSource = [[NSBundle bundleForClass:[SUUpdater class]]  pathForResource:@"relaunch" ofType:@""];
-  NSString *launcherTarget = [NSTemporaryDirectory() stringByAppendingPathComponent:[launcherSource lastPathComponent]];
   NSString *appPath = [[NSBundle mainBundle] bundlePath];
   NSString *processID = [NSString stringWithFormat:@"%d", [[NSProcessInfo processInfo] processIdentifier]];
-
-  [[NSFileManager defaultManager] removeItemAtPath:launcherTarget error:NULL];
-  [[NSFileManager defaultManager] copyItemAtPath:launcherSource toPath:launcherTarget error:NULL];
-
-  [NSTask launchedTaskWithLaunchPath:launcherTarget arguments:[NSArray arrayWithObjects:appPath, processID, nil]];
+  NSString *relaunchScript = [NSString stringWithFormat:@"while kill -0 %@ 2>/dev/null; do sleep 0.1; done; open -n \"%@\"", processID, appPath];
+  [NSTask launchedTaskWithLaunchPath:@"/bin/sh" arguments:[NSArray arrayWithObjects:@"-c", relaunchScript, nil]];
   [NSApp terminate:self];
 }
 
@@ -434,20 +459,28 @@ OSStatus OnModifiersChangedEvent(EventHandlerCallRef nextHandler, EventRef theEv
 }
 
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification {
+  if (NSClassFromString(@"XCTestCase") != nil ||
+      [[[NSProcessInfo processInfo] environment] objectForKey:@"XCTestConfigurationFilePath"] != nil) {
+    return;
+  }
   if (cmdTabBinding > 0 || cmdShiftTabBinding > 0) {
-    CFMachPortRef keyDownEventTap;
-    CFRunLoopSourceRef keyDownRunLoopSource;
-    keyDownEventTap = CGEventTapCreate(kCGSessionEventTap, kCGHeadInsertEventTap, 0, CGEventMaskBit(kCGEventKeyDown), EatAppSwitcherCallback, (__bridge void *)self);
-    keyDownRunLoopSource = CFMachPortCreateRunLoopSource(kCFAllocatorDefault, keyDownEventTap, 0);
-    CFRunLoopAddSource(CFRunLoopGetCurrent(), keyDownRunLoopSource, kCFRunLoopCommonModes);
-    CGEventTapEnable(keyDownEventTap, true);
+    CFMachPortRef keyDownEventTap = CGEventTapCreate(kCGSessionEventTap, kCGHeadInsertEventTap, 0, CGEventMaskBit(kCGEventKeyDown), EatAppSwitcherCallback, (__bridge void *)self);
+    if (keyDownEventTap != NULL) {
+      CFRunLoopSourceRef keyDownRunLoopSource = CFMachPortCreateRunLoopSource(kCFAllocatorDefault, keyDownEventTap, 0);
+      CFRunLoopAddSource(CFRunLoopGetCurrent(), keyDownRunLoopSource, kCFRunLoopCommonModes);
+      CGEventTapEnable(keyDownEventTap, true);
+      CFRelease(keyDownEventTap);
+      if (keyDownRunLoopSource) CFRelease(keyDownRunLoopSource);
+    }
 
-    CFMachPortRef keyUpEventTap;
-    CFRunLoopSourceRef keyUpRunLoopSource;
-    keyUpEventTap = CGEventTapCreate(kCGSessionEventTap, kCGHeadInsertEventTap, 0, CGEventMaskBit(kCGEventKeyUp), EatAppSwitcherResetCallback, (__bridge void *)self);
-    keyUpRunLoopSource = CFMachPortCreateRunLoopSource(kCFAllocatorDefault, keyUpEventTap, 0);
-    CFRunLoopAddSource(CFRunLoopGetCurrent(), keyUpRunLoopSource, kCFRunLoopCommonModes);
-    CGEventTapEnable(keyUpEventTap, true);
+    CFMachPortRef keyUpEventTap = CGEventTapCreate(kCGSessionEventTap, kCGHeadInsertEventTap, 0, CGEventMaskBit(kCGEventKeyUp), EatAppSwitcherResetCallback, (__bridge void *)self);
+    if (keyUpEventTap != NULL) {
+      CFRunLoopSourceRef keyUpRunLoopSource = CFMachPortCreateRunLoopSource(kCFAllocatorDefault, keyUpEventTap, 0);
+      CFRunLoopAddSource(CFRunLoopGetCurrent(), keyUpRunLoopSource, kCFRunLoopCommonModes);
+      CGEventTapEnable(keyUpEventTap, true);
+      CFRelease(keyUpEventTap);
+      if (keyUpRunLoopSource) CFRelease(keyUpRunLoopSource);
+    }
   }
 }
 
@@ -457,6 +490,10 @@ OSStatus OnModifiersChangedEvent(EventHandlerCallRef nextHandler, EventRef theEv
 }
 
 - (void)awakeFromNib {
+  if (NSClassFromString(@"XCTestCase") != nil ||
+      [[[NSProcessInfo processInfo] environment] objectForKey:@"XCTestConfigurationFilePath"] != nil) {
+    return;
+  }
   cmdTabBinding = -1;
   cmdShiftTabBinding = -1;
   currentHintOperation = nil;
@@ -509,21 +546,18 @@ OSStatus OnModifiersChangedEvent(EventHandlerCallRef nextHandler, EventRef theEv
   }
 
   // Check if Accessibility API is enabled
-  if (!AXAPIEnabled()) {
-    NSAlert *alert = [SlateConfig warningAlertWithKeyEquivalents: [NSArray arrayWithObjects:@"Enable", @"Quit", nil]];
-    [alert setMessageText:[NSString stringWithFormat:@"Slate cannot run without \"Access for assistive devices\". Would you like to enable it?"]];
-    [alert setInformativeText:[NSString stringWithFormat:@"You may be prompted for your administrator password."]];
-    [alert setAlertStyle:NSCriticalAlertStyle];
-    NSInteger alertIndex = [alert runModal];
-    if (alertIndex == NSAlertFirstButtonReturn) {
-      SlateLogger(@"User wants to enable Access for assistive devices");
-      NSDictionary* errorDictionary;
-      NSAppleScript* applescript = [[NSAppleScript alloc] initWithSource:@"tell application \"System Events\" to set UI elements enabled to true"];
-      [applescript executeAndReturnError:&errorDictionary];
-    }
-    else if (alertIndex == NSAlertSecondButtonReturn) {
-      SlateLogger(@"User selected quit");
-      [NSApp terminate:nil];
+  NSDictionary *options = @{(__bridge id)kAXTrustedCheckOptionPrompt: @YES};
+  BOOL isTrusted = AXIsProcessTrustedWithOptions((__bridge CFDictionaryRef)options);
+  if (!isTrusted) {
+    SlateLogger(@"Accessibility permission not yet granted; system authorization prompt requested.");
+    NSAlert *alert = [[NSAlert alloc] init];
+    [alert setMessageText:@"Accessibility Permission Required"];
+    [alert setInformativeText:@"Slate requires Accessibility permissions to manage windows.\n\nIf Slate is already enabled in System Settings, macOS requires you to remove it (using the '-' button) and re-add it because the application binary has been updated."];
+    [alert setAlertStyle:NSAlertStyleWarning];
+    [alert addButtonWithTitle:@"Open System Settings"];
+    [alert addButtonWithTitle:@"Continue Anyway"];
+    if ([alert runModal] == NSAlertFirstButtonReturn) {
+      [[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:@"x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility"]];
     }
   }
 
