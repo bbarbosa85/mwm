@@ -2,7 +2,7 @@
 //  TestSlateLegacyMigration.m
 //  Slate
 //
-//  Tests for converting ~/.slate and ~/.slate.js into ~/.slate.yml.
+//  Tests for converting ~/.slate, ~/.slate.js and ~/.slate.yml into ~/.mwm.yml.
 //
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -326,11 +326,11 @@ static NSString *const kManagedJS =
 - (void)testMigrateFileWritesYAMLAndRenamesLegacy {
   NSString *dir = [self tempDirectory];
   NSString *legacyPath = [dir stringByAppendingPathComponent:@".slate"];
-  NSString *ymlPath = [dir stringByAppendingPathComponent:@".slate.yml"];
+  NSString *ymlPath = [dir stringByAppendingPathComponent:@".mwm.yml"];
   [kLegacy writeToFile:legacyPath atomically:YES encoding:NSUTF8StringEncoding error:nil];
 
   NSError *error = nil;
-  NSArray *backups = [SlateLegacyMigration migrateLegacyFile:legacyPath javaScriptFile:nil toFile:ymlPath warnings:[NSMutableArray array] error:&error];
+  NSArray *backups = [SlateLegacyMigration migrateLegacyFile:legacyPath javaScriptFile:nil oldYAMLFile:nil toFile:ymlPath warnings:[NSMutableArray array] error:&error];
   XCTAssertEqual([backups count], 1u, @"%@", error);
 
   NSFileManager *fm = [NSFileManager defaultManager];
@@ -346,19 +346,19 @@ static NSString *const kManagedJS =
   NSString *dir = [self tempDirectory];
   NSString *legacyPath = [dir stringByAppendingPathComponent:@".slate"];
   NSString *jsPath = [dir stringByAppendingPathComponent:@".slate.js"];
-  NSString *ymlPath = [dir stringByAppendingPathComponent:@".slate.yml"];
+  NSString *ymlPath = [dir stringByAppendingPathComponent:@".mwm.yml"];
   NSString *yml = @"settings:\n  keyboardLayout: qwerty\nbindings:\n  - key: z\n    action: relaunch\n";
   [@"bind r:cmd relaunch\n" writeToFile:legacyPath atomically:YES encoding:NSUTF8StringEncoding error:nil];
   [kManagedJS writeToFile:jsPath atomically:YES encoding:NSUTF8StringEncoding error:nil];
   [yml writeToFile:ymlPath atomically:YES encoding:NSUTF8StringEncoding error:nil];
 
   NSError *error = nil;
-  NSArray *backups = [SlateLegacyMigration migrateLegacyFile:legacyPath javaScriptFile:jsPath toFile:ymlPath warnings:[NSMutableArray array] error:&error];
+  NSArray *backups = [SlateLegacyMigration migrateLegacyFile:legacyPath javaScriptFile:jsPath oldYAMLFile:nil toFile:ymlPath warnings:[NSMutableArray array] error:&error];
   XCTAssertEqual([backups count], 2u, @"%@", error);
   SlateConfigDocument *written = [SlateConfigDocument documentWithContentsOfFile:ymlPath error:&error];
   XCTAssertEqualObjects([written.bindings valueForKey:@"key"], (@[@"r", @"x", @"y", @"z"]), @"%@", error);
   NSUInteger layout = [[written.settings valueForKey:@"name"] indexOfObject:@"keyboardLayout"];
-  XCTAssertEqualObjects(written.settings[layout].value, @"qwerty", @"~/.slate.yml wins");
+  XCTAssertEqualObjects(written.settings[layout].value, @"qwerty", @"~/.mwm.yml wins");
   XCTAssertEqualObjects([NSString stringWithContentsOfFile:[ymlPath stringByAppendingString:@".bak"] encoding:NSUTF8StringEncoding error:nil], yml);
   XCTAssertFalse([[NSFileManager defaultManager] fileExistsAtPath:jsPath]);
 }
@@ -372,7 +372,8 @@ static NSString *const kManagedJS =
 
   NSError *error = nil;
   NSArray *backups = [SlateLegacyMigration migrateLegacyFile:legacyPath javaScriptFile:nil
-                                                      toFile:[dir stringByAppendingPathComponent:@".slate.yml"]
+                                                 oldYAMLFile:nil
+                                                      toFile:[dir stringByAppendingPathComponent:@".mwm.yml"]
                                                     warnings:[NSMutableArray array] error:&error];
   XCTAssertEqual([backups count], 1u, @"%@", error);
   XCTAssertTrue([[NSFileManager defaultManager] fileExistsAtPath:target], @"the symlink's target is left alone");
@@ -382,14 +383,49 @@ static NSString *const kManagedJS =
 - (void)testMigrateFileFailsWithoutChangingAnything {
   NSString *dir = [self tempDirectory];
   NSString *legacyPath = [dir stringByAppendingPathComponent:@".slate"];
-  NSString *ymlPath = [dir stringByAppendingPathComponent:@".slate.yml"];
+  NSString *ymlPath = [dir stringByAppendingPathComponent:@".mwm.yml"];
   [@"bind r:${nope} relaunch\n" writeToFile:legacyPath atomically:YES encoding:NSUTF8StringEncoding error:nil];
 
   NSError *error = nil;
-  XCTAssertNil([SlateLegacyMigration migrateLegacyFile:legacyPath javaScriptFile:nil toFile:ymlPath warnings:[NSMutableArray array] error:&error]);
+  XCTAssertNil([SlateLegacyMigration migrateLegacyFile:legacyPath javaScriptFile:nil oldYAMLFile:nil toFile:ymlPath warnings:[NSMutableArray array] error:&error]);
   XCTAssertEqual(error.code, SlateConfigDocumentErrorInvalid);
   XCTAssertTrue([[NSFileManager defaultManager] fileExistsAtPath:legacyPath]);
   XCTAssertFalse([[NSFileManager defaultManager] fileExistsAtPath:ymlPath]);
+}
+
+- (void)testMigratePreviousYAMLFile {
+  NSString *dir = [self tempDirectory];
+  NSString *oldPath = [dir stringByAppendingPathComponent:@".slate.yml"];
+  NSString *ymlPath = [dir stringByAppendingPathComponent:@".mwm.yml"];
+  NSString *old = @"settings:\n  keyboardLayout: colemak\nbindings:\n  - key: r\n    action: relaunch\n";
+  [old writeToFile:oldPath atomically:YES encoding:NSUTF8StringEncoding error:nil];
+
+  NSError *error = nil;
+  NSArray *backups = [SlateLegacyMigration migrateLegacyFile:nil javaScriptFile:nil oldYAMLFile:oldPath toFile:ymlPath
+                                                    warnings:[NSMutableArray array] error:&error];
+  XCTAssertEqual([backups count], 1u, @"%@", error);
+  XCTAssertTrue([[backups[0] lastPathComponent] hasPrefix:@".slate.yml.migrated-"], @"%@", backups);
+  XCTAssertFalse([[NSFileManager defaultManager] fileExistsAtPath:oldPath], @"~/.slate.yml no longer loads");
+  SlateConfigDocument *written = [SlateConfigDocument documentWithContentsOfFile:ymlPath error:&error];
+  XCTAssertEqualObjects(written.settings[0].value, @"colemak", @"%@", error);
+  XCTAssertEqualObjects(written.bindings[0].action, @"relaunch");
+}
+
+- (void)testPreviousYAMLLoadsAfterTheOlderFormats {
+  NSString *dir = [self tempDirectory];
+  NSString *legacyPath = [dir stringByAppendingPathComponent:@".slate"];
+  NSString *oldPath = [dir stringByAppendingPathComponent:@".slate.yml"];
+  NSString *ymlPath = [dir stringByAppendingPathComponent:@".mwm.yml"];
+  [@"config keyboardLayout dvorak\nbind r:cmd relaunch\n" writeToFile:legacyPath atomically:YES encoding:NSUTF8StringEncoding error:nil];
+  [@"settings:\n  keyboardLayout: colemak\nbindings:\n  - key: x\n    action: undo\n" writeToFile:oldPath atomically:YES encoding:NSUTF8StringEncoding error:nil];
+
+  NSError *error = nil;
+  NSArray *backups = [SlateLegacyMigration migrateLegacyFile:legacyPath javaScriptFile:nil oldYAMLFile:oldPath toFile:ymlPath
+                                                    warnings:[NSMutableArray array] error:&error];
+  XCTAssertEqual([backups count], 2u, @"%@", error);
+  SlateConfigDocument *written = [SlateConfigDocument documentWithContentsOfFile:ymlPath error:&error];
+  XCTAssertEqualObjects(written.settings[0].value, @"colemak", @"the newer file wins: %@", error);
+  XCTAssertEqualObjects([written.bindings valueForKey:@"key"], (@[@"r", @"x"]), @"older bindings first");
 }
 
 @end

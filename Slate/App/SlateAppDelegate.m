@@ -48,6 +48,13 @@ static EventHotKeyID currentHotKey;
 static SlateAppDelegate *selfRef = nil;
 static EventHandlerRef modifiersEvent;
 
+// The menu bar symbol, as a template image so macOS colors it for light and dark menu bars.
+- (NSImage *)statusImageNamed:(NSString *)name {
+  NSImage *image = [NSImage imageNamed:name];
+  [image setTemplate:YES];
+  return image;
+}
+
 - (IBAction)updateLaunchState {
   if ([launchOnLoginItem state] == NSControlStateValueOn) {
     // currently on
@@ -153,7 +160,7 @@ static EventHandlerRef modifiersEvent;
     UnregisterEventHotKey([hotKeyRef pointerValue]);
   }
   // reset status image
-  [[statusItem button] setImage:[NSImage imageNamed:@"status"]];
+  [[statusItem button] setImage:[self statusImageNamed:@"status"]];
   currentModalKey = nil;
 }
 
@@ -223,7 +230,7 @@ static EventHandlerRef modifiersEvent;
       }
       [self setCurrentModalKey:modalKey];
       // change status image
-      [[statusItem button] setImage:[NSImage imageNamed:@"statusActive"]];
+      [[statusItem button] setImage:[self statusImageNamed:@"statusActive"]];
       return noErr;
     }
   }
@@ -447,37 +454,37 @@ OSStatus OnModifiersChangedEvent(EventHandlerCallRef nextHandler, EventRef theEv
   return item;
 }
 
-// The status bar menu: everything Slate offers, in three short groups.
+// The status bar menu: everything MWM offers, in three short groups.
 - (NSMenu *)buildStatusMenu {
-  NSMenu *menu = [[NSMenu alloc] initWithTitle:@"Slate"];
-  [self addItem:@"About Slate" action:@selector(aboutWindow) key:@"" to:menu];
+  NSMenu *menu = [[NSMenu alloc] initWithTitle:@"MWM"];
+  [self addItem:@"About MWM" action:@selector(aboutWindow) key:@"" to:menu];
   [menu addItem:[NSMenuItem separatorItem]];
-  [self addItem:@"Configure Slate…" action:@selector(configureSlate) key:@"," to:menu];
+  [self addItem:@"Configure MWM…" action:@selector(configureSlate) key:@"," to:menu];
   [[self addItem:@"Reload Configuration" action:@selector(relaunch) key:@"" to:menu]
-    setToolTip:@"Restart Slate to load the configuration file again"];
-  launchOnLoginItem = [self addItem:@"Launch Slate at Login" action:@selector(updateLaunchState) key:@"" to:menu];
+    setToolTip:@"Restart MWM to load the configuration file again"];
+  launchOnLoginItem = [self addItem:@"Launch MWM at Login" action:@selector(updateLaunchState) key:@"" to:menu];
   [self setLaunchOnLoginItemStatus];
   [menu addItem:[NSMenuItem separatorItem]];
-  [menu addItemWithTitle:@"Quit Slate" action:@selector(terminate:) keyEquivalent:@"q"];
+  [menu addItemWithTitle:@"Quit MWM" action:@selector(terminate:) keyEquivalent:@"q"];
   return menu;
 }
 
-// The app menus, shown only while a Slate window is in front. They carry the
+// The app menus, shown only while an MWM window is in front. They carry the
 // standard shortcuts that window's text fields and tables need.
 - (NSMenu *)buildMainMenu {
   NSMenu *main = [[NSMenu alloc] initWithTitle:@"Main"];
 
-  NSMenu *app = [[NSMenu alloc] initWithTitle:@"Slate"];
-  [self addItem:@"About Slate" action:@selector(aboutWindow) key:@"" to:app];
+  NSMenu *app = [[NSMenu alloc] initWithTitle:@"MWM"];
+  [self addItem:@"About MWM" action:@selector(aboutWindow) key:@"" to:app];
   [app addItem:[NSMenuItem separatorItem]];
-  [self addItem:@"Configure Slate…" action:@selector(configureSlate) key:@"," to:app];
+  [self addItem:@"Configure MWM…" action:@selector(configureSlate) key:@"," to:app];
   [app addItem:[NSMenuItem separatorItem]];
-  [app addItemWithTitle:@"Hide Slate" action:@selector(hide:) keyEquivalent:@"h"];
+  [app addItemWithTitle:@"Hide MWM" action:@selector(hide:) keyEquivalent:@"h"];
   [[app addItemWithTitle:@"Hide Others" action:@selector(hideOtherApplications:) keyEquivalent:@"h"]
     setKeyEquivalentModifierMask:NSEventModifierFlagCommand | NSEventModifierFlagOption];
   [app addItemWithTitle:@"Show All" action:@selector(unhideAllApplications:) keyEquivalent:@""];
   [app addItem:[NSMenuItem separatorItem]];
-  [app addItemWithTitle:@"Quit Slate" action:@selector(terminate:) keyEquivalent:@"q"];
+  [app addItemWithTitle:@"Quit MWM" action:@selector(terminate:) keyEquivalent:@"q"];
 
   NSMenu *edit = [[NSMenu alloc] initWithTitle:@"Edit"];
   [edit addItemWithTitle:@"Undo" action:@selector(undo:) keyEquivalent:@"z"];
@@ -524,9 +531,7 @@ OSStatus OnModifiersChangedEvent(EventHandlerCallRef nextHandler, EventRef theEv
 
   statusItem = [[NSStatusBar systemStatusBar] statusItemWithLength: NSVariableStatusItemLength];
   [statusItem setMenu:[self buildStatusMenu]];
-  NSImage *statusImage = [NSImage imageNamed:@"status"];
-  [statusImage setTemplate:YES];
-  [[statusItem button] setImage:statusImage];
+  [[statusItem button] setImage:[self statusImageNamed:@"status"]];
 
   // Ensure no timer exists
   @synchronized(timerLock) {
@@ -545,7 +550,7 @@ OSStatus OnModifiersChangedEvent(EventHandlerCallRef nextHandler, EventRef theEv
     SlateLogger(@"Accessibility permission not yet granted; system authorization prompt requested.");
     NSAlert *alert = [[NSAlert alloc] init];
     [alert setMessageText:@"Accessibility Permission Required"];
-    [alert setInformativeText:@"Slate requires Accessibility permissions to manage windows.\n\nIf Slate is already enabled in System Settings, macOS requires you to remove it (using the '-' button) and re-add it because the application binary has been updated."];
+    [alert setInformativeText:@"MWM requires Accessibility permissions to manage windows.\n\nIf MWM is already enabled in System Settings, macOS requires you to remove it (using the '-' button) and re-add it because the application binary has been updated."];
     [alert setAlertStyle:NSAlertStyleWarning];
     [alert addButtonWithTitle:@"Open System Settings"];
     [alert addButtonWithTitle:@"Continue Anyway"];
@@ -580,7 +585,7 @@ OSStatus OnModifiersChangedEvent(EventHandlerCallRef nextHandler, EventRef theEv
   if (@available(macOS 13.0, *)) {
     NSError *error = nil;
     if (![[SMAppService mainAppService] registerAndReturnError:&error]) {
-      SlateLogger(@"ERROR: Could not add Slate to login items: %@", error);
+      SlateLogger(@"ERROR: Could not add MWM to login items: %@", error);
     }
     return;
   }
@@ -591,7 +596,7 @@ OSStatus OnModifiersChangedEvent(EventHandlerCallRef nextHandler, EventRef theEv
   if (@available(macOS 13.0, *)) {
     NSError *error = nil;
     if (![[SMAppService mainAppService] unregisterAndReturnError:&error]) {
-      SlateLogger(@"ERROR: Could not remove Slate from login items: %@", error);
+      SlateLogger(@"ERROR: Could not remove MWM from login items: %@", error);
     }
     return;
   }

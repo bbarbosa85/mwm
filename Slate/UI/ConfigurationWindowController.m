@@ -25,7 +25,7 @@
 
 typedef NS_ENUM(NSInteger, SaveState) {
   SaveStateSaved,       // the file on disk matches the form
-  SaveStateNotCreated,  // ~/.slate.yml doesn't exist and the defaults are untouched
+  SaveStateNotCreated,  // ~/.mwm.yml doesn't exist and the defaults are untouched
   SaveStateBlocked,     // edited, but not saved because it has errors
   SaveStateUnreadable,  // the file on disk can't be shown as a form
 };
@@ -44,7 +44,7 @@ typedef NS_ENUM(NSInteger, SaveState) {
 // The previous file goes to .bak once per editing session, not on every save.
 @property (assign) BOOL backedUp;
 @property (assign) BOOL resolvingConflict;
-// Tests point the window at a temporary file instead of ~/.slate.yml.
+// Tests point the window at a temporary file instead of ~/.mwm.yml.
 @property (copy, nullable) NSString *configPathOverride;
 @end
 
@@ -65,12 +65,12 @@ typedef NS_ENUM(NSInteger, SaveState) {
                                                      defer:YES];
   self = [super initWithWindow:window];
   if (self) {
-    [window setTitle:@"Slate configuration"];
+    [window setTitle:@"MWM configuration"];
     [window setMinSize:NSMakeSize(640, 360)];
     [window setReleasedWhenClosed:NO];
     [window setDelegate:self];
     [window center];
-    [window setFrameAutosaveName:@"SlateConfiguration"];
+    [window setFrameAutosaveName:@"MWMConfiguration"];
     [self buildInterface];
   }
   return self;
@@ -363,7 +363,7 @@ typedef NS_ENUM(NSInteger, SaveState) {
   [alert beginSheetModalForWindow:[self window] completionHandler:nil];
 }
 
-// Saves, closes the window, and restarts Slate so it loads ~/.slate.yml.
+// Saves, closes the window, and restarts MWM so it loads ~/.mwm.yml.
 - (IBAction)apply:(NSButton *)sender {
   [[self window] makeFirstResponder:nil];  // commit a cell being edited
   if (self.formView.document == nil) {
@@ -377,7 +377,7 @@ typedef NS_ENUM(NSInteger, SaveState) {
     NSAlert *alert = [[NSAlert alloc] init];
     [alert setAlertStyle:NSAlertStyleWarning];
     [alert setMessageText:@"Fix the errors before applying"];
-    [alert setInformativeText:[NSString stringWithFormat:@"%@\n\nChanges with errors aren't saved, so Slate would restart with the last valid version.",
+    [alert setInformativeText:[NSString stringWithFormat:@"%@\n\nChanges with errors aren't saved, so MWM would restart with the last valid version.",
                                [self messageFor:first]]];
     [alert addButtonWithTitle:@"Show error"];
     [alert addButtonWithTitle:@"Cancel"];
@@ -387,7 +387,7 @@ typedef NS_ENUM(NSInteger, SaveState) {
     return;
   }
   if (self.resolvingConflict) return;
-  // Applying the untouched defaults creates ~/.slate.yml from them.
+  // Applying the untouched defaults creates ~/.mwm.yml from them.
   if (self.savedText == nil && ![self writeText:[self currentText]]) return;
   if (![[self currentText] isEqualToString:self.baselineText]) return;
   [[self window] close];

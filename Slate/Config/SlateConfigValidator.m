@@ -86,7 +86,7 @@
     result.settingCount++;
     if ([config getConfigDefault:setting.name] == nil) {
       SlateConfigIssue *issue = [SlateConfigIssue issueWithError:NO
-                                                         message:[NSString stringWithFormat:@"\"%@\" isn't a setting Slate knows about.", setting.name]
+                                                         message:[NSString stringWithFormat:@"\"%@\" isn't a setting MWM knows about.", setting.name]
                                                             line:setting.line];
       issue.entryName = setting.name;
       [issues addObject:issue];

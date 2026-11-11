@@ -3,7 +3,7 @@
 //  Slate
 //
 //  Tests for the configuration window saving valid changes as they're made,
-//  against a temporary file instead of ~/.slate.yml.
+//  against a temporary file instead of ~/.mwm.yml.
 //
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -44,7 +44,7 @@ static NSString *const kOriginal =
   NSString *dir = [NSTemporaryDirectory() stringByAppendingPathComponent:[[NSUUID UUID] UUIDString]];
   [[NSFileManager defaultManager] createDirectoryAtPath:dir withIntermediateDirectories:YES attributes:nil error:nil];
   [self addTeardownBlock:^{ [[NSFileManager defaultManager] removeItemAtPath:dir error:nil]; }];
-  self.path = [dir stringByAppendingPathComponent:@".slate.yml"];
+  self.path = [dir stringByAppendingPathComponent:@".mwm.yml"];
   self.controller = [[ConfigurationWindowController alloc] init];
   [self.controller setValue:self.path forKey:@"configPathOverride"];
 }

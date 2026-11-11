@@ -2,7 +2,7 @@
 //  TestSlateConfigValidator.m
 //  Slate
 //
-//  Tests for validating ~/.slate.yml text without applying it.
+//  Tests for validating ~/.mwm.yml text without applying it.
 //
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by

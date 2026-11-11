@@ -96,6 +96,6 @@ Located in [`SlateTests/`](file:///Users/brunobarbosa/Projetos/mwm/mwm/SlateTest
   - Tasks:
     - `gen`: Generates release builds.
     - `pub`: Publishes updates to the web server and appcast XML feed.
-    - `dmg`: Bundles the application into `Slate.dmg` using `create-dmg` with custom background image (`build/dmg_background.png`) and application icon (`Slate/icon.icns`).
+    - `dmg`: Bundles the application into `MWM.dmg` using `create-dmg` with custom background image (`build/dmg_background.png`) and application icon (`Slate/icon.icns`).
 - **Updates**: there's no automatic updater; new versions are installed from a DMG.
 

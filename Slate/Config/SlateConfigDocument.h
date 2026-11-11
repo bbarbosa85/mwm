@@ -2,7 +2,7 @@
 //  SlateConfigDocument.h
 //  Slate
 //
-//  In-memory model of ~/.slate.yml: settings, the alias sections and bindings,
+//  In-memory model of ~/.mwm.yml: settings, the alias sections and bindings,
 //  read from and written to YAML. Nothing in the file is ever executed.
 //
 //  This program is free software: you can redistribute it and/or modify
@@ -93,7 +93,7 @@ typedef NS_ENUM(NSInteger, SlateBindingCategory) {
 @property (strong) NSMutableArray<SlateConfigEntry *> *aliases;
 @property (strong) NSMutableArray<SlateBindingEntry *> *bindings;
 
-// ~/.slate.yml, tilde expanded.
+// ~/.mwm.yml, tilde expanded.
 + (NSString *)defaultPath;
 
 + (nullable instancetype)documentWithContentsOfFile:(NSString *)path error:(NSError **)error;

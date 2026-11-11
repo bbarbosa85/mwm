@@ -33,7 +33,7 @@ flowchart TD
 The central hub of Slate during runtime is [`SlateAppDelegate`](file:///Users/brunobarbosa/Projetos/mwm/mwm/Slate/SlateAppDelegate.m).
 
 ### Key Responsibilities:
-1. **Status Item & Menu Management**: Runs Slate as a status-bar accessory application (`NSStatusItem`). The status menu offers "About Slate", "Configure Slate…", "Reload Configuration", "Launch Slate at Login" and "Quit Slate". Menus are built in code by `SlateAppDelegate` (there's no main nib); the app menus (Slate, Edit, Window) only show while a Slate window is in front.
+1. **Status Item & Menu Management**: Runs MWM as a status-bar accessory application (`NSStatusItem`). The status menu offers "About MWM", "Configure MWM…", "Reload Configuration", "Launch MWM at Login" and "Quit MWM". Menus are built in code by `SlateAppDelegate` (there's no main nib); the app menus (MWM, Edit, Window) only show while an MWM window is in front.
 2. **Configuration Loading**: Dispatches config loading to `[SlateConfig getInstance]`, handling fallback to the embedded `default.slate` if neither `~/.slate` nor `~/.slate.js` exists.
 3. **Global HotKey Registration**: Uses the Carbon Event Manager (`RegisterEventHotKey`, `InstallEventHandler`) to bind global keystrokes system-wide.
 4. **Modal HotKey Management**:

@@ -66,7 +66,7 @@ static const CGFloat kBarHeight = 44;
     NSButton *apply = [NSButton buttonWithTitle:@"Apply" target:target action:@selector(apply:)];
     [apply setTranslatesAutoresizingMaskIntoConstraints:NO];
     [apply setBezelColor:[NSColor controlAccentColor]];
-    [apply setToolTip:@"Close and restart Slate to apply ~/.slate.yml"];
+    [apply setToolTip:@"Close and restart MWM to apply ~/.mwm.yml"];
     NSButton *close = [NSButton buttonWithTitle:@"Close" target:target action:@selector(closeWindow:)];
     [close setTranslatesAutoresizingMaskIntoConstraints:NO];
     [close setKeyEquivalent:@"w"];

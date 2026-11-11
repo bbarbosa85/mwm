@@ -420,7 +420,7 @@ static void windowCallback(AXObserverRef observer, AXUIElementRef element, CFStr
 - (void)applicationActivated:(id)notification {
   SlateLogger(@"Activated: %@", [notification name]);
   NSRunningApplication *activatedApp = [[notification userInfo] objectForKey:NSWorkspaceApplicationKey];
-  if ([[activatedApp localizedName] isEqualToString:@"Slate"]) return;
+  if ([activatedApp processIdentifier] == [[NSProcessInfo processInfo] processIdentifier]) return;
   [self bringAppToFront:activatedApp];
   [self pruneWindows];
   NSString *eventName = prettyifyEventName([notification name]);
@@ -439,7 +439,7 @@ static void windowCallback(AXObserverRef observer, AXUIElementRef element, CFStr
 - (void)applicationLaunched:(id)notification {
   SlateLogger(@"Launched: %@", [notification name]);
   NSRunningApplication *launchedApp = [[notification userInfo] objectForKey:NSWorkspaceApplicationKey];
-  if ([[launchedApp localizedName] isEqualToString:@"Slate"]) return;
+  if ([launchedApp processIdentifier] == [[NSProcessInfo processInfo] processIdentifier]) return;
   NSNumber *appPID = [NSNumber numberWithInteger:[launchedApp processIdentifier]];
   [appToWindows setObject:[NSMutableArray array] forKey:appPID];
   AXError err;

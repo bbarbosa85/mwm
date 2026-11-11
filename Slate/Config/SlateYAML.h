@@ -2,7 +2,7 @@
 //  SlateYAML.h
 //  Slate
 //
-//  A small, strict YAML reader for ~/.slate.yml. It understands the subset a
+//  A small, strict YAML reader for ~/.mwm.yml. It understands the subset a
 //  configuration needs: block mappings and sequences, plain and quoted
 //  scalars, booleans, numbers, null, comments, and empty {} / []. Anything
 //  else (anchors, tags, multi-line strings, flow collections) is rejected

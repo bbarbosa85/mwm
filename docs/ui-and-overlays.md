@@ -80,5 +80,5 @@ Slate includes a full replacement for macOS's built-in `Cmd+Tab` switcher.
 
 ## 4. Configuration Window
 
-- **Configure Slate…** (⌘,) in the status menu opens a form for `~/.slate.yml`. See [Configuration File](configuration-yaml.md).
+- **Configure MWM…** (⌘,) in the status menu opens a form for `~/.mwm.yml`. See [Configuration File](configuration-yaml.md).
 

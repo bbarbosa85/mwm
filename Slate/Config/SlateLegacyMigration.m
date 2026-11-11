@@ -326,7 +326,7 @@ static id NilIfNull(id value) {
     if ([trimmed hasPrefix:@"//"]) commentLines++; else codeLines++;
   }
   if (codeLines > 0) {
-    [warnings addObject:@"The custom JavaScript at the end of ~/.slate.js wasn't carried over, because Slate no longer runs JavaScript. It's still in the backup of ~/.slate.js."];
+    [warnings addObject:@"The custom JavaScript at the end of ~/.slate.js wasn't carried over, because MWM no longer runs JavaScript. It's still in the backup of ~/.slate.js."];
   } else if (commentLines > 0) {
     [warnings addObject:[NSString stringWithFormat:@"%lu comment line%@ at the end of ~/.slate.js weren't carried over; they're still in its backup.",
                          (unsigned long)commentLines, commentLines == 1 ? @"" : @"s"]];
@@ -384,6 +384,7 @@ static id NilIfNull(id value) {
 
 + (nullable NSArray<NSString *> *)migrateLegacyFile:(nullable NSString *)legacyPath
                                      javaScriptFile:(nullable NSString *)jsPath
+                                        oldYAMLFile:(nullable NSString *)oldYAMLPath
                                              toFile:(NSString *)ymlPath
                                            warnings:(NSMutableArray<NSString *> *)warnings
                                               error:(NSError **)error {
@@ -391,10 +392,13 @@ static id NilIfNull(id value) {
   ymlPath = [ymlPath stringByExpandingTildeInPath];
   legacyPath = [legacyPath stringByExpandingTildeInPath];
   jsPath = [jsPath stringByExpandingTildeInPath];
+  oldYAMLPath = [oldYAMLPath stringByExpandingTildeInPath];
   if (legacyPath != nil && ![fm fileExistsAtPath:legacyPath]) legacyPath = nil;
   if (jsPath != nil && ![fm fileExistsAtPath:jsPath]) jsPath = nil;
+  if (oldYAMLPath != nil && ![fm fileExistsAtPath:oldYAMLPath]) oldYAMLPath = nil;
 
-  // Lowest precedence first, matching the old load order: ~/.slate, then ~/.slate.js.
+  // Lowest precedence first, matching the load order of each generation:
+  // ~/.slate, then ~/.slate.js, then ~/.slate.yml, then ~/.mwm.yml.
   SlateConfigDocument *doc = nil;
   NSString *docName = nil;
   if (legacyPath != nil) {
@@ -411,13 +415,19 @@ static id NilIfNull(id value) {
     doc = doc ? [self documentByMerging:doc into:js lowerName:docName higherName:@"~/.slate.js" warnings:warnings] : js;
     docName = @"~/.slate.js";
   }
+  if (oldYAMLPath != nil) {
+    SlateConfigDocument *old = [SlateConfigDocument documentWithContentsOfFile:oldYAMLPath error:error];
+    if (old == nil) return nil;
+    doc = doc ? [self documentByMerging:doc into:old lowerName:docName higherName:@"~/.slate.yml" warnings:warnings] : old;
+    docName = @"~/.slate.yml";
+  }
   if (doc == nil) return @[];
 
   BOOL ymlExisted = [fm fileExistsAtPath:ymlPath];
   if (ymlExisted) {
     SlateConfigDocument *yml = [SlateConfigDocument documentWithContentsOfFile:ymlPath error:error];
     if (yml == nil) return nil;
-    doc = [self documentByMerging:doc into:yml lowerName:docName higherName:@"~/.slate.yml" warnings:warnings];
+    doc = [self documentByMerging:doc into:yml lowerName:docName higherName:@"~/.mwm.yml" warnings:warnings];
   }
 
   // Refuse to write something that wouldn't load.
@@ -430,7 +440,7 @@ static id NilIfNull(id value) {
 
   // Rename the old files (a symlink itself, not its target) so they stop loading.
   NSMutableArray *backups = [NSMutableArray array];
-  for (NSString *old in @[legacyPath ?: @"", jsPath ?: @""]) {
+  for (NSString *old in @[legacyPath ?: @"", jsPath ?: @"", oldYAMLPath ?: @""]) {
     if ([old length] == 0) continue;
     NSString *backup = [self backupPathFor:old suffix:@"migrated"];
     if (![fm moveItemAtPath:old toPath:backup error:error]) {
@@ -453,11 +463,11 @@ static id NilIfNull(id value) {
 
 + (void)showMigrationResult:(NSArray<NSString *> *)backups warnings:(NSArray<NSString *> *)warnings {
   NSAlert *alert = [[NSAlert alloc] init];
-  [alert setMessageText:@"Slate now uses ~/.slate.yml"];
+  [alert setMessageText:@"MWM now uses ~/.mwm.yml"];
   NSMutableArray *names = [NSMutableArray array];
   for (NSString *backup in backups) [names addObject:[backup stringByAbbreviatingWithTildeInPath]];
   NSMutableString *info = [NSMutableString stringWithFormat:
-    @"Your configuration was converted to ~/.slate.yml, which Slate reads without running any code. "
+    @"Your configuration was converted to ~/.mwm.yml, which MWM reads without running any code. "
     @"The old file%@ %@ saved as:\n%@", [backups count] == 1 ? @"" : @"s", [backups count] == 1 ? @"is" : @"are",
     [names componentsJoinedByString:@"\n"]];
   if ([warnings count] > 0) {
@@ -487,8 +497,8 @@ static id NilIfNull(id value) {
   NSError *moveError = nil;
   BOOL moved = [[NSFileManager defaultManager] moveItemAtPath:jsPath toPath:backup error:&moveError];
   SlateLogger(@"~/.slate.js not converted (%@); moved: %d", [reason localizedDescription], moved);
-  [self showAlert:@"Slate no longer runs ~/.slate.js"
-           detail:[NSString stringWithFormat:@"%@\n\n%@ Recreate what you need in Configure Slate…, which saves to ~/.slate.yml.",
+  [self showAlert:@"MWM no longer runs ~/.slate.js"
+           detail:[NSString stringWithFormat:@"%@\n\n%@ Recreate what you need in Configure MWM…, which saves to ~/.mwm.yml.",
                    [reason localizedDescription],
                    moved ? [NSString stringWithFormat:@"It was renamed to %@.", [backup stringByAbbreviatingWithTildeInPath]]
                          : @"It's left in place but isn't loaded."]];
@@ -499,9 +509,11 @@ static id NilIfNull(id value) {
   NSString *ymlPath = [SlateConfigDocument defaultPath];
   NSString *legacyPath = [@"~/.slate" stringByExpandingTildeInPath];
   NSString *jsPath = [@"~/.slate.js" stringByExpandingTildeInPath];
+  NSString *oldYAMLPath = [@"~/.slate.yml" stringByExpandingTildeInPath];
   BOOL hasLegacy = [fm fileExistsAtPath:legacyPath];
   BOOL hasJS = [fm fileExistsAtPath:jsPath];
-  if (!hasLegacy && !hasJS) return;
+  BOOL hasOldYAML = [fm fileExistsAtPath:oldYAMLPath];
+  if (!hasLegacy && !hasJS && !hasOldYAML) return;
 
   // A ~/.slate.js the converter can't read is set aside first, whatever else happens.
   if (hasJS) {
@@ -510,18 +522,24 @@ static id NilIfNull(id value) {
     if (source == nil || [self documentFromJavaScript:source warnings:[NSMutableArray array] error:&jsError] == nil) {
       [self retireJavaScriptFile:jsPath reason:jsError ?: MigrationError(@"~/.slate.js couldn't be read.")];
       hasJS = NO;
-      if (!hasLegacy) return;
+      if (!hasLegacy && !hasOldYAML) return;
     }
   }
 
+  NSMutableArray *oldNames = [NSMutableArray array];
+  if (hasLegacy) [oldNames addObject:@"~/.slate"];
+  if (hasJS) [oldNames addObject:@"~/.slate.js"];
+  if (hasOldYAML) [oldNames addObject:@"~/.slate.yml"];
+  NSString *names = [oldNames componentsJoinedByString:@", "];
+
   if ([fm fileExistsAtPath:ymlPath]) {
-    NSString *names = hasLegacy && hasJS ? @"~/.slate and ~/.slate.js" : (hasLegacy ? @"~/.slate" : @"~/.slate.js");
     NSAlert *alert = [[NSAlert alloc] init];
-    [alert setMessageText:[NSString stringWithFormat:@"Merge %@ into ~/.slate.yml?", names]];
+    [alert setMessageText:[NSString stringWithFormat:@"Merge %@ into ~/.mwm.yml?", names]];
     [alert setInformativeText:[NSString stringWithFormat:
-      @"Slate now keeps its configuration in ~/.slate.yml. You also have %@, so Slate can merge it in; ~/.slate.yml wins "
-      @"where both set the same thing. Either way the old file is kept as a backup.%@", names,
-      hasJS ? @"\n\n~/.slate.js isn't loaded anymore, since Slate no longer runs JavaScript." : @""]];
+      @"MWM keeps its configuration in ~/.mwm.yml. You also have %@, so MWM can merge %@ in; ~/.mwm.yml wins "
+      @"where both set the same thing. Either way the old %@ kept as a backup.%@", names,
+      [oldNames count] == 1 ? @"file" : @"files", [oldNames count] == 1 ? @"file is" : @"files are",
+      hasJS ? @"\n\n~/.slate.js isn't loaded anymore, since MWM no longer runs JavaScript." : @""]];
     [alert addButtonWithTitle:@"Merge"];
     [alert addButtonWithTitle:@"Not now"];
     [alert addButtonWithTitle:@"Stop using them"];
@@ -531,7 +549,7 @@ static id NilIfNull(id value) {
       return;
     }
     if (response == NSAlertThirdButtonReturn) {
-      for (NSString *old in @[hasLegacy ? legacyPath : @"", hasJS ? jsPath : @""]) {
+      for (NSString *old in @[hasLegacy ? legacyPath : @"", hasJS ? jsPath : @"", hasOldYAML ? oldYAMLPath : @""]) {
         if ([old length] == 0) continue;
         NSError *error = nil;
         if (![fm moveItemAtPath:old toPath:[self backupPathFor:old suffix:@"unused"] error:&error]) {
@@ -546,17 +564,18 @@ static id NilIfNull(id value) {
   NSError *error = nil;
   NSArray *backups = [self migrateLegacyFile:hasLegacy ? legacyPath : nil
                               javaScriptFile:hasJS ? jsPath : nil
+                                 oldYAMLFile:hasOldYAML ? oldYAMLPath : nil
                                       toFile:ymlPath
                                     warnings:warnings
                                        error:&error];
   if (backups == nil) {
     SlateLogger(@"Migration failed: %@", error);
-    [self showAlert:@"Couldn't convert the configuration to ~/.slate.yml"
+    [self showAlert:@"Couldn't convert the configuration to ~/.mwm.yml"
              detail:[NSString stringWithFormat:@"%@\n\nNothing was changed.%@", [error localizedDescription],
-                     hasLegacy ? @" Slate will keep loading ~/.slate." : @""]];
+                     hasLegacy ? @" MWM will keep loading ~/.slate." : @""]];
     return;
   }
-  SlateLogger(@"Migrated to ~/.slate.yml (backups: %@, %lu warnings)", backups, (unsigned long)[warnings count]);
+  SlateLogger(@"Migrated to ~/.mwm.yml (backups: %@, %lu warnings)", backups, (unsigned long)[warnings count]);
   [self showMigrationResult:backups warnings:warnings];
 }
 

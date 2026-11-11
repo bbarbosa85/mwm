@@ -1,6 +1,6 @@
 # JavaScript Scripting Guide (`.slate.js`)
 
-> **Slate no longer loads `~/.slate.js`.** Configurations are data only, in [`~/.slate.yml`](configuration-yaml.md); on startup Slate converts a `~/.slate.js` written by the earlier configuration window into it. This guide describes the JavaScript runtime, which is still part of the codebase but isn't reachable from a configuration file.
+> **MWM no longer loads `~/.slate.js`.** Configurations are data only, in [`~/.mwm.yml`](configuration-yaml.md); on startup MWM converts a `~/.slate.js` written by the earlier configuration window into it. This guide describes the JavaScript runtime, which is still part of the codebase but isn't reachable from a configuration file.
 
 Slate's JavaScript runtime (`~/.slate.js`) offered programmatic scripting, dynamic calculation, conditional layouts, and event-driven automation.
 
