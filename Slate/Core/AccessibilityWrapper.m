@@ -194,9 +194,7 @@ static NSDictionary *unselectableApps = nil;
     SlateLogger(@"ERROR: Could not change focus to window");
     couldFocus = NO;
   }
-  ProcessSerialNumber psn;
-  GetProcessForPID(focusPID, &psn);
-  SetFrontProcessWithOptions(&psn, kSetFrontProcessFrontWindowOnly);
+  [app activateWithOptions:NSApplicationActivateIgnoringOtherApps];
   if (_window != NULL) CFRelease(_window);
   return couldFocus;
 }
@@ -212,9 +210,8 @@ static NSDictionary *unselectableApps = nil;
   if (runningApp != nil) {
     [runningApp activateWithOptions:NSApplicationActivateIgnoringOtherApps];
   } else {
-    ProcessSerialNumber psn;
-    GetProcessForPID(focusPID, &psn);
-    SetFrontProcessWithOptions(&psn, kSetFrontProcessFrontWindowOnly);
+    SlateLogger(@"ERROR: Could not find running application for pid %d", focusPID);
+    couldFocus = NO;
   }
   return couldFocus;
 }
