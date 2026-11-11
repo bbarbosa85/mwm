@@ -285,7 +285,7 @@
 		3BFF7D7A16AC7FF600A8CB0E /* CornerOperation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Operations/CornerOperation.m; sourceTree = "<group>"; };
 		4747E1EE13877C150005180C /* icon.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = icon.icns; path = Slate/Resources/icon.icns; sourceTree = "<group>"; };
 		4786D53413882381004554B1 /* ASCIIToCode.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Resources/ASCIIToCode.plist; sourceTree = "<group>"; };
-		47C4A28F1384E8890066B6DE /* Slate.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Slate.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		47C4A28F1384E8890066B6DE /* MWM.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MWM.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		47C4A2931384E8890066B6DE /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
 		47C4A2961384E8890066B6DE /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
 		47C4A2971384E8890066B6DE /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = System/Library/Frameworks/CoreData.framework; sourceTree = SDKROOT; };
@@ -584,7 +584,7 @@
 		47C4A2901384E8890066B6DE /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				47C4A28F1384E8890066B6DE /* Slate.app */,
+				47C4A28F1384E8890066B6DE /* MWM.app */,
 				47C4A2B01384E8890066B6DE /* SlateTests.octest */,
 			);
 			name = Products;
@@ -688,7 +688,7 @@
 			);
 			name = Slate;
 			productName = Slate;
-			productReference = 47C4A28F1384E8890066B6DE /* Slate.app */;
+			productReference = 47C4A28F1384E8890066B6DE /* MWM.app */;
 			productType = "com.apple.product-type.application";
 		};
 		47C4A2AF1384E8890066B6DE /* SlateTests */ = {
@@ -949,8 +949,9 @@
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ARCHS = "$(ARCHS_STANDARD)";
 				CLANG_ENABLE_OBJC_ARC = YES;
-				CODE_SIGN_IDENTITY = "-";
-				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Manual;
+				DEVELOPMENT_TEAM = ZC7K9PD6Q9;
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
 				DEPLOYMENT_LOCATION = YES;
@@ -966,8 +967,8 @@
 				INFOPLIST_FILE = "Slate/App/Slate-Info.plist";
 				INSTALL_PATH = "$(LOCAL_APPS_DIR)";
 				MACOSX_DEPLOYMENT_TARGET = 12.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.slate.Slate;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_BUNDLE_IDENTIFIER = com.bbarbosa85.mwm;
+				PRODUCT_NAME = MWM;
 				WRAPPER_EXTENSION = app;
 			};
 			name = Debug;
@@ -978,8 +979,9 @@
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ARCHS = "$(ARCHS_STANDARD)";
 				CLANG_ENABLE_OBJC_ARC = YES;
-				CODE_SIGN_IDENTITY = "-";
-				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Manual;
+				DEVELOPMENT_TEAM = ZC7K9PD6Q9;
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
@@ -995,8 +997,8 @@
 				INFOPLIST_FILE = "Slate/App/Slate-Info.plist";
 				INSTALL_PATH = "$(LOCAL_APPS_DIR)";
 				MACOSX_DEPLOYMENT_TARGET = 12.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.slate.Slate;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_BUNDLE_IDENTIFIER = com.bbarbosa85.mwm;
+				PRODUCT_NAME = MWM;
 				WRAPPER_EXTENSION = app;
 			};
 			name = Release;
@@ -1006,7 +1008,7 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ARCHS = "$(ARCHS_STANDARD)";
-				BUNDLE_LOADER = "$(BUILT_PRODUCTS_DIR)/Slate.app/Contents/MacOS/Slate";
+				BUNDLE_LOADER = "$(BUILT_PRODUCTS_DIR)/MWM.app/Contents/MacOS/MWM";
 				CLANG_ENABLE_OBJC_ARC = YES;
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
@@ -1030,7 +1032,7 @@
 					"-framework",
 					JavaScriptCore,
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.slate.SlateTests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.bbarbosa85.mwm.tests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				TEST_HOST = "$(BUNDLE_LOADER)";
 				WRAPPER_EXTENSION = xctest;
@@ -1042,7 +1044,7 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ARCHS = "$(ARCHS_STANDARD)";
-				BUNDLE_LOADER = "$(BUILT_PRODUCTS_DIR)/Slate.app/Contents/MacOS/Slate";
+				BUNDLE_LOADER = "$(BUILT_PRODUCTS_DIR)/MWM.app/Contents/MacOS/MWM";
 				CLANG_ENABLE_OBJC_ARC = YES;
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = YES;
@@ -1066,7 +1068,7 @@
 					"-framework",
 					JavaScriptCore,
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.slate.SlateTests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.bbarbosa85.mwm.tests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				TEST_HOST = "$(BUNDLE_LOADER)";
 				WRAPPER_EXTENSION = xctest;

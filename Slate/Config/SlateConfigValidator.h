@@ -2,7 +2,7 @@
 //  SlateConfigValidator.h
 //  Slate
 //
-//  Checks ~/.slate.yml text without applying it: reads it, expands aliases,
+//  Checks ~/.mwm.yml text without applying it: reads it, expands aliases,
 //  and checks each binding with Slate's own parser. Nothing is registered or run.
 //
 //  This program is free software: you can redistribute it and/or modify

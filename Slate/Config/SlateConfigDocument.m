@@ -24,7 +24,7 @@ NSString *const SlateConfigDocumentErrorBindingIndexKey = @"SlateConfigDocumentE
 NSString *const SlateConfigDocumentErrorEntryNameKey = @"SlateConfigDocumentErrorEntryName";
 
 static NSString *const kHeader =
-  @"# Slate configuration, managed by Slate's configuration window (Configure Slate...).\n"
+  @"# MWM configuration, managed by the configuration window (Configure MWM...).\n"
   @"# The window rewrites this file when you change something there, so comments\n"
   @"# added here aren't kept. Values like ${hyper} refer to an entry in modifiers,\n"
   @"# monitors, positions or aliases.\n";
@@ -161,7 +161,7 @@ static BOOL SameOptional(id a, id b) {
 }
 
 + (NSString *)defaultPath {
-  return [@"~/.slate.yml" stringByExpandingTildeInPath];
+  return [@"~/.mwm.yml" stringByExpandingTildeInPath];
 }
 
 #pragma mark - Reading

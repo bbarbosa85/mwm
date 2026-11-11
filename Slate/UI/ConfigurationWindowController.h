@@ -2,9 +2,9 @@
 //  ConfigurationWindowController.h
 //  Slate
 //
-//  The "Configure Slate…" window: a form for ~/.slate.yml. Every change is
+//  The "Configure MWM…" window: a form for ~/.mwm.yml. Every change is
 //  validated and, when it has no errors, saved right away. Apply restarts
-//  Slate to load the file.
+//  MWM to load the file.
 //
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -29,7 +29,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 + (instancetype)sharedController;
 
-// Brings the window to the front, loading ~/.slate.yml if it wasn't open.
+// Brings the window to the front, loading ~/.mwm.yml if it wasn't open.
 - (void)showConfiguration;
 
 // The form, for tests.

@@ -2,7 +2,7 @@
 //  TestSlateYAML.m
 //  Slate
 //
-//  Tests for the strict YAML subset ~/.slate.yml is read with.
+//  Tests for the strict YAML subset ~/.mwm.yml is read with.
 //
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by

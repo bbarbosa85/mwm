@@ -30,11 +30,13 @@
 	<string>${MACOSX_DEPLOYMENT_TARGET}</string>
 	<key>LSUIElement</key>
 	<true/>
+	<key>NSHumanReadableCopyright</key>
+	<string>MWM, based on Slate. GPLv3. Copyright © Jigish Patel 2011 and contributors.</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
 	<key>NSAppleEventsUsageDescription</key>
-	<string>Slate needs access to Apple Events to control application windows.</string>
+	<string>MWM needs access to Apple Events to control application windows.</string>
 	<key>NSSystemAdministrationUsageDescription</key>
-	<string>Slate requires accessibility permissions to manage window sizes and positions.</string>
+	<string>MWM requires accessibility permissions to manage window sizes and positions.</string>
 </dict>
 </plist>

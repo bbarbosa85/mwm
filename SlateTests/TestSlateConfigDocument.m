@@ -2,7 +2,7 @@
 //  TestSlateConfigDocument.m
 //  Slate
 //
-//  Tests for the ~/.slate.yml format: reading, resolving aliases and writing
+//  Tests for the ~/.mwm.yml format: reading, resolving aliases and writing
 //  used by slate.applyConfig, and SlateConfigDocument reading and writing.
 //
 //  This program is free software: you can redistribute it and/or modify
@@ -207,7 +207,7 @@ static NSString *const kSample =
   [doc.bindings addObject:binding];
 
   NSString *written = [doc stringRepresentation];
-  XCTAssertTrue([written hasPrefix:@"# Slate configuration"], @"%@", written);
+  XCTAssertTrue([written hasPrefix:@"# MWM configuration"], @"%@", written);
   XCTAssertTrue([written containsString:@"\nsettings:\n  defaultToCurrentScreen: true\n"], @"%@", written);
   XCTAssertTrue([written containsString:@"\nmonitors:\n  monitor-macbook: \"1\"\n"], @"%@", written);
   XCTAssertTrue([written containsString:@"\nmodifiers: {}\n"], @"%@", written);
@@ -224,8 +224,8 @@ static NSString *const kSample =
   NSFileManager *fm = [NSFileManager defaultManager];
   NSString *dir = [NSTemporaryDirectory() stringByAppendingPathComponent:[[NSUUID UUID] UUIDString]];
   [fm createDirectoryAtPath:dir withIntermediateDirectories:YES attributes:nil error:nil];
-  NSString *real = [dir stringByAppendingPathComponent:@"dotfiles-slate.yml"];
-  NSString *link = [dir stringByAppendingPathComponent:@".slate.yml"];
+  NSString *real = [dir stringByAppendingPathComponent:@"dotfiles-mwm.yml"];
+  NSString *link = [dir stringByAppendingPathComponent:@".mwm.yml"];
   [@"# old\n" writeToFile:real atomically:YES encoding:NSUTF8StringEncoding error:nil];
   XCTAssertTrue([fm createSymbolicLinkAtPath:link withDestinationPath:real error:nil]);
 

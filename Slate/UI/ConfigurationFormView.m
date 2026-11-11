@@ -39,7 +39,7 @@ typedef struct {
 static SectionInfo InfoFor(ConfigurationFormSection section) {
   switch (section) {
     case ConfigurationFormSectionGeneral:
-      return (SectionInfo){@"General", @"gearshape", @"Global settings. Anything not listed uses Slate's default."};
+      return (SectionInfo){@"General", @"gearshape", @"Global settings. Anything not listed uses MWM's default."};
     case ConfigurationFormSectionModifiers:
       return (SectionInfo){@"Modifiers", @"command", @"Named modifier combinations, used as ${name} in bindings."};
     case ConfigurationFormSectionMonitors:

@@ -2,8 +2,8 @@
 //  SlateLegacyMigration.h
 //  Slate
 //
-//  Converts the older configuration files (~/.slate, and a ~/.slate.js written
-//  by the earlier configuration window) into ~/.slate.yml on startup.
+//  Converts the older configuration files (~/.slate, a ~/.slate.js written by
+//  the earlier configuration window, and ~/.slate.yml) into ~/.mwm.yml on startup.
 //
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -46,18 +46,19 @@ NS_ASSUME_NONNULL_BEGIN
                                 higherName:(NSString *)higherName
                                   warnings:(NSMutableArray<NSString *> *)warnings;
 
-// Converts whichever of legacyPath and jsPath exist (merging into ymlPath when
-// it exists), writes ymlPath, then renames the old files to
-// <path>.migrated-<timestamp> so they stop loading. Returns those backup paths,
-// or nil (with nothing changed on disk) on failure.
+// Converts whichever of legacyPath, jsPath and oldYAMLPath exist (merging into
+// ymlPath when it exists, which wins), writes ymlPath, then renames the old
+// files to <path>.migrated-<timestamp> so they stop loading. Returns those
+// backup paths, or nil (with nothing changed on disk) on failure.
 + (nullable NSArray<NSString *> *)migrateLegacyFile:(nullable NSString *)legacyPath
                                      javaScriptFile:(nullable NSString *)jsPath
+                                        oldYAMLFile:(nullable NSString *)oldYAMLPath
                                              toFile:(NSString *)ymlPath
                                            warnings:(NSMutableArray<NSString *> *)warnings
                                               error:(NSError **)error;
 
-// Startup entry point: converts ~/.slate and ~/.slate.js into ~/.slate.yml,
-// asking first if ~/.slate.yml already exists. Shows alerts; does nothing
+// Startup entry point: converts ~/.slate, ~/.slate.js and ~/.slate.yml into ~/.mwm.yml,
+// asking first if ~/.mwm.yml already exists. Shows alerts; does nothing
 // when neither old file exists.
 + (void)runStartupMigration;
 

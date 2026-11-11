@@ -313,7 +313,7 @@ static NSDictionary *unselectableApps = nil;
   dispatch_once(&onceToken, ^{
     systemWideElement = AXUIElementCreateSystemWide();
     unselectableApps = [NSDictionary dictionaryWithObjectsAndKeys:@"SystemUIServer", @"SystemUIServer",
-                                                                  @"Slate", @"Slate",
+                                                                  @"MWM", @"MWM",
                                                                   @"Dropbox", @"Dropbox",
                                                                   @"loginwindow", @"loginwindow", nil];
   });

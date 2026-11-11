@@ -22,8 +22,28 @@
 
 @implementation NSFileManager (ApplicationSupport)
 
+// The bundle identifier the app had while it was called Slate.
+static NSString *const kLegacyBundleIdentifier = @"com.slate.Slate";
+
 - (NSURL *)applicationSupportDirectory {
-  return [self findOrCreateDirectory:NSApplicationSupportDirectory inDomain:NSUserDomainMask append:[[NSBundle mainBundle] bundleIdentifier] error:nil];
+  NSURL *directory = [self findOrCreateDirectory:NSApplicationSupportDirectory inDomain:NSUserDomainMask append:[[NSBundle mainBundle] bundleIdentifier] error:nil];
+  static dispatch_once_t once;
+  dispatch_once(&once, ^{ [self copyLegacySupportFilesInto:directory]; });
+  return directory;
+}
+
+// One time: carries the files stored under the old bundle identifier (the
+// snapshots) over to this one. The old folder is left in place as a backup,
+// and files already here are never overwritten.
+- (void)copyLegacySupportFilesInto:(NSURL *)directory {
+  NSURL *base = [[self URLsForDirectory:NSApplicationSupportDirectory inDomains:NSUserDomainMask] firstObject];
+  NSURL *legacy = [base URLByAppendingPathComponent:kLegacyBundleIdentifier];
+  if (directory == nil || base == nil || [[directory path] isEqualToString:[legacy path]]) return;
+  for (NSString *name in [self contentsOfDirectoryAtPath:[legacy path] error:nil]) {
+    NSURL *target = [directory URLByAppendingPathComponent:name];
+    if ([self fileExistsAtPath:[target path]]) continue;
+    [self copyItemAtURL:[legacy URLByAppendingPathComponent:name] toURL:target error:nil];
+  }
 }
 
 - (NSURL *)findOrCreateDirectory:(NSSearchPathDirectory)searchPathDirectory inDomain:(NSSearchPathDomainMask)domainMask append:(NSString *)appendComponent error:(NSError **)errorOut {

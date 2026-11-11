@@ -145,7 +145,7 @@ static SlateConfig *_instance = nil;
   [self setDefaultLayouts:[[NSMutableArray alloc] init]];
   [self setAliases:[[NSMutableDictionary alloc] init]];
 
-  // Converts ~/.slate and ~/.slate.js into ~/.slate.yml. If the user postpones
+  // Converts ~/.slate, ~/.slate.js and ~/.slate.yml into ~/.mwm.yml. If the user postpones
   // it or it fails, ~/.slate keeps loading below; ~/.slate.js never runs.
   [SlateLegacyMigration runStartupMigration];
 
@@ -155,18 +155,18 @@ static SlateConfig *_instance = nil;
   BOOL loadedYAML = hasYAML && [self loadYAMLConfigAtPath:ymlPath error:&yamlError];
   BOOL loadedDefault = [self loadConfigFileWithPath:@"~/.slate"];
   if ([[NSFileManager defaultManager] fileExistsAtPath:[@"~/.slate.js" stringByExpandingTildeInPath]]) {
-    SlateLogger(@"  Ignoring ~/.slate.js: Slate no longer runs JavaScript configurations.");
+    SlateLogger(@"  Ignoring ~/.slate.js: MWM no longer runs JavaScript configurations.");
   }
 
   if (yamlError != nil || (!loadedYAML && !loadedDefault)) {
-    NSString *message = yamlError ? @"~/.slate.yml has an error" : @"Could not load ~/.slate.yml";
+    NSString *message = yamlError ? @"~/.mwm.yml has an error" : @"Could not load ~/.mwm.yml";
     SlateLogger(@"  ERROR %@: %@", message, [yamlError localizedDescription]);
     NSAlert *alert = [SlateConfig warningAlertWithKeyEquivalents: [NSArray arrayWithObjects:@"Continue", @"Quit", @"Open configuration", nil]];
     [alert setMessageText:message];
-    [alert setInformativeText:[NSString stringWithFormat:@"%@Slate will use %@. Choose Open configuration to %@.",
+    [alert setInformativeText:[NSString stringWithFormat:@"%@MWM will use %@. Choose Open configuration to %@.",
                                yamlError ? [NSString stringWithFormat:@"%@\n\n", [yamlError localizedDescription]] : @"",
                                loadedDefault ? @"only ~/.slate" : @"its default configuration",
-                               yamlError ? @"see the problem" : @"create ~/.slate.yml from the defaults and edit it"]];
+                               yamlError ? @"see the problem" : @"create ~/.mwm.yml from the defaults and edit it"]];
     NSModalResponse response = [alert runModal];
     if (response == NSAlertSecondButtonReturn) {
       SlateLogger(@"User selected exit");
@@ -208,7 +208,7 @@ static SlateConfig *_instance = nil;
     configFile = [NSString stringWithFormat:@"~/%@", file];
   if ([configFile hasSuffix:EXT_JS]) {
     // Configurations never run code; `source` of a .js file is ignored.
-    SlateLogger(@"  Not loading %@: Slate no longer runs JavaScript configurations.", configFile);
+    SlateLogger(@"  Not loading %@: MWM no longer runs JavaScript configurations.", configFile);
     return NO;
   }
   NSError *err;
@@ -217,7 +217,7 @@ static SlateConfig *_instance = nil;
   return NO;
 }
 
-// Reads ~/.slate.yml and registers its settings and bindings. Nothing in it is run.
+// Reads ~/.mwm.yml and registers its settings and bindings. Nothing in it is run.
 - (BOOL)loadYAMLConfigAtPath:(NSString *)path error:(NSError **)error {
   SlateConfigDocument *document = [SlateConfigDocument documentWithContentsOfFile:path error:error];
   SlateResolvedConfig *resolved = [document resolve:error];
@@ -239,7 +239,7 @@ static SlateConfig *_instance = nil;
       SlateLogger(@"   ERROR %@",[ex name]);
       NSAlert *alert = [SlateConfig warningAlertWithKeyEquivalents: [NSArray arrayWithObjects:@"Quit", @"Skip", nil]];
       [alert setMessageText:[ex name]];
-      [alert setInformativeText:[NSString stringWithFormat:@"~/.slate.yml, binding #%lu: %@", (unsigned long)binding.index + 1, [ex reason]]];
+      [alert setInformativeText:[NSString stringWithFormat:@"~/.mwm.yml, binding #%lu: %@", (unsigned long)binding.index + 1, [ex reason]]];
       if ([alert runModal] == NSAlertFirstButtonReturn) {
         SlateLogger(@"User selected exit");
         [NSApp terminate:nil];

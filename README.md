@@ -1,6 +1,6 @@
-# About Slate #
+# About MWM #
 
-Slate is a window management application similar to Divvy and SizeUp (except better and free!). Originally written to replace them due to some limitations in how each work, it attempts to overcome them by simply being extremely configurable. As a result, it may be a bit daunting to get configured, but once it is done, the benefit is huge.
+MWM (Mac Window Manager) is a fork of [Slate](https://github.com/jigish/slate) by Jigish Patel, and is released under the same license. It is a window management application similar to Divvy and SizeUp (except better and free!). Originally written to replace them due to some limitations in how each work, it attempts to overcome them by simply being extremely configurable. As a result, it may be a bit daunting to get configured, but once it is done, the benefit is huge.
 
 Slate currently works on Mac OS X 10.6 and above
 
@@ -41,7 +41,7 @@ Just run this in your terminal:
 
 ## Configuring Slate ##
 
-**NEW:** Slate is now configured with a "~/.slate.yml" file, which you can edit from **Configure Slate…** in the status menu. It's plain data, so nothing in it ever runs. On startup Slate converts an existing ".slate" or ".slate.js" into it; JavaScript configurations are no longer loaded. See [docs/configuration-yaml.md](docs/configuration-yaml.md).
+**NEW:** MWM is now configured with a "~/.mwm.yml" file, which you can edit from **Configure MWM…** in the status menu. It's plain data, so nothing in it ever runs. On startup MWM converts an existing ".slate", ".slate.js" or ".slate.yml" into it; JavaScript configurations are no longer loaded. See [docs/configuration-yaml.md](docs/configuration-yaml.md).
 
 Slate is configured using a ".slate" file in the current user's home directory. Configuration is loaded upon running Slate. You can also re-load the config using the "Load Config" menu option on the status menu (use this at your own risk. It is better to simply restart Slate).
 
