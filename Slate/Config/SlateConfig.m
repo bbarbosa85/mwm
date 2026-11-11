@@ -150,7 +150,7 @@ static SlateConfig *_instance = nil;
     SlateLogger(@"  ERROR Could not load ~/.slate or ~/.slate.js");
     NSAlert *alert = [SlateConfig warningAlertWithKeyEquivalents: [NSArray arrayWithObjects:@"Continue", @"Quit", nil]];
     [alert setMessageText:@"Could not load ~/.slate or ~/.slate.js"];
-    [alert setInformativeText:@"The default configuration will be used. You can find the default .slate file at https://github.com/jigish/slate/blob/master/Slate/default.slate"];
+    [alert setInformativeText:@"The default configuration will be used. You can find the default .slate file at https://github.com/bbarbosa85/mwm/blob/master/Slate/default.slate"];
     if ([alert runModal] == NSAlertSecondButtonReturn) {
       SlateLogger(@"User selected exit");
       [NSApp terminate:nil];

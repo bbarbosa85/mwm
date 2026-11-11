@@ -59,7 +59,7 @@
 - (IBAction)checkForUpdates:(id)sender {
   NSAlert *alert = [[NSAlert alloc] init];
   [alert setMessageText:@"Check for Updates"];
-  [alert setInformativeText:@"Please check the GitHub repository at https://github.com/jigish/slate for the latest updates."];
+  [alert setInformativeText:@"Please check the GitHub repository at https://github.com/bbarbosa85/mwm for the latest updates."];
   [alert runModal];
 }
 @end
@@ -509,11 +509,11 @@ OSStatus OnModifiersChangedEvent(EventHandlerCallRef nextHandler, EventRef theEv
   NSMenuItem *aboutItem = [statusMenu insertItemWithTitle:@"About Slate" action:@selector(aboutWindow) keyEquivalent:@"" atIndex:0];
   [aboutItem setTarget:self];
 
-  NSMenuItem *takeSnapshotItem = [statusMenu insertItemWithTitle:@"Take Snapshot" action:@selector(takeSnapshot) keyEquivalent:@"" atIndex:3];
-  [takeSnapshotItem setTarget:self];
+  // NSMenuItem *takeSnapshotItem = [statusMenu insertItemWithTitle:@"Take Snapshot" action:@selector(takeSnapshot) keyEquivalent:@"" atIndex:3];
+  // [takeSnapshotItem setTarget:self];
 
-  activateSnapshotItem = [statusMenu insertItemWithTitle:@"Activate Snapshot" action:@selector(activateSnapshot) keyEquivalent:@"" atIndex:4];
-  [activateSnapshotItem setTarget:self];
+  // activateSnapshotItem = [statusMenu insertItemWithTitle:@"Activate Snapshot" action:@selector(activateSnapshot) keyEquivalent:@"" atIndex:4];
+  // [activateSnapshotItem setTarget:self];
 
   NSMenuItem *loadConfigItem = [statusMenu insertItemWithTitle:@"Relaunch and Load Config" action:@selector(relaunch) keyEquivalent:@"" atIndex:1];
   [loadConfigItem setTarget:self];
@@ -522,8 +522,8 @@ OSStatus OnModifiersChangedEvent(EventHandlerCallRef nextHandler, EventRef theEv
   [self setLaunchOnLoginItemStatus];
   [launchOnLoginItem setTarget:self];
 
-  NSMenuItem *windowInfoItem = [statusMenu insertItemWithTitle:@"Current Window Info" action:@selector(currentWindowInfo) keyEquivalent:@"" atIndex:4];
-  [windowInfoItem setTarget:self];
+  // NSMenuItem *windowInfoItem = [statusMenu insertItemWithTitle:@"Current Window Info" action:@selector(currentWindowInfo) keyEquivalent:@"" atIndex:4];
+  // [windowInfoItem setTarget:self];
 
   //NSMenuItem *configInfoItem = [statusMenu insertItemWithTitle:@"Configuration Helper" action:@selector(configurationHelper) keyEquivalent:@"" atIndex:2];
   //[configInfoItem setTarget:self];

@@ -41,11 +41,11 @@ Just run this in your terminal:
 
 ## Configuring Slate ##
 
-**NEW:** You may now use a ".slate.js" file to configure slate using JavaScript. This allows for much more complex and dynamic configurations than the normal slate configuration style below. You can check out the documentation for this [here](https://github.com/jigish/slate/wiki/JavaScript-Configs).
+**NEW:** You may now use a ".slate.js" file to configure slate using JavaScript. This allows for much more complex and dynamic configurations than the normal slate configuration style below. You can check out the documentation for this [here](https://github.com/bbarbosa85/mwm/wiki/JavaScript-Configs).
 
 Slate is configured using a ".slate" file in the current user's home directory. Configuration is loaded upon running Slate. You can also re-load the config using the "Load Config" menu option on the status menu (use this at your own risk. It is better to simply restart Slate).
 
-**Note:** If no ".slate" file exists in the current user's home directory, the [default config file](https://github.com/jigish/slate/blob/master/Slate/default.slate) will be used.
+**Note:** If no ".slate" file exists in the current user's home directory, the [default config file](https://github.com/bbarbosa85/mwm/blob/master/Slate/default.slate) will be used.
 
 Configuration is split into the following directives:
 
@@ -112,7 +112,7 @@ The `config` directive follows the following format:
 
     config name value
 
-[List of allowed configs](https://github.com/jigish/slate/wiki/Global-Configs)
+[List of allowed configs](https://github.com/bbarbosa85/mwm/wiki/Global-Configs)
 
 Example:
 
@@ -591,7 +591,7 @@ You can check out my own config [here](https://github.com/jigish/dotfiles/blob/m
 
 # Contact #
 
-Please send all questions, bug reports, suggestions, or general commentary to [Jigish Patel](mailto:slate.issues@gmail.com) or [create an issue](https://github.com/jigish/slate/issues/new) on github.
+Please send all questions, bug reports, suggestions, or general commentary to [Jigish Patel](mailto:slate.issues@gmail.com) or [create an issue](https://github.com/bbarbosa85/mwm/issues/new) on github.
 
 # Allowed Keys #
 
