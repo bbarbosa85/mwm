@@ -49,6 +49,13 @@ Welcome to the internal and technical documentation for **Slate**, a highly cust
    - Unit test suite (`SlateTests`).
    - Build system, release pipeline (`slate.rb`), DMG staging, and Sparkle framework updater.
 
+7. **[macOS Permissions & Code Signing Guide](permissions-and-codesigning.md)**
+   - macOS TCC (Transparency, Consent, and Control) security model for accessibility.
+   - Why permissions are invalidated when updating or rebuilding ad-hoc binaries.
+   - How to create a persistent self-signed code signing certificate in Keychain Access.
+   - How to configure persistent signing in Xcode and `script/build-dmg.sh` to preserve permissions across all updates.
+   - Troubleshooting and resetting stale permission entries with `tccutil`.
+
 ---
 
 ## Quick Repository Overview
@@ -56,11 +63,11 @@ Welcome to the internal and technical documentation for **Slate**, a highly cust
 | Directory / File | Description |
 | :--- | :--- |
 | `Slate/` | Main Objective-C source files, UI views, operation classes, JS bridge, and assets. |
-| `Slate/JSONKit/` | Embedded high-performance JSONKit library for snapshot serialization. |
 | `SlateTests/` | Unit tests for tokenizer, math parser, expressions, Levenshtein, and string helpers. |
-| `script/` | Release automation (`slate.rb`) and disk image packager (`create-dmg`). |
-| `Sparkle.framework` | Integrated auto-update framework for macOS. |
+| `script/build-dmg.sh` | Modern native packaging script to build Release DMG disk images. |
+| `script/` | Build scripts and release automation helpers. |
 | `Slate.xcodeproj` | Xcode project defining `Slate`, `SlateTests`, and Release/Debug build targets. |
+| `docs/` | Comprehensive technical architecture, configuration, operation, and permission documentation. |
 | `README.md` | User-facing usage instructions and quick configuration guide. |
 | `VERSION` | Current release number (1.0.25) and detailed release notes. |
 

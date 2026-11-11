@@ -52,13 +52,12 @@
 static SlateConfig *_instance = nil;
 
 + (SlateConfig *)getInstance {
-  @synchronized([SlateConfig class]) {
-    if (!_instance) {
-      [ScreenWrapper updateStatics];
-      _instance = [[[SlateConfig class] alloc] init];
-    }
-    return _instance;
-  }
+  static dispatch_once_t onceToken;
+  dispatch_once(&onceToken, ^{
+    [ScreenWrapper updateStatics];
+    _instance = [[[SlateConfig class] alloc] init];
+  });
+  return _instance;
 }
 
 - (id)init {

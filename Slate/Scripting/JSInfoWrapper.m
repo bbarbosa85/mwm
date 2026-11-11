@@ -25,11 +25,11 @@
 static JSInfoWrapper *_instance = nil;
 
 + (JSInfoWrapper *)getInstance {
-  @synchronized([JSInfoWrapper class]) {
-    if (!_instance)
-      _instance = [[[JSInfoWrapper class] alloc] init];
-    return _instance;
-  }
+  static dispatch_once_t onceToken;
+  dispatch_once(&onceToken, ^{
+    _instance = [[[JSInfoWrapper class] alloc] init];
+  });
+  return _instance;
 }
 
 - (id)init {

@@ -47,28 +47,14 @@
 - (id)initWithTopLeft:(NSString *)tl dimensions:(NSString *)dim monitor:(NSString *)mon {
   self = [self init];
   if (self) {
-    NSArray *tlTokens = [tl componentsSeparatedByString:SEMICOLON];
-    if ([tlTokens count] == 2) {
-      [self setTopLeft:[[ExpressionPoint alloc] initWithX:[tlTokens objectAtIndex:0] y:[tlTokens objectAtIndex:1]]];
-    } else {
-      tlTokens = [tl componentsSeparatedByString:COMMA];
-      if ([tlTokens count] == 2) {
-        [self setTopLeft:[[ExpressionPoint alloc] initWithX:[tlTokens objectAtIndex:0] y:[tlTokens objectAtIndex:1]]];
-      } else {
-        return nil;
-      }
-    }
-    NSArray *dimTokens = [dim componentsSeparatedByString:SEMICOLON];
-    if ([dimTokens count] == 2) {
-      [self setDimensions:[[ExpressionPoint alloc] initWithX:[dimTokens objectAtIndex:0] y:[dimTokens objectAtIndex:1]]];
-    } else {
-      dimTokens = [dim componentsSeparatedByString:COMMA];
-      if ([dimTokens count] == 2) {
-        [self setDimensions:[[ExpressionPoint alloc] initWithX:[dimTokens objectAtIndex:0] y:[dimTokens objectAtIndex:1]] ];
-      } else {
-        return nil;
-      }
-    }
+    ExpressionPoint *tlPoint = [ExpressionPoint pointFromString:tl];
+    if (tlPoint == nil) return nil;
+    [self setTopLeft:tlPoint];
+
+    ExpressionPoint *dimPoint = [ExpressionPoint pointFromString:dim];
+    if (dimPoint == nil) return nil;
+    [self setDimensions:dimPoint];
+
     [self setMonitor:mon];
     [self setScreenId:-1];
   }

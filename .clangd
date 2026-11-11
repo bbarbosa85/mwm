@@ -1,6 +1,14 @@
 CompileFlags:
   Add:
     - -ISlate
+    - -ISlate/App
+    - -ISlate/Config
+    - -ISlate/Core
+    - -ISlate/Operations
+    - -ISlate/Scripting
+    - -ISlate/UI
+    - -ISlate/Utilities
+    - -ISlate/Resources
     - -ISlateTests
     - -I.
     - -fobjc-arc

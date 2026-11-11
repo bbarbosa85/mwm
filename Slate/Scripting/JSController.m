@@ -430,11 +430,11 @@ static JSController *_instance = nil;
 }
 
 + (JSController *)getInstance {
-  @synchronized([JSController class]) {
-    if (!_instance)
-      _instance = [[[JSController class] alloc] init];
-    return _instance;
-  }
+  static dispatch_once_t onceToken;
+  dispatch_once(&onceToken, ^{
+    _instance = [[[JSController class] alloc] init];
+  });
+  return _instance;
 }
 
 @end

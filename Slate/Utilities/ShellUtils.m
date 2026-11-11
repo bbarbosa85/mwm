@@ -61,30 +61,35 @@
   }
 }
 
-+ (NSTask *)run:(NSString *)command args:(NSArray *)args wait:(BOOL)wait path:(NSString *)path {
-  NSTask *task;
-  task = [[NSTask alloc] init];
-  [task setLaunchPath:command];
-  [task setArguments:args];
-  if (path != nil) [task setCurrentDirectoryPath:path];
++ (NSTask *)run:(NSString *)command args:(NSArray *)args wait:(BOOL)wait path:(NSString *)path output:(NSString **)output {
+  NSTask *task = [[NSTask alloc] init];
+  [task setLaunchPath:[command stringByExpandingTildeInPath]];
+  if (args != nil) [task setArguments:args];
+  if (path != nil) [task setCurrentDirectoryPath:[path stringByExpandingTildeInPath]];
 
-  NSPipe *pipe;
-  pipe = [NSPipe pipe];
+  NSPipe *pipe = [NSPipe pipe];
   [task setStandardOutput:pipe];
   [task setStandardError:pipe];
   [task setStandardInput:[NSPipe pipe]];
 
-  NSFileHandle *file;
-  file = [pipe fileHandleForReading];
+  NSFileHandle *file = [pipe fileHandleForReading];
 
   [task launch];
-  if (wait){
+  if (wait) {
     NSData *data = [file readDataToEndOfFile];
     [task waitUntilExit];
+    NSString *res = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
     SlateLogger(@"SHELL RESULT:");
-    SlateLogger(@"%@", [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding]);
+    SlateLogger(@"%@", res);
+    if (output != NULL) {
+      *output = res;
+    }
   }
   return task;
+}
+
++ (NSTask *)run:(NSString *)command args:(NSArray *)args wait:(BOOL)wait path:(NSString *)path {
+  return [self run:command args:args wait:wait path:path output:NULL];
 }
 
 + (NSString *)run:(NSString *)commandAndArgs wait:(BOOL)wait path:(NSString *)path {
@@ -99,29 +104,9 @@
   for (NSInteger i = 1; i < [commandAndArgsTokens count]; i++) {
     [args addObject:[commandAndArgsTokens objectAtIndex:i]];
   }
-  NSTask *task;
-  task = [[NSTask alloc] init];
-  [task setLaunchPath:[command stringByExpandingTildeInPath]];
-  [task setArguments:args];
-  if (path != nil) [task setCurrentDirectoryPath:[path stringByExpandingTildeInPath]];
-
-  NSPipe *pipe;
-  pipe = [NSPipe pipe];
-  [task setStandardOutput:pipe];
-  [task setStandardError:pipe];
-  [task setStandardInput:[NSPipe pipe]];
-
-  NSFileHandle *file;
-  file = [pipe fileHandleForReading];
-
-  [task launch];
-  if (!wait) return nil;
-  NSData *data = [file readDataToEndOfFile];
-  [task waitUntilExit];
-  NSString *res = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
-  SlateLogger(@"SHELL RESULT:");
-  SlateLogger(@"%@", res);
-  return res;
+  NSString *output = nil;
+  [self run:command args:args wait:wait path:path output:&output];
+  return output;
 }
 
 @end

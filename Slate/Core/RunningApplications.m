@@ -34,11 +34,11 @@
 static RunningApplications *_instance = nil;
 
 + (RunningApplications *)getInstance {
-  @synchronized([RunningApplications class]) {
-    if (!_instance)
-      _instance = [[[RunningApplications class] alloc] init];
-    return _instance;
-  }
+  static dispatch_once_t onceToken;
+  dispatch_once(&onceToken, ^{
+    _instance = [[[RunningApplications class] alloc] init];
+  });
+  return _instance;
 }
 
 + (BOOL)isAppSelectable:(NSRunningApplication *)app {

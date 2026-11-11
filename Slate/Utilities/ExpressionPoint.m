@@ -19,6 +19,7 @@
 //  along with this program.  If not, see http://www.gnu.org/licenses
 
 #import "ExpressionPoint.h"
+#import "Constants.h"
 
 
 @implementation ExpressionPoint
@@ -53,6 +54,19 @@
 
 - (NSSize)getSizeWithDict:(NSDictionary *)values {
   return NSMakeSize([ExpressionPoint expToFloat:x withDict:values],[ExpressionPoint expToFloat:y withDict:values]);
+}
+
++ (ExpressionPoint *)pointFromString:(NSString *)str {
+  if (str == nil) return nil;
+  NSArray *tokens = [str componentsSeparatedByString:SEMICOLON];
+  if ([tokens count] == 2) {
+    return [[ExpressionPoint alloc] initWithX:[tokens objectAtIndex:0] y:[tokens objectAtIndex:1]];
+  }
+  tokens = [str componentsSeparatedByString:COMMA];
+  if ([tokens count] == 2) {
+    return [[ExpressionPoint alloc] initWithX:[tokens objectAtIndex:0] y:[tokens objectAtIndex:1]];
+  }
+  return nil;
 }
 
 + (float)expToFloat:(NSString *)exp withDict:(NSDictionary *)values {

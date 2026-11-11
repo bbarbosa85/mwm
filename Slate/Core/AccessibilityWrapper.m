@@ -59,12 +59,25 @@ static NSDictionary *unselectableApps = nil;
   self = [super init];
   if (self) {
     [AccessibilityWrapper createSystemWideElement];
+    if (appRef != NULL) CFRetain(appRef);
+    if (windowRef != NULL) CFRetain(windowRef);
     [self setApp:appRef];
     [self setWindow:windowRef];
     [self setInited:YES];
   }
 
   return self;
+}
+
+- (void)dealloc {
+  if (app != NULL) {
+    CFRelease(app);
+    app = NULL;
+  }
+  if (window != NULL) {
+    CFRelease(window);
+    window = NULL;
+  }
 }
 
 + (NSPoint)getTopLeftForWindow:(AXUIElementRef)window {
@@ -195,9 +208,14 @@ static NSDictionary *unselectableApps = nil;
     couldFocus = NO;
   }
   pid_t focusPID = [AccessibilityWrapper processIdentifierOfUIElement:window];
-  ProcessSerialNumber psn;
-  GetProcessForPID(focusPID, &psn);
-  SetFrontProcessWithOptions(&psn, kSetFrontProcessFrontWindowOnly);
+  NSRunningApplication *runningApp = [NSRunningApplication runningApplicationWithProcessIdentifier:focusPID];
+  if (runningApp != nil) {
+    [runningApp activateWithOptions:NSApplicationActivateIgnoringOtherApps];
+  } else {
+    ProcessSerialNumber psn;
+    GetProcessForPID(focusPID, &psn);
+    SetFrontProcessWithOptions(&psn, kSetFrontProcessFrontWindowOnly);
+  }
   return couldFocus;
 }
 
@@ -242,11 +260,9 @@ static NSDictionary *unselectableApps = nil;
 
 + (NSString *)getTitle:(AXUIElementRef)window {
   [AccessibilityWrapper createSystemWideElement];
-  CFTypeRef _title;
-  if (AXUIElementCopyAttributeValue(window, (CFStringRef)NSAccessibilityTitleAttribute, (CFTypeRef *)&_title) == kAXErrorSuccess) {
-    NSString *title = (__bridge NSString *) _title;
-    if (_title != NULL) CFRelease(_title);
-    return title;
+  CFTypeRef _title = NULL;
+  if (AXUIElementCopyAttributeValue(window, (CFStringRef)NSAccessibilityTitleAttribute, (CFTypeRef *)&_title) == kAXErrorSuccess && _title != NULL) {
+    return (__bridge_transfer NSString *)_title;
   }
   if (_title != NULL) CFRelease(_title);
   return @"";
@@ -296,13 +312,14 @@ static NSDictionary *unselectableApps = nil;
 }
 
 + (void)createSystemWideElement {
-  if (systemWideElement == NULL) {
+  static dispatch_once_t onceToken;
+  dispatch_once(&onceToken, ^{
     systemWideElement = AXUIElementCreateSystemWide();
     unselectableApps = [NSDictionary dictionaryWithObjectsAndKeys:@"SystemUIServer", @"SystemUIServer",
                                                                   @"Slate", @"Slate",
                                                                   @"Dropbox", @"Dropbox",
                                                                   @"loginwindow", @"loginwindow", nil];
-  }
+  });
 }
 
 + (BOOL)isWindow:(AXUIElementRef)element {

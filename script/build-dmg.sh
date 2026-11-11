@@ -27,12 +27,24 @@ if [ ! -d "${APP_PATH}" ]; then
   exit 1
 fi
 
+# Signing identity: can be overridden via SIGN_IDENTITY env var or auto-detected
+SIGN_IDENTITY="${SIGN_IDENTITY:-}"
+if [ -z "${SIGN_IDENTITY}" ]; then
+  if security find-identity -v -p codesigning 2>/dev/null | grep -q '"Slate Code Signing"'; then
+    SIGN_IDENTITY="Slate Code Signing"
+  elif security find-identity -v -p codesigning 2>/dev/null | grep -q "Apple Development"; then
+    SIGN_IDENTITY="Apple Development"
+  else
+    SIGN_IDENTITY="-"
+  fi
+fi
+
 echo "==> Preparing DMG staging directory..."
 rm -rf "${STAGING_DIR}"
 mkdir -p "${STAGING_DIR}"
 cp -R "${APP_PATH}" "${STAGING_DIR}/Slate.app"
-echo "==> Signing Slate.app bundle with ad-hoc signature..."
-codesign --force --deep --sign - "${STAGING_DIR}/Slate.app"
+echo "==> Signing Slate.app bundle with signature: ${SIGN_IDENTITY}..."
+codesign --force --deep --sign "${SIGN_IDENTITY}" "${STAGING_DIR}/Slate.app"
 ln -s /Applications "${STAGING_DIR}/Applications"
 
 mkdir -p "${OUTPUT_DIR}"
