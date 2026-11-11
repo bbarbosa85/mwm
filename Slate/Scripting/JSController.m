@@ -114,6 +114,7 @@ static JSController *_instance = nil;
   @try {
     [self runFile:[[NSBundle mainBundle] pathForResource:@"underscore" ofType:@"js"]];
     [self runFile:[[NSBundle mainBundle] pathForResource:@"utils" ofType:@"js"]];
+    [self runFile:[[NSBundle mainBundle] pathForResource:@"managed-config" ofType:@"js"]];
     [self runFile:[[NSBundle mainBundle] pathForResource:@"initialize" ofType:@"js"]];
   } @catch (NSException *ex) {
     SlateLogger(@"   ERROR %@",[ex name]);
@@ -187,6 +188,27 @@ static JSController *_instance = nil;
   }
   @try {
     Binding *bind = [[Binding alloc] initWithKeystroke:hotkey operation:op repeat:repeat];
+    [[SlateConfig getInstance] addBinding:bind];
+  } @catch (NSException *ex) {
+    SlateLogger(@"   ERROR %@",[ex name]);
+    NSAlert *alert = [SlateConfig warningAlertWithKeyEquivalents: [NSArray arrayWithObjects:@"Quit", @"Skip", nil]];
+    [alert setMessageText:[ex name]];
+    [alert setInformativeText:[ex reason]];
+    if ([alert runModal] == NSAlertFirstButtonReturn) {
+      SlateLogger(@"User selected exit");
+      [NSApp terminate:nil];
+    }
+  }
+}
+
+// Binds a legacy-style operation string, going through the same parser as
+// `bind` lines in ~/.slate so behavior (default repeat, switch modifiers) matches.
+- (void)bindString:(NSString *)hotkey operation:(NSString *)opString repeat:(id)_repeat {
+  @try {
+    Binding *bind = [[Binding alloc] initWithString:[NSString stringWithFormat:@"bind %@ %@", hotkey, opString]];
+    if ([_repeat isKindOfClass:[NSNumber class]]) {
+      [bind setRepeat:[_repeat boolValue]];
+    }
     [[SlateConfig getInstance] addBinding:bind];
   } @catch (NSException *ex) {
     SlateLogger(@"   ERROR %@",[ex name]);

@@ -25,6 +25,7 @@
 #import "ScreenState.h"
 #import "ScreenWrapper.h"
 #import "SlateConfig.h"
+#import "SlateLegacyMigration.h"
 #import "StringTokenizer.h"
 #import "Snapshot.h"
 #import "SnapshotList.h"
@@ -143,17 +144,25 @@ static SlateConfig *_instance = nil;
   [self setDefaultLayouts:[[NSMutableArray alloc] init]];
   [self setAliases:[[NSMutableDictionary alloc] init]];
 
+  // Moves ~/.slate into ~/.slate.js. If the user postpones it or it fails,
+  // ~/.slate is still there and keeps loading below.
+  [SlateLegacyMigration runStartupMigration];
+
   BOOL loadedDefault = [self loadConfigFileWithPath:@"~/.slate"];
   BOOL loadedJS = [self loadConfigFileWithPath:@"~/.slate.js"];
 
   if (!loadedDefault && !loadedJS) {
     SlateLogger(@"  ERROR Could not load ~/.slate or ~/.slate.js");
-    NSAlert *alert = [SlateConfig warningAlertWithKeyEquivalents: [NSArray arrayWithObjects:@"Continue", @"Quit", nil]];
+    NSAlert *alert = [SlateConfig warningAlertWithKeyEquivalents: [NSArray arrayWithObjects:@"Continue", @"Quit", @"Open configuration", nil]];
     [alert setMessageText:@"Could not load ~/.slate or ~/.slate.js"];
-    [alert setInformativeText:@"The default configuration will be used. You can find the default .slate file at https://github.com/bbarbosa85/mwm/blob/master/Slate/default.slate"];
-    if ([alert runModal] == NSAlertSecondButtonReturn) {
+    [alert setInformativeText:@"Slate will use its default configuration. Choose Open configuration to create ~/.slate.js from the defaults and edit it."];
+    NSModalResponse response = [alert runModal];
+    if (response == NSAlertSecondButtonReturn) {
       SlateLogger(@"User selected exit");
       [NSApp terminate:nil];
+    } else if (response == NSAlertThirdButtonReturn) {
+      // After launch finishes, so the window opens on a fully set-up app.
+      [(NSObject *)[NSApp delegate] performSelector:@selector(configureSlate) withObject:nil afterDelay:0];
     }
     return [self loadConfigFileWithPath:[[NSBundle mainBundle] pathForResource:@"default" ofType:@"slate"]];
   }

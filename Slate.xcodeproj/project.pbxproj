@@ -7,6 +7,15 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		5E1A0C0B2D0000000000031D /* TestSlateConfigValidator.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D0000000000031C /* TestSlateConfigValidator.m */; };
+		5E1A0C0B2D0000000000031B /* ConfigurationWindowController.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D0000000000031A /* ConfigurationWindowController.m */; };
+		5E1A0C0B2D00000000000317 /* LineNumberGutterView.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D00000000000316 /* LineNumberGutterView.m */; };
+		5E1A0C0B2D00000000000313 /* SlateConfigValidator.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D00000000000312 /* SlateConfigValidator.m */; };
+		5E1A0C0B2D00000000000212 /* SlateLegacyMigration.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D00000000000211 /* SlateLegacyMigration.m */; };
+		5E1A0C0B2D00000000000214 /* TestSlateLegacyMigration.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D00000000000213 /* TestSlateLegacyMigration.m */; };
+		5E1A0C0B2D00000000000111 /* managed-config.js in Resources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D00000000000110 /* managed-config.js */; };
+		5E1A0C0B2D00000000000114 /* SlateConfigDocument.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D00000000000113 /* SlateConfigDocument.m */; };
+		5E1A0C0B2D00000000000116 /* TestSlateConfigDocument.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D00000000000115 /* TestSlateConfigDocument.m */; };
 		3AA7D09116A6ED1200C81A67 /* JavaScriptCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3AA7D09016A6ED1200C81A67 /* JavaScriptCore.framework */; };
 		3AA7D09516A6EE0200C81A67 /* JSController.m in Sources */ = {isa = PBXBuildFile; fileRef = 3AA7D09416A6EE0200C81A67 /* JSController.m */; };
 		3AA7D09D16A6FC9B00C81A67 /* initialize.js in Resources */ = {isa = PBXBuildFile; fileRef = 3AA7D09A16A6FAE100C81A67 /* initialize.js */; };
@@ -124,6 +133,20 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		5E1A0C0B2D0000000000031C /* TestSlateConfigValidator.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TestSlateConfigValidator.m; sourceTree = "<group>"; };
+		5E1A0C0B2D0000000000031A /* ConfigurationWindowController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UI/ConfigurationWindowController.m; sourceTree = "<group>"; };
+		5E1A0C0B2D00000000000318 /* ConfigurationWindowController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UI/ConfigurationWindowController.h; sourceTree = "<group>"; };
+		5E1A0C0B2D00000000000316 /* LineNumberGutterView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UI/LineNumberGutterView.m; sourceTree = "<group>"; };
+		5E1A0C0B2D00000000000314 /* LineNumberGutterView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UI/LineNumberGutterView.h; sourceTree = "<group>"; };
+		5E1A0C0B2D00000000000312 /* SlateConfigValidator.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Config/SlateConfigValidator.m; sourceTree = "<group>"; };
+		5E1A0C0B2D00000000000310 /* SlateConfigValidator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Config/SlateConfigValidator.h; sourceTree = "<group>"; };
+		5E1A0C0B2D00000000000210 /* SlateLegacyMigration.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Config/SlateLegacyMigration.h; sourceTree = "<group>"; };
+		5E1A0C0B2D00000000000211 /* SlateLegacyMigration.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Config/SlateLegacyMigration.m; sourceTree = "<group>"; };
+		5E1A0C0B2D00000000000213 /* TestSlateLegacyMigration.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TestSlateLegacyMigration.m; sourceTree = "<group>"; };
+		5E1A0C0B2D00000000000110 /* managed-config.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; path = Scripting/managed-config.js; sourceTree = "<group>"; };
+		5E1A0C0B2D00000000000112 /* SlateConfigDocument.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Config/SlateConfigDocument.h; sourceTree = "<group>"; };
+		5E1A0C0B2D00000000000113 /* SlateConfigDocument.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Config/SlateConfigDocument.m; sourceTree = "<group>"; };
+		5E1A0C0B2D00000000000115 /* TestSlateConfigDocument.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TestSlateConfigDocument.m; sourceTree = "<group>"; };
 		3AA7D09016A6ED1200C81A67 /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		3AA7D09316A6EE0200C81A67 /* JSController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Scripting/JSController.h; sourceTree = "<group>"; };
 		3AA7D09416A6EE0200C81A67 /* JSController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Scripting/JSController.m; sourceTree = "<group>"; };
@@ -343,6 +366,7 @@
 				3BE0736916AF735A00D33DB0 /* JSWrapperUtils.h */,
 				3BE0736A16AF735A00D33DB0 /* JSWrapperUtils.m */,
 				3AA7D09A16A6FAE100C81A67 /* initialize.js */,
+				5E1A0C0B2D00000000000110 /* managed-config.js */,
 				3B38E04616AB8B3500603901 /* underscore.js */,
 				3BE0736516AF3C3F00D33DB0 /* utils.js */,
 			);
@@ -371,6 +395,9 @@
 				3BA1BA6D162F51760026774E /* TestShellUtils.m */,
 				3BA1BA63162E01A20026774E /* TestStringTokenizer.h */,
 				3BA1BA64162E01A20026774E /* TestStringTokenizer.m */,
+				5E1A0C0B2D00000000000115 /* TestSlateConfigDocument.m */,
+				5E1A0C0B2D00000000000213 /* TestSlateLegacyMigration.m */,
+				5E1A0C0B2D0000000000031C /* TestSlateConfigValidator.m */,
 			);
 			name = Common;
 			sourceTree = "<group>";
@@ -417,6 +444,12 @@
 				3B40AC2013A73530006C9A5C /* Layout.m */,
 				47C4A2C91384EA510066B6DE /* SlateConfig.h */,
 				47C4A2CA1384EA510066B6DE /* SlateConfig.m */,
+				5E1A0C0B2D00000000000112 /* SlateConfigDocument.h */,
+				5E1A0C0B2D00000000000113 /* SlateConfigDocument.m */,
+				5E1A0C0B2D00000000000210 /* SlateLegacyMigration.h */,
+				5E1A0C0B2D00000000000211 /* SlateLegacyMigration.m */,
+				5E1A0C0B2D00000000000312 /* SlateConfigValidator.m */,
+				5E1A0C0B2D00000000000310 /* SlateConfigValidator.h */,
 				3B42D72D13A831E6009103A0 /* ApplicationOptions.h */,
 				3B42D72E13A831E6009103A0 /* ApplicationOptions.m */,
 				3BDDA17B14FDA50C00829D2A /* Snapshot.h */,
@@ -588,6 +621,10 @@
 				47C4A2A81384E8890066B6DE /* MainMenu.xib */,
 				3B84A550150552DC006E2194 /* ConfigurationHelperView.h */,
 				3B84A551150552DC006E2194 /* ConfigurationHelperView.m */,
+				5E1A0C0B2D0000000000031A /* ConfigurationWindowController.m */,
+				5E1A0C0B2D00000000000318 /* ConfigurationWindowController.h */,
+				5E1A0C0B2D00000000000316 /* LineNumberGutterView.m */,
+				5E1A0C0B2D00000000000314 /* LineNumberGutterView.h */,
 				47C4A2A51384E8890066B6DE /* SlateAppDelegate.h */,
 				47C4A2A61384E8890066B6DE /* SlateAppDelegate.m */,
 				3B3335AB14FC1EA900F72638 /* WindowInfoView.h */,
@@ -714,6 +751,7 @@
 				3B38E04816AB8BBF00603901 /* underscore.js in Resources */,
 				3BE0736816AF3C9B00D33DB0 /* utils.js in Resources */,
 				3AA7D09D16A6FC9B00C81A67 /* initialize.js in Resources */,
+				5E1A0C0B2D00000000000111 /* managed-config.js in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -739,6 +777,11 @@
 				47C4A2A11384E8890066B6DE /* main.m in Sources */,
 				47C4A2A71384E8890066B6DE /* SlateAppDelegate.m in Sources */,
 				47C4A2CB1384EA510066B6DE /* SlateConfig.m in Sources */,
+				5E1A0C0B2D00000000000114 /* SlateConfigDocument.m in Sources */,
+				5E1A0C0B2D00000000000212 /* SlateLegacyMigration.m in Sources */,
+				5E1A0C0B2D0000000000031B /* ConfigurationWindowController.m in Sources */,
+				5E1A0C0B2D00000000000317 /* LineNumberGutterView.m in Sources */,
+				5E1A0C0B2D00000000000313 /* SlateConfigValidator.m in Sources */,
 				47C4A2CE1384F26A0066B6DE /* Binding.m in Sources */,
 				47C4A2D11384F3E10066B6DE /* Operation.m in Sources */,
 				47C4A2D41384F4A60066B6DE /* MoveOperation.m in Sources */,
@@ -811,6 +854,9 @@
 				3BA1BA5C162DD7190026774E /* TestMathUtils.m in Sources */,
 				3BA1BA62162DDFEF0026774E /* TestExpressionPoint.m in Sources */,
 				3BA1BA65162E01A30026774E /* TestStringTokenizer.m in Sources */,
+				5E1A0C0B2D00000000000116 /* TestSlateConfigDocument.m in Sources */,
+				5E1A0C0B2D00000000000214 /* TestSlateLegacyMigration.m in Sources */,
+				5E1A0C0B2D0000000000031D /* TestSlateConfigValidator.m in Sources */,
 				3BA1BA6E162F51760026774E /* TestShellUtils.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -985,6 +1031,8 @@
 				OTHER_LDFLAGS = (
 					"-framework",
 					XCTest,
+					"-framework",
+					JavaScriptCore,
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.slate.SlateTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -1019,6 +1067,8 @@
 				OTHER_LDFLAGS = (
 					"-framework",
 					XCTest,
+					"-framework",
+					JavaScriptCore,
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.slate.SlateTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";

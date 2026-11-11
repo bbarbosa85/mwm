@@ -33,6 +33,7 @@
 #import "SwitchOperation.h"
 #import "RunningApplications.h"
 #import "GridOperation.h"
+#import "ConfigurationWindowController.h"
 // Sparkle replacement stub for NIB compatibility
 @interface SUUpdater : NSObject
 @property (nonatomic, assign) BOOL automaticallyChecksForUpdates;
@@ -104,13 +105,8 @@ static EventHandlerRef modifiersEvent;
   [windowInfo setLevel:(NSScreenSaverWindowLevel - 1)];
 }
 
-- (IBAction)configurationHelper {
-  NSString *configFile = [@"~/.slate" stringByExpandingTildeInPath];
-  [configHelperTextView setFont:[NSFont fontWithName:@"Menlo" size:11]];
-  [configHelperTextView setString:[NSString stringWithContentsOfFile:[configFile stringByExpandingTildeInPath] encoding:NSUTF8StringEncoding error:nil]];
-  [configHelperController showWindow:configHelper];
-  [configHelper makeKeyAndOrderFront:NSApp];
-  [configHelper setLevel:(NSScreenSaverWindowLevel - 1)];
+- (IBAction)configureSlate {
+  [[ConfigurationWindowController sharedController] showConfiguration];
 }
 
 - (void)loadConfig {
@@ -464,6 +460,7 @@ OSStatus OnModifiersChangedEvent(EventHandlerCallRef nextHandler, EventRef theEv
       [[[NSProcessInfo processInfo] environment] objectForKey:@"XCTestConfigurationFilePath"] != nil) {
     return;
   }
+  [ConfigurationWindowController reopenAfterRelaunchIfNeeded];
   if (cmdTabBinding > 0 || cmdShiftTabBinding > 0) {
     CFMachPortRef keyDownEventTap = CGEventTapCreate(kCGSessionEventTap, kCGHeadInsertEventTap, 0, CGEventMaskBit(kCGEventKeyDown), EatAppSwitcherCallback, (__bridge void *)self);
     if (keyDownEventTap != NULL) {
@@ -505,7 +502,6 @@ OSStatus OnModifiersChangedEvent(EventHandlerCallRef nextHandler, EventRef theEv
   [self setCurrentModalHotKeyRefs:[NSMutableArray array]];
 
   windowInfoController = [[NSWindowController alloc] initWithWindow:windowInfo];
-  configHelperController = [[NSWindowController alloc] initWithWindow:configHelper];
 
   NSMenuItem *aboutItem = [statusMenu insertItemWithTitle:@"About Slate" action:@selector(aboutWindow) keyEquivalent:@"" atIndex:0];
   [aboutItem setTarget:self];
@@ -523,11 +519,12 @@ OSStatus OnModifiersChangedEvent(EventHandlerCallRef nextHandler, EventRef theEv
   [self setLaunchOnLoginItemStatus];
   [launchOnLoginItem setTarget:self];
 
+  NSMenuItem *configureItem = [statusMenu insertItemWithTitle:@"Configure Slate…" action:@selector(configureSlate) keyEquivalent:@"," atIndex:1];
+  [configureItem setTarget:self];
+
   // NSMenuItem *windowInfoItem = [statusMenu insertItemWithTitle:@"Current Window Info" action:@selector(currentWindowInfo) keyEquivalent:@"" atIndex:4];
   // [windowInfoItem setTarget:self];
 
-  //NSMenuItem *configInfoItem = [statusMenu insertItemWithTitle:@"Configuration Helper" action:@selector(configurationHelper) keyEquivalent:@"" atIndex:2];
-  //[configInfoItem setTarget:self];
 
   statusItem = [[NSStatusBar systemStatusBar] statusItemWithLength: NSVariableStatusItemLength];
   [statusItem setMenu:statusMenu];

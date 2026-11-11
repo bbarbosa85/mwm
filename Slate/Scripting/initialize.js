@@ -43,6 +43,18 @@
       }
     },
 
+    // Applies the managed config object written by the configuration window.
+    // See managed-config.js for the format.
+    applyConfig: function(config) {
+      var resolved = window._slateManagedConfig.resolve(config);
+      _.each(resolved.settings, function(setting) {
+        slate.config(setting.name, setting.value);
+      });
+      _.each(resolved.bindings, function(binding) {
+        _controller.bindString(binding.hotkey, binding.action, binding.repeat);
+      });
+    },
+
     operationFromString: function(opString) {
       if (!_.isString(opString)) {
         throw "Operation String must be a string. Was: "+opString;

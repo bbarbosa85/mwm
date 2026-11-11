@@ -19,7 +19,8 @@ flowchart LR
 When initializing, Slate loads:
 1. **[`underscore.js`](file:///Users/brunobarbosa/Projetos/mwm/mwm/Slate/underscore.js)**: Full Underscore.js utility library (`_`).
 2. **[`utils.js`](file:///Users/brunobarbosa/Projetos/mwm/mwm/Slate/utils.js)**: Helper functions for type checking and array/dictionary conversion.
-3. **[`initialize.js`](file:///Users/brunobarbosa/Projetos/mwm/mwm/Slate/initialize.js)**: Creates the global `slate` (and shorthand `S`) object, binds methods, and connects callbacks.
+3. **`Scripting/managed-config.js`**: Resolves the managed `config` object used by `slate.applyConfig` (see section 6).
+4. **[`initialize.js`](file:///Users/brunobarbosa/Projetos/mwm/mwm/Slate/initialize.js)**: Creates the global `slate` (and shorthand `S`) object, binds methods, and connects callbacks.
 
 ---
 
@@ -223,3 +224,53 @@ slate.on("windowOpened", function(win) {
 slate.default(2, slate.operation("layout", { "name": "codingLayout" }));
 ```
 
+---
+
+## 6. Managed Configuration (`slate.applyConfig`)
+
+The Slate configuration window reads and writes `~/.slate.js` in a fixed shape: a plain `config` object, one `slate.applyConfig(config)` call, and a custom code area below a marker line. Code after the marker runs normally but is never touched by the window.
+
+```javascript
+var config = {
+  settings:  { defaultToCurrentScreen: true, secondsBeforeRepeat: 0.4 },
+  modifiers: { hyper: "ctrl;alt;cmd" },
+  monitors:  { "monitor-samsung": "0", "monitor-samsung-size": "5120x1440" },
+  positions: { lefthalf: "move screenOriginX;screenOriginY screenSizeX/2;screenSizeY" },
+  aliases:   {},
+  bindings: [
+    { group: "Apps", key: "c", mods: "alt;shift", action: "focus 'Google Chrome'" },
+    { group: "Layout", key: "pad4", mods: "${hyper}", action: "${lefthalf} ${monitor-samsung}" },
+    { group: "Layout", key: "pad7", mods: "${hyper}", action: "${lefthalf}", enabled: false, note: "thirds" },
+  ],
+};
+
+slate.applyConfig(config);
+
+// ---- Custom code (preserved as-is by the configuration window) ----
+```
+
+| Section | Contents |
+|---|---|
+| `settings` | Global configs, applied with `slate.config`. Arrays are joined with `;`. |
+| `modifiers`, `monitors`, `positions`, `aliases` | Named aliases, referenced as `${name}` anywhere in settings and bindings. The four sections share one namespace and differ only in how the window groups them. |
+| `bindings` | `key` and optional `mods` form the hotkey (`key:mods`); `action` is an operation string in the `.slate` format. Optional: `repeat` (boolean, defaults to the operation's default), `enabled` (`false` skips the binding), `group` and `note` (for the window only). |
+
+Aliases follow the legacy `.slate` rules: they can reference other aliases, and an unknown `${name}` is an error. Bindings go through the same parser as `bind` lines in `.slate`, so they behave identically.
+
+### The configuration window
+
+**Configure Slate…** in the status menu opens `~/.slate.js` in an editor with line numbers, syntax highlighting, and find (⌘F). If the file doesn't exist yet, the editor starts from Slate's bundled defaults.
+
+- **Validation** runs as you type, and with **Validate**. It runs the file against the real `slate` API with a stand-in controller (`SlateConfigValidator`), so nothing is bound and no operation or shell command runs. It reports JavaScript errors, bindings that Slate's parser rejects (unknown keys, operations or aliases), unknown settings, and keys bound more than once, each with its line.
+- **Save and apply** (⌘S) warns before saving with errors and before replacing a file that another app changed. It then writes atomically and keeps the previous version as `~/.slate.js.bak`. If `~/.slate.js` is a symlink, it writes through to the target. Finally, it relaunches Slate to apply the file.
+
+### Migrating from `~/.slate`
+
+On startup, Slate moves a legacy `~/.slate` into `~/.slate.js` (`SlateLegacyMigration`):
+
+- `config`, `alias` and `bind` lines become settings, aliases and bindings. Each alias is sorted into `modifiers`, `monitors`, `positions` or `aliases` by its value. `${…}` references are kept as written, and bindings expand to exactly what the legacy parser produced.
+- Commented-out `bind` lines become bindings with `enabled: false`. Each binding's `group` comes from the nearest `# HEADER` comment with a `# ----` underline, and its `note` comes from comments directly above it.
+- `layout`, `default` and `source` lines, per-app configs and redefined aliases can't be represented yet. They're kept as comments in the custom code area, and Slate lists them in an alert.
+- After migrating, `~/.slate` is renamed to `~/.slate.migrated-<timestamp>`. If `~/.slate` is a symlink, the link itself is renamed and its target is left untouched.
+- If `~/.slate.js` already exists, Slate asks whether to merge into it, postpone, or stop using `~/.slate`. When merging, `~/.slate.js` wins wherever both files set the same thing, matching the old load order. A `~/.slate.js` that isn't in the managed format is kept unchanged as custom code.
+- If the result wouldn't read back cleanly (for example, a binding uses an undefined alias), nothing is changed and Slate keeps loading `~/.slate`.
