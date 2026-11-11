@@ -21,14 +21,19 @@ Welcome to the internal and technical documentation for **Slate**, a highly cust
    - Application-specific configurations.
    - Complete global configuration options table with default values.
 
-3. **[JavaScript Scripting Engine (`.slate.js`)](configuration-javascript.md)**
+3. **[Configuration File (`.slate.yml`)](configuration-yaml.md)**
+   - The YAML format Slate loads, and the supported YAML subset.
+   - The Configure Slate… window: saving as you go, validation, Apply.
+   - Migration from `.slate` and `.slate.js`.
+
+4. **[JavaScript Scripting Engine (`.slate.js`, no longer loaded)](configuration-javascript.md)**
    - WebKit JavaScript runtime integration (`JSController`, WebScript bridge).
    - The global `slate` (`S`) object and API methods.
    - Object wrappers: `JSWindowWrapper`, `JSApplicationWrapper`, `JSScreenWrapper`, `JSInfoWrapper`.
    - Event-driven automation: system event triggers (`appOpened`, `windowMoved`, `screenConfigurationChanged`, etc.).
    - Underscore.js embedded utilities and test harnesses (`slate-mock.js`).
 
-4. **[Operations Reference](operations-reference.md)**
+5. **[Operations Reference](operations-reference.md)**
    - Comprehensive reference of all built-in window and system operations:
      - Window positioning & sizing: `move`, `resize`, `push`, `nudge`, `throw`, `corner`.
      - Layout & orchestration: `chain`, `sequence`, `layout`.
@@ -36,20 +41,20 @@ Welcome to the internal and technical documentation for **Slate**, a highly cust
      - State persistence: `snapshot`, `activate-snapshot`, `delete-snapshot`, `undo`.
      - System & automation: `shell`, `hide`, `show`, `toggle`, `relaunch`.
 
-5. **[UI Components & Overlays](ui-and-overlays.md)**
+6. **[UI Components & Overlays](ui-and-overlays.md)**
    - Interactive screen grid overlay (`GridWindow`, `GridView`, `GridCellView`).
    - Vimium-style visual window hints (`HintWindow`, `HintView`, collision spread algorithm).
    - Custom application switcher (`SwitchWindow`, `SwitchView`, `SwitchAppView`, quick actions `q`/`f`/`h`/`` ` ``).
    - Window inspector & configuration helper panels (`WindowInfoView`, `ConfigurationHelperView`).
 
-6. **[Codebase Walkthrough & Internals](codebase-walkthrough.md)**
+7. **[Codebase Walkthrough & Internals](codebase-walkthrough.md)**
    - Directory structure and file manifest.
    - String tokenization (`StringTokenizer`), Levenshtein distance (`NSString+Levenshtein`), math utilities (`MathUtils`).
    - Keyboard layout plists (QWERTY, Dvorak, Colemak, AZERTY).
    - Unit test suite (`SlateTests`).
    - Build system, release pipeline (`slate.rb`), DMG staging, and Sparkle framework updater.
 
-7. **[macOS Permissions & Code Signing Guide](permissions-and-codesigning.md)**
+8. **[macOS Permissions & Code Signing Guide](permissions-and-codesigning.md)**
    - macOS TCC (Transparency, Consent, and Control) security model for accessibility.
    - Why permissions are invalidated when updating or rebuilding ad-hoc binaries.
    - How to create a persistent self-signed code signing certificate in Keychain Access.

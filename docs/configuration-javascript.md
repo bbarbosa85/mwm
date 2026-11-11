@@ -1,6 +1,8 @@
 # JavaScript Scripting Guide (`.slate.js`)
 
-In addition to `.slate`, Slate supports programmatic configuration via JavaScript in `~/.slate.js`. This allows programmatic scripting, dynamic calculation, conditional layouts, and event-driven automation.
+> **Slate no longer loads `~/.slate.js`.** Configurations are data only, in [`~/.slate.yml`](configuration-yaml.md); on startup Slate converts a `~/.slate.js` written by the earlier configuration window into it. This guide describes the JavaScript runtime, which is still part of the codebase but isn't reachable from a configuration file.
+
+Slate's JavaScript runtime (`~/.slate.js`) offered programmatic scripting, dynamic calculation, conditional layouts, and event-driven automation.
 
 ---
 
@@ -19,7 +21,8 @@ flowchart LR
 When initializing, Slate loads:
 1. **[`underscore.js`](file:///Users/brunobarbosa/Projetos/mwm/mwm/Slate/underscore.js)**: Full Underscore.js utility library (`_`).
 2. **[`utils.js`](file:///Users/brunobarbosa/Projetos/mwm/mwm/Slate/utils.js)**: Helper functions for type checking and array/dictionary conversion.
-3. **[`initialize.js`](file:///Users/brunobarbosa/Projetos/mwm/mwm/Slate/initialize.js)**: Creates the global `slate` (and shorthand `S`) object, binds methods, and connects callbacks.
+3. **`Scripting/managed-config.js`**: Resolves the managed `config` object used by `slate.applyConfig` (see section 6).
+4. **[`initialize.js`](file:///Users/brunobarbosa/Projetos/mwm/mwm/Slate/initialize.js)**: Creates the global `slate` (and shorthand `S`) object, binds methods, and connects callbacks.
 
 ---
 
@@ -223,3 +226,4 @@ slate.on("windowOpened", function(win) {
 slate.default(2, slate.operation("layout", { "name": "codingLayout" }));
 ```
 
+---

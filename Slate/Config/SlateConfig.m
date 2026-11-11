@@ -25,6 +25,8 @@
 #import "ScreenState.h"
 #import "ScreenWrapper.h"
 #import "SlateConfig.h"
+#import "SlateConfigDocument.h"
+#import "SlateLegacyMigration.h"
 #import "StringTokenizer.h"
 #import "Snapshot.h"
 #import "SnapshotList.h"
@@ -143,19 +145,37 @@ static SlateConfig *_instance = nil;
   [self setDefaultLayouts:[[NSMutableArray alloc] init]];
   [self setAliases:[[NSMutableDictionary alloc] init]];
 
-  BOOL loadedDefault = [self loadConfigFileWithPath:@"~/.slate"];
-  BOOL loadedJS = [self loadConfigFileWithPath:@"~/.slate.js"];
+  // Converts ~/.slate and ~/.slate.js into ~/.slate.yml. If the user postpones
+  // it or it fails, ~/.slate keeps loading below; ~/.slate.js never runs.
+  [SlateLegacyMigration runStartupMigration];
 
-  if (!loadedDefault && !loadedJS) {
-    SlateLogger(@"  ERROR Could not load ~/.slate or ~/.slate.js");
-    NSAlert *alert = [SlateConfig warningAlertWithKeyEquivalents: [NSArray arrayWithObjects:@"Continue", @"Quit", nil]];
-    [alert setMessageText:@"Could not load ~/.slate or ~/.slate.js"];
-    [alert setInformativeText:@"The default configuration will be used. You can find the default .slate file at https://github.com/bbarbosa85/mwm/blob/master/Slate/default.slate"];
-    if ([alert runModal] == NSAlertSecondButtonReturn) {
+  NSString *ymlPath = [SlateConfigDocument defaultPath];
+  BOOL hasYAML = [[NSFileManager defaultManager] fileExistsAtPath:ymlPath];
+  NSError *yamlError = nil;
+  BOOL loadedYAML = hasYAML && [self loadYAMLConfigAtPath:ymlPath error:&yamlError];
+  BOOL loadedDefault = [self loadConfigFileWithPath:@"~/.slate"];
+  if ([[NSFileManager defaultManager] fileExistsAtPath:[@"~/.slate.js" stringByExpandingTildeInPath]]) {
+    SlateLogger(@"  Ignoring ~/.slate.js: Slate no longer runs JavaScript configurations.");
+  }
+
+  if (yamlError != nil || (!loadedYAML && !loadedDefault)) {
+    NSString *message = yamlError ? @"~/.slate.yml has an error" : @"Could not load ~/.slate.yml";
+    SlateLogger(@"  ERROR %@: %@", message, [yamlError localizedDescription]);
+    NSAlert *alert = [SlateConfig warningAlertWithKeyEquivalents: [NSArray arrayWithObjects:@"Continue", @"Quit", @"Open configuration", nil]];
+    [alert setMessageText:message];
+    [alert setInformativeText:[NSString stringWithFormat:@"%@Slate will use %@. Choose Open configuration to %@.",
+                               yamlError ? [NSString stringWithFormat:@"%@\n\n", [yamlError localizedDescription]] : @"",
+                               loadedDefault ? @"only ~/.slate" : @"its default configuration",
+                               yamlError ? @"see the problem" : @"create ~/.slate.yml from the defaults and edit it"]];
+    NSModalResponse response = [alert runModal];
+    if (response == NSAlertSecondButtonReturn) {
       SlateLogger(@"User selected exit");
       [NSApp terminate:nil];
+    } else if (response == NSAlertThirdButtonReturn) {
+      // After launch finishes, so the window opens on a fully set-up app.
+      [(NSObject *)[NSApp delegate] performSelector:@selector(configureSlate) withObject:nil afterDelay:0];
     }
-    return [self loadConfigFileWithPath:[[NSBundle mainBundle] pathForResource:@"default" ofType:@"slate"]];
+    if (!loadedDefault) return [self loadConfigFileWithPath:[[NSBundle mainBundle] pathForResource:@"default" ofType:@"slate"]];
   }
 
   if (![self loadSnapshots]) {
@@ -187,12 +207,46 @@ static SlateConfig *_instance = nil;
   if ([file rangeOfString:SLASH].location != 0 && [file rangeOfString:TILDA].location != 0)
     configFile = [NSString stringWithFormat:@"~/%@", file];
   if ([configFile hasSuffix:EXT_JS]) {
-    return [[JSController getInstance] loadConfigFileWithPath:configFile];
+    // Configurations never run code; `source` of a .js file is ignored.
+    SlateLogger(@"  Not loading %@: Slate no longer runs JavaScript configurations.", configFile);
+    return NO;
   }
   NSError *err;
   NSString *fileString = [NSString stringWithContentsOfFile:[configFile stringByExpandingTildeInPath] encoding:NSUTF8StringEncoding error:&err];
   if (err == nil && fileString != nil && fileString != NULL) { return [self append:fileString]; }
   return NO;
+}
+
+// Reads ~/.slate.yml and registers its settings and bindings. Nothing in it is run.
+- (BOOL)loadYAMLConfigAtPath:(NSString *)path error:(NSError **)error {
+  SlateConfigDocument *document = [SlateConfigDocument documentWithContentsOfFile:path error:error];
+  SlateResolvedConfig *resolved = [document resolve:error];
+  if (resolved == nil) return NO;
+  SlateLogger(@"  Loading %@", path);
+  for (SlateConfigEntry *setting in resolved.settings) {
+    id value = setting.value;
+    NSString *text = [value isKindOfClass:[NSNumber class]] && CFGetTypeID((__bridge CFTypeRef)value) == CFBooleanGetTypeID()
+      ? ([value boolValue] ? @"true" : @"false")
+      : [NSString stringWithFormat:@"%@", value];
+    [configs setObject:text forKey:setting.name];
+  }
+  for (SlateResolvedBinding *binding in resolved.bindings) {
+    @try {
+      Binding *bind = [[Binding alloc] initWithString:[NSString stringWithFormat:@"bind %@ %@", binding.hotkey, binding.action]];
+      if (binding.repeat != nil) [bind setRepeat:[binding.repeat boolValue]];
+      [self addBinding:bind];
+    } @catch (NSException *ex) {
+      SlateLogger(@"   ERROR %@",[ex name]);
+      NSAlert *alert = [SlateConfig warningAlertWithKeyEquivalents: [NSArray arrayWithObjects:@"Quit", @"Skip", nil]];
+      [alert setMessageText:[ex name]];
+      [alert setInformativeText:[NSString stringWithFormat:@"~/.slate.yml, binding #%lu: %@", (unsigned long)binding.index + 1, [ex reason]]];
+      if ([alert runModal] == NSAlertFirstButtonReturn) {
+        SlateLogger(@"User selected exit");
+        [NSApp terminate:nil];
+      }
+    }
+  }
+  return YES;
 }
 
 - (NSString *)stripComments:(NSString *)line {

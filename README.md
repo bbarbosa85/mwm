@@ -41,7 +41,7 @@ Just run this in your terminal:
 
 ## Configuring Slate ##
 
-**NEW:** You may now use a ".slate.js" file to configure slate using JavaScript. This allows for much more complex and dynamic configurations than the normal slate configuration style below. You can check out the documentation for this [here](https://github.com/bbarbosa85/mwm/wiki/JavaScript-Configs).
+**NEW:** Slate is now configured with a "~/.slate.yml" file, which you can edit from **Configure Slate…** in the status menu. It's plain data, so nothing in it ever runs. On startup Slate converts an existing ".slate" or ".slate.js" into it; JavaScript configurations are no longer loaded. See [docs/configuration-yaml.md](docs/configuration-yaml.md).
 
 Slate is configured using a ".slate" file in the current user's home directory. Configuration is loaded upon running Slate. You can also re-load the config using the "Load Config" menu option on the status menu (use this at your own risk. It is better to simply restart Slate).
 

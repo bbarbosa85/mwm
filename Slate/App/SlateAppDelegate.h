@@ -35,11 +35,8 @@
   NSMenuItem *activateSnapshotItem;
   NSMenuItem *launchOnLoginItem;
   IBOutlet NSWindow *windowInfo;
-  IBOutlet NSWindow *configHelper;
-  IBOutlet NSTextView *configHelperTextView;
   NSStatusItem *statusItem;
   NSWindowController *windowInfoController;
-  NSWindowController *configHelperController;
   HintOperation *currentHintOperation;
   GridOperation *currentGridOperation;
   Binding *currentSwitchBinding;
@@ -75,7 +72,7 @@
 - (IBAction)updateLaunchState;
 - (IBAction)relaunch;
 - (IBAction)currentWindowInfo;
-- (IBAction)configurationHelper;
+- (IBAction)configureSlate;
 - (IBAction)aboutWindow;
 - (void)loadConfig;
 - (void)registerHotKeys;
