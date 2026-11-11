@@ -8,7 +8,7 @@ This document provides a component-by-component, file-by-file guide to the Slate
 
 ### Core Application
 - **[`Slate/main.m`](file:///Users/brunobarbosa/Projetos/mwm/mwm/Slate/main.m)**: Process entry point; invokes `NSApplicationMain`.
-- **[`Slate/SlateAppDelegate.{h,m}`](file:///Users/brunobarbosa/Projetos/mwm/mwm/Slate/SlateAppDelegate.m)**: App delegate; coordinates status bar item, hotkey registration, Quartz event taps, modal input handling, Sparkle updates, and login items.
+- **[`Slate/SlateAppDelegate.{h,m}`](file:///Users/brunobarbosa/Projetos/mwm/mwm/Slate/SlateAppDelegate.m)**: App delegate; coordinates status bar item, hotkey registration, Quartz event taps, modal input handling, login items, and the status and app menus (built in code).
 - **[`Slate/SlateConfig.{h,m}`](file:///Users/brunobarbosa/Projetos/mwm/mwm/Slate/SlateConfig.m)**: Configuration engine; parses `.slate` directives, aliases, and layouts; manages snapshot persistence.
 - **[`Slate/Constants.{h,m}`](file:///Users/brunobarbosa/Projetos/mwm/mwm/Slate/Constants.m)**: Central definitions of all string constants, config keys, default values, and token identifiers.
 - **[`Slate/SlateLogger.h`](file:///Users/brunobarbosa/Projetos/mwm/mwm/Slate/SlateLogger.h)**: Logging macro abstractions (`SlateLogger`).
@@ -60,8 +60,6 @@ This document provides a component-by-component, file-by-file guide to the Slate
 - **[`Slate/GridWindow.{h,m}`](file:///Users/brunobarbosa/Projetos/mwm/mwm/Slate/GridWindow.m)**, **[`Slate/GridView.{h,m}`](file:///Users/brunobarbosa/Projetos/mwm/mwm/Slate/GridView.m)**, **[`Slate/GridCellView.{h,m}`](file:///Users/brunobarbosa/Projetos/mwm/mwm/Slate/GridCellView.m)**: Visual interactive grid overlay.
 - **[`Slate/HintWindow.{h,m}`](file:///Users/brunobarbosa/Projetos/mwm/mwm/Slate/HintWindow.m)**, **[`Slate/HintView.{h,m}`](file:///Users/brunobarbosa/Projetos/mwm/mwm/Slate/HintView.m)**: Window hint badges.
 - **[`Slate/SwitchWindow.{h,m}`](file:///Users/brunobarbosa/Projetos/mwm/mwm/Slate/SwitchWindow.m)**, **[`Slate/SwitchView.{h,m}`](file:///Users/brunobarbosa/Projetos/mwm/mwm/Slate/SwitchView.m)**, **[`Slate/SwitchAppView.{h,m}`](file:///Users/brunobarbosa/Projetos/mwm/mwm/Slate/SwitchAppView.m)**, **[`Slate/SwitchAppQuittingOverlayView.{h,m}`](file:///Users/brunobarbosa/Projetos/mwm/mwm/Slate/SwitchAppQuittingOverlayView.m)**: App switcher HUD.
-- **[`Slate/WindowInfoView.{h,m}`](file:///Users/brunobarbosa/Projetos/mwm/mwm/Slate/WindowInfoView.m)**: Window inspector modal panel.
-- **[`Slate/ConfigurationHelperView.{h,m}`](file:///Users/brunobarbosa/Projetos/mwm/mwm/Slate/ConfigurationHelperView.m)**: Config text viewer panel.
 
 ### Parser & Utilities
 - **[`Slate/StringTokenizer.{h,m}`](file:///Users/brunobarbosa/Projetos/mwm/mwm/Slate/StringTokenizer.m)**: Command and expression tokenizer respecting quotes and delimiters.
@@ -99,5 +97,5 @@ Located in [`SlateTests/`](file:///Users/brunobarbosa/Projetos/mwm/mwm/SlateTest
     - `gen`: Generates release builds.
     - `pub`: Publishes updates to the web server and appcast XML feed.
     - `dmg`: Bundles the application into `Slate.dmg` using `create-dmg` with custom background image (`build/dmg_background.png`) and application icon (`Slate/icon.icns`).
-- **`Sparkle.framework`**: Provides automated application updating via standard appcast feed (`SUUpdater`).
+- **Updates**: there's no automatic updater; new versions are installed from a DMG.
 

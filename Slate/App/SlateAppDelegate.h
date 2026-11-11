@@ -31,18 +31,12 @@
 
 @interface SlateAppDelegate : NSObject <NSApplicationDelegate> {
 @private
-  IBOutlet NSMenu *statusMenu;
-  NSMenuItem *activateSnapshotItem;
   NSMenuItem *launchOnLoginItem;
-  IBOutlet NSWindow *windowInfo;
   NSStatusItem *statusItem;
-  NSWindowController *windowInfoController;
   HintOperation *currentHintOperation;
   GridOperation *currentGridOperation;
   Binding *currentSwitchBinding;
-  SnapshotOperation *menuSnapshotOperation;
   SnapshotOperation *undoSnapshotOperation;
-  ActivateSnapshotOperation *menuActivateSnapshotOperation;
   DeleteSnapshotOperation *undoDeleteSnapshotOperation;
   NSInteger cmdTabBinding;
   NSInteger cmdShiftTabBinding;
@@ -56,9 +50,7 @@
 @property HintOperation *currentHintOperation;
 @property GridOperation *currentGridOperation;
 @property Binding *currentSwitchBinding;
-@property SnapshotOperation *menuSnapshotOperation;
 @property SnapshotOperation *undoSnapshotOperation;
-@property ActivateSnapshotOperation *menuActivateSnapshotOperation;
 @property DeleteSnapshotOperation *undoDeleteSnapshotOperation;
 @property (assign) NSInteger cmdTabBinding;
 @property (assign) NSInteger cmdShiftTabBinding;
@@ -71,14 +63,11 @@
 
 - (IBAction)updateLaunchState;
 - (IBAction)relaunch;
-- (IBAction)currentWindowInfo;
 - (IBAction)configureSlate;
 - (IBAction)aboutWindow;
 - (void)loadConfig;
 - (void)registerHotKeys;
 - (void)createSnapshotOperations;
-- (IBAction)takeSnapshot;
-- (IBAction)activateSnapshot;
 - (OSStatus)timerActivateBinding:(NSTimer *)timer;
 - (void)resetModalKey;
 - (OSStatus)activateBinding:(EventHotKeyID)hkCom isRepeat:(BOOL)isRepeat;
