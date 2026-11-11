@@ -1,9 +1,9 @@
 //
-//  LineNumberGutterView.h
+//  ConfigurationStatusBar.h
 //  Slate
 //
-//  Line numbers for a non-wrapping NSTextView. Sits beside the text view's
-//  scroll view (same top and bottom) and follows its scrolling.
+//  The bottom bar shared by the configuration windows:
+//  {saved?} {filename} ... {valid?} ... {Apply} {Close}
 //
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -22,16 +22,18 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface LineNumberGutterView : NSView
+@interface ConfigurationStatusBar : NSView
 
-// The text view must already be the document view of a scroll view.
-- (instancetype)initWithTextView:(NSTextView *)textView;
+// The target receives showIssues:, apply: and closeWindow: from the bar's controls.
+- (instancetype)initWithTarget:(id)target path:(NSString *)path;
 
-// Resizes the gutter for the current line count. Runs automatically after edits.
-- (void)updateThickness;
+- (void)setSavedText:(NSString *)text symbol:(NSString *)symbol color:(NSColor *)color;
+- (void)setStatusText:(NSString *)text symbol:(NSString *)symbol color:(NSColor *)color tip:(nullable NSString *)tip;
 
-// 1-based line numbers drawn in red.
-@property (copy, nonatomic) NSIndexSet *errorLines;
+// The validity status, for positioning the issue list under it.
+@property (readonly) NSButton *statusButton;
+
++ (NSImage *)symbol:(NSString *)name color:(NSColor *)color;
 
 @end
 

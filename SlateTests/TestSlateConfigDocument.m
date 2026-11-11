@@ -2,7 +2,7 @@
 //  TestSlateConfigDocument.m
 //  Slate
 //
-//  Tests for the managed ~/.slate.js format: the managed-config.js resolver
+//  Tests for the ~/.slate.yml format: reading, resolving aliases and writing
 //  used by slate.applyConfig, and SlateConfigDocument reading and writing.
 //
 //  This program is free software: you can redistribute it and/or modify
@@ -19,7 +19,6 @@
 //  along with this program.  If not, see http://www.gnu.org/licenses
 
 #import <XCTest/XCTest.h>
-#import <JavaScriptCore/JavaScriptCore.h>
 #import "SlateConfigDocument.h"
 
 @interface TestSlateConfigDocument : XCTestCase
@@ -28,136 +27,65 @@
 @implementation TestSlateConfigDocument
 
 static NSString *const kSample =
-  @"var config = {\n"
-  @"  settings: { defaultToCurrentScreen: true, secondsBeforeRepeat: 0.4, keyboardLayout: \"qwerty\" },\n"
-  @"  modifiers: { hyper: \"ctrl;alt;cmd\", shyper: \"shift;ctrl;alt;cmd\" },\n"
-  @"  monitors: { \"monitor-samsung\": \"0\", \"monitor-samsung-size\": \"5120x1440\" },\n"
-  @"  positions: {\n"
-  @"    lefthalf: \"move screenOriginX;screenOriginY screenSizeX/2;screenSizeY\",\n"
-  @"    \"samsung-full\": \"move screenOriginX;screenOriginY screenSizeX;screenSizeY ${monitor-samsung-size}\",\n"
-  @"  },\n"
-  @"  bindings: [\n"
-  @"    { group: \"Apps\", key: \"c\", mods: \"alt;shift\", action: \"focus 'Google Chrome'\" },\n"
-  @"    { group: \"Layout\", key: \"pad4\", mods: \"${hyper}\", action: \"${lefthalf} ${monitor-samsung}\" },\n"
-  @"    { group: \"Layout\", key: \"pad7\", mods: \"${hyper}\", action: \"${lefthalf}\", enabled: false, note: \"thirds\" },\n"
-  @"    { key: \"esc\", action: \"relaunch\", repeat: false },\n"
-  @"  ],\n"
-  @"};\n"
-  @"slate.applyConfig(config);\n";
+  @"settings:\n"
+  @"  defaultToCurrentScreen: true\n"
+  @"  secondsBeforeRepeat: 0.4\n"
+  @"  keyboardLayout: qwerty\n"
+  @"modifiers:\n"
+  @"  hyper: \"ctrl;alt;cmd\"\n"
+  @"  shyper: 'shift;ctrl;alt;cmd'\n"
+  @"monitors:\n"
+  @"  monitor-samsung: \"0\"\n"
+  @"  monitor-samsung-size: 5120x1440\n"
+  @"positions:\n"
+  @"  lefthalf: move screenOriginX;screenOriginY screenSizeX/2;screenSizeY\n"
+  @"  samsung-full: \"move screenOriginX;screenOriginY screenSizeX;screenSizeY ${monitor-samsung-size}\"\n"
+  @"bindings:\n"
+  @"  - group: Apps\n"
+  @"    key: c\n"
+  @"    mods: alt;shift\n"
+  @"    action: \"focus 'Google Chrome'\"\n";
 
-#pragma mark - managed-config.js
-
-- (JSContext *)runtimeContext {
-  JSContext *context = [[JSContext alloc] init];
-  NSString *path = [[NSBundle bundleForClass:[SlateConfigDocument class]] pathForResource:@"managed-config" ofType:@"js"];
-  XCTAssertNotNil(path, @"managed-config.js should be bundled with the app");
-  [context evaluateScript:[NSString stringWithContentsOfFile:path encoding:NSUTF8StringEncoding error:nil]];
-  return context;
-}
-
-- (JSValue *)resolve:(NSString *)configLiteral inContext:(JSContext *)context {
-  return [context evaluateScript:[NSString stringWithFormat:@"_slateManagedConfig.resolve(%@)", configLiteral]];
-}
-
-- (void)testResolveExpandsAliasesAndSkipsDisabledBindings {
-  JSContext *context = [self runtimeContext];
-  NSString *literal = [[kSample stringByReplacingOccurrencesOfString:@"var config = " withString:@"("]
-                       stringByReplacingOccurrencesOfString:@"};\nslate.applyConfig(config);\n" withString:@"})"];
-  NSDictionary *resolved = [[self resolve:literal inContext:context] toDictionary];
-  XCTAssertNil(context.exception);
-
-  NSArray *bindings = resolved[@"bindings"];
-  XCTAssertEqual([bindings count], 3u, @"the disabled binding is skipped");
-  XCTAssertEqualObjects(bindings[0][@"hotkey"], @"c:alt;shift");
-  XCTAssertEqualObjects(bindings[0][@"action"], @"focus 'Google Chrome'");
-  XCTAssertEqualObjects(bindings[1][@"hotkey"], @"pad4:ctrl;alt;cmd");
-  XCTAssertEqualObjects(bindings[1][@"action"], @"move screenOriginX;screenOriginY screenSizeX/2;screenSizeY 0");
-  XCTAssertEqualObjects(bindings[2][@"hotkey"], @"esc", @"no modifiers means a bare key");
-  XCTAssertEqualObjects(bindings[2][@"repeat"], @NO);
-  XCTAssertNil(bindings[1][@"repeat"], @"repeat is left to the operation default");
-
-  NSArray *settings = resolved[@"settings"];
-  XCTAssertEqual([settings count], 3u);
-  XCTAssertEqualObjects(settings[1][@"name"], @"secondsBeforeRepeat");
-  XCTAssertEqualObjects(settings[1][@"value"], @0.4);
-}
-
-- (void)testResolveExpandsNestedAliases {
-  JSContext *context = [self runtimeContext];
-  JSValue *result = [self resolve:@"({ monitors: { size: '5120x1440' }, positions: { full: 'move 0;0 1;1 ${size}' },"
-                                  @"   bindings: [{ key: 'f', action: '${full}' }] })" inContext:context];
-  XCTAssertNil(context.exception);
-  XCTAssertEqualObjects([result[@"bindings"][0][@"action"] toString], @"move 0;0 1;1 5120x1440");
-}
-
-- (void)assertResolveOf:(NSString *)literal failsWith:(NSString *)fragment {
-  JSContext *context = [self runtimeContext];
-  [self resolve:literal inContext:context];
-  XCTAssertNotNil(context.exception, @"%@ should fail", literal);
-  NSString *message = [context.exception toString];
-  XCTAssertTrue([message rangeOfString:fragment].location != NSNotFound, @"'%@' should mention '%@'", message, fragment);
-}
-
-- (void)testResolveRejectsBadConfigs {
-  [self assertResolveOf:@"({ bindings: [{ key: 'a', action: '${nope}' }] })" failsWith:@"Unrecognized alias ${nope}"];
-  [self assertResolveOf:@"({ aliases: { a: '${b}', b: '${a}' }, bindings: [{ key: 'x', action: '${a}' }] })" failsWith:@"loop"];
-  [self assertResolveOf:@"({ modifiers: { hyper: 'cmd' }, aliases: { hyper: 'ctrl' } })" failsWith:@"defined more than once"];
-  [self assertResolveOf:@"({ layouts: {} })" failsWith:@"Unknown config section \"layouts\""];
-  [self assertResolveOf:@"({ bindings: [{ key: 'a' }] })" failsWith:@"needs an action"];
-  [self assertResolveOf:@"({ bindings: [{ action: 'relaunch' }] })" failsWith:@"needs a key"];
-  [self assertResolveOf:@"({ settings: { x: {} } })" failsWith:@"must be a string, number, boolean, or array"];
-}
-
-// Loads the real runtime scripts (in the order JSController uses) against a
-// recording stand-in controller, then runs slate.applyConfig.
-- (void)testApplyConfigCallsController {
-  JSContext *context = [[JSContext alloc] init];
-  NSBundle *bundle = [NSBundle bundleForClass:[SlateConfigDocument class]];
-  [context evaluateScript:
-    @"var window = this;\n"
-    @"var calls = [];\n"
-    @"var _controller = {\n"
-    @"  log: function() {},\n"
-    @"  configNative: function(k, v) { calls.push(['config', k, String(v)]); },\n"
-    @"  bindString: function(h, a, r) { calls.push(['bind', h, a, r === undefined ? 'default' : String(r)]); }\n"
-    @"};\n"
-    @"var _info = { jsMethods: function() { return []; } };\n"];
-  for (NSString *script in @[@"underscore", @"utils", @"managed-config", @"initialize"]) {
-    NSString *path = [bundle pathForResource:script ofType:@"js"];
-    [context evaluateScript:[NSString stringWithContentsOfFile:path encoding:NSUTF8StringEncoding error:nil]];
-    XCTAssertNil(context.exception, @"%@.js: %@", script, context.exception);
-  }
-
-  [context evaluateScript:kSample];
-  XCTAssertNil(context.exception, @"%@", context.exception);
-  NSArray *calls = [context[@"calls"] toArray];
-  NSArray *expected = @[
-    @[@"config", @"defaultToCurrentScreen", @"true"],
-    @[@"config", @"secondsBeforeRepeat", @"0.4"],
-    @[@"config", @"keyboardLayout", @"qwerty"],
-    @[@"bind", @"c:alt;shift", @"focus 'Google Chrome'", @"default"],
-    @[@"bind", @"pad4:ctrl;alt;cmd", @"move screenOriginX;screenOriginY screenSizeX/2;screenSizeY 0", @"default"],
-    @[@"bind", @"esc", @"relaunch", @"false"],
-  ];
-  XCTAssertEqualObjects(calls, expected);
+// kSample with more bindings.
+- (NSString *)sample {
+  return [kSample stringByAppendingString:
+    @"  # Layout\n"
+    @"  - group: Layout\n"
+    @"    key: pad4\n"
+    @"    mods: ${hyper}\n"
+    @"    action: ${lefthalf} ${monitor-samsung}  # comment\n"
+    @"  - group: Layout\n"
+    @"    key: pad7\n"
+    @"    mods: ${hyper}\n"
+    @"    action: ${lefthalf}\n"
+    @"    enabled: false\n"
+    @"    note: thirds\n"
+    @"  - key: esc\n"
+    @"    action: relaunch\n"
+    @"    repeat: false\n"];
 }
 
 #pragma mark - Reading
 
 - (void)testReadsSample {
   NSError *error = nil;
-  SlateConfigDocument *doc = [SlateConfigDocument documentFromString:kSample error:&error];
+  SlateConfigDocument *doc = [SlateConfigDocument documentFromString:[self sample] error:&error];
   XCTAssertNotNil(doc, @"%@", error);
 
   XCTAssertEqual([doc.settings count], 3u);
   XCTAssertEqualObjects(doc.settings[0], [SlateConfigEntry entryWithName:@"defaultToCurrentScreen" value:@YES]);
   XCTAssertEqualObjects(doc.settings[1].value, @0.4);
+  XCTAssertEqualObjects(doc.settings[2].value, @"qwerty");
   XCTAssertEqualObjects([doc.modifiers valueForKey:@"name"], (@[@"hyper", @"shyper"]), @"order is preserved");
+  XCTAssertEqualObjects(doc.modifiers[1].value, @"shift;ctrl;alt;cmd");
   XCTAssertEqualObjects([doc.monitors valueForKey:@"name"], (@[@"monitor-samsung", @"monitor-samsung-size"]));
+  XCTAssertEqualObjects(doc.monitors[0].value, @"0", @"a quoted number stays text");
   XCTAssertEqual([doc.positions count], 2u);
   XCTAssertEqual([doc.aliases count], 0u);
 
   XCTAssertEqual([doc.bindings count], 4u);
+  XCTAssertEqualObjects(doc.bindings[0].action, @"focus 'Google Chrome'");
+  XCTAssertEqualObjects(doc.bindings[1].action, @"${lefthalf} ${monitor-samsung}", @"trailing comment dropped");
   SlateBindingEntry *disabled = doc.bindings[2];
   XCTAssertFalse(disabled.enabled);
   XCTAssertEqualObjects(disabled.note, @"thirds");
@@ -165,50 +93,96 @@ static NSString *const kSample =
   XCTAssertNil(doc.bindings[3].group);
   XCTAssertNil(doc.bindings[3].modifiers);
   XCTAssertEqualObjects(doc.bindings[3].repeat, @NO);
-  XCTAssertEqualObjects(doc.customCode, @"");
+  XCTAssertEqual(doc.bindings[3].line, 30u, @"bindings remember their line");
 }
 
-- (void)testReadsCustomCodeAfterMarker {
-  NSString *custom = @"slate.bind('g:cmd', slate.op('grid'));\n\n// trailing\n";
-  NSString *source = [NSString stringWithFormat:@"%@\n%@\n%@", kSample, SlateConfigDocumentCustomCodeMarker, custom];
+- (void)testEmptyFileIsAnEmptyConfiguration {
   NSError *error = nil;
-  SlateConfigDocument *doc = [SlateConfigDocument documentFromString:source error:&error];
+  SlateConfigDocument *doc = [SlateConfigDocument documentFromString:@"# nothing yet\n" error:&error];
   XCTAssertNotNil(doc, @"%@", error);
-  XCTAssertEqualObjects(doc.customCode, custom, @"custom code is not evaluated and is kept exactly");
+  XCTAssertEqual([doc.bindings count], 0u);
 }
 
-- (void)testHandWrittenFileIsNotManaged {
+- (void)testResolveExpandsAliasesAndSkipsDisabledBindings {
+  SlateConfigDocument *doc = [SlateConfigDocument documentFromString:[self sample] error:nil];
   NSError *error = nil;
-  SlateConfigDocument *doc = [SlateConfigDocument documentFromString:@"slate.bind('a:cmd', slate.op('relaunch'));" error:&error];
-  XCTAssertNil(doc);
-  XCTAssertEqualObjects(error.domain, SlateConfigDocumentErrorDomain);
-  XCTAssertEqual(error.code, SlateConfigDocumentErrorNotManaged);
+  SlateResolvedConfig *resolved = [doc resolve:&error];
+  XCTAssertNotNil(resolved, @"%@", error);
 
-  doc = [SlateConfigDocument documentFromString:@"var config = {};" error:&error];
-  XCTAssertNil(doc);
-  XCTAssertEqual(error.code, SlateConfigDocumentErrorNotManaged, @"no applyConfig call");
+  NSArray<SlateResolvedBinding *> *bindings = resolved.bindings;
+  XCTAssertEqual([bindings count], 3u, @"the disabled binding is skipped");
+  XCTAssertEqualObjects(bindings[0].hotkey, @"c:alt;shift");
+  XCTAssertEqualObjects(bindings[0].action, @"focus 'Google Chrome'");
+  XCTAssertEqualObjects(bindings[1].hotkey, @"pad4:ctrl;alt;cmd");
+  XCTAssertEqualObjects(bindings[1].action, @"move screenOriginX;screenOriginY screenSizeX/2;screenSizeY 0");
+  XCTAssertNil(bindings[1].repeat, @"repeat is left to the operation default");
+  XCTAssertEqualObjects(bindings[2].hotkey, @"esc", @"no modifiers means a bare key");
+  XCTAssertEqualObjects(bindings[2].repeat, @NO);
+  XCTAssertEqual(bindings[2].index, 3u);
+  XCTAssertEqualObjects(resolved.settings[1].value, @0.4);
+}
+
+- (void)testResolveExpandsNestedAliases {
+  NSString *yaml = @"monitors:\n  size: 5120x1440\npositions:\n  full: move 0;0 1;1 ${size}\nbindings:\n  - key: f\n    action: ${full}\n";
+  SlateConfigDocument *doc = [SlateConfigDocument documentFromString:yaml error:nil];
+  XCTAssertEqualObjects([doc resolve:nil].bindings[0].action, @"move 0;0 1;1 5120x1440");
+}
+
+- (void)assertYAML:(NSString *)yaml failsWith:(NSString *)fragment {
+  NSError *error = nil;
+  XCTAssertNil([SlateConfigDocument documentFromString:yaml error:&error], @"%@ should fail", yaml);
+  NSString *message = [error localizedDescription];
+  XCTAssertTrue([message rangeOfString:fragment].location != NSNotFound, @"'%@' should mention '%@'", message, fragment);
+}
+
+- (void)testRejectsBadConfigs {
+  [self assertYAML:@"bindings:\n  - key: a\n    action: ${nope}\n" failsWith:@"Unknown alias ${nope}"];
+  [self assertYAML:@"aliases:\n  a: ${b}\n  b: ${a}\nbindings:\n  - key: x\n    action: ${a}\n" failsWith:@"loop"];
+  [self assertYAML:@"modifiers:\n  hyper: cmd\naliases:\n  hyper: ctrl\n" failsWith:@"defined more than once"];
+  [self assertYAML:@"layouts: {}\n" failsWith:@"Unknown section \"layouts\""];
+  [self assertYAML:@"bindings:\n  - key: a\n" failsWith:@"needs an action"];
+  [self assertYAML:@"bindings:\n  - action: relaunch\n" failsWith:@"needs a key"];
+  [self assertYAML:@"bindings:\n  - key: a\n    action: relaunch\n    acton: x\n" failsWith:@"unknown field \"acton\""];
+  [self assertYAML:@"bindings:\n  - key: a\n    action: relaunch\n    repeat: yes\n" failsWith:@"repeat should be true or false"];
+  [self assertYAML:@"settings:\n  x:\n    y: 1\n" failsWith:@"should be text, a number, or true/false"];
+  [self assertYAML:@"bindings:\n  key: a\n" failsWith:@"bindings should be a list"];
+  [self assertYAML:@"- a\n- b\n" failsWith:@"mapping of sections"];
+}
+
+- (void)testErrorsPointAtTheLineAndBinding {
+  NSError *error = nil;
+  NSString *yaml = @"bindings:\n  - key: a\n    action: relaunch\n  - key: b\n    action: ${missing}\n";
+  XCTAssertNil([SlateConfigDocument documentFromString:yaml error:&error]);
+  XCTAssertEqual(error.code, SlateConfigDocumentErrorInvalid);
+  XCTAssertEqualObjects(error.userInfo[SlateConfigDocumentErrorLineKey], @4);
+  XCTAssertEqualObjects(error.userInfo[SlateConfigDocumentErrorBindingIndexKey], @1);
 }
 
 - (void)testSyntaxErrorReportsLine {
   NSError *error = nil;
-  SlateConfigDocument *doc = [SlateConfigDocument documentFromString:@"var config = {\n  settings: {,\n};\nslate.applyConfig(config);" error:&error];
-  XCTAssertNil(doc);
-  XCTAssertEqual(error.code, SlateConfigDocumentErrorScript);
+  XCTAssertNil([SlateConfigDocument documentFromString:@"settings:\n  a: \"open\n" error:&error]);
+  XCTAssertEqual(error.code, SlateConfigDocumentErrorSyntax);
   XCTAssertEqualObjects(error.userInfo[SlateConfigDocumentErrorLineKey], @2);
 }
 
-- (void)testInvalidConfigIsReported {
+- (void)testLenientReadKeepsUnknownAliases {
+  NSString *yaml = @"bindings:\n  - key: a\n    action: ${typo}\n";
   NSError *error = nil;
-  SlateConfigDocument *doc = [SlateConfigDocument documentFromString:@"slate.applyConfig({ bindings: [{ key: 'a', action: '${x}' }] });" error:&error];
-  XCTAssertNil(doc);
-  XCTAssertEqual(error.code, SlateConfigDocumentErrorInvalid);
+  SlateConfigDocument *doc = [SlateConfigDocument documentFromString:yaml lenient:YES error:&error];
+  XCTAssertNotNil(doc, @"%@", error);
+  NSMutableArray *errors = [NSMutableArray array];
+  SlateResolvedConfig *resolved = [doc resolveCollectingErrors:errors];
+  XCTAssertEqual([errors count], 1u);
+  XCTAssertEqual([resolved.bindings count], 0u, @"the broken binding is left out");
 }
 
 #pragma mark - Writing
 
 - (void)testRoundTrip {
-  NSString *source = [NSString stringWithFormat:@"%@\n%@\nslate.log('hi');\n", kSample, SlateConfigDocumentCustomCodeMarker];
-  SlateConfigDocument *doc = [SlateConfigDocument documentFromString:source error:nil];
+  SlateConfigDocument *doc = [SlateConfigDocument documentFromString:[self sample] error:nil];
+  [doc.aliases addObject:[SlateConfigEntry entryWithName:@"needs: quoting" value:@"say \"hi\"\\ # not a comment"]];
+  [doc.aliases addObject:[SlateConfigEntry entryWithName:@"yes" value:@"true"]];
+  [doc.aliases addObject:[SlateConfigEntry entryWithName:@"n" value:@12]];
   NSString *written = [doc stringRepresentation];
 
   NSError *error = nil;
@@ -220,7 +194,6 @@ static NSString *const kSample =
   XCTAssertEqualObjects(reread.positions, doc.positions);
   XCTAssertEqualObjects(reread.aliases, doc.aliases);
   XCTAssertEqualObjects(reread.bindings, doc.bindings);
-  XCTAssertEqualObjects(reread.customCode, @"slate.log('hi');\n");
   XCTAssertEqualObjects([reread stringRepresentation], written, @"writing is stable");
 }
 
@@ -230,23 +203,30 @@ static NSString *const kSample =
   [doc.monitors addObject:[SlateConfigEntry entryWithName:@"monitor-macbook" value:@"1"]];
   SlateBindingEntry *binding = [SlateBindingEntry bindingWithKey:@"r" modifiers:@"${hyper}" action:@"relaunch"];
   binding.group = @"Features";
+  binding.enabled = NO;
   [doc.bindings addObject:binding];
 
   NSString *written = [doc stringRepresentation];
-  XCTAssertTrue([written rangeOfString:@"    defaultToCurrentScreen: true,\n"].location != NSNotFound, @"%@", written);
-  XCTAssertTrue([written rangeOfString:@"    \"monitor-macbook\": \"1\",\n"].location != NSNotFound, @"%@", written);
-  XCTAssertTrue([written rangeOfString:@"  modifiers: {},\n"].location != NSNotFound, @"%@", written);
-  XCTAssertTrue([written rangeOfString:@"    { group: \"Features\", key: \"r\", mods: \"${hyper}\", action: \"relaunch\" },\n"].location != NSNotFound, @"%@", written);
-  XCTAssertTrue([written hasSuffix:[SlateConfigDocumentCustomCodeMarker stringByAppendingString:@"\n"]], @"%@", written);
+  XCTAssertTrue([written hasPrefix:@"# Slate configuration"], @"%@", written);
+  XCTAssertTrue([written containsString:@"\nsettings:\n  defaultToCurrentScreen: true\n"], @"%@", written);
+  XCTAssertTrue([written containsString:@"\nmonitors:\n  monitor-macbook: \"1\"\n"], @"%@", written);
+  XCTAssertTrue([written containsString:@"\nmodifiers: {}\n"], @"%@", written);
+  XCTAssertTrue([written hasSuffix:
+    @"\nbindings:\n"
+    @"  - group: \"Features\"\n"
+    @"    key: \"r\"\n"
+    @"    mods: \"${hyper}\"\n"
+    @"    action: \"relaunch\"\n"
+    @"    enabled: false\n"], @"%@", written);
 }
 
 - (void)testWriteKeepsBackupAndFollowsSymlink {
   NSFileManager *fm = [NSFileManager defaultManager];
   NSString *dir = [NSTemporaryDirectory() stringByAppendingPathComponent:[[NSUUID UUID] UUIDString]];
   [fm createDirectoryAtPath:dir withIntermediateDirectories:YES attributes:nil error:nil];
-  NSString *real = [dir stringByAppendingPathComponent:@"dotfiles-slate.js"];
-  NSString *link = [dir stringByAppendingPathComponent:@".slate.js"];
-  [@"// old\n" writeToFile:real atomically:YES encoding:NSUTF8StringEncoding error:nil];
+  NSString *real = [dir stringByAppendingPathComponent:@"dotfiles-slate.yml"];
+  NSString *link = [dir stringByAppendingPathComponent:@".slate.yml"];
+  [@"# old\n" writeToFile:real atomically:YES encoding:NSUTF8StringEncoding error:nil];
   XCTAssertTrue([fm createSymbolicLinkAtPath:link withDestinationPath:real error:nil]);
 
   SlateConfigDocument *doc = [SlateConfigDocument documentFromString:kSample error:nil];
@@ -256,7 +236,7 @@ static NSString *const kSample =
   NSDictionary *attrs = [fm attributesOfItemAtPath:link error:nil];
   XCTAssertEqualObjects(attrs[NSFileType], NSFileTypeSymbolicLink, @"the symlink is not replaced");
   XCTAssertEqualObjects([NSString stringWithContentsOfFile:real encoding:NSUTF8StringEncoding error:nil], [doc stringRepresentation]);
-  XCTAssertEqualObjects([NSString stringWithContentsOfFile:[real stringByAppendingString:@".bak"] encoding:NSUTF8StringEncoding error:nil], @"// old\n");
+  XCTAssertEqualObjects([NSString stringWithContentsOfFile:[real stringByAppendingString:@".bak"] encoding:NSUTF8StringEncoding error:nil], @"# old\n");
 
   SlateConfigDocument *reread = [SlateConfigDocument documentWithContentsOfFile:link error:&error];
   XCTAssertEqualObjects(reread.bindings, doc.bindings, @"%@", error);

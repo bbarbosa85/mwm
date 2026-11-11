@@ -16,29 +16,36 @@
 //  along with this program.  If not, see http://www.gnu.org/licenses
 
 #import "ConfigurationWindowController.h"
-#import "LineNumberGutterView.h"
+#import "ConfigurationFormView.h"
+#import "ConfigurationStatusBar.h"
 #import "SlateAppDelegate.h"
 #import "SlateConfigDocument.h"
 #import "SlateConfigValidator.h"
 #import "SlateLegacyMigration.h"
 
-static const NSTimeInterval kValidateDelay = 0.8;
-static const CGFloat kBarHeight = 44;
-// Set just before Save relaunches Slate, so the new process reopens the window where it was.
-static NSString *const kReopenDefaultsKey = @"SlateConfigurationReopenState";
+typedef NS_ENUM(NSInteger, SaveState) {
+  SaveStateSaved,       // the file on disk matches the form
+  SaveStateNotCreated,  // ~/.slate.yml doesn't exist and the defaults are untouched
+  SaveStateBlocked,     // edited, but not saved because it has errors
+  SaveStateUnreadable,  // the file on disk can't be shown as a form
+};
 
-@interface ConfigurationWindowController ()
-@property (strong) NSTextView *textView;
-@property (strong) LineNumberGutterView *gutter;
-@property (strong) NSImageView *savedIcon;
-@property (strong) NSTextField *savedLabel;
-@property (strong) NSTextField *pathLabel;
-@property (strong) NSButton *statusButton;
-@property (strong) NSArray<SlateConfigIssue *> *issues;
-@property (strong) NSDate *loadedModificationDate;
-@property (assign) BOOL fileExisted;
-@property (assign) BOOL dirty;
-@property (assign) BOOL loading;
+@interface ConfigurationWindowController () <ConfigurationFormViewDelegate>
+@property (strong) ConfigurationFormView *formView;
+@property (strong) ConfigurationStatusBar *bar;
+@property (strong) SlateConfigValidationResult *lastResult;
+@property (assign) SaveState saveState;
+// The file's text as read or last written (nil if there's no file).
+@property (copy, nullable) NSString *savedText;
+// The form's text as loaded or last saved; only changes from it get saved, so
+// opening the window never rewrites a hand-edited file.
+@property (copy) NSString *baselineText;
+@property (strong, nullable) NSDate *savedModificationDate;
+// The previous file goes to .bak once per editing session, not on every save.
+@property (assign) BOOL backedUp;
+@property (assign) BOOL resolvingConflict;
+// Tests point the window at a temporary file instead of ~/.slate.yml.
+@property (copy, nullable) NSString *configPathOverride;
 @end
 
 @implementation ConfigurationWindowController
@@ -51,7 +58,7 @@ static NSString *const kReopenDefaultsKey = @"SlateConfigurationReopenState";
 }
 
 - (instancetype)init {
-  NSWindow *window = [[NSWindow alloc] initWithContentRect:NSMakeRect(0, 0, 900, 640)
+  NSWindow *window = [[NSWindow alloc] initWithContentRect:NSMakeRect(0, 0, 980, 640)
                                                  styleMask:NSWindowStyleMaskTitled | NSWindowStyleMaskClosable |
                                                            NSWindowStyleMaskMiniaturizable | NSWindowStyleMaskResizable
                                                    backing:NSBackingStoreBuffered
@@ -59,174 +66,51 @@ static NSString *const kReopenDefaultsKey = @"SlateConfigurationReopenState";
   self = [super initWithWindow:window];
   if (self) {
     [window setTitle:@"Slate configuration"];
-    [window setMinSize:NSMakeSize(620, 360)];
+    [window setMinSize:NSMakeSize(640, 360)];
     [window setReleasedWhenClosed:NO];
     [window setDelegate:self];
     [window center];
     [window setFrameAutosaveName:@"SlateConfiguration"];
-    self.issues = @[];
     [self buildInterface];
   }
   return self;
 }
 
-#pragma mark - Interface
-
-- (NSImage *)symbol:(NSString *)name color:(NSColor *)color {
-  NSImage *image = [NSImage imageWithSystemSymbolName:name accessibilityDescription:nil];
-  return [image imageWithSymbolConfiguration:[NSImageSymbolConfiguration configurationWithHierarchicalColor:color]];
-}
-
-- (NSTextField *)barLabel {
-  NSTextField *label = [NSTextField labelWithString:@""];
-  [label setTranslatesAutoresizingMaskIntoConstraints:NO];
-  [label setLineBreakMode:NSLineBreakByTruncatingMiddle];
-  return label;
-}
-
 - (void)buildInterface {
   NSView *content = [[self window] contentView];
-
-  NSScrollView *scroll = [[NSScrollView alloc] init];
-  [scroll setTranslatesAutoresizingMaskIntoConstraints:NO];
-  [scroll setHasVerticalScroller:YES];
-  [scroll setHasHorizontalScroller:YES];
-  [scroll setAutohidesScrollers:YES];
-  [scroll setBorderType:NSNoBorder];
-
-  NSTextView *textView = [[NSTextView alloc] initWithFrame:NSMakeRect(0, 0, 900, 560)];
-  [textView setMinSize:NSMakeSize(0, 0)];
-  [textView setMaxSize:NSMakeSize(CGFLOAT_MAX, CGFLOAT_MAX)];
-  [textView setVerticallyResizable:YES];
-  [textView setHorizontallyResizable:YES];
-  [textView setAutoresizingMask:NSViewWidthSizable];
-  [[textView textContainer] setContainerSize:NSMakeSize(CGFLOAT_MAX, CGFLOAT_MAX)];
-  [[textView textContainer] setWidthTracksTextView:NO];
-  [textView setRichText:NO];
-  [textView setImportsGraphics:NO];
-  [textView setAllowsUndo:YES];
-  [textView setUsesFindBar:YES];
-  [textView setIncrementalSearchingEnabled:YES];
-  [textView setAutomaticQuoteSubstitutionEnabled:NO];
-  [textView setAutomaticDashSubstitutionEnabled:NO];
-  [textView setAutomaticTextReplacementEnabled:NO];
-  [textView setAutomaticSpellingCorrectionEnabled:NO];
-  [textView setAutomaticLinkDetectionEnabled:NO];
-  [textView setContinuousSpellCheckingEnabled:NO];
-  [textView setGrammarCheckingEnabled:NO];
-  [textView setSmartInsertDeleteEnabled:NO];
-  [textView setFont:[self editorFont]];
-  [textView setTypingAttributes:@{NSFontAttributeName: [self editorFont], NSForegroundColorAttributeName: [NSColor textColor]}];
-  [textView setTextContainerInset:NSMakeSize(4, 8)];
-  [textView setDelegate:self];
-  [[textView textStorage] setDelegate:self];
-  [scroll setDocumentView:textView];
-  self.textView = textView;
-  self.gutter = [[LineNumberGutterView alloc] initWithTextView:textView];
-
-  NSBox *separator = [[NSBox alloc] init];
-  [separator setBoxType:NSBoxSeparator];
-  [separator setTranslatesAutoresizingMaskIntoConstraints:NO];
-
-  // Bottom bar: {saved?} {filename} ... {valid?} ... {Save} {Close}
-  self.savedIcon = [[NSImageView alloc] init];
-  [self.savedIcon setTranslatesAutoresizingMaskIntoConstraints:NO];
-  self.savedLabel = [self barLabel];
-  self.pathLabel = [self barLabel];
-  [self.pathLabel setStringValue:[[SlateConfigDocument defaultPath] stringByAbbreviatingWithTildeInPath]];
-  [self.pathLabel setTextColor:[NSColor secondaryLabelColor]];
-
-  self.statusButton = [NSButton buttonWithTitle:@"" target:self action:@selector(showIssues:)];
-  [self.statusButton setTranslatesAutoresizingMaskIntoConstraints:NO];
-  [self.statusButton setBordered:NO];
-  [self.statusButton setImagePosition:NSImageLeading];
-  [self.statusButton setImageHugsTitle:YES];
-  [[self.statusButton cell] setLineBreakMode:NSLineBreakByTruncatingTail];
-  [self.statusButton setContentCompressionResistancePriority:NSLayoutPriorityDefaultLow forOrientation:NSLayoutConstraintOrientationHorizontal];
-
-  NSButton *save = [NSButton buttonWithTitle:@"Save" target:self action:@selector(save:)];
-  [save setTranslatesAutoresizingMaskIntoConstraints:NO];
-  [save setKeyEquivalent:@"s"];
-  [save setKeyEquivalentModifierMask:NSEventModifierFlagCommand];
-  [save setBezelColor:[NSColor controlAccentColor]];
-  [save setToolTip:@"Save ~/.slate.js and apply it (⌘S)"];
-  NSButton *close = [NSButton buttonWithTitle:@"Close" target:self action:@selector(closeConfiguration:)];
-  [close setTranslatesAutoresizingMaskIntoConstraints:NO];
-  [close setKeyEquivalent:@"w"];
-  [close setKeyEquivalentModifierMask:NSEventModifierFlagCommand];
-  [close setToolTip:@"Close and discard unsaved changes (⌘W)"];
-
-  for (NSView *view in @[self.gutter, scroll, separator, self.savedIcon, self.savedLabel, self.pathLabel, self.statusButton, save, close]) {
-    [content addSubview:view];
-  }
-
-  NSLayoutYAxisAnchor *barCenter = self.savedIcon.centerYAnchor;
-  NSLayoutConstraint *centered = [self.statusButton.centerXAnchor constraintEqualToAnchor:content.centerXAnchor];
-  [centered setPriority:NSLayoutPriorityDefaultHigh];
+  self.formView = [[ConfigurationFormView alloc] initWithFrame:NSZeroRect];
+  [self.formView setTranslatesAutoresizingMaskIntoConstraints:NO];
+  [self.formView setDelegate:self];
+  self.bar = [[ConfigurationStatusBar alloc] initWithTarget:self path:[[self configPath] stringByAbbreviatingWithTildeInPath]];
+  [content addSubview:self.formView];
+  [content addSubview:self.bar];
   [NSLayoutConstraint activateConstraints:@[
-    [self.gutter.topAnchor constraintEqualToAnchor:content.topAnchor],
-    [self.gutter.leadingAnchor constraintEqualToAnchor:content.leadingAnchor],
-    [self.gutter.bottomAnchor constraintEqualToAnchor:separator.topAnchor],
-    [scroll.topAnchor constraintEqualToAnchor:content.topAnchor],
-    [scroll.leadingAnchor constraintEqualToAnchor:self.gutter.trailingAnchor],
-    [scroll.trailingAnchor constraintEqualToAnchor:content.trailingAnchor],
-    [scroll.bottomAnchor constraintEqualToAnchor:separator.topAnchor],
-
-    [separator.leadingAnchor constraintEqualToAnchor:content.leadingAnchor],
-    [separator.trailingAnchor constraintEqualToAnchor:content.trailingAnchor],
-    [separator.bottomAnchor constraintEqualToAnchor:content.bottomAnchor constant:-kBarHeight],
-
-    [self.savedIcon.leadingAnchor constraintEqualToAnchor:content.leadingAnchor constant:14],
-    [self.savedIcon.centerYAnchor constraintEqualToAnchor:content.bottomAnchor constant:-kBarHeight / 2],
-    [self.savedLabel.leadingAnchor constraintEqualToAnchor:self.savedIcon.trailingAnchor constant:5],
-    [self.savedLabel.centerYAnchor constraintEqualToAnchor:barCenter],
-    [self.pathLabel.leadingAnchor constraintEqualToAnchor:self.savedLabel.trailingAnchor constant:10],
-    [self.pathLabel.centerYAnchor constraintEqualToAnchor:barCenter],
-
-    centered,
-    [self.statusButton.centerYAnchor constraintEqualToAnchor:barCenter],
-    [self.statusButton.leadingAnchor constraintGreaterThanOrEqualToAnchor:self.pathLabel.trailingAnchor constant:16],
-    [self.statusButton.trailingAnchor constraintLessThanOrEqualToAnchor:save.leadingAnchor constant:-16],
-
-    [close.trailingAnchor constraintEqualToAnchor:content.trailingAnchor constant:-14],
-    [close.centerYAnchor constraintEqualToAnchor:barCenter],
-    [save.trailingAnchor constraintEqualToAnchor:close.leadingAnchor constant:-8],
-    [save.centerYAnchor constraintEqualToAnchor:barCenter],
+    [self.formView.topAnchor constraintEqualToAnchor:content.topAnchor],
+    [self.formView.leadingAnchor constraintEqualToAnchor:content.leadingAnchor],
+    [self.formView.trailingAnchor constraintEqualToAnchor:content.trailingAnchor],
+    [self.formView.bottomAnchor constraintEqualToAnchor:self.bar.topAnchor],
+    [self.bar.leadingAnchor constraintEqualToAnchor:content.leadingAnchor],
+    [self.bar.trailingAnchor constraintEqualToAnchor:content.trailingAnchor],
+    [self.bar.bottomAnchor constraintEqualToAnchor:content.bottomAnchor],
   ]];
-}
-
-- (NSFont *)editorFont {
-  return [NSFont monospacedSystemFontOfSize:12 weight:NSFontWeightRegular];
 }
 
 #pragma mark - Showing and loading
 
 - (void)showConfiguration {
-  if (!self.dirty) [self loadFromDisk];
+  if (![[self window] isVisible]) [self loadFromDisk];
   [NSApp activateIgnoringOtherApps:YES];
   [self showWindow:self];
   [[self window] makeKeyAndOrderFront:self];
-  [[self window] makeFirstResponder:self.textView];
-}
-
-+ (void)reopenAfterRelaunchIfNeeded {
-  NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-  NSDictionary *state = [defaults dictionaryForKey:kReopenDefaultsKey];
-  if (state == nil) return;
-  [defaults removeObjectForKey:kReopenDefaultsKey];
-
-  ConfigurationWindowController *controller = [self sharedController];
-  [controller showConfiguration];
-  NSUInteger length = [[controller.textView string] length];
-  NSUInteger selection = MIN([state[@"selection"] unsignedIntegerValue], length);
-  [controller.textView setSelectedRange:NSMakeRange(selection, 0)];
-  NSClipView *clip = [[controller.textView enclosingScrollView] contentView];
-  [clip scrollToPoint:NSMakePoint(0, [state[@"scrollY"] doubleValue])];
-  [[controller.textView enclosingScrollView] reflectScrolledClipView:clip];
+  [[self window] makeFirstResponder:self.formView.initialFirstResponder];
 }
 
 - (NSString *)configPath {
-  return [SlateConfigDocument defaultPath];
+  return self.configPathOverride ?: [SlateConfigDocument defaultPath];
+}
+
+- (NSString *)displayPath {
+  return [[self configPath] stringByAbbreviatingWithTildeInPath];
 }
 
 - (NSDate *)modificationDateOnDisk {
@@ -234,147 +118,197 @@ static NSString *const kReopenDefaultsKey = @"SlateConfigurationReopenState";
   return [[NSFileManager defaultManager] attributesOfItemAtPath:target error:nil][NSFileModificationDate];
 }
 
-// The bundled defaults, converted to the managed format.
-- (NSString *)defaultConfigText {
+// The bundled defaults, as a document.
+- (SlateConfigDocument *)defaultDocument {
   NSString *path = [[NSBundle mainBundle] pathForResource:@"default" ofType:@"slate"];
   NSString *legacy = path ? [NSString stringWithContentsOfFile:path encoding:NSUTF8StringEncoding error:nil] : nil;
-  if (legacy == nil) return [[[SlateConfigDocument alloc] init] stringRepresentation];
-  return [[SlateLegacyMigration documentFromLegacySource:legacy warnings:[NSMutableArray array]] stringRepresentation];
+  if (legacy == nil) return [[SlateConfigDocument alloc] init];
+  return [SlateLegacyMigration documentFromLegacySource:legacy warnings:[NSMutableArray array]];
 }
 
 - (void)loadFromDisk {
   NSError *error = nil;
   NSString *text = [NSString stringWithContentsOfFile:[self configPath] encoding:NSUTF8StringEncoding error:&error];
-  self.fileExisted = text != nil;
+  self.savedText = text;
+  self.savedModificationDate = [self modificationDateOnDisk];
+  self.backedUp = NO;
+
+  SlateConfigDocument *document;
   if (text == nil) {
     BOOL missing = [error.domain isEqualToString:NSCocoaErrorDomain] && error.code == NSFileReadNoSuchFileError;
     if (!missing) {
-      [self showError:@"Couldn't read ~/.slate.js" detail:[error localizedDescription]];
-    }
-    text = missing ? [self defaultConfigText] : @"";
-  }
-  self.loadedModificationDate = [self modificationDateOnDisk];
-
-  self.loading = YES;
-  [self.textView setString:text];
-  [[self.textView undoManager] removeAllActions];
-  [self.textView setSelectedRange:NSMakeRange(0, 0)];
-  [self.textView scrollRangeToVisible:NSMakeRange(0, 0)];
-  self.loading = NO;
-  [self.gutter updateThickness];
-  [self setDirty:NO];
-  [self runValidation];
-}
-
-- (void)setDirty:(BOOL)dirty {
-  _dirty = dirty;
-  [[self window] setDocumentEdited:dirty];
-  if (dirty) {
-    [self.savedIcon setImage:[self symbol:@"circle.fill" color:[NSColor systemOrangeColor]]];
-    [self.savedLabel setStringValue:@"Edited"];
-  } else if (self.fileExisted) {
-    [self.savedIcon setImage:[self symbol:@"checkmark.circle.fill" color:[NSColor secondaryLabelColor]]];
-    [self.savedLabel setStringValue:@"Saved"];
-  } else {
-    [self.savedIcon setImage:[self symbol:@"doc.badge.plus" color:[NSColor secondaryLabelColor]]];
-    [self.savedLabel setStringValue:@"Not saved yet"];
-  }
-}
-
-#pragma mark - Editing
-
-- (void)textDidChange:(NSNotification *)notification {
-  if (self.loading) return;
-  if (!self.dirty) [self setDirty:YES];
-  [[self.textView layoutManager] removeTemporaryAttribute:NSBackgroundColorAttributeName
-                                        forCharacterRange:NSMakeRange(0, [[self.textView string] length])];
-  [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(runValidation) object:nil];
-  [self performSelector:@selector(runValidation) withObject:nil afterDelay:kValidateDelay];
-}
-
-// Tab inserts two spaces, matching the generated file.
-- (BOOL)textView:(NSTextView *)textView doCommandBySelector:(SEL)selector {
-  if (selector == @selector(insertTab:)) {
-    [textView insertText:@"  " replacementRange:[textView selectedRange]];
-    return YES;
-  }
-  return NO;
-}
-
-- (void)textStorage:(NSTextStorage *)textStorage didProcessEditing:(NSTextStorageEditActions)editedMask
-              range:(NSRange)editedRange changeInLength:(NSInteger)delta {
-  if (editedMask & NSTextStorageEditedCharacters) [self highlight:textStorage];
-}
-
-- (void)color:(NSTextStorage *)storage pattern:(NSString *)pattern color:(NSColor *)color {
-  NSRegularExpression *re = [NSRegularExpression regularExpressionWithPattern:pattern options:0 error:nil];
-  [re enumerateMatchesInString:[storage string] options:0 range:NSMakeRange(0, [storage length])
-                    usingBlock:^(NSTextCheckingResult *match, NSMatchingFlags flags, BOOL *stop) {
-    [storage addAttribute:NSForegroundColorAttributeName value:color range:[match range]];
-  }];
-}
-
-- (void)highlight:(NSTextStorage *)storage {
-  NSRange all = NSMakeRange(0, [storage length]);
-  [storage addAttribute:NSFontAttributeName value:[self editorFont] range:all];
-  [storage addAttribute:NSForegroundColorAttributeName value:[NSColor textColor] range:all];
-  [self color:storage pattern:@"\\b(var|let|const|function|return|if|else|for|while|do|switch|case|break|continue|new|this|typeof|in|of|try|catch|throw|true|false|null|undefined)\\b"
-        color:[NSColor systemPinkColor]];
-  [self color:storage pattern:@"\\b[0-9]+(\\.[0-9]+)?\\b" color:[NSColor systemBlueColor]];
-  [self color:storage pattern:@"\\b(slate|S)(?=\\.)" color:[NSColor systemPurpleColor]];
-
-  // Strings and comments in one pass, so "//" inside a string isn't a comment and vice versa.
-  NSRegularExpression *tokens = [NSRegularExpression regularExpressionWithPattern:
-    @"(//[^\\n]*|/\\*[\\s\\S]*?\\*/)|(\"(?:\\\\.|[^\"\\\\\\n])*\"|'(?:\\\\.|[^'\\\\\\n])*'|`(?:\\\\.|[^`\\\\])*`)"
-                                                                         options:0 error:nil];
-  NSRegularExpression *alias = [NSRegularExpression regularExpressionWithPattern:@"\\$\\{[^}]*\\}" options:0 error:nil];
-  NSString *text = [storage string];
-  [tokens enumerateMatchesInString:text options:0 range:all usingBlock:^(NSTextCheckingResult *match, NSMatchingFlags flags, BOOL *stop) {
-    if ([match rangeAtIndex:1].location != NSNotFound) {
-      [storage addAttribute:NSForegroundColorAttributeName value:[NSColor secondaryLabelColor] range:[match range]];
+      [self showUnreadable:[NSString stringWithFormat:@"%@ couldn't be read.\n\n%@", [self displayPath], [error localizedDescription]]];
       return;
     }
-    [storage addAttribute:NSForegroundColorAttributeName value:[NSColor systemRedColor] range:[match range]];
-    [alias enumerateMatchesInString:text options:0 range:[match range] usingBlock:^(NSTextCheckingResult *a, NSMatchingFlags f, BOOL *s) {
-      [storage addAttribute:NSForegroundColorAttributeName value:[NSColor systemOrangeColor] range:[a range]];
-    }];
+    document = [self defaultDocument];
+  } else {
+    // Lenient, so a file with an unknown alias still opens and shows the error.
+    document = [SlateConfigDocument documentFromString:text lenient:YES error:&error];
+    if (document == nil) {
+      [self showUnreadable:[NSString stringWithFormat:
+        @"%@ can't be shown here until this is fixed:\n\n%@\n\nFix it in a text editor, then choose Reload.",
+        [self displayPath], [error localizedDescription]]];
+      return;
+    }
+  }
+  [self.formView setDocument:document];
+  self.baselineText = [document stringRepresentation];
+  [self runValidation];
+  [self updateSaveState:self.savedText ? SaveStateSaved : SaveStateNotCreated];
+}
+
+- (void)showUnreadable:(NSString *)message {
+  [self.formView showUnavailableMessage:message];
+  self.baselineText = @"";
+  self.lastResult = nil;
+  [self.bar setStatusText:@"Can't be read" symbol:@"xmark.octagon.fill" color:[NSColor systemRedColor] tip:nil];
+  [self updateSaveState:SaveStateUnreadable];
+}
+
+- (NSString *)currentText {
+  return [self.formView.document stringRepresentation] ?: @"";
+}
+
+#pragma mark - Form
+
+- (void)formViewDidChangeDocument:(ConfigurationFormView *)formView {
+  [self validateAndSave];
+}
+
+- (void)formViewWantsTextEditor:(ConfigurationFormView *)formView {
+  NSURL *file = [NSURL fileURLWithPath:[self configPath]];
+  NSURL *textEdit = [[NSWorkspace sharedWorkspace] URLForApplicationWithBundleIdentifier:@"com.apple.TextEdit"];
+  if (textEdit == nil) {
+    [[NSWorkspace sharedWorkspace] activateFileViewerSelectingURLs:@[file]];
+    return;
+  }
+  [[NSWorkspace sharedWorkspace] openURLs:@[file]
+                     withApplicationAtURL:textEdit
+                            configuration:[NSWorkspaceOpenConfiguration configuration]
+                        completionHandler:nil];
+}
+
+- (void)formViewWantsReload:(ConfigurationFormView *)formView {
+  [self loadFromDisk];
+}
+
+#pragma mark - Saving
+
+// Checks the form's configuration and writes it when it has no errors.
+- (void)validateAndSave {
+  if (self.formView.document == nil) return;
+  SlateConfigValidationResult *result = [self runValidation];
+  NSString *text = [self currentText];
+  if ([text isEqualToString:self.baselineText]) {
+    // Back to what was loaded: nothing to save (and a missing file stays missing).
+    [self updateSaveState:self.savedText ? SaveStateSaved : SaveStateNotCreated];
+    return;
+  }
+  if (result.errorCount > 0) {
+    [self updateSaveState:SaveStateBlocked];
+    return;
+  }
+  if ([self changedOnDisk]) {
+    [self resolveConflict];
+    return;
+  }
+  [self writeText:text];
+}
+
+- (BOOL)writeText:(NSString *)text {
+  NSError *error = nil;
+  if (![SlateConfigDocument writeString:text toFile:[self configPath] backup:!self.backedUp error:&error]) {
+    [self updateSaveState:SaveStateBlocked];
+    [self showError:[NSString stringWithFormat:@"Couldn't save %@", [self displayPath]] detail:[error localizedDescription]];
+    return NO;
+  }
+  self.backedUp = YES;
+  self.savedText = text;
+  self.baselineText = text;
+  self.savedModificationDate = [self modificationDateOnDisk];
+  [self updateSaveState:SaveStateSaved];
+  return YES;
+}
+
+- (BOOL)changedOnDisk {
+  NSDate *current = [self modificationDateOnDisk];
+  if (current == nil && self.savedModificationDate == nil) return NO;
+  return ![current isEqualToDate:self.savedModificationDate];
+}
+
+- (void)resolveConflict {
+  if (self.resolvingConflict) return;
+  self.resolvingConflict = YES;
+  NSAlert *alert = [[NSAlert alloc] init];
+  [alert setAlertStyle:NSAlertStyleWarning];
+  [alert setMessageText:[NSString stringWithFormat:@"%@ changed on disk", [self displayPath]]];
+  [alert setInformativeText:@"Another app changed the file while it was open here. Keep the changes made here and replace the file, or load the version on disk."];
+  [alert addButtonWithTitle:@"Load from disk"];
+  [alert addButtonWithTitle:@"Replace"];
+  [alert beginSheetModalForWindow:[self window] completionHandler:^(NSModalResponse response) {
+    self.resolvingConflict = NO;
+    if (response == NSAlertFirstButtonReturn) {
+      [self loadFromDisk];
+    } else {
+      [self writeText:[self currentText]];
+    }
   }];
+}
+
+// Picks up edits made in a text editor while the window was in the background.
+- (void)windowDidBecomeKey:(NSNotification *)notification {
+  if (self.resolvingConflict || ![self changedOnDisk]) return;
+  if (self.saveState == SaveStateBlocked) {
+    [self resolveConflict];
+  } else {
+    [self loadFromDisk];
+  }
+}
+
+// ⌘S: commits a cell being edited, which saves it.
+- (IBAction)saveDocument:(id)sender {
+  [[self window] makeFirstResponder:nil];
+  [self validateAndSave];
+}
+
+- (void)updateSaveState:(SaveState)state {
+  self.saveState = state;
+  NSString *text, *symbol;
+  NSColor *color;
+  switch (state) {
+    case SaveStateSaved:
+      text = @"Saved"; symbol = @"checkmark.circle.fill"; color = [NSColor secondaryLabelColor]; break;
+    case SaveStateNotCreated:
+      text = @"Not created yet"; symbol = @"doc.badge.plus"; color = [NSColor secondaryLabelColor]; break;
+    case SaveStateBlocked:
+      text = @"Not saved"; symbol = @"exclamationmark.circle.fill"; color = [NSColor systemRedColor]; break;
+    case SaveStateUnreadable:
+      text = @"Not loaded"; symbol = @"exclamationmark.circle.fill"; color = [NSColor systemRedColor]; break;
+  }
+  [self.bar setSavedText:text symbol:symbol color:color];
+  [[self window] setDocumentEdited:state == SaveStateBlocked];
 }
 
 #pragma mark - Validation
-
-- (NSRange)rangeOfLine:(NSUInteger)line {
-  NSString *text = [self.textView string];
-  NSUInteger index = 0;
-  for (NSUInteger current = 1; current < line && index < [text length]; current++) {
-    index = NSMaxRange([text lineRangeForRange:NSMakeRange(index, 0)]);
-  }
-  if (index > [text length]) return NSMakeRange(NSNotFound, 0);
-  return [text lineRangeForRange:NSMakeRange(index, 0)];
-}
 
 - (NSString *)plural:(NSUInteger)count of:(NSString *)noun {
   return [NSString stringWithFormat:@"%lu %@%@", (unsigned long)count, noun, count == 1 ? @"" : @"s"];
 }
 
 - (void)setStatus:(NSString *)text symbol:(NSString *)symbol color:(NSColor *)color {
-  [self.statusButton setImage:[self symbol:symbol color:color]];
-  // A chevron shows the status opens a list when there are issues.
-  [self.statusButton setTitle:[self.issues count] > 0 ? [text stringByAppendingString:@"  ▾"] : text];
-  [self.statusButton setToolTip:[self.issues count] > 0 ? [NSString stringWithFormat:@"Show %@", [self plural:[self.issues count] of:@"issue"]] : nil];
+  NSUInteger count = [self.lastResult.issues count];
+  NSString *title = count > 0 ? [text stringByAppendingString:@"  ▾"] : text;
+  NSString *tip = count > 0 ? [NSString stringWithFormat:@"Show %@", [self plural:count of:@"issue"]] : nil;
+  [self.bar setStatusText:title symbol:symbol color:color tip:tip];
 }
 
 - (SlateConfigValidationResult *)runValidation {
-  [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(runValidation) object:nil];
-  SlateConfigValidationResult *result = [SlateConfigValidator validateSource:[self.textView string]];
-  self.issues = result.issues;
-
+  SlateConfigValidationResult *result = [SlateConfigValidator validateSource:[self currentText]];
+  self.lastResult = result;
   NSString *counts = [NSString stringWithFormat:@"%@, %@", [self plural:result.bindingCount of:@"binding"],
                       [self plural:result.settingCount of:@"setting"]];
   if (result.errorCount > 0) {
-    SlateConfigIssue *first = result.issues[0];
-    NSString *where = first.line > 0 ? [NSString stringWithFormat:@"line %lu: ", (unsigned long)first.line] : @"";
-    [self setStatus:[NSString stringWithFormat:@"%@ · %@%@", [self plural:result.errorCount of:@"error"], where, first.message]
+    [self setStatus:[NSString stringWithFormat:@"%@ · %@", [self plural:result.errorCount of:@"error"], [self messageFor:result.issues[0]]]
              symbol:@"xmark.octagon.fill" color:[NSColor systemRedColor]];
   } else if (result.warningCount > 0) {
     [self setStatus:[NSString stringWithFormat:@"Valid · %@ · %@", counts, [self plural:result.warningCount of:@"warning"]]
@@ -382,54 +316,44 @@ static NSString *const kReopenDefaultsKey = @"SlateConfigurationReopenState";
   } else {
     [self setStatus:[@"Valid · " stringByAppendingString:counts] symbol:@"checkmark.circle.fill" color:[NSColor systemGreenColor]];
   }
-
-  // Error lines marked in the gutter and text.
-  NSMutableIndexSet *errorLines = [NSMutableIndexSet indexSet];
-  NSLayoutManager *layoutManager = [self.textView layoutManager];
-  [layoutManager removeTemporaryAttribute:NSBackgroundColorAttributeName forCharacterRange:NSMakeRange(0, [[self.textView string] length])];
-  for (SlateConfigIssue *issue in result.issues) {
-    if (!issue.isError || issue.line == 0) continue;
-    [errorLines addIndex:issue.line];
-    NSRange range = [self rangeOfLine:issue.line];
-    if (range.location != NSNotFound) {
-      [layoutManager addTemporaryAttribute:NSBackgroundColorAttributeName
-                                     value:[[NSColor systemRedColor] colorWithAlphaComponent:0.15]
-                         forCharacterRange:range];
-    }
-  }
-  [self.gutter setErrorLines:errorLines];
   return result;
 }
 
-- (IBAction)showIssues:(id)sender {
-  if ([self.issues count] == 0) return;
+// Issues found in the form's own text: its line numbers mean nothing here.
+- (NSString *)messageFor:(SlateConfigIssue *)issue {
+  NSString *message = issue.message;
+  NSRegularExpression *linePrefix = [NSRegularExpression regularExpressionWithPattern:@"^Line [0-9]+: " options:0 error:nil];
+  return [linePrefix stringByReplacingMatchesInString:message options:0 range:NSMakeRange(0, [message length]) withTemplate:@""];
+}
+
+- (IBAction)showIssues:(NSButton *)sender {
+  NSArray *issues = self.lastResult.issues;
+  if ([issues count] == 0) return;
   NSMenu *menu = [[NSMenu alloc] init];
-  for (SlateConfigIssue *issue in self.issues) {
-    NSString *title = issue.line > 0 ? [NSString stringWithFormat:@"Line %lu: %@", (unsigned long)issue.line, issue.message] : issue.message;
-    NSMenuItem *item = [menu addItemWithTitle:title action:@selector(jumpToIssue:) keyEquivalent:@""];
+  for (SlateConfigIssue *issue in issues) {
+    NSMenuItem *item = [menu addItemWithTitle:[self messageFor:issue] action:@selector(revealIssue:) keyEquivalent:@""];
     [item setTarget:self];
-    [item setRepresentedObject:@(issue.line)];
-    [item setImage:[self symbol:issue.isError ? @"xmark.octagon.fill" : @"exclamationmark.triangle.fill"
-                          color:issue.isError ? [NSColor systemRedColor] : [NSColor systemOrangeColor]]];
+    [item setRepresentedObject:issue];
+    [item setImage:[ConfigurationStatusBar symbol:issue.isError ? @"xmark.octagon.fill" : @"exclamationmark.triangle.fill"
+                                            color:issue.isError ? [NSColor systemRedColor] : [NSColor systemOrangeColor]]];
   }
-  [menu popUpMenuPositioningItem:nil atLocation:NSMakePoint(0, NSHeight([self.statusButton bounds]) + 4) inView:self.statusButton];
+  [menu popUpMenuPositioningItem:nil atLocation:NSMakePoint(0, NSHeight([sender bounds]) + 4) inView:sender];
 }
 
-- (IBAction)jumpToIssue:(NSMenuItem *)sender {
-  [self goToLine:[[sender representedObject] unsignedIntegerValue]];
+- (IBAction)revealIssue:(NSMenuItem *)sender {
+  [self reveal:[sender representedObject]];
 }
 
-- (void)goToLine:(NSUInteger)line {
-  if (line == 0) return;
-  NSRange range = [self rangeOfLine:line];
-  if (range.location == NSNotFound) return;
-  [[self window] makeFirstResponder:self.textView];
-  [self.textView setSelectedRange:NSMakeRange(range.location, 0)];
-  [self.textView scrollRangeToVisible:range];
-  [self.textView showFindIndicatorForRange:range];
+// Shows the binding or entry an issue is about.
+- (void)reveal:(SlateConfigIssue *)issue {
+  if (issue.bindingIndex != NSNotFound) {
+    [self.formView revealBindingAtIndex:issue.bindingIndex];
+  } else if (issue.entryName != nil) {
+    [self.formView revealEntryNamed:issue.entryName];
+  }
 }
 
-#pragma mark - Saving
+#pragma mark - Apply and close
 
 - (void)showError:(NSString *)message detail:(NSString *)detail {
   NSAlert *alert = [[NSAlert alloc] init];
@@ -439,82 +363,45 @@ static NSString *const kReopenDefaultsKey = @"SlateConfigurationReopenState";
   [alert beginSheetModalForWindow:[self window] completionHandler:nil];
 }
 
-// Saves, then relaunches Slate to apply the file; the window reopens where it was.
-- (IBAction)save:(id)sender {
-  SlateConfigValidationResult *result = [self runValidation];
-  if (result.errorCount > 0) {
-    SlateConfigIssue *first = result.issues[0];
+// Saves, closes the window, and restarts Slate so it loads ~/.slate.yml.
+- (IBAction)apply:(NSButton *)sender {
+  [[self window] makeFirstResponder:nil];  // commit a cell being edited
+  if (self.formView.document == nil) {
+    [self showError:[NSString stringWithFormat:@"%@ can't be applied", [self displayPath]]
+             detail:@"Fix the file in a text editor and choose Reload first."];
+    return;
+  }
+  [self validateAndSave];
+  if (self.lastResult.errorCount > 0) {
+    SlateConfigIssue *first = self.lastResult.issues[0];
     NSAlert *alert = [[NSAlert alloc] init];
     [alert setAlertStyle:NSAlertStyleWarning];
-    [alert setMessageText:[NSString stringWithFormat:@"Save with %@?", [self plural:result.errorCount of:@"error"]]];
-    [alert setInformativeText:[NSString stringWithFormat:
-      @"%@%@\n\nIf you save anyway, Slate will show these errors when it reloads and skip what it can't load.",
-      first.line > 0 ? [NSString stringWithFormat:@"Line %lu: ", (unsigned long)first.line] : @"", first.message]];
-    [alert addButtonWithTitle:@"Review errors"];
-    [alert addButtonWithTitle:@"Save anyway"];
+    [alert setMessageText:@"Fix the errors before applying"];
+    [alert setInformativeText:[NSString stringWithFormat:@"%@\n\nChanges with errors aren't saved, so Slate would restart with the last valid version.",
+                               [self messageFor:first]]];
+    [alert addButtonWithTitle:@"Show error"];
+    [alert addButtonWithTitle:@"Cancel"];
     [alert beginSheetModalForWindow:[self window] completionHandler:^(NSModalResponse response) {
-      if (response == NSAlertFirstButtonReturn) {
-        [self goToLine:first.line];
-      } else {
-        [self confirmOverwriteThenSave];
-      }
+      if (response == NSAlertFirstButtonReturn) [self reveal:first];
     }];
     return;
   }
-  [self confirmOverwriteThenSave];
-}
-
-- (BOOL)changedOnDisk {
-  NSDate *current = [self modificationDateOnDisk];
-  if (current == nil && self.loadedModificationDate == nil) return NO;
-  return ![current isEqualToDate:self.loadedModificationDate];
-}
-
-- (void)confirmOverwriteThenSave {
-  if (![self changedOnDisk]) {
-    [self writeAndApply];
-    return;
-  }
-  NSAlert *alert = [[NSAlert alloc] init];
-  [alert setAlertStyle:NSAlertStyleWarning];
-  [alert setMessageText:@"~/.slate.js changed on disk"];
-  [alert setInformativeText:@"Another app changed the file after you opened it here. Saving replaces those changes; the previous file is kept as ~/.slate.js.bak."];
-  [alert addButtonWithTitle:@"Cancel"];
-  [alert addButtonWithTitle:@"Replace"];
-  [alert beginSheetModalForWindow:[self window] completionHandler:^(NSModalResponse response) {
-    if (response == NSAlertSecondButtonReturn) [self writeAndApply];
-  }];
-}
-
-- (void)writeAndApply {
-  NSError *error = nil;
-  if (![SlateConfigDocument writeString:[self.textView string] toFile:[self configPath] error:&error]) {
-    [self showError:@"Couldn't save ~/.slate.js" detail:[error localizedDescription]];
-    return;
-  }
-  self.fileExisted = YES;
-  [self setDirty:NO];
-  self.loadedModificationDate = [self modificationDateOnDisk];
-
-  NSDictionary *state = @{
-    @"selection": @([self.textView selectedRange].location),
-    @"scrollY": @(NSMinY([[[self.textView enclosingScrollView] contentView] bounds])),
-  };
-  [[NSUserDefaults standardUserDefaults] setObject:state forKey:kReopenDefaultsKey];
-  [[NSUserDefaults standardUserDefaults] synchronize];
+  if (self.resolvingConflict) return;
+  // Applying the untouched defaults creates ~/.slate.yml from them.
+  if (self.savedText == nil && ![self writeText:[self currentText]]) return;
+  if (![[self currentText] isEqualToString:self.baselineText]) return;
+  [[self window] close];
   [(SlateAppDelegate *)[NSApp delegate] relaunch];
 }
 
-#pragma mark - Closing
-
-// Close discards unsaved changes; the next open reloads ~/.slate.js from disk.
-- (IBAction)closeConfiguration:(id)sender {
-  [[self window] close];
+- (IBAction)closeWindow:(NSButton *)sender {
+  [[self window] performClose:sender];
 }
 
 - (void)windowWillClose:(NSNotification *)notification {
-  [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(runValidation) object:nil];
-  [self setDirty:NO];
+  // Commits a cell being edited, which saves it if it's valid. Changes with
+  // errors are dropped, and the next open reloads the file.
+  [[self window] makeFirstResponder:nil];
 }
 
 @end

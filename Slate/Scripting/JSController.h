@@ -22,9 +22,6 @@ JSExportAs(bindFunction,
 JSExportAs(bindNative,
 - (void)bindNative:(NSString *)hotkey callback:(JSOperationWrapper *)opWrapper repeat:(id)_repeat
 );
-JSExportAs(bindString,
-- (void)bindString:(NSString *)hotkey operation:(NSString *)opString repeat:(id)_repeat
-);
 JSExportAs(configFunction,
 - (void)configFunction:(NSString *)key callback:(JSValue *)callback
 );

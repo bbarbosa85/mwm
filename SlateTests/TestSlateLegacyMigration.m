@@ -2,7 +2,7 @@
 //  TestSlateLegacyMigration.m
 //  Slate
 //
-//  Tests for converting ~/.slate into the managed ~/.slate.js format.
+//  Tests for converting ~/.slate and ~/.slate.js into ~/.slate.yml.
 //
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -18,7 +18,6 @@
 //  along with this program.  If not, see http://www.gnu.org/licenses
 
 #import <XCTest/XCTest.h>
-#import <JavaScriptCore/JavaScriptCore.h>
 #import "SlateConfigDocument.h"
 #import "SlateLegacyMigration.h"
 #import "StringTokenizer.h"
@@ -134,17 +133,15 @@ static NSString *const kLegacy =
   return result;
 }
 
-// Runs a written ~/.slate.js through the same resolver slate.applyConfig uses.
+// What Slate registers from a converted document, as "hotkey action" lines.
 - (NSArray<NSString *> *)resolvedBindings:(SlateConfigDocument *)doc {
-  JSContext *context = [[JSContext alloc] init];
-  NSString *path = [[NSBundle bundleForClass:[SlateConfigDocument class]] pathForResource:@"managed-config" ofType:@"js"];
-  [context evaluateScript:[NSString stringWithContentsOfFile:path encoding:NSUTF8StringEncoding error:nil]];
-  [context evaluateScript:@"var captured; var slate = { applyConfig: function(c) { captured = c; } };"];
-  [context evaluateScript:[doc stringRepresentation]];
-  NSArray *bindings = [[context evaluateScript:@"_slateManagedConfig.resolve(captured).bindings"] toArray];
-  XCTAssertNil(context.exception, @"%@", context.exception);
+  NSError *error = nil;
+  SlateConfigDocument *reread = [SlateConfigDocument documentFromString:[doc stringRepresentation] error:&error];
+  XCTAssertNotNil(reread, @"%@", error);
+  SlateResolvedConfig *resolved = [reread resolve:&error];
+  XCTAssertNotNil(resolved, @"%@", error);
   NSMutableArray *result = [NSMutableArray array];
-  for (NSDictionary *b in bindings) [result addObject:[NSString stringWithFormat:@"%@ %@", b[@"hotkey"], b[@"action"]]];
+  for (SlateResolvedBinding *b in resolved.bindings) [result addObject:[NSString stringWithFormat:@"%@ %@", b.hotkey, b.action]];
   return result;
 }
 
@@ -167,7 +164,7 @@ static NSString *const kLegacy =
 - (void)testBindingsMatchLegacyBehavior {
   NSMutableArray *warnings = [NSMutableArray array];
   SlateConfigDocument *doc = [SlateLegacyMigration documentFromLegacySource:kLegacy warnings:warnings];
-  XCTAssertEqualObjects(warnings, @[]);
+  XCTAssertEqual([warnings count], 1u, @"only the note about the commented-out alias: %@", warnings);
   XCTAssertEqualObjects([self resolvedBindings:doc], [self legacyExpandedBindings:kLegacy],
                         @"every active binding expands to the same hotkey and operation as before");
 }
@@ -226,12 +223,11 @@ static NSString *const kLegacy =
   XCTAssertEqual([[doc.bindings filteredArrayUsingPredicate:[NSPredicate predicateWithFormat:@"enabled == NO"]] count], 3u);
 }
 
-- (void)testCommentedOutLinesAreKeptAsComments {
-  SlateConfigDocument *doc = [SlateLegacyMigration documentFromLegacySource:kLegacy warnings:[NSMutableArray array]];
-  XCTAssertTrue([doc.customCode rangeOfString:@"// alias tophalf move screenOriginX;screenOriginY screenSizeX;screenSizeY/2\n"].location != NSNotFound,
-                @"%@", doc.customCode);
-  XCTAssertTrue([doc.customCode rangeOfString:@"alias and then a keybinding"].location == NSNotFound,
-                @"prose starting with 'alias' isn't a commented-out alias: %@", doc.customCode);
+- (void)testCommentedOutLinesAreMentioned {
+  NSMutableArray *warnings = [NSMutableArray array];
+  [SlateLegacyMigration documentFromLegacySource:kLegacy warnings:warnings];
+  XCTAssertTrue([warnings[0] containsString:@"1 commented-out line (like \"alias tophalf"], @"%@", warnings);
+  XCTAssertFalse([warnings[0] containsString:@"alias and then a keybinding"], @"prose starting with 'alias' isn't a commented-out alias");
 }
 
 - (void)testUnsupportedLinesWarnAndAreKept {
@@ -242,11 +238,11 @@ static NSString *const kLegacy =
                      @"bind r:${hyper} relaunch\n";
   NSMutableArray *warnings = [NSMutableArray array];
   SlateConfigDocument *doc = [SlateLegacyMigration documentFromLegacySource:legacy warnings:warnings];
-  XCTAssertEqual([warnings count], 3u, @"%@", warnings);
+  XCTAssertEqual([warnings count], 4u, @"%@", warnings);
   XCTAssertTrue([warnings[0] hasPrefix:@"Line 2 \"layout\" lines aren't supported"], @"%@", warnings[0]);
   XCTAssertTrue([warnings[1] hasPrefix:@"Line 3: per-app configs"], @"%@", warnings[1]);
   XCTAssertTrue([warnings[2] hasPrefix:@"Line 4: alias \"hyper\" is defined twice"], @"%@", warnings[2]);
-  XCTAssertTrue([doc.customCode rangeOfString:@"// layout work 'iTerm2':REPEAT"].location != NSNotFound, @"%@", doc.customCode);
+  XCTAssertTrue([warnings[3] containsString:@"still in the backup"], @"%@", warnings[3]);
   XCTAssertEqualObjects(doc.modifiers[0].value, @"ctrl;alt;cmd");
   XCTAssertEqual([doc.bindings count], 1u);
 }
@@ -257,76 +253,114 @@ static NSString *const kLegacy =
   SlateConfigDocument *reread = [SlateConfigDocument documentFromString:[doc stringRepresentation] error:&error];
   XCTAssertNotNil(reread, @"%@", error);
   XCTAssertEqualObjects(reread.bindings, doc.bindings);
-  XCTAssertEqualObjects(reread.customCode, doc.customCode);
+  XCTAssertEqualObjects(reread.positions, doc.positions);
+}
+
+#pragma mark - ~/.slate.js
+
+static NSString *const kManagedJS =
+  @"var config = {\n"
+  @"  settings: { keyboardLayout: 'colemak', windowHintsSpread: true, order: ['a', 'b'] },\n"
+  @"  modifiers: { hyper: 'cmd;shift' },\n"
+  @"  bindings: [\n"
+  @"    { group: 'Apps', key: 'x', mods: '${hyper}', action: 'relaunch', note: 'n' },\n"
+  @"    { key: 'y', action: 'undo', enabled: false, repeat: true },\n"
+  @"  ],\n"
+  @"};\nslate.applyConfig(config);\n";
+
+- (void)testReadsManagedJavaScript {
+  NSMutableArray *warnings = [NSMutableArray array];
+  NSError *error = nil;
+  NSString *js = [kManagedJS stringByAppendingString:@"\n// ---- Custom code (preserved as-is by the configuration window) ----\n// just a note\n"];
+  SlateConfigDocument *doc = [SlateLegacyMigration documentFromJavaScript:js warnings:warnings error:&error];
+  XCTAssertNotNil(doc, @"%@", error);
+  XCTAssertEqualObjects(doc.settings[0], [SlateConfigEntry entryWithName:@"keyboardLayout" value:@"colemak"]);
+  XCTAssertEqualObjects(doc.settings[1], [SlateConfigEntry entryWithName:@"windowHintsSpread" value:@YES]);
+  XCTAssertEqualObjects(doc.settings[2].value, @"a;b");
+  XCTAssertEqualObjects(doc.modifiers[0].value, @"cmd;shift");
+  XCTAssertEqual([doc.bindings count], 2u);
+  XCTAssertEqualObjects(doc.bindings[0].group, @"Apps");
+  XCTAssertEqualObjects(doc.bindings[0].note, @"n");
+  XCTAssertFalse(doc.bindings[1].enabled);
+  XCTAssertEqualObjects(doc.bindings[1].repeat, @YES);
+  XCTAssertEqual([warnings count], 1u, @"%@", warnings);
+  XCTAssertTrue([warnings[0] hasPrefix:@"1 comment line"], @"%@", warnings[0]);
+}
+
+- (void)testCustomJavaScriptIsNotCarriedOver {
+  NSMutableArray *warnings = [NSMutableArray array];
+  NSString *js = [kManagedJS stringByAppendingString:@"// ---- Custom code (preserved as-is by the configuration window) ----\nslate.bind('g:cmd', function() {});\n"];
+  XCTAssertNotNil([SlateLegacyMigration documentFromJavaScript:js warnings:warnings error:nil]);
+  XCTAssertTrue([warnings[0] containsString:@"no longer runs JavaScript"], @"%@", warnings);
+}
+
+- (void)testHandWrittenJavaScriptIsRefused {
+  NSError *error = nil;
+  XCTAssertNil([SlateLegacyMigration documentFromJavaScript:@"slate.bind('g:cmd', slate.op('grid'));\n" warnings:[NSMutableArray array] error:&error]);
+  XCTAssertTrue([[error localizedDescription] containsString:@"can't be converted"], @"%@", error);
+  XCTAssertNil([SlateLegacyMigration documentFromJavaScript:@"var config = {};\n" warnings:[NSMutableArray array] error:&error]);
 }
 
 #pragma mark - Merging
 
-- (void)testMergeIntoManagedFile {
+- (void)testMergeKeepsTheHigherFile {
   NSString *legacy = @"config secondsBeforeRepeat 0.4\nconfig keyboardLayout dvorak\n"
                      @"alias hyper ctrl;alt;cmd\nalias full move 0;0 1;1\n"
                      @"bind r:${hyper} relaunch\n";
-  NSString *js = @"var config = {\n"
-                 @"  settings: { keyboardLayout: 'colemak' },\n"
-                 @"  modifiers: { hyper: 'cmd;shift' },\n"
-                 @"  bindings: [{ key: 'x', mods: '${hyper}', action: 'relaunch' }],\n"
-                 @"};\nslate.applyConfig(config);\n";
   NSMutableArray *warnings = [NSMutableArray array];
   SlateConfigDocument *legacyDoc = [SlateLegacyMigration documentFromLegacySource:legacy warnings:warnings];
-  SlateConfigDocument *merged = [SlateLegacyMigration documentByMergingLegacy:legacyDoc intoJavaScript:js warnings:warnings];
+  SlateConfigDocument *js = [SlateLegacyMigration documentFromJavaScript:kManagedJS warnings:warnings error:nil];
+  SlateConfigDocument *merged = [SlateLegacyMigration documentByMerging:legacyDoc into:js lowerName:@"~/.slate" higherName:@"~/.slate.js" warnings:warnings];
 
-  XCTAssertEqualObjects([merged.settings valueForKey:@"name"], (@[@"secondsBeforeRepeat", @"keyboardLayout"]));
+  XCTAssertEqualObjects([merged.settings valueForKey:@"name"], (@[@"secondsBeforeRepeat", @"keyboardLayout", @"windowHintsSpread", @"order"]));
   XCTAssertEqualObjects(merged.settings[1].value, @"colemak", @"~/.slate.js wins, as it loaded last");
   XCTAssertEqualObjects(merged.modifiers[0].value, @"cmd;shift");
   XCTAssertEqual([warnings count], 1u, @"%@", warnings);
+  XCTAssertTrue([warnings[0] containsString:@"kept the ~/.slate.js value"], @"%@", warnings);
   XCTAssertEqualObjects([merged.positions valueForKey:@"name"], (@[@"full"]));
-  XCTAssertEqualObjects([merged.bindings valueForKey:@"key"], (@[@"r", @"x"]), @"~/.slate bindings first, as before");
-}
-
-- (void)testMergeIntoHandWrittenFileKeepsItAsCustomCode {
-  NSString *js = @"slate.bind('g:cmd', slate.op('grid'));\n";
-  SlateConfigDocument *legacyDoc = [SlateLegacyMigration documentFromLegacySource:@"bind r:cmd relaunch\n" warnings:[NSMutableArray array]];
-  SlateConfigDocument *merged = [SlateLegacyMigration documentByMergingLegacy:legacyDoc intoJavaScript:js warnings:[NSMutableArray array]];
-  XCTAssertTrue([merged.customCode hasSuffix:js], @"%@", merged.customCode);
-  XCTAssertEqual([merged.bindings count], 1u);
-  XCTAssertNotNil([SlateConfigDocument documentFromString:[merged stringRepresentation] error:nil]);
+  XCTAssertEqualObjects([merged.bindings valueForKey:@"key"], (@[@"r", @"x", @"y"]), @"~/.slate bindings first, as before");
 }
 
 #pragma mark - Files
 
-- (void)testMigrateFileWritesJsAndRenamesLegacy {
+- (void)testMigrateFileWritesYAMLAndRenamesLegacy {
   NSString *dir = [self tempDirectory];
   NSString *legacyPath = [dir stringByAppendingPathComponent:@".slate"];
-  NSString *jsPath = [dir stringByAppendingPathComponent:@".slate.js"];
+  NSString *ymlPath = [dir stringByAppendingPathComponent:@".slate.yml"];
   [kLegacy writeToFile:legacyPath atomically:YES encoding:NSUTF8StringEncoding error:nil];
 
   NSError *error = nil;
-  NSString *backup = [SlateLegacyMigration migrateLegacyFile:legacyPath toFile:jsPath warnings:[NSMutableArray array] error:&error];
-  XCTAssertNotNil(backup, @"%@", error);
+  NSArray *backups = [SlateLegacyMigration migrateLegacyFile:legacyPath javaScriptFile:nil toFile:ymlPath warnings:[NSMutableArray array] error:&error];
+  XCTAssertEqual([backups count], 1u, @"%@", error);
 
   NSFileManager *fm = [NSFileManager defaultManager];
   XCTAssertFalse([fm fileExistsAtPath:legacyPath], @"~/.slate no longer loads");
-  XCTAssertTrue([[backup lastPathComponent] hasPrefix:@".slate.migrated-"], @"%@", backup);
-  XCTAssertEqualObjects([NSString stringWithContentsOfFile:backup encoding:NSUTF8StringEncoding error:nil], kLegacy);
-  SlateConfigDocument *written = [SlateConfigDocument documentWithContentsOfFile:jsPath error:&error];
+  XCTAssertTrue([[backups[0] lastPathComponent] hasPrefix:@".slate.migrated-"], @"%@", backups);
+  XCTAssertEqualObjects([NSString stringWithContentsOfFile:backups[0] encoding:NSUTF8StringEncoding error:nil], kLegacy);
+  SlateConfigDocument *written = [SlateConfigDocument documentWithContentsOfFile:ymlPath error:&error];
   XCTAssertNotNil(written, @"%@", error);
   XCTAssertEqualObjects([self resolvedBindings:written], [self legacyExpandedBindings:kLegacy]);
 }
 
-- (void)testMigrateFileMergesIntoExistingJs {
+- (void)testMigrateBothFilesIntoExistingYAML {
   NSString *dir = [self tempDirectory];
   NSString *legacyPath = [dir stringByAppendingPathComponent:@".slate"];
   NSString *jsPath = [dir stringByAppendingPathComponent:@".slate.js"];
-  NSString *js = @"slate.log('hello');\n";
+  NSString *ymlPath = [dir stringByAppendingPathComponent:@".slate.yml"];
+  NSString *yml = @"settings:\n  keyboardLayout: qwerty\nbindings:\n  - key: z\n    action: relaunch\n";
   [@"bind r:cmd relaunch\n" writeToFile:legacyPath atomically:YES encoding:NSUTF8StringEncoding error:nil];
-  [js writeToFile:jsPath atomically:YES encoding:NSUTF8StringEncoding error:nil];
+  [kManagedJS writeToFile:jsPath atomically:YES encoding:NSUTF8StringEncoding error:nil];
+  [yml writeToFile:ymlPath atomically:YES encoding:NSUTF8StringEncoding error:nil];
 
   NSError *error = nil;
-  XCTAssertNotNil([SlateLegacyMigration migrateLegacyFile:legacyPath toFile:jsPath warnings:[NSMutableArray array] error:&error], @"%@", error);
-  SlateConfigDocument *written = [SlateConfigDocument documentWithContentsOfFile:jsPath error:&error];
-  XCTAssertEqual([written.bindings count], 1u, @"%@", error);
-  XCTAssertTrue([written.customCode hasSuffix:js]);
-  XCTAssertEqualObjects([NSString stringWithContentsOfFile:[jsPath stringByAppendingString:@".bak"] encoding:NSUTF8StringEncoding error:nil], js);
+  NSArray *backups = [SlateLegacyMigration migrateLegacyFile:legacyPath javaScriptFile:jsPath toFile:ymlPath warnings:[NSMutableArray array] error:&error];
+  XCTAssertEqual([backups count], 2u, @"%@", error);
+  SlateConfigDocument *written = [SlateConfigDocument documentWithContentsOfFile:ymlPath error:&error];
+  XCTAssertEqualObjects([written.bindings valueForKey:@"key"], (@[@"r", @"x", @"y", @"z"]), @"%@", error);
+  NSUInteger layout = [[written.settings valueForKey:@"name"] indexOfObject:@"keyboardLayout"];
+  XCTAssertEqualObjects(written.settings[layout].value, @"qwerty", @"~/.slate.yml wins");
+  XCTAssertEqualObjects([NSString stringWithContentsOfFile:[ymlPath stringByAppendingString:@".bak"] encoding:NSUTF8StringEncoding error:nil], yml);
+  XCTAssertFalse([[NSFileManager defaultManager] fileExistsAtPath:jsPath]);
 }
 
 - (void)testMigrateFileFollowsSymlinkedLegacyFile {
@@ -337,25 +371,25 @@ static NSString *const kLegacy =
   [[NSFileManager defaultManager] createSymbolicLinkAtPath:legacyPath withDestinationPath:target error:nil];
 
   NSError *error = nil;
-  NSString *backup = [SlateLegacyMigration migrateLegacyFile:legacyPath
-                                                      toFile:[dir stringByAppendingPathComponent:@".slate.js"]
+  NSArray *backups = [SlateLegacyMigration migrateLegacyFile:legacyPath javaScriptFile:nil
+                                                      toFile:[dir stringByAppendingPathComponent:@".slate.yml"]
                                                     warnings:[NSMutableArray array] error:&error];
-  XCTAssertNotNil(backup, @"%@", error);
+  XCTAssertEqual([backups count], 1u, @"%@", error);
   XCTAssertTrue([[NSFileManager defaultManager] fileExistsAtPath:target], @"the symlink's target is left alone");
-  XCTAssertEqualObjects([[NSFileManager defaultManager] attributesOfItemAtPath:backup error:nil][NSFileType], NSFileTypeSymbolicLink);
+  XCTAssertEqualObjects([[NSFileManager defaultManager] attributesOfItemAtPath:backups[0] error:nil][NSFileType], NSFileTypeSymbolicLink);
 }
 
 - (void)testMigrateFileFailsWithoutChangingAnything {
   NSString *dir = [self tempDirectory];
   NSString *legacyPath = [dir stringByAppendingPathComponent:@".slate"];
-  NSString *jsPath = [dir stringByAppendingPathComponent:@".slate.js"];
+  NSString *ymlPath = [dir stringByAppendingPathComponent:@".slate.yml"];
   [@"bind r:${nope} relaunch\n" writeToFile:legacyPath atomically:YES encoding:NSUTF8StringEncoding error:nil];
 
   NSError *error = nil;
-  XCTAssertNil([SlateLegacyMigration migrateLegacyFile:legacyPath toFile:jsPath warnings:[NSMutableArray array] error:&error]);
+  XCTAssertNil([SlateLegacyMigration migrateLegacyFile:legacyPath javaScriptFile:nil toFile:ymlPath warnings:[NSMutableArray array] error:&error]);
   XCTAssertEqual(error.code, SlateConfigDocumentErrorInvalid);
   XCTAssertTrue([[NSFileManager defaultManager] fileExistsAtPath:legacyPath]);
-  XCTAssertFalse([[NSFileManager defaultManager] fileExistsAtPath:jsPath]);
+  XCTAssertFalse([[NSFileManager defaultManager] fileExistsAtPath:ymlPath]);
 }
 
 @end

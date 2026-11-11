@@ -460,7 +460,6 @@ OSStatus OnModifiersChangedEvent(EventHandlerCallRef nextHandler, EventRef theEv
       [[[NSProcessInfo processInfo] environment] objectForKey:@"XCTestConfigurationFilePath"] != nil) {
     return;
   }
-  [ConfigurationWindowController reopenAfterRelaunchIfNeeded];
   if (cmdTabBinding > 0 || cmdShiftTabBinding > 0) {
     CFMachPortRef keyDownEventTap = CGEventTapCreate(kCGSessionEventTap, kCGHeadInsertEventTap, 0, CGEventMaskBit(kCGEventKeyDown), EatAppSwitcherCallback, (__bridge void *)self);
     if (keyDownEventTap != NULL) {

@@ -2,9 +2,8 @@
 //  SlateConfigValidator.h
 //  Slate
 //
-//  Checks ~/.slate.js text without applying it: runs it against the real
-//  slate API with a stand-in controller that records settings and bindings
-//  instead of registering them, then checks those with Slate's own parsers.
+//  Checks ~/.slate.yml text without applying it: reads it, expands aliases,
+//  and checks each binding with Slate's own parser. Nothing is registered or run.
 //
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -27,6 +26,10 @@ NS_ASSUME_NONNULL_BEGIN
 @property (assign) BOOL isError;  // NO for warnings
 @property (copy) NSString *message;
 @property (assign) NSUInteger line;  // 1-based; 0 when unknown
+// Index in the document's bindings, or NSNotFound.
+@property (assign) NSUInteger bindingIndex;
+// The setting or alias it's about, if any.
+@property (copy, nullable) NSString *entryName;
 @end
 
 @interface SlateConfigValidationResult : NSObject

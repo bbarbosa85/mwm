@@ -2,8 +2,9 @@
 //  ConfigurationWindowController.h
 //  Slate
 //
-//  The "Configure Slate…" window: edits ~/.slate.js as code, validates it
-//  without applying it, and saves and relaunches to apply it.
+//  The "Configure Slate…" window: a form for ~/.slate.yml. Every change is
+//  validated and, when it has no errors, saved right away. Apply restarts
+//  Slate to load the file.
 //
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -20,20 +21,19 @@
 
 #import <Cocoa/Cocoa.h>
 
+@class ConfigurationFormView;
+
 NS_ASSUME_NONNULL_BEGIN
 
-@interface ConfigurationWindowController : NSWindowController <NSWindowDelegate, NSTextViewDelegate, NSTextStorageDelegate>
+@interface ConfigurationWindowController : NSWindowController <NSWindowDelegate>
 
 + (instancetype)sharedController;
 
-// Brings the window to the front, reloading ~/.slate.js unless there are unsaved edits.
+// Brings the window to the front, loading ~/.slate.yml if it wasn't open.
 - (void)showConfiguration;
 
-// Reopens the window, at the same place in the file, when Save just relaunched Slate.
-+ (void)reopenAfterRelaunchIfNeeded;
-
-// The text being edited, for tests.
-@property (readonly) NSTextView *textView;
+// The form, for tests.
+@property (readonly) ConfigurationFormView *formView;
 
 @end
 

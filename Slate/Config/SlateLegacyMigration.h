@@ -2,8 +2,8 @@
 //  SlateLegacyMigration.h
 //  Slate
 //
-//  Converts a legacy ~/.slate file into the managed ~/.slate.js format and
-//  moves users over to it on startup.
+//  Converts the older configuration files (~/.slate, and a ~/.slate.js written
+//  by the earlier configuration window) into ~/.slate.yml on startup.
 //
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -29,28 +29,36 @@ NS_ASSUME_NONNULL_BEGIN
 // Converts legacy .slate text. config/alias/bind lines become settings, aliases
 // and bindings; commented-out bind lines become disabled bindings; section
 // headers become binding groups and comments directly above a binding become
-// its note. Anything else is kept as comments in the custom code, and active
-// lines that couldn't be converted are described in `warnings`.
+// its note. Lines that couldn't be converted are described in `warnings`.
 + (SlateConfigDocument *)documentFromLegacySource:(NSString *)source warnings:(NSMutableArray<NSString *> *)warnings;
 
-// Combines a converted legacy document with existing ~/.slate.js contents,
-// matching today's load order (~/.slate first, then ~/.slate.js). A managed
-// file is merged entry by entry, with ~/.slate.js winning on conflicts. Any
-// other JavaScript is kept unchanged as the custom code.
-+ (SlateConfigDocument *)documentByMergingLegacy:(SlateConfigDocument *)legacy
-                                   intoJavaScript:(NSString *)javaScript
-                                         warnings:(NSMutableArray<NSString *> *)warnings;
+// Reads a ~/.slate.js written by the earlier configuration window, evaluating
+// it once in a bare JSContext (no Slate API, files or shell). Fails for any
+// other JavaScript. Custom code after the marker isn't carried over.
++ (nullable SlateConfigDocument *)documentFromJavaScript:(NSString *)javaScript
+                                                warnings:(NSMutableArray<NSString *> *)warnings
+                                                   error:(NSError **)error;
 
-// Converts legacyPath, merging into jsPath when it exists, writes jsPath, then
-// renames legacyPath to <legacyPath>.migrated-<timestamp> so it stops loading.
-// Returns the backup path, or nil (with nothing changed on disk) on failure.
-+ (nullable NSString *)migrateLegacyFile:(NSString *)legacyPath
-                                  toFile:(NSString *)jsPath
-                                warnings:(NSMutableArray<NSString *> *)warnings
-                                   error:(NSError **)error;
+// Adds `lower` into `higher`, with `higher` winning where both set something.
++ (SlateConfigDocument *)documentByMerging:(SlateConfigDocument *)lower
+                                      into:(SlateConfigDocument *)higher
+                                 lowerName:(NSString *)lowerName
+                                higherName:(NSString *)higherName
+                                  warnings:(NSMutableArray<NSString *> *)warnings;
 
-// Startup entry point: migrates ~/.slate when present, asking first if
-// ~/.slate.js also exists. Shows alerts; does nothing when there's no ~/.slate.
+// Converts whichever of legacyPath and jsPath exist (merging into ymlPath when
+// it exists), writes ymlPath, then renames the old files to
+// <path>.migrated-<timestamp> so they stop loading. Returns those backup paths,
+// or nil (with nothing changed on disk) on failure.
++ (nullable NSArray<NSString *> *)migrateLegacyFile:(nullable NSString *)legacyPath
+                                     javaScriptFile:(nullable NSString *)jsPath
+                                             toFile:(NSString *)ymlPath
+                                           warnings:(NSMutableArray<NSString *> *)warnings
+                                              error:(NSError **)error;
+
+// Startup entry point: converts ~/.slate and ~/.slate.js into ~/.slate.yml,
+// asking first if ~/.slate.yml already exists. Shows alerts; does nothing
+// when neither old file exists.
 + (void)runStartupMigration;
 
 @end

@@ -17,6 +17,7 @@
 
 #import "SlateLegacyMigration.h"
 #import <Cocoa/Cocoa.h>
+#import <JavaScriptCore/JavaScriptCore.h>
 #import "SlateConfigDocument.h"
 #import "StringTokenizer.h"
 #import "SlateLogger.h"
@@ -217,77 +218,158 @@ static id TypedValue(NSString *raw) {
     [notMigrated addObject:content];
   }
 
-  NSMutableString *custom = [NSMutableString string];
   if ([notMigrated count] > 0) {
-    [custom appendString:@"// From ~/.slate: these lines were active but couldn't be migrated.\n"
-                         @"// Rewrite them as JavaScript to keep using them.\n"];
-    for (NSString *line in notMigrated) [custom appendFormat:@"// %@\n", line];
+    [warnings addObject:@"Lines that couldn't be converted are still in the backup of ~/.slate."];
   }
   if ([inactive count] > 0) {
-    if ([custom length] > 0) [custom appendString:@"\n"];
-    [custom appendString:@"// From ~/.slate: these lines were commented out there.\n"];
-    for (NSString *line in inactive) [custom appendFormat:@"// %@\n", line];
+    [warnings addObject:[NSString stringWithFormat:@"%lu commented-out line%@ (like \"%@\") weren't carried over; they're still in the backup of ~/.slate.",
+                         (unsigned long)[inactive count], [inactive count] == 1 ? @"" : @"s", inactive[0]]];
   }
-  doc.customCode = custom;
+  return doc;
+}
+
+#pragma mark - ~/.slate.js
+
+// A stand-in `slate` that only records applyConfig calls. The file runs in a
+// bare JSContext: no Slate API, no files, no shell.
+static NSString *const kCapturePrelude =
+  @"var window = this;\n"
+  @"var __slateCaptured = [];\n"
+  @"var slate = { applyConfig: function(c) { __slateCaptured.push(c); } };\n"
+  @"var S = slate;\n";
+
+// Turns the captured config into plain data (objects become [{name, value}]).
+static NSString *const kExportFunction =
+  @"(function(c) {\n"
+  @"  function pairs(o) {\n"
+  @"    if (o === undefined || o === null || typeof o !== 'object') return [];\n"
+  @"    return Object.keys(o).map(function(k) {\n"
+  @"      var v = o[k];\n"
+  @"      if (Array.isArray(v)) v = v.join(';');\n"
+  @"      if (typeof v !== 'boolean' && typeof v !== 'number') v = String(v);\n"
+  @"      return { name: k, value: v };\n"
+  @"    });\n"
+  @"  }\n"
+  @"  function opt(v) { return (v === undefined || v === null) ? null : String(v); }\n"
+  @"  return {\n"
+  @"    settings: pairs(c.settings), modifiers: pairs(c.modifiers), monitors: pairs(c.monitors),\n"
+  @"    positions: pairs(c.positions), aliases: pairs(c.aliases),\n"
+  @"    bindings: (Array.isArray(c.bindings) ? c.bindings : []).map(function(b) {\n"
+  @"      b = b || {};\n"
+  @"      return { group: opt(b.group), key: String(b.key), mods: opt(b.mods), action: String(b.action), note: opt(b.note),\n"
+  @"               enabled: b.enabled !== false, repeat: typeof b.repeat === 'boolean' ? b.repeat : null };\n"
+  @"    })\n"
+  @"  };\n"
+  @"})";
+
+static NSString *const kCustomCodeMarkerPrefix = @"// ---- Custom code";
+
+static NSError *MigrationError(NSString *message) {
+  return [NSError errorWithDomain:SlateConfigDocumentErrorDomain code:SlateConfigDocumentErrorInvalid
+                         userInfo:@{NSLocalizedDescriptionKey: message}];
+}
+
+static id NilIfNull(id value) {
+  return (value == nil || value == [NSNull null]) ? nil : value;
+}
+
++ (SlateConfigDocument *)documentFromJavaScript:(NSString *)javaScript warnings:(NSMutableArray<NSString *> *)warnings error:(NSError **)error {
+  NSString *managed = javaScript;
+  NSString *custom = @"";
+  NSRange marker = [javaScript rangeOfString:[@"\n" stringByAppendingString:kCustomCodeMarkerPrefix]];
+  if ([javaScript hasPrefix:kCustomCodeMarkerPrefix]) marker = NSMakeRange(0, 0);
+  if (marker.location != NSNotFound) {
+    managed = [javaScript substringToIndex:marker.location];
+    NSRange lineEnd = [javaScript rangeOfString:@"\n" options:0 range:NSMakeRange(NSMaxRange(marker), [javaScript length] - NSMaxRange(marker))];
+    custom = lineEnd.location == NSNotFound ? @"" : [javaScript substringFromIndex:NSMaxRange(lineEnd)];
+  }
+
+  JSContext *context = [[JSContext alloc] init];
+  [context evaluateScript:kCapturePrelude];
+  [context evaluateScript:managed];
+  if (context.exception != nil) {
+    if (error) *error = MigrationError([NSString stringWithFormat:
+      @"~/.slate.js isn't a file written by the configuration window, so it can't be converted (%@).", [context.exception toString]]);
+    return nil;
+  }
+  if ([[context[@"__slateCaptured"][@"length"] toNumber] unsignedIntegerValue] != 1) {
+    if (error) *error = MigrationError(@"~/.slate.js isn't a file written by the configuration window (it doesn't call slate.applyConfig once), so it can't be converted.");
+    return nil;
+  }
+  NSDictionary *data = [[[context evaluateScript:kExportFunction] callWithArguments:@[context[@"__slateCaptured"][0]]] toDictionary];
+  if (context.exception != nil || data == nil) {
+    if (error) *error = MigrationError([NSString stringWithFormat:@"Couldn't read the configuration in ~/.slate.js (%@).", [context.exception toString] ?: @"no data"]);
+    return nil;
+  }
+
+  SlateConfigDocument *doc = [[SlateConfigDocument alloc] init];
+  NSDictionary *sections = @{@"settings": doc.settings, @"modifiers": doc.modifiers, @"monitors": doc.monitors,
+                             @"positions": doc.positions, @"aliases": doc.aliases};
+  for (NSString *section in sections) {
+    for (NSDictionary *pair in data[section]) {
+      [sections[section] addObject:[SlateConfigEntry entryWithName:pair[@"name"] value:pair[@"value"]]];
+    }
+  }
+  for (NSDictionary *b in data[@"bindings"]) {
+    SlateBindingEntry *binding = [SlateBindingEntry bindingWithKey:b[@"key"] modifiers:NilIfNull(b[@"mods"]) action:b[@"action"]];
+    binding.group = NilIfNull(b[@"group"]);
+    binding.note = NilIfNull(b[@"note"]);
+    binding.enabled = [b[@"enabled"] boolValue];
+    binding.repeat = NilIfNull(b[@"repeat"]);
+    [doc.bindings addObject:binding];
+  }
+
+  NSUInteger codeLines = 0, commentLines = 0;
+  for (NSString *line in [custom componentsSeparatedByString:@"\n"]) {
+    NSString *trimmed = Trim(line);
+    if ([trimmed length] == 0) continue;
+    if ([trimmed hasPrefix:@"//"]) commentLines++; else codeLines++;
+  }
+  if (codeLines > 0) {
+    [warnings addObject:@"The custom JavaScript at the end of ~/.slate.js wasn't carried over, because Slate no longer runs JavaScript. It's still in the backup of ~/.slate.js."];
+  } else if (commentLines > 0) {
+    [warnings addObject:[NSString stringWithFormat:@"%lu comment line%@ at the end of ~/.slate.js weren't carried over; they're still in its backup.",
+                         (unsigned long)commentLines, commentLines == 1 ? @"" : @"s"]];
+  }
   return doc;
 }
 
 #pragma mark - Merging
 
-+ (NSString *)sectionName:(NSArray *)section in:(SlateConfigDocument *)doc {
-  if (section == doc.modifiers) return @"modifiers";
-  if (section == doc.monitors) return @"monitors";
-  if (section == doc.positions) return @"positions";
-  return @"aliases";
-}
-
-+ (SlateConfigDocument *)documentByMergingLegacy:(SlateConfigDocument *)legacy
-                                   intoJavaScript:(NSString *)javaScript
-                                         warnings:(NSMutableArray<NSString *> *)warnings {
-  NSError *readError = nil;
-  SlateConfigDocument *js = [SlateConfigDocument documentFromString:javaScript error:&readError];
-  if (js == nil) {
-    // Hand-written JS: it ran after ~/.slate before, and still does as custom code.
-    SlateConfigDocument *merged = legacy;
-    NSString *separator = [legacy.customCode length] > 0 ? @"\n" : @"";
-    merged.customCode = [NSString stringWithFormat:@"%@%@// From ~/.slate.js:\n%@", legacy.customCode, separator, javaScript];
-    return merged;
-  }
-
-  // ~/.slate loaded first, so ~/.slate.js wins wherever both set something.
-  NSArray *jsSettingNames = [js.settings valueForKey:@"name"];
++ (SlateConfigDocument *)documentByMerging:(SlateConfigDocument *)lower
+                                      into:(SlateConfigDocument *)higher
+                                 lowerName:(NSString *)lowerName
+                                higherName:(NSString *)higherName
+                                  warnings:(NSMutableArray<NSString *> *)warnings {
+  NSArray *higherSettingNames = [higher.settings valueForKey:@"name"];
   NSMutableArray *settings = [NSMutableArray array];
-  for (SlateConfigEntry *entry in legacy.settings) {
-    if (![jsSettingNames containsObject:entry.name]) [settings addObject:entry];
+  for (SlateConfigEntry *entry in lower.settings) {
+    if (![higherSettingNames containsObject:entry.name]) [settings addObject:entry];
   }
-  [settings addObjectsFromArray:js.settings];
-  js.settings = settings;
+  [settings addObjectsFromArray:higher.settings];
+  higher.settings = settings;
 
-  NSMutableDictionary *jsAliases = [NSMutableDictionary dictionary];
-  for (NSArray<SlateConfigEntry *> *section in @[js.modifiers, js.monitors, js.positions, js.aliases]) {
-    for (SlateConfigEntry *entry in section) jsAliases[entry.name] = entry;
+  NSMutableDictionary *higherAliases = [NSMutableDictionary dictionary];
+  for (NSArray<SlateConfigEntry *> *section in @[higher.modifiers, higher.monitors, higher.positions, higher.aliases]) {
+    for (SlateConfigEntry *entry in section) higherAliases[entry.name] = entry;
   }
-  NSArray *legacySections = @[legacy.modifiers, legacy.monitors, legacy.positions, legacy.aliases];
-  NSArray *jsSections = @[js.modifiers, js.monitors, js.positions, js.aliases];
-  for (NSUInteger s = 0; s < [legacySections count]; s++) {
-    for (SlateConfigEntry *entry in legacySections[s]) {
-      SlateConfigEntry *existing = jsAliases[entry.name];
+  NSArray *lowerSections = @[lower.modifiers, lower.monitors, lower.positions, lower.aliases];
+  NSArray *higherSections = @[higher.modifiers, higher.monitors, higher.positions, higher.aliases];
+  for (NSUInteger s = 0; s < [lowerSections count]; s++) {
+    for (SlateConfigEntry *entry in lowerSections[s]) {
+      SlateConfigEntry *existing = higherAliases[entry.name];
       if (existing == nil) {
-        [jsSections[s] addObject:entry];
+        [higherSections[s] addObject:entry];
       } else if (![[existing.value description] isEqualToString:[entry.value description]]) {
-        [warnings addObject:[NSString stringWithFormat:@"Alias \"%@\" differs between ~/.slate and ~/.slate.js; kept the ~/.slate.js value.", entry.name]];
+        [warnings addObject:[NSString stringWithFormat:@"Alias \"%@\" differs between %@ and %@; kept the %@ value.", entry.name, lowerName, higherName, higherName]];
       }
     }
   }
 
-  NSMutableArray *bindings = [NSMutableArray arrayWithArray:legacy.bindings];
-  [bindings addObjectsFromArray:js.bindings];
-  js.bindings = bindings;
-
-  if ([legacy.customCode length] > 0) {
-    js.customCode = [NSString stringWithFormat:@"%@\n%@", js.customCode, legacy.customCode];
-  }
-  return js;
+  NSMutableArray *bindings = [NSMutableArray arrayWithArray:lower.bindings];
+  [bindings addObjectsFromArray:higher.bindings];
+  higher.bindings = bindings;
+  return higher;
 }
 
 #pragma mark - Files
@@ -300,57 +382,87 @@ static id TypedValue(NSString *raw) {
   return [NSString stringWithFormat:@"%@.%@-%@", path, suffix, [formatter stringFromDate:[NSDate date]]];
 }
 
-+ (nullable NSString *)migrateLegacyFile:(NSString *)legacyPath
-                                  toFile:(NSString *)jsPath
-                                warnings:(NSMutableArray<NSString *> *)warnings
-                                   error:(NSError **)error {
++ (nullable NSArray<NSString *> *)migrateLegacyFile:(nullable NSString *)legacyPath
+                                     javaScriptFile:(nullable NSString *)jsPath
+                                             toFile:(NSString *)ymlPath
+                                           warnings:(NSMutableArray<NSString *> *)warnings
+                                              error:(NSError **)error {
+  NSFileManager *fm = [NSFileManager defaultManager];
+  ymlPath = [ymlPath stringByExpandingTildeInPath];
   legacyPath = [legacyPath stringByExpandingTildeInPath];
   jsPath = [jsPath stringByExpandingTildeInPath];
-  NSFileManager *fm = [NSFileManager defaultManager];
+  if (legacyPath != nil && ![fm fileExistsAtPath:legacyPath]) legacyPath = nil;
+  if (jsPath != nil && ![fm fileExistsAtPath:jsPath]) jsPath = nil;
 
-  NSString *legacySource = [NSString stringWithContentsOfFile:legacyPath encoding:NSUTF8StringEncoding error:error];
-  if (legacySource == nil) return nil;
-  SlateConfigDocument *doc = [self documentFromLegacySource:legacySource warnings:warnings];
+  // Lowest precedence first, matching the old load order: ~/.slate, then ~/.slate.js.
+  SlateConfigDocument *doc = nil;
+  NSString *docName = nil;
+  if (legacyPath != nil) {
+    NSString *source = [NSString stringWithContentsOfFile:legacyPath encoding:NSUTF8StringEncoding error:error];
+    if (source == nil) return nil;
+    doc = [self documentFromLegacySource:source warnings:warnings];
+    docName = @"~/.slate";
+  }
+  if (jsPath != nil) {
+    NSString *source = [NSString stringWithContentsOfFile:jsPath encoding:NSUTF8StringEncoding error:error];
+    if (source == nil) return nil;
+    SlateConfigDocument *js = [self documentFromJavaScript:source warnings:warnings error:error];
+    if (js == nil) return nil;
+    doc = doc ? [self documentByMerging:doc into:js lowerName:docName higherName:@"~/.slate.js" warnings:warnings] : js;
+    docName = @"~/.slate.js";
+  }
+  if (doc == nil) return @[];
 
-  BOOL jsExisted = [fm fileExistsAtPath:jsPath];
-  if (jsExisted) {
-    NSString *javaScript = [NSString stringWithContentsOfFile:jsPath encoding:NSUTF8StringEncoding error:error];
-    if (javaScript == nil) return nil;
-    doc = [self documentByMergingLegacy:doc intoJavaScript:javaScript warnings:warnings];
+  BOOL ymlExisted = [fm fileExistsAtPath:ymlPath];
+  if (ymlExisted) {
+    SlateConfigDocument *yml = [SlateConfigDocument documentWithContentsOfFile:ymlPath error:error];
+    if (yml == nil) return nil;
+    doc = [self documentByMerging:doc into:yml lowerName:docName higherName:@"~/.slate.yml" warnings:warnings];
   }
 
-  // Refuse to write something the configuration window couldn't read back.
-  if ([SlateConfigDocument documentFromString:[doc stringRepresentation] error:error] == nil) return nil;
-  if (![doc writeToFile:jsPath error:error]) return nil;
-
-  NSString *backup = [self backupPathFor:legacyPath suffix:@"migrated"];
-  // Renames a symlinked ~/.slate itself, leaving its target untouched.
-  if (![fm moveItemAtPath:legacyPath toPath:backup error:error]) {
-    // Undo the write so the next launch isn't left with both files merged once already.
-    NSString *target = [jsPath stringByResolvingSymlinksInPath];
-    if (jsExisted) {
-      NSString *jsBackup = [target stringByAppendingString:@".bak"];
-      [fm removeItemAtPath:target error:nil];
-      [fm moveItemAtPath:jsBackup toPath:target error:nil];
-    } else {
-      [fm removeItemAtPath:target error:nil];
-    }
+  // Refuse to write something that wouldn't load.
+  NSError *checkError = nil;
+  if ([SlateConfigDocument documentFromString:[doc stringRepresentation] error:&checkError] == nil) {
+    if (error) *error = MigrationError([NSString stringWithFormat:@"The converted configuration has a problem: %@", [checkError localizedDescription]]);
     return nil;
   }
-  return backup;
+  if (![doc writeToFile:ymlPath error:error]) return nil;
+
+  // Rename the old files (a symlink itself, not its target) so they stop loading.
+  NSMutableArray *backups = [NSMutableArray array];
+  for (NSString *old in @[legacyPath ?: @"", jsPath ?: @""]) {
+    if ([old length] == 0) continue;
+    NSString *backup = [self backupPathFor:old suffix:@"migrated"];
+    if (![fm moveItemAtPath:old toPath:backup error:error]) {
+      // Put everything back so the next launch tries again from the same state.
+      for (NSUInteger i = 0; i < [backups count]; i += 2) [fm moveItemAtPath:backups[i + 1] toPath:backups[i] error:nil];
+      NSString *target = [ymlPath stringByResolvingSymlinksInPath];
+      [fm removeItemAtPath:target error:nil];
+      if (ymlExisted) [fm moveItemAtPath:[target stringByAppendingString:@".bak"] toPath:target error:nil];
+      return nil;
+    }
+    [backups addObject:old];
+    [backups addObject:backup];
+  }
+  NSMutableArray *result = [NSMutableArray array];
+  for (NSUInteger i = 1; i < [backups count]; i += 2) [result addObject:backups[i]];
+  return result;
 }
 
 #pragma mark - Startup
 
-+ (void)showMigrationResult:(NSString *)backup warnings:(NSArray<NSString *> *)warnings {
++ (void)showMigrationResult:(NSArray<NSString *> *)backups warnings:(NSArray<NSString *> *)warnings {
   NSAlert *alert = [[NSAlert alloc] init];
-  [alert setMessageText:@"Slate now uses ~/.slate.js"];
+  [alert setMessageText:@"Slate now uses ~/.slate.yml"];
+  NSMutableArray *names = [NSMutableArray array];
+  for (NSString *backup in backups) [names addObject:[backup stringByAbbreviatingWithTildeInPath]];
   NSMutableString *info = [NSMutableString stringWithFormat:
-    @"Your ~/.slate configuration was moved to ~/.slate.js. The original file is saved as %@.",
-    [backup stringByAbbreviatingWithTildeInPath]];
+    @"Your configuration was converted to ~/.slate.yml, which Slate reads without running any code. "
+    @"The old file%@ %@ saved as:\n%@", [backups count] == 1 ? @"" : @"s", [backups count] == 1 ? @"is" : @"are",
+    [names componentsJoinedByString:@"\n"]];
   if ([warnings count] > 0) {
     [alert setAlertStyle:NSAlertStyleWarning];
-    [info appendString:@"\n\nSome lines need your attention. They're kept as comments at the end of ~/.slate.js:\n"];
+    [info appendString:@"\n\nWorth checking:\n"];
     NSUInteger shown = MIN([warnings count], (NSUInteger)8);
     for (NSUInteger i = 0; i < shown; i++) [info appendFormat:@"\n• %@", warnings[i]];
     if ([warnings count] > shown) [info appendFormat:@"\n• …and %lu more", (unsigned long)([warnings count] - shown)];
@@ -360,55 +472,92 @@ static id TypedValue(NSString *raw) {
   [alert runModal];
 }
 
-+ (void)showMigrationFailure:(NSError *)error {
++ (void)showAlert:(NSString *)message detail:(NSString *)detail {
   NSAlert *alert = [[NSAlert alloc] init];
   [alert setAlertStyle:NSAlertStyleWarning];
-  [alert setMessageText:@"Couldn't move ~/.slate to ~/.slate.js"];
-  [alert setInformativeText:[NSString stringWithFormat:
-    @"%@\n\nNothing was changed, and Slate will keep loading ~/.slate.", [error localizedDescription]]];
+  [alert setMessageText:message];
+  [alert setInformativeText:detail];
   [alert addButtonWithTitle:@"OK"];
   [alert runModal];
 }
 
+// ~/.slate.js that can't be converted: stop it from looking like it's in use.
++ (void)retireJavaScriptFile:(NSString *)jsPath reason:(NSError *)reason {
+  NSString *backup = [self backupPathFor:jsPath suffix:@"unused"];
+  NSError *moveError = nil;
+  BOOL moved = [[NSFileManager defaultManager] moveItemAtPath:jsPath toPath:backup error:&moveError];
+  SlateLogger(@"~/.slate.js not converted (%@); moved: %d", [reason localizedDescription], moved);
+  [self showAlert:@"Slate no longer runs ~/.slate.js"
+           detail:[NSString stringWithFormat:@"%@\n\n%@ Recreate what you need in Configure Slate…, which saves to ~/.slate.yml.",
+                   [reason localizedDescription],
+                   moved ? [NSString stringWithFormat:@"It was renamed to %@.", [backup stringByAbbreviatingWithTildeInPath]]
+                         : @"It's left in place but isn't loaded."]];
+}
+
 + (void)runStartupMigration {
   NSFileManager *fm = [NSFileManager defaultManager];
+  NSString *ymlPath = [SlateConfigDocument defaultPath];
   NSString *legacyPath = [@"~/.slate" stringByExpandingTildeInPath];
-  NSString *jsPath = [SlateConfigDocument defaultPath];
-  if (![fm fileExistsAtPath:legacyPath]) return;
+  NSString *jsPath = [@"~/.slate.js" stringByExpandingTildeInPath];
+  BOOL hasLegacy = [fm fileExistsAtPath:legacyPath];
+  BOOL hasJS = [fm fileExistsAtPath:jsPath];
+  if (!hasLegacy && !hasJS) return;
 
-  if ([fm fileExistsAtPath:jsPath]) {
+  // A ~/.slate.js the converter can't read is set aside first, whatever else happens.
+  if (hasJS) {
+    NSString *source = [NSString stringWithContentsOfFile:jsPath encoding:NSUTF8StringEncoding error:nil];
+    NSError *jsError = nil;
+    if (source == nil || [self documentFromJavaScript:source warnings:[NSMutableArray array] error:&jsError] == nil) {
+      [self retireJavaScriptFile:jsPath reason:jsError ?: MigrationError(@"~/.slate.js couldn't be read.")];
+      hasJS = NO;
+      if (!hasLegacy) return;
+    }
+  }
+
+  if ([fm fileExistsAtPath:ymlPath]) {
+    NSString *names = hasLegacy && hasJS ? @"~/.slate and ~/.slate.js" : (hasLegacy ? @"~/.slate" : @"~/.slate.js");
     NSAlert *alert = [[NSAlert alloc] init];
-    [alert setMessageText:@"Merge ~/.slate into ~/.slate.js?"];
-    [alert setInformativeText:
-      @"Slate now keeps its configuration in ~/.slate.js. You have both files, so Slate can merge "
-      @"~/.slate into ~/.slate.js, where ~/.slate.js wins if both set the same thing. "
-      @"Either way, ~/.slate is kept as a backup."];
+    [alert setMessageText:[NSString stringWithFormat:@"Merge %@ into ~/.slate.yml?", names]];
+    [alert setInformativeText:[NSString stringWithFormat:
+      @"Slate now keeps its configuration in ~/.slate.yml. You also have %@, so Slate can merge it in; ~/.slate.yml wins "
+      @"where both set the same thing. Either way the old file is kept as a backup.%@", names,
+      hasJS ? @"\n\n~/.slate.js isn't loaded anymore, since Slate no longer runs JavaScript." : @""]];
     [alert addButtonWithTitle:@"Merge"];
     [alert addButtonWithTitle:@"Not now"];
-    [alert addButtonWithTitle:@"Stop using ~/.slate"];
+    [alert addButtonWithTitle:@"Stop using them"];
     NSModalResponse response = [alert runModal];
     if (response == NSAlertSecondButtonReturn) {
-      SlateLogger(@"Legacy migration postponed; loading both files.");
+      SlateLogger(@"Migration postponed.");
       return;
     }
     if (response == NSAlertThirdButtonReturn) {
-      NSError *error = nil;
-      NSString *backup = [self backupPathFor:legacyPath suffix:@"unused"];
-      if (![fm moveItemAtPath:legacyPath toPath:backup error:&error]) [self showMigrationFailure:error];
+      for (NSString *old in @[hasLegacy ? legacyPath : @"", hasJS ? jsPath : @""]) {
+        if ([old length] == 0) continue;
+        NSError *error = nil;
+        if (![fm moveItemAtPath:old toPath:[self backupPathFor:old suffix:@"unused"] error:&error]) {
+          [self showAlert:@"Couldn't rename the old configuration" detail:[error localizedDescription]];
+        }
+      }
       return;
     }
   }
 
   NSMutableArray<NSString *> *warnings = [NSMutableArray array];
   NSError *error = nil;
-  NSString *backup = [self migrateLegacyFile:legacyPath toFile:jsPath warnings:warnings error:&error];
-  if (backup == nil) {
-    SlateLogger(@"Legacy migration failed: %@", error);
-    [self showMigrationFailure:error];
+  NSArray *backups = [self migrateLegacyFile:hasLegacy ? legacyPath : nil
+                              javaScriptFile:hasJS ? jsPath : nil
+                                      toFile:ymlPath
+                                    warnings:warnings
+                                       error:&error];
+  if (backups == nil) {
+    SlateLogger(@"Migration failed: %@", error);
+    [self showAlert:@"Couldn't convert the configuration to ~/.slate.yml"
+             detail:[NSString stringWithFormat:@"%@\n\nNothing was changed.%@", [error localizedDescription],
+                     hasLegacy ? @" Slate will keep loading ~/.slate." : @""]];
     return;
   }
-  SlateLogger(@"Migrated ~/.slate to ~/.slate.js (backup: %@, %lu warnings)", backup, (unsigned long)[warnings count]);
-  [self showMigrationResult:backup warnings:warnings];
+  SlateLogger(@"Migrated to ~/.slate.yml (backups: %@, %lu warnings)", backups, (unsigned long)[warnings count]);
+  [self showMigrationResult:backups warnings:warnings];
 }
 
 @end
