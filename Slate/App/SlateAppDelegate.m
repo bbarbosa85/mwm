@@ -18,6 +18,7 @@
 //  You should have received a copy of the GNU General Public License
 //  along with this program.  If not, see http://www.gnu.org/licenses
 
+#import <ServiceManagement/ServiceManagement.h>
 #import "Constants.h"
 #import "SlateAppDelegate.h"
 #import "SlateConfig.h"
@@ -78,7 +79,7 @@ static SlateAppDelegate *selfRef = nil;
 static EventHandlerRef modifiersEvent;
 
 - (IBAction)updateLaunchState {
-  if ([launchOnLoginItem state] == NSOnState) {
+  if ([launchOnLoginItem state] == NSControlStateValueOn) {
     // currently on
     [self deleteFromLoginItems];
     [self setLaunchOnLoginItemStatus];
@@ -203,7 +204,7 @@ static EventHandlerRef modifiersEvent;
     UnregisterEventHotKey([hotKeyRef pointerValue]);
   }
   // reset status image
-  [statusItem setImage:[NSImage imageNamed:@"status"]];
+  [[statusItem button] setImage:[NSImage imageNamed:@"status"]];
   currentModalKey = nil;
 }
 
@@ -273,7 +274,7 @@ static EventHandlerRef modifiersEvent;
       }
       [self setCurrentModalKey:modalKey];
       // change status image
-      [statusItem setImage:[NSImage imageNamed:@"statusActive"]];
+      [[statusItem button] setImage:[NSImage imageNamed:@"statusActive"]];
       return noErr;
     }
   }
@@ -485,8 +486,8 @@ OSStatus OnModifiersChangedEvent(EventHandlerCallRef nextHandler, EventRef theEv
 }
 
 - (void)setLaunchOnLoginItemStatus {
-  if ([self isInLoginItems]) [launchOnLoginItem setState:NSOnState];
-  else [launchOnLoginItem setState:NSOffState];
+  if ([self isInLoginItems]) [launchOnLoginItem setState:NSControlStateValueOn];
+  else [launchOnLoginItem setState:NSControlStateValueOff];
 }
 
 - (void)awakeFromNib {
@@ -532,8 +533,7 @@ OSStatus OnModifiersChangedEvent(EventHandlerCallRef nextHandler, EventRef theEv
   [statusItem setMenu:statusMenu];
   NSImage *statusImage = [NSImage imageNamed:@"status"];
   [statusImage setTemplate:YES];
-  [statusItem setImage:statusImage];
-  [statusItem setHighlightMode:YES];
+  [[statusItem button] setImage:statusImage];
 
   // Ensure no timer exists
   @synchronized(timerLock) {
@@ -587,86 +587,91 @@ OSStatus OnModifiersChangedEvent(EventHandlerCallRef nextHandler, EventRef theEv
 }
 
 - (BOOL)isInLoginItems {
-  NSString * appPath = [[NSBundle mainBundle] bundlePath];
-
-  // This will retrieve the path for the application
-  // For example, /Applications/test.app
-  CFURLRef url = (__bridge CFURLRef)[NSURL fileURLWithPath:appPath];
-
-  // Create a reference to the shared file list.
-  LSSharedFileListRef loginItems = LSSharedFileListCreate(NULL, kLSSharedFileListSessionLoginItems, NULL);
-
-  if (loginItems) {
-    UInt32 seedValue;
-    // Retrieve the list of Login Items and cast them to
-    // a NSArray so that it will be easier to iterate.
-    NSArray  *loginItemsArray = (__bridge NSArray *)LSSharedFileListCopySnapshot(loginItems, &seedValue);
-    for(NSInteger i = 0; i < [loginItemsArray count]; i++){
-      LSSharedFileListItemRef itemRef = (__bridge LSSharedFileListItemRef)[loginItemsArray objectAtIndex:i];
-      //Resolve the item with URL
-      if (LSSharedFileListItemResolve(itemRef, 0, (CFURLRef*) &url, NULL) == noErr) {
-        NSString * urlPath = [(__bridge NSURL*)url path];
-        if ([urlPath compare:appPath] == NSOrderedSame) {
-          return YES;
-        }
-      }
-    }
+  if (@available(macOS 13.0, *)) {
+    return [[SMAppService mainAppService] status] == SMAppServiceStatusEnabled;
   }
-  return NO;
+  return [self legacyIsInLoginItems];
 }
 
 - (void)addToLoginItems {
-  NSString * appPath = [[NSBundle mainBundle] bundlePath];
-
-  // This will retrieve the path for the application
-  // For example, /Applications/test.app
-  CFURLRef url = (__bridge CFURLRef)[NSURL fileURLWithPath:appPath];
-
-  // Create a reference to the shared file list.
-  // We are adding it to the current user only.
-  // If we want to add it all users, use
-  // kLSSharedFileListGlobalLoginItems instead of
-  // kLSSharedFileListSessionLoginItems
-  LSSharedFileListRef loginItems = LSSharedFileListCreate(NULL, kLSSharedFileListSessionLoginItems, NULL);
-  if (loginItems) {
-    //Insert an item to the list.
-    LSSharedFileListItemRef item = LSSharedFileListInsertItemURL(loginItems,
-                                                                 kLSSharedFileListItemLast, NULL, NULL,
-                                                                 url, NULL, NULL);
-    if (item){
-      CFRelease(item);
+  if (@available(macOS 13.0, *)) {
+    NSError *error = nil;
+    if (![[SMAppService mainAppService] registerAndReturnError:&error]) {
+      SlateLogger(@"ERROR: Could not add Slate to login items: %@", error);
     }
+    return;
   }
-
-  CFRelease(loginItems);
+  [self legacyAddToLoginItems];
 }
 
 - (void)deleteFromLoginItems {
-  NSString * appPath = [[NSBundle mainBundle] bundlePath];
+  if (@available(macOS 13.0, *)) {
+    NSError *error = nil;
+    if (![[SMAppService mainAppService] unregisterAndReturnError:&error]) {
+      SlateLogger(@"ERROR: Could not remove Slate from login items: %@", error);
+    }
+    return;
+  }
+  [self legacyDeleteFromLoginItems];
+}
 
-  // This will retrieve the path for the application
-  // For example, /Applications/test.app
-  CFURLRef url = (__bridge CFURLRef)[NSURL fileURLWithPath:appPath];
+// Fallback for macOS 12, where SMAppService is unavailable. LSSharedFileList is
+// deprecated but is the only way to manage login items there without a helper app.
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 
-  // Create a reference to the shared file list.
+- (BOOL)legacyIsInLoginItems {
+  NSString *appPath = [[NSBundle mainBundle] bundlePath];
   LSSharedFileListRef loginItems = LSSharedFileListCreate(NULL, kLSSharedFileListSessionLoginItems, NULL);
-
-  if (loginItems) {
-    UInt32 seedValue;
-    // Retrieve the list of Login Items and cast them to
-    // a NSArray so that it will be easier to iterate.
-    NSArray  *loginItemsArray = (__bridge NSArray *)LSSharedFileListCopySnapshot(loginItems, &seedValue);
-    for(NSInteger i = 0; i < [loginItemsArray count]; i++){
-      LSSharedFileListItemRef itemRef = (__bridge LSSharedFileListItemRef)[loginItemsArray objectAtIndex:i];
-      //Resolve the item with URL
-      if (LSSharedFileListItemResolve(itemRef, 0, (CFURLRef*) &url, NULL) == noErr) {
-        NSString * urlPath = [(__bridge NSURL*)url path];
-        if ([urlPath compare:appPath] == NSOrderedSame) {
-          LSSharedFileListItemRemove(loginItems,itemRef);
-        }
+  if (!loginItems) return NO;
+  BOOL found = NO;
+  UInt32 seedValue;
+  NSArray *loginItemsArray = CFBridgingRelease(LSSharedFileListCopySnapshot(loginItems, &seedValue));
+  for (id item in loginItemsArray) {
+    CFURLRef url = NULL;
+    if (LSSharedFileListItemResolve((__bridge LSSharedFileListItemRef)item, 0, &url, NULL) == noErr && url) {
+      NSString *urlPath = [(__bridge NSURL *)url path];
+      CFRelease(url);
+      if ([urlPath isEqualToString:appPath]) {
+        found = YES;
+        break;
       }
     }
   }
+  CFRelease(loginItems);
+  return found;
 }
+
+- (void)legacyAddToLoginItems {
+  NSURL *url = [NSURL fileURLWithPath:[[NSBundle mainBundle] bundlePath]];
+  LSSharedFileListRef loginItems = LSSharedFileListCreate(NULL, kLSSharedFileListSessionLoginItems, NULL);
+  if (!loginItems) return;
+  LSSharedFileListItemRef item = LSSharedFileListInsertItemURL(loginItems, kLSSharedFileListItemLast, NULL, NULL,
+                                                               (__bridge CFURLRef)url, NULL, NULL);
+  if (item) CFRelease(item);
+  CFRelease(loginItems);
+}
+
+- (void)legacyDeleteFromLoginItems {
+  NSString *appPath = [[NSBundle mainBundle] bundlePath];
+  LSSharedFileListRef loginItems = LSSharedFileListCreate(NULL, kLSSharedFileListSessionLoginItems, NULL);
+  if (!loginItems) return;
+  UInt32 seedValue;
+  NSArray *loginItemsArray = CFBridgingRelease(LSSharedFileListCopySnapshot(loginItems, &seedValue));
+  for (id item in loginItemsArray) {
+    LSSharedFileListItemRef itemRef = (__bridge LSSharedFileListItemRef)item;
+    CFURLRef url = NULL;
+    if (LSSharedFileListItemResolve(itemRef, 0, &url, NULL) == noErr && url) {
+      NSString *urlPath = [(__bridge NSURL *)url path];
+      CFRelease(url);
+      if ([urlPath isEqualToString:appPath]) {
+        LSSharedFileListItemRemove(loginItems, itemRef);
+      }
+    }
+  }
+  CFRelease(loginItems);
+}
+
+#pragma clang diagnostic pop
 
 @end

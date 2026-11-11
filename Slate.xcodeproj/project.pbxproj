@@ -89,6 +89,7 @@
 		47C4A2B91384E8890066B6DE /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 47C4A2B71384E8890066B6DE /* InfoPlist.strings */; };
 		47C4A2BC1384E8890066B6DE /* SlateTests.h in Resources */ = {isa = PBXBuildFile; fileRef = 47C4A2BB1384E8890066B6DE /* SlateTests.h */; };
 		47C4A2BE1384E8890066B6DE /* SlateTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 47C4A2BD1384E8890066B6DE /* SlateTests.m */; };
+		5E1A0C0B2D00000000000001 /* ServiceManagement.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D00000000000002 /* ServiceManagement.framework */; };
 		47C4A2C81384E8B10066B6DE /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 47C4A2C71384E8B10066B6DE /* Carbon.framework */; };
 		47C4A2CB1384EA510066B6DE /* SlateConfig.m in Sources */ = {isa = PBXBuildFile; fileRef = 47C4A2CA1384EA510066B6DE /* SlateConfig.m */; };
 		47C4A2CE1384F26A0066B6DE /* Binding.m in Sources */ = {isa = PBXBuildFile; fileRef = 47C4A2CD1384F26A0066B6DE /* Binding.m */; };
@@ -277,6 +278,7 @@
 		47C4A2BA1384E8890066B6DE /* SlateTests-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "SlateTests-Prefix.pch"; sourceTree = "<group>"; };
 		47C4A2BB1384E8890066B6DE /* SlateTests.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SlateTests.h; sourceTree = "<group>"; };
 		47C4A2BD1384E8890066B6DE /* SlateTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SlateTests.m; sourceTree = "<group>"; };
+		5E1A0C0B2D00000000000002 /* ServiceManagement.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ServiceManagement.framework; path = System/Library/Frameworks/ServiceManagement.framework; sourceTree = SDKROOT; };
 		47C4A2C71384E8B10066B6DE /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = System/Library/Frameworks/Carbon.framework; sourceTree = SDKROOT; };
 		47C4A2C91384EA510066B6DE /* SlateConfig.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Config/SlateConfig.h; sourceTree = "<group>"; };
 		47C4A2CA1384EA510066B6DE /* SlateConfig.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; lineEnding = 0; path = Config/SlateConfig.m; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objc; };
@@ -299,6 +301,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				47C4A2C81384E8B10066B6DE /* Carbon.framework in Frameworks */,
+				5E1A0C0B2D00000000000001 /* ServiceManagement.framework in Frameworks */,
 				47C4A2941384E8890066B6DE /* Cocoa.framework in Frameworks */,
 				3AA7D09116A6ED1200C81A67 /* JavaScriptCore.framework in Frameworks */,
 			);
@@ -553,6 +556,7 @@
 			children = (
 				3BA85C9916276DAB00FAAF0B /* Sparkle.framework */,
 				47C4A2C71384E8B10066B6DE /* Carbon.framework */,
+				5E1A0C0B2D00000000000002 /* ServiceManagement.framework */,
 				47C4A2931384E8890066B6DE /* Cocoa.framework */,
 				47C4A2951384E8890066B6DE /* Other Frameworks */,
 			);

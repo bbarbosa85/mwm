@@ -152,7 +152,7 @@ static const NSString *DEFAULT_HIDE_KEY = @"h";
                          iconViewSize + titleHeight + selectedPadding*2);
     }
     NSWindow *window = [[SwitchWindow alloc] initWithContentRect:frame
-                                                       styleMask:NSBorderlessWindowMask
+                                                       styleMask:NSWindowStyleMaskBorderless
                                                          backing:NSBackingStoreBuffered
                                                            defer:NO
                                                           screen:screen];
