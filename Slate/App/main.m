@@ -19,7 +19,14 @@
 //  along with this program.  If not, see http://www.gnu.org/licenses
 
 #import <Cocoa/Cocoa.h>
+#import "SlateAppDelegate.h"
 
 int main(int argc, char *argv[]) {
-  return NSApplicationMain(argc, (const char **)argv);
+  @autoreleasepool {
+    // The app delegate builds the menus in code; there's no main nib.
+    static SlateAppDelegate *delegate;
+    delegate = [[SlateAppDelegate alloc] init];
+    [[NSApplication sharedApplication] setDelegate:delegate];
+    return NSApplicationMain(argc, (const char **)argv);
+  }
 }

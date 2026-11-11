@@ -78,18 +78,7 @@ Slate includes a full replacement for macOS's built-in `Cmd+Tab` switcher.
 
 ---
 
-## 4. Diagnostics & Utility Windows
+## 4. Configuration Window
 
-### Window Info Panel (`WindowInfoView`)
-- Accessible from the Slate menu bar ("Current Window Info").
-- Displays:
-  - Application name and PID.
-  - Window title and accessibility role.
-  - Current X, Y position, width, and height.
-  - Enclosing screen index and resolution.
-- Extremely useful for debugging layout rules and finding window titles for `TITLE_ORDER` matching.
-
-### Configuration Helper (`ConfigurationHelperView`)
-- Accessible from the Slate menu bar ("Configuration Helper").
-- Renders the current contents of `~/.slate` inside a native monospace text editor window for quick reference.
+- **Configure Slate…** (⌘,) in the status menu opens a form for `~/.slate.yml`. See [Configuration File](configuration-yaml.md).
 

@@ -24,7 +24,6 @@
 		3AA7D09516A6EE0200C81A67 /* JSController.m in Sources */ = {isa = PBXBuildFile; fileRef = 3AA7D09416A6EE0200C81A67 /* JSController.m */; };
 		3AA7D09D16A6FC9B00C81A67 /* initialize.js in Resources */ = {isa = PBXBuildFile; fileRef = 3AA7D09A16A6FAE100C81A67 /* initialize.js */; };
 		3B1E86EE16B3627A001B9090 /* JSOperationWrapper.m in Sources */ = {isa = PBXBuildFile; fileRef = 3B1E86ED16B3627A001B9090 /* JSOperationWrapper.m */; };
-		3B3335AD14FC1EA900F72638 /* WindowInfoView.m in Sources */ = {isa = PBXBuildFile; fileRef = 3B3335AC14FC1EA900F72638 /* WindowInfoView.m */; };
 		3B34F39115462323004090BB /* NSFileManager+ApplicationSupport.m in Sources */ = {isa = PBXBuildFile; fileRef = 3B34F39015462323004090BB /* NSFileManager+ApplicationSupport.m */; };
 		3B38E04816AB8BBF00603901 /* underscore.js in Resources */ = {isa = PBXBuildFile; fileRef = 3B38E04616AB8B3500603901 /* underscore.js */; };
 		3B3C41A01501ADC600C1E927 /* HintOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 3B3C419F1501ADC600C1E927 /* HintOperation.m */; };
@@ -47,7 +46,6 @@
 		3B7EB3A7138F3F6800EBEC2B /* ResizeOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 3B7EB3A6138F3F6800EBEC2B /* ResizeOperation.m */; };
 		3B7EB475138F691800EBEC2B /* Constants.m in Sources */ = {isa = PBXBuildFile; fileRef = 3B7EB474138F691800EBEC2B /* Constants.m */; };
 		3B7EB4CC138F72D900EBEC2B /* StringTokenizer.m in Sources */ = {isa = PBXBuildFile; fileRef = 3B7EB4CB138F72D900EBEC2B /* StringTokenizer.m */; };
-		3B84A552150552DC006E2194 /* ConfigurationHelperView.m in Sources */ = {isa = PBXBuildFile; fileRef = 3B84A551150552DC006E2194 /* ConfigurationHelperView.m */; };
 		3B883A0D1627725200FF3D8C /* RelaunchOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 3B883A0C1627725200FF3D8C /* RelaunchOperation.m */; };
 		3B8B5523161A1E5C00E21A6C /* NSString+Indicies.m in Sources */ = {isa = PBXBuildFile; fileRef = 3B8B5522161A1E5C00E21A6C /* NSString+Indicies.m */; };
 		3B8B5527161A1FDF00E21A6C /* TestNSString+Indicies.m in Sources */ = {isa = PBXBuildFile; fileRef = 3B8B5526161A1FDF00E21A6C /* TestNSString+Indicies.m */; };
@@ -97,7 +95,6 @@
 		47C4A2A11384E8890066B6DE /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 47C4A2A01384E8890066B6DE /* main.m */; };
 		47C4A2A41384E8890066B6DE /* Credits.rtf in Resources */ = {isa = PBXBuildFile; fileRef = 47C4A2A21384E8890066B6DE /* Credits.rtf */; };
 		47C4A2A71384E8890066B6DE /* SlateAppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 47C4A2A61384E8890066B6DE /* SlateAppDelegate.m */; };
-		47C4A2AA1384E8890066B6DE /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 47C4A2A81384E8890066B6DE /* MainMenu.xib */; };
 		47C4A2B11384E8890066B6DE /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 47C4A2931384E8890066B6DE /* Cocoa.framework */; };
 		47C4A2B91384E8890066B6DE /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 47C4A2B71384E8890066B6DE /* InfoPlist.strings */; };
 		47C4A2BC1384E8890066B6DE /* SlateTests.h in Resources */ = {isa = PBXBuildFile; fileRef = 47C4A2BB1384E8890066B6DE /* SlateTests.h */; };
@@ -163,8 +160,6 @@
 		3AA7D09A16A6FAE100C81A67 /* initialize.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; path = Scripting/initialize.js; sourceTree = "<group>"; };
 		3B1E86EC16B3627A001B9090 /* JSOperationWrapper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Scripting/JSOperationWrapper.h; sourceTree = "<group>"; };
 		3B1E86ED16B3627A001B9090 /* JSOperationWrapper.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Scripting/JSOperationWrapper.m; sourceTree = "<group>"; };
-		3B3335AB14FC1EA900F72638 /* WindowInfoView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UI/WindowInfoView.h; sourceTree = "<group>"; };
-		3B3335AC14FC1EA900F72638 /* WindowInfoView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UI/WindowInfoView.m; sourceTree = "<group>"; };
 		3B34F38F15462323004090BB /* NSFileManager+ApplicationSupport.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "Utilities/NSFileManager+ApplicationSupport.h"; sourceTree = "<group>"; };
 		3B34F39015462323004090BB /* NSFileManager+ApplicationSupport.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "Utilities/NSFileManager+ApplicationSupport.m"; sourceTree = "<group>"; };
 		3B38E04616AB8B3500603901 /* underscore.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; path = Scripting/underscore.js; sourceTree = "<group>"; };
@@ -208,8 +203,6 @@
 		3B7EB474138F691800EBEC2B /* Constants.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; lineEnding = 0; path = Config/Constants.m; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objc; };
 		3B7EB4CA138F72D900EBEC2B /* StringTokenizer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Utilities/StringTokenizer.h; sourceTree = "<group>"; };
 		3B7EB4CB138F72D900EBEC2B /* StringTokenizer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Utilities/StringTokenizer.m; sourceTree = "<group>"; };
-		3B84A550150552DC006E2194 /* ConfigurationHelperView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UI/ConfigurationHelperView.h; sourceTree = "<group>"; };
-		3B84A551150552DC006E2194 /* ConfigurationHelperView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UI/ConfigurationHelperView.m; sourceTree = "<group>"; };
 		3B883A0B1627725200FF3D8C /* RelaunchOperation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Operations/RelaunchOperation.h; sourceTree = "<group>"; };
 		3B883A0C1627725200FF3D8C /* RelaunchOperation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Operations/RelaunchOperation.m; sourceTree = "<group>"; };
 		3B8B5521161A1E5C00E21A6C /* NSString+Indicies.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "Utilities/NSString+Indicies.h"; sourceTree = "<group>"; };
@@ -304,7 +297,6 @@
 		47C4A2A31384E8890066B6DE /* en */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; name = en; path = App/en.lproj/Credits.rtf; sourceTree = "<group>"; };
 		47C4A2A51384E8890066B6DE /* SlateAppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = App/SlateAppDelegate.h; sourceTree = "<group>"; };
 		47C4A2A61384E8890066B6DE /* SlateAppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; lineEnding = 0; path = App/SlateAppDelegate.m; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objc; };
-		47C4A2A91384E8890066B6DE /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = App/en.lproj/MainMenu.xib; sourceTree = "<group>"; };
 		47C4A2B01384E8890066B6DE /* SlateTests.octest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SlateTests.octest; sourceTree = BUILT_PRODUCTS_DIR; };
 		47C4A2B61384E8890066B6DE /* SlateTests-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "SlateTests-Info.plist"; sourceTree = "<group>"; };
 		47C4A2B81384E8890066B6DE /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
@@ -632,9 +624,6 @@
 				478293E513859BA000452C07 /* Config */,
 				478293E713859BED00452C07 /* Operation */,
 				47C4A29A1384E8890066B6DE /* Supporting Files */,
-				47C4A2A81384E8890066B6DE /* MainMenu.xib */,
-				3B84A550150552DC006E2194 /* ConfigurationHelperView.h */,
-				3B84A551150552DC006E2194 /* ConfigurationHelperView.m */,
 				5E1A0C0B2D00000000000512 /* ConfigurationStatusBar.m */,
 				5E1A0C0B2D00000000000510 /* ConfigurationStatusBar.h */,
 				5E1A0C0B2D00000000000412 /* ConfigurationFormView.m */,
@@ -643,8 +632,6 @@
 				5E1A0C0B2D00000000000318 /* ConfigurationWindowController.h */,
 				47C4A2A51384E8890066B6DE /* SlateAppDelegate.h */,
 				47C4A2A61384E8890066B6DE /* SlateAppDelegate.m */,
-				3B3335AB14FC1EA900F72638 /* WindowInfoView.h */,
-				3B3335AC14FC1EA900F72638 /* WindowInfoView.m */,
 			);
 			path = Slate;
 			sourceTree = "<group>";
@@ -755,7 +742,6 @@
 			files = (
 				47C4A29E1384E8890066B6DE /* InfoPlist.strings in Resources */,
 				47C4A2A41384E8890066B6DE /* Credits.rtf in Resources */,
-				47C4A2AA1384E8890066B6DE /* MainMenu.xib in Resources */,
 				4747E1EF13877C160005180C /* icon.icns in Resources */,
 				4786D53513882381004554B1 /* ASCIIToCode.plist in Resources */,
 				3B65CF251576CDF10063D298 /* ASCIIToCode_Dvorak.plist in Resources */,
@@ -816,7 +802,6 @@
 				3BB5380413AEDA1B0005CFFC /* ScreenState.m in Sources */,
 				3BCE40F513B15FF300804615 /* FocusOperation.m in Sources */,
 				3BA7485913B1D0F500CFA792 /* MathUtils.m in Sources */,
-				3B3335AD14FC1EA900F72638 /* WindowInfoView.m in Sources */,
 				3BDDA17A14FD95E200829D2A /* SnapshotOperation.m in Sources */,
 				3BDDA17D14FDA50C00829D2A /* Snapshot.m in Sources */,
 				3BDDA18014FDA55600829D2A /* WindowSnapshot.m in Sources */,
@@ -827,7 +812,6 @@
 				3B3C41A01501ADC600C1E927 /* HintOperation.m in Sources */,
 				3B3C41A31501BE8600C1E927 /* HintWindow.m in Sources */,
 				3B58153C1502FB7D0078D568 /* HintView.m in Sources */,
-				3B84A552150552DC006E2194 /* ConfigurationHelperView.m in Sources */,
 				3B4CDD00150ACA6800B819E2 /* SwitchOperation.m in Sources */,
 				3B4CDD03150AD68000B819E2 /* SwitchView.m in Sources */,
 				3B4CDD06150AD69500B819E2 /* SwitchWindow.m in Sources */,
@@ -906,14 +890,6 @@
 				47C4A2A31384E8890066B6DE /* en */,
 			);
 			name = Credits.rtf;
-			sourceTree = "<group>";
-		};
-		47C4A2A81384E8890066B6DE /* MainMenu.xib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				47C4A2A91384E8890066B6DE /* en */,
-			);
-			name = MainMenu.xib;
 			sourceTree = "<group>";
 		};
 		47C4A2B71384E8890066B6DE /* InfoPlist.strings */ = {

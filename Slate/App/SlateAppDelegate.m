@@ -34,42 +34,11 @@
 #import "RunningApplications.h"
 #import "GridOperation.h"
 #import "ConfigurationWindowController.h"
-// Sparkle replacement stub for NIB compatibility
-@interface SUUpdater : NSObject
-@property (nonatomic, assign) BOOL automaticallyChecksForUpdates;
-@property (nonatomic, assign) BOOL automaticallyDownloadsUpdates;
-@property (nonatomic, assign) NSTimeInterval updateCheckInterval;
-@property (nonatomic, copy) NSURL *feedURL;
-+ (SUUpdater *)sharedUpdater;
-- (IBAction)checkForUpdates:(id)sender;
-@end
-@implementation SUUpdater
-+ (SUUpdater *)sharedUpdater {
-  static SUUpdater *updater = nil;
-  static dispatch_once_t onceToken;
-  dispatch_once(&onceToken, ^{
-    updater = [[SUUpdater alloc] init];
-  });
-  return updater;
-}
-- (id)valueForUndefinedKey:(NSString *)key {
-  return nil;
-}
-- (void)setValue:(id)value forUndefinedKey:(NSString *)key {
-  // no-op for Sparkle bindings in NIB
-}
-- (IBAction)checkForUpdates:(id)sender {
-  NSAlert *alert = [[NSAlert alloc] init];
-  [alert setMessageText:@"Check for Updates"];
-  [alert setInformativeText:@"Please check the GitHub repository at https://github.com/bbarbosa85/mwm for the latest updates."];
-  [alert runModal];
-}
-@end
 
 @implementation SlateAppDelegate
 
-@synthesize currentHintOperation, currentGridOperation, currentSwitchBinding, menuSnapshotOperation;
-@synthesize menuActivateSnapshotOperation, cmdTabBinding, cmdShiftTabBinding, modalHotKeyRefs, modalIdToKey;
+@synthesize currentHintOperation, currentGridOperation, currentSwitchBinding;
+@synthesize cmdTabBinding, cmdShiftTabBinding, modalHotKeyRefs, modalIdToKey;
 @synthesize currentModalKey, currentModalHotKeyRefs, undoSnapshotOperation, undoDeleteSnapshotOperation, hasUndoOperation;
 
 static NSObject *timerLock = nil;
@@ -97,12 +66,6 @@ static EventHandlerRef modifiersEvent;
   NSString *relaunchScript = [NSString stringWithFormat:@"while kill -0 %@ 2>/dev/null; do sleep 0.1; done; open -n \"%@\"", processID, appPath];
   [NSTask launchedTaskWithLaunchPath:@"/bin/sh" arguments:[NSArray arrayWithObjects:@"-c", relaunchScript, nil]];
   [NSApp terminate:self];
-}
-
-- (IBAction)currentWindowInfo {
-  [windowInfoController showWindow:windowInfo];
-  [windowInfo makeKeyAndOrderFront:NSApp];
-  [windowInfo setLevel:(NSScreenSaverWindowLevel - 1)];
 }
 
 - (IBAction)configureSlate {
@@ -169,17 +132,7 @@ static EventHandlerRef modifiersEvent;
   [undoSnapOp setStackSize:[[SlateConfig getInstance] getIntegerConfig:UNDO_MAX_STACK_SIZE]];
   [self setUndoSnapshotOperation:undoSnapOp];
   [self setUndoDeleteSnapshotOperation:[DeleteSnapshotOperation operationFromString:[NSString stringWithFormat:@"delete-snapshot %@ all", UNDO_SNAPSHOT]]];
-  [self setMenuSnapshotOperation:[SnapshotOperation operationFromString:[NSString stringWithFormat:@"snapshot %@ save-to-disk", MENU_SNAPSHOT]]];
-  [self setMenuActivateSnapshotOperation:[ActivateSnapshotOperation operationFromString:[NSString stringWithFormat:@"activate-snapshot %@", MENU_SNAPSHOT]]];
   [[self undoDeleteSnapshotOperation] doOperation];
-}
-
-- (IBAction)takeSnapshot {
-  [menuSnapshotOperation doOperation];
-}
-
-- (IBAction)activateSnapshot {
-  [menuActivateSnapshotOperation doOperation];
 }
 
 - (IBAction)aboutWindow {
@@ -486,7 +439,76 @@ OSStatus OnModifiersChangedEvent(EventHandlerCallRef nextHandler, EventRef theEv
   else [launchOnLoginItem setState:NSControlStateValueOff];
 }
 
-- (void)awakeFromNib {
+#pragma mark - Menus
+
+- (NSMenuItem *)addItem:(NSString *)title action:(SEL)action key:(NSString *)key to:(NSMenu *)menu {
+  NSMenuItem *item = [menu addItemWithTitle:title action:action keyEquivalent:key];
+  [item setTarget:self];
+  return item;
+}
+
+// The status bar menu: everything Slate offers, in three short groups.
+- (NSMenu *)buildStatusMenu {
+  NSMenu *menu = [[NSMenu alloc] initWithTitle:@"Slate"];
+  [self addItem:@"About Slate" action:@selector(aboutWindow) key:@"" to:menu];
+  [menu addItem:[NSMenuItem separatorItem]];
+  [self addItem:@"Configure Slate…" action:@selector(configureSlate) key:@"," to:menu];
+  [[self addItem:@"Reload Configuration" action:@selector(relaunch) key:@"" to:menu]
+    setToolTip:@"Restart Slate to load the configuration file again"];
+  launchOnLoginItem = [self addItem:@"Launch Slate at Login" action:@selector(updateLaunchState) key:@"" to:menu];
+  [self setLaunchOnLoginItemStatus];
+  [menu addItem:[NSMenuItem separatorItem]];
+  [menu addItemWithTitle:@"Quit Slate" action:@selector(terminate:) keyEquivalent:@"q"];
+  return menu;
+}
+
+// The app menus, shown only while a Slate window is in front. They carry the
+// standard shortcuts that window's text fields and tables need.
+- (NSMenu *)buildMainMenu {
+  NSMenu *main = [[NSMenu alloc] initWithTitle:@"Main"];
+
+  NSMenu *app = [[NSMenu alloc] initWithTitle:@"Slate"];
+  [self addItem:@"About Slate" action:@selector(aboutWindow) key:@"" to:app];
+  [app addItem:[NSMenuItem separatorItem]];
+  [self addItem:@"Configure Slate…" action:@selector(configureSlate) key:@"," to:app];
+  [app addItem:[NSMenuItem separatorItem]];
+  [app addItemWithTitle:@"Hide Slate" action:@selector(hide:) keyEquivalent:@"h"];
+  [[app addItemWithTitle:@"Hide Others" action:@selector(hideOtherApplications:) keyEquivalent:@"h"]
+    setKeyEquivalentModifierMask:NSEventModifierFlagCommand | NSEventModifierFlagOption];
+  [app addItemWithTitle:@"Show All" action:@selector(unhideAllApplications:) keyEquivalent:@""];
+  [app addItem:[NSMenuItem separatorItem]];
+  [app addItemWithTitle:@"Quit Slate" action:@selector(terminate:) keyEquivalent:@"q"];
+
+  NSMenu *edit = [[NSMenu alloc] initWithTitle:@"Edit"];
+  [edit addItemWithTitle:@"Undo" action:@selector(undo:) keyEquivalent:@"z"];
+  [[edit addItemWithTitle:@"Redo" action:@selector(redo:) keyEquivalent:@"z"]
+    setKeyEquivalentModifierMask:NSEventModifierFlagCommand | NSEventModifierFlagShift];
+  [edit addItem:[NSMenuItem separatorItem]];
+  [edit addItemWithTitle:@"Cut" action:@selector(cut:) keyEquivalent:@"x"];
+  [edit addItemWithTitle:@"Copy" action:@selector(copy:) keyEquivalent:@"c"];
+  [edit addItemWithTitle:@"Paste" action:@selector(paste:) keyEquivalent:@"v"];
+  [edit addItemWithTitle:@"Delete" action:@selector(delete:) keyEquivalent:@""];
+  [edit addItemWithTitle:@"Select All" action:@selector(selectAll:) keyEquivalent:@"a"];
+
+  NSMenu *window = [[NSMenu alloc] initWithTitle:@"Window"];
+  [window addItemWithTitle:@"Close" action:@selector(performClose:) keyEquivalent:@"w"];
+  [window addItemWithTitle:@"Minimize" action:@selector(performMiniaturize:) keyEquivalent:@"m"];
+  [window addItemWithTitle:@"Zoom" action:@selector(performZoom:) keyEquivalent:@""];
+  [window addItem:[NSMenuItem separatorItem]];
+  [window addItemWithTitle:@"Bring All to Front" action:@selector(arrangeInFront:) keyEquivalent:@""];
+  [NSApp setWindowsMenu:window];
+
+  for (NSMenu *submenu in @[app, edit, window]) {
+    NSMenuItem *item = [main addItemWithTitle:[submenu title] action:nil keyEquivalent:@""];
+    [item setSubmenu:submenu];
+  }
+  return main;
+}
+
+#pragma mark - Launch
+
+- (void)applicationWillFinishLaunching:(NSNotification *)notification {
+  [NSApp setMainMenu:[self buildMainMenu]];
   if (NSClassFromString(@"XCTestCase") != nil ||
       [[[NSProcessInfo processInfo] environment] objectForKey:@"XCTestConfigurationFilePath"] != nil) {
     return;
@@ -500,33 +522,8 @@ OSStatus OnModifiersChangedEvent(EventHandlerCallRef nextHandler, EventRef theEv
   [self setModalIdToKey:[NSMutableDictionary dictionary]];
   [self setCurrentModalHotKeyRefs:[NSMutableArray array]];
 
-  windowInfoController = [[NSWindowController alloc] initWithWindow:windowInfo];
-
-  NSMenuItem *aboutItem = [statusMenu insertItemWithTitle:@"About Slate" action:@selector(aboutWindow) keyEquivalent:@"" atIndex:0];
-  [aboutItem setTarget:self];
-
-  // NSMenuItem *takeSnapshotItem = [statusMenu insertItemWithTitle:@"Take Snapshot" action:@selector(takeSnapshot) keyEquivalent:@"" atIndex:3];
-  // [takeSnapshotItem setTarget:self];
-
-  // activateSnapshotItem = [statusMenu insertItemWithTitle:@"Activate Snapshot" action:@selector(activateSnapshot) keyEquivalent:@"" atIndex:4];
-  // [activateSnapshotItem setTarget:self];
-
-  NSMenuItem *loadConfigItem = [statusMenu insertItemWithTitle:@"Relaunch and Load Config" action:@selector(relaunch) keyEquivalent:@"" atIndex:1];
-  [loadConfigItem setTarget:self];
-
-  launchOnLoginItem = [statusMenu insertItemWithTitle:@"Launch Slate on Login" action:@selector(updateLaunchState) keyEquivalent:@"" atIndex:2];
-  [self setLaunchOnLoginItemStatus];
-  [launchOnLoginItem setTarget:self];
-
-  NSMenuItem *configureItem = [statusMenu insertItemWithTitle:@"Configure Slate…" action:@selector(configureSlate) keyEquivalent:@"," atIndex:1];
-  [configureItem setTarget:self];
-
-  // NSMenuItem *windowInfoItem = [statusMenu insertItemWithTitle:@"Current Window Info" action:@selector(currentWindowInfo) keyEquivalent:@"" atIndex:4];
-  // [windowInfoItem setTarget:self];
-
-
   statusItem = [[NSStatusBar systemStatusBar] statusItemWithLength: NSVariableStatusItemLength];
-  [statusItem setMenu:statusMenu];
+  [statusItem setMenu:[self buildStatusMenu]];
   NSImage *statusImage = [NSImage imageNamed:@"status"];
   [statusImage setTemplate:YES];
   [[statusItem button] setImage:statusImage];
@@ -570,16 +567,6 @@ OSStatus OnModifiersChangedEvent(EventHandlerCallRef nextHandler, EventRef theEv
   if ([rapps count] > 0) [AccessibilityWrapper focusMainWindow:[rapps objectAtIndex:0]];
 
   selfRef = self;
-}
-
-- (BOOL)validateMenuItem:(NSMenuItem *)menuItem {
-  if (menuItem == activateSnapshotItem) {
-    SnapshotList *menuSnapshots = [[[SlateConfig getInstance] snapshots] objectForKey:@"menuSnapshot"];
-    if (menuSnapshots == nil || [[menuSnapshots snapshots] count] <= 0) {
-      return NO;
-    }
-  }
-  return YES;
 }
 
 - (BOOL)isInLoginItems {

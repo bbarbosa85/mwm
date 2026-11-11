@@ -14,3 +14,4 @@ Slate.xcodeproj/xcuserdata/jigish.xcuserdatad/
 *.xcuserdatad
 tmp
 build/DerivedData/
+*.profraw

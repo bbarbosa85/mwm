@@ -45,14 +45,13 @@ Welcome to the internal and technical documentation for **Slate**, a highly cust
    - Interactive screen grid overlay (`GridWindow`, `GridView`, `GridCellView`).
    - Vimium-style visual window hints (`HintWindow`, `HintView`, collision spread algorithm).
    - Custom application switcher (`SwitchWindow`, `SwitchView`, `SwitchAppView`, quick actions `q`/`f`/`h`/`` ` ``).
-   - Window inspector & configuration helper panels (`WindowInfoView`, `ConfigurationHelperView`).
 
 7. **[Codebase Walkthrough & Internals](codebase-walkthrough.md)**
    - Directory structure and file manifest.
    - String tokenization (`StringTokenizer`), Levenshtein distance (`NSString+Levenshtein`), math utilities (`MathUtils`).
    - Keyboard layout plists (QWERTY, Dvorak, Colemak, AZERTY).
    - Unit test suite (`SlateTests`).
-   - Build system, release pipeline (`slate.rb`), DMG staging, and Sparkle framework updater.
+   - Build system, release pipeline (`slate.rb`), and DMG staging.
 
 8. **[macOS Permissions & Code Signing Guide](permissions-and-codesigning.md)**
    - macOS TCC (Transparency, Consent, and Control) security model for accessibility.
