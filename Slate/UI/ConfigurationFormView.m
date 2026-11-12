@@ -18,10 +18,13 @@
 #import "ConfigurationFormView.h"
 #import "SlateConfigDocument.h"
 #import "SlateConfig.h"
+#import "SlateShortcut.h"
+#import "ConfigurationShortcutView.h"
 
 static NSString *const kColEnabled = @"enabled";
 static NSString *const kColModifiers = @"mods";
 static NSString *const kColKey = @"key";
+static NSString *const kColShortcut = @"shortcut";
 static NSString *const kColAction = @"action";
 static NSString *const kColNote = @"note";
 static NSString *const kColName = @"name";
@@ -77,7 +80,7 @@ static NSString *DisplayValue(id value) {
   return [value description] ?: @"";
 }
 
-@interface ConfigurationFormView ()
+@interface ConfigurationFormView () <ConfigurationShortcutViewDelegate>
 @property (strong) NSTableView *sidebar;
 @property (strong) NSView *detail;
 @property (strong) NSTextField *titleLabel;
@@ -315,9 +318,8 @@ static NSString *DisplayValue(id value) {
   while ([[self.table tableColumns] count] > 0) [self.table removeTableColumn:[[self.table tableColumns] lastObject]];
   if ([self isBindingSection:section]) {
     [self.table addTableColumn:[self column:kColEnabled title:@"On" width:34]];
-    [self.table addTableColumn:[self column:kColModifiers title:@"Modifiers" width:150]];
-    [self.table addTableColumn:[self column:kColKey title:@"Key" width:70]];
-    [self.table addTableColumn:[self column:kColAction title:@"Action" width:300]];
+    [self.table addTableColumn:[self column:kColShortcut title:@"Shortcut" width:250]];
+    [self.table addTableColumn:[self column:kColAction title:@"Action" width:330]];
     [self.table addTableColumn:[self column:kColNote title:@"Note" width:180]];
   } else if (section == ConfigurationFormSectionGeneral) {
     [self.table addTableColumn:[self column:kColName title:@"Setting" width:230]];
@@ -444,8 +446,7 @@ static NSString *DisplayValue(id value) {
   if ([self isBindingSection:self.selectedSection]) {
     SlateBindingEntry *binding = self.rows[row];
     if ([column isEqualToString:kColEnabled]) return [self checkboxCell:binding.enabled action:@selector(enabledToggled:)];
-    if ([column isEqualToString:kColModifiers]) return [self textCell:binding.modifiers column:column monospaced:YES placeholder:@"none"];
-    if ([column isEqualToString:kColKey]) return [self textCell:binding.key column:column monospaced:YES placeholder:@"key"];
+    if ([column isEqualToString:kColShortcut]) return [self shortcutCellForBinding:binding];
     if ([column isEqualToString:kColAction]) return [self textCell:binding.action column:column monospaced:YES placeholder:@"operation"];
     return [self textCell:binding.note column:column monospaced:NO placeholder:@""];
   }
@@ -463,6 +464,126 @@ static NSString *DisplayValue(id value) {
     return [self checkboxCell:[DisplayValue(entry.value) isEqualToString:@"true"] action:@selector(settingToggled:)];
   }
   return [self textCell:DisplayValue(entry.value) column:column monospaced:YES placeholder:@""];
+}
+
+#pragma mark - Shortcuts
+
+// Shortcuts that fire on the same keys, from every enabled binding: identity -> bindings.
+- (NSDictionary<NSString *, NSArray<SlateBindingEntry *> *> *)bindingsByShortcut {
+  NSMutableDictionary *groups = [NSMutableDictionary dictionary];
+  for (SlateBindingEntry *binding in self.document.bindings) {
+    if (!binding.enabled) continue;
+    NSString *identity = [SlateShortcut identityForKey:[self.document expandAliases:binding.key]
+                                             modifiers:[self.document expandAliases:binding.modifiers ?: @""]];
+    if (identity == nil) continue;
+    groups[identity] = [(groups[identity] ?: @[]) arrayByAddingObject:binding];
+  }
+  return groups;
+}
+
+- (NSString *)conflictTextForBinding:(SlateBindingEntry *)binding groups:(NSDictionary *)groups {
+  if (!binding.enabled) return nil;
+  NSString *identity = [SlateShortcut identityForKey:[self.document expandAliases:binding.key]
+                                           modifiers:[self.document expandAliases:binding.modifiers ?: @""]];
+  NSArray<SlateBindingEntry *> *same = identity ? groups[identity] : nil;
+  if ([same count] < 2) return nil;
+  NSMutableArray *others = [NSMutableArray array];
+  for (SlateBindingEntry *other in same) {
+    if (other != binding) [others addObject:[NSString stringWithFormat:@"“%@”", other.action]];
+  }
+  return [NSString stringWithFormat:@"Same shortcut as %@", [others componentsJoinedByString:@", "]];
+}
+
+- (NSView *)shortcutCellForBinding:(SlateBindingEntry *)binding {
+  ConfigurationShortcutView *view = [[ConfigurationShortcutView alloc] init];
+  [view setDelegate:self];
+  NSString *key = [self.document expandAliases:binding.key];
+  NSString *expandedMods = [self.document expandAliases:binding.modifiers ?: @""];
+  NSArray *names = [SlateShortcut modifierNamesFromString:expandedMods];
+  BOOL known = [SlateShortcut identityForKey:key modifiers:nil] != nil && names != nil;
+  if (known) {
+    NSString *alias = nil;
+    NSRegularExpression *single = [NSRegularExpression regularExpressionWithPattern:@"^\\$\\{([^}]*)\\}$" options:0 error:nil];
+    NSTextCheckingResult *match = [single firstMatchInString:binding.modifiers ?: @"" options:0 range:NSMakeRange(0, [binding.modifiers length])];
+    if (match) alias = [binding.modifiers substringWithRange:[match rangeAtIndex:1]];
+    [view setKeyName:key modifierNames:names aliasName:alias
+            conflict:[self conflictTextForBinding:binding groups:[self bindingsByShortcut]]];
+  } else {
+    [view showRawText:[binding.modifiers length] > 0 ? [NSString stringWithFormat:@"%@ + %@", binding.modifiers, binding.key] : binding.key];
+  }
+  NSMenu *menu = [[NSMenu alloc] init];
+  [[menu addItemWithTitle:@"Edit as Text…" action:@selector(editShortcutAsText:) keyEquivalent:@""] setTarget:self];
+  [view setMenu:menu];
+  return [self cellWith:view];
+}
+
+- (void)shortcutViewWillBeginRecording:(ConfigurationShortcutView *)view {
+  NSInteger row = [self.table rowForView:view];
+  if (row >= 0) [self.table selectRowIndexes:[NSIndexSet indexSetWithIndex:row] byExtendingSelection:NO];
+}
+
+- (void)shortcutView:(ConfigurationShortcutView *)view didRecordKey:(NSString *)keyName modifierNames:(NSArray<NSString *> *)modifierNames {
+  NSInteger row = [self.table rowForView:view];
+  if (row < 0 || row >= (NSInteger)[self.rows count]) return;
+  SlateBindingEntry *binding = self.rows[row];
+  // A named group (like ${hyper}) that matches keeps the file readable.
+  NSString *alias = [SlateShortcut aliasForModifierNames:modifierNames inEntries:self.document.modifiers];
+  NSString *modifiers = alias ?: ([modifierNames count] > 0 ? [SlateShortcut stringFromModifierNames:modifierNames] : nil);
+  if ([binding.key isEqualToString:keyName] && ((modifiers == nil && [binding.modifiers length] == 0) || [modifiers isEqualToString:binding.modifiers])) return;
+  binding.key = keyName;
+  binding.modifiers = modifiers;
+  dispatch_async(dispatch_get_main_queue(), ^{ [self reloadRows]; });  // conflicts may have changed on other rows
+  [self documentChanged];
+}
+
+- (void)beginRecordingRow:(NSInteger)row {
+  [self.table selectRowIndexes:[NSIndexSet indexSetWithIndex:row] byExtendingSelection:NO];
+  [self.table scrollRowToVisible:row];
+  if ([self window] == nil) return;
+  NSInteger columnIndex = [self.table columnWithIdentifier:kColShortcut];
+  if (columnIndex < 0) return;
+  NSView *cell = [self.table viewAtColumn:columnIndex row:row makeIfNecessary:YES];
+  for (NSView *view in [cell subviews]) {
+    if ([view isKindOfClass:[ConfigurationShortcutView class]]) [(ConfigurationShortcutView *)view beginRecording];
+  }
+}
+
+// For what can't be recorded: a key with no physical equivalent, or a modal key (name:modal).
+- (void)editShortcutAsText:(NSMenuItem *)item {
+  NSInteger row = [self.table clickedRow];
+  if (row < 0 || row >= (NSInteger)[self.rows count]) return;
+  SlateBindingEntry *binding = self.rows[row];
+  NSTextField *keyField = [NSTextField textFieldWithString:binding.key ?: @""];
+  NSTextField *modifiersField = [NSTextField textFieldWithString:binding.modifiers ?: @""];
+  [keyField setPlaceholderString:@"r, pad5, left"];
+  [modifiersField setPlaceholderString:@"ctrl;alt;cmd or ${hyper}"];
+  NSStackView *fields = [NSStackView stackViewWithViews:@[
+    [NSTextField labelWithString:@"Key"], keyField, [NSTextField labelWithString:@"Modifiers"], modifiersField,
+  ]];
+  [fields setOrientation:NSUserInterfaceLayoutOrientationVertical];
+  [fields setAlignment:NSLayoutAttributeLeading];
+  [fields setFrameSize:NSMakeSize(300, 100)];
+  [keyField setFrameSize:NSMakeSize(300, 22)];
+  [modifiersField setFrameSize:NSMakeSize(300, 22)];
+  NSAlert *alert = [[NSAlert alloc] init];
+  [alert setMessageText:@"Edit shortcut as text"];
+  [alert addButtonWithTitle:@"Save"];
+  [alert addButtonWithTitle:@"Cancel"];
+  [alert setAccessoryView:fields];
+  if ([self window] == nil) return;
+  [alert beginSheetModalForWindow:[self window] completionHandler:^(NSModalResponse response) {
+    if (response != NSAlertFirstButtonReturn) return;
+    NSString *key = [[keyField stringValue] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+    NSString *mods = [[modifiersField stringValue] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+    if ([key length] == 0) {
+      NSBeep();
+      return;
+    }
+    binding.key = key;
+    binding.modifiers = [mods length] > 0 ? mods : nil;
+    [self reloadRows];
+    [self documentChanged];
+  }];
 }
 
 #pragma mark - Editing
@@ -584,7 +705,7 @@ static NSString *DisplayValue(id value) {
     [self.document.bindings insertObject:binding atIndex:index];
     [self reloadRows];
     [self documentChanged];
-    [self beginEditingRow:[self.rows indexOfObjectIdenticalTo:binding] column:kColKey];
+    [self beginRecordingRow:[self.rows indexOfObjectIdenticalTo:binding]];
     return;
   }
   NSDictionary *defaults = @{

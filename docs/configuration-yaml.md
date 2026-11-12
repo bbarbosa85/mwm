@@ -56,7 +56,9 @@ Aliases follow the legacy `.slate` rules: they can reference other aliases, and 
 
 ## 2. The configuration window
 
-The window is a form with a sidebar of sections: General (settings), Modifiers, Monitors, Positions, Other aliases, and bindings grouped as Apps, Layout bindings, Window actions and Features. The bottom bar shows `{saved?} {file} … {valid?} … {Apply} {Close}`.
+The window is a form with a sidebar of sections: General (settings), Modifiers, Monitors, Positions, Other aliases, and bindings grouped as Apps, Layout bindings, Window actions and Features. In a bindings section, click a **Shortcut** to record a new one: press the keys (modifiers show up as you hold them), Esc cancels. A combination that matches a named modifier group is saved as `${name}` (for example `${hyper}`). Shortcuts used by more than one enabled binding are flagged. Right-click a shortcut and choose **Edit as Text…** for keys that can't be recorded.
+
+The bottom bar shows `{saved?} {file} … {valid?} … {Apply} {Close}`.
 
 - **Saving as you go.** Every change is validated (`SlateConfigValidator`) and, if it has no errors, written right away. Warnings don't block saving. Changes with errors show **Not saved**, and the file keeps its last valid version. The first save of a session copies the previous file to `~/.mwm.yml.bak`. Writes are atomic and go through a symlinked `~/.mwm.yml` to its target.
 - **Hand edits.** Opening the window doesn't rewrite the file, so comments and layout are kept until something changes in the window, which then writes the canonical layout. If the file changes on disk while the window is open, the window reloads it when it comes to the front (or asks, if it has unsaved changes with errors).
