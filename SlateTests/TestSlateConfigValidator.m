@@ -104,6 +104,16 @@
   XCTAssertEqualObjects(result.issues[3].message, @"Binding #4 (c:cmd) uses the same keys as binding #3.");
 }
 
+- (void)testDuplicateShortcutsIgnoreModifierOrder {
+  NSString *source = [self configWithBindings:
+    @"  - key: r\n    mods: cmd;alt\n    action: relaunch\n"
+    @"  - key: r\n    mods: alt,cmd\n    action: undo\n"];
+  SlateConfigValidationResult *result = [SlateConfigValidator validateSource:source];
+  XCTAssertEqual(result.errorCount, 0u, @"%@", result.issues);
+  XCTAssertEqual(result.warningCount, 1u, @"%@", result.issues);
+  XCTAssertTrue([result.issues[0].message containsString:@"same keys as binding #1"], @"%@", result.issues[0].message);
+}
+
 - (void)testSyntaxErrorHasLine {
   SlateConfigIssue *issue = [self onlyIssue:[SlateConfigValidator validateSource:@"settings:\n  a: [1, 2]\n"]];
   XCTAssertTrue(issue.isError);

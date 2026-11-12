@@ -19,6 +19,7 @@
 #import "Binding.h"
 #import "SlateConfig.h"
 #import "SlateConfigDocument.h"
+#import "SlateShortcut.h"
 
 @implementation SlateConfigIssue
 
@@ -107,9 +108,14 @@
       issue.bindingIndex = binding.index;
       [issues addObject:issue];
     }
-    NSNumber *first = seenHotkeys[binding.hotkey];
+    // Same keys whatever order the modifiers are written in.
+    NSRange colon = [binding.hotkey rangeOfString:@":"];
+    NSString *identity = [SlateShortcut identityForKey:colon.location == NSNotFound ? binding.hotkey : [binding.hotkey substringToIndex:colon.location]
+                                            modifiers:colon.location == NSNotFound ? nil : [binding.hotkey substringFromIndex:NSMaxRange(colon)]]
+                         ?: binding.hotkey;
+    NSNumber *first = seenHotkeys[identity];
     if (first == nil) {
-      seenHotkeys[binding.hotkey] = @(binding.index);
+      seenHotkeys[identity] = @(binding.index);
     } else {
       SlateConfigIssue *issue = [SlateConfigIssue issueWithError:NO
                                                          message:[NSString stringWithFormat:@"%@ uses the same keys as binding #%lu.", label, [first unsignedIntegerValue] + 1]
