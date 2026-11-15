@@ -16,6 +16,7 @@
 //  along with this program.  If not, see http://www.gnu.org/licenses
 
 #import "SlateConfigDocument.h"
+#import "SlateDisplays.h"
 #import "SlateYAML.h"
 
 NSString *const SlateConfigDocumentErrorDomain = @"SlateConfigDocumentErrorDomain";
@@ -375,6 +376,7 @@ static const NSUInteger kMaxAliasDepth = 20;
 
 - (SlateResolvedConfig *)resolveCollectingErrors:(NSMutableArray<NSError *> *)errors {
   NSMutableDictionary<NSString *, NSString *> *table = [NSMutableDictionary dictionary];
+  NSArray<SlateDisplay *> *displays = [SlateDisplays connected];
   for (NSArray<SlateConfigEntry *> *section in @[self.modifiers, self.monitors, self.positions, self.aliases]) {
     for (SlateConfigEntry *entry in section) {
       if (table[entry.name] != nil) {
@@ -382,7 +384,7 @@ static const NSUInteger kMaxAliasDepth = 20;
                                         [NSString stringWithFormat:@"The alias \"%@\" is defined more than once.", entry.name], entry.line, nil, entry.name)];
         continue;
       }
-      table[entry.name] = ScalarText(entry.value);
+      table[entry.name] = section == self.monitors ? [SlateDisplays referenceForValue:ScalarText(entry.value) displays:displays] : ScalarText(entry.value);
     }
   }
 
@@ -429,7 +431,9 @@ static const NSUInteger kMaxAliasDepth = 20;
   NSMutableDictionary *table = [NSMutableDictionary dictionary];
   for (NSArray<SlateConfigEntry *> *section in @[self.modifiers, self.monitors, self.positions, self.aliases]) {
     for (SlateConfigEntry *entry in section) {
-      if (table[entry.name] == nil) table[entry.name] = [entry.value description];
+      if (table[entry.name] != nil) continue;
+      NSString *text = [entry.value description];
+      table[entry.name] = section == self.monitors ? [SlateDisplays referenceForValue:text] : text;
     }
   }
   NSRegularExpression *reference = [NSRegularExpression regularExpressionWithPattern:@"\\$\\{([^}]*)\\}" options:0 error:nil];

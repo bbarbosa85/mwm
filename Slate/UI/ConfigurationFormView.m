@@ -22,6 +22,7 @@
 #import "ConfigurationShortcutView.h"
 #import "ConfigurationActionView.h"
 #import "ConfigurationSettingsView.h"
+#import "ConfigurationDisplaysView.h"
 
 static NSString *const kColEnabled = @"enabled";
 static NSString *const kColModifiers = @"mods";
@@ -148,19 +149,19 @@ static NSString *DisplayValue(id value) {
   return [value description] ?: @"";
 }
 
-@interface ConfigurationFormView () <ConfigurationShortcutViewDelegate, ConfigurationActionViewDelegate, ConfigurationSettingsViewDelegate>
+@interface ConfigurationFormView () <ConfigurationShortcutViewDelegate, ConfigurationActionViewDelegate, ConfigurationSettingsViewDelegate, ConfigurationDisplaysViewDelegate>
 @property (strong) NSTableView *sidebar;
 @property (strong) NSView *detail;
 @property (strong) NSTextField *titleLabel;
 @property (strong) NSTextField *infoLabel;
 @property (strong) NSButton *addButton;
-@property (strong) NSButton *detectButton;
 @property (strong) NSButton *removeButton;
 @property (strong) NSScrollView *tableScroll;
 @property (strong) NSView *filterBar;
 @property (strong) NSSegmentedControl *filterControl;
 @property (strong) NSLayoutConstraint *filterBarHeight;
 @property (strong) ConfigurationSettingsView *settingsView;
+@property (strong) ConfigurationDisplaysView *displaysView;
 @property (strong) NSView *placeholderView;
 @property (strong) NSTextField *placeholderTitle;
 @property (strong) NSTableView *table;
@@ -234,10 +235,6 @@ static NSString *DisplayValue(id value) {
   [self.infoLabel setTranslatesAutoresizingMaskIntoConstraints:NO];
   self.addButton = [self symbolButton:@"plus" tip:@"Add" action:@selector(add:)];
   self.removeButton = [self symbolButton:@"minus" tip:@"Remove the selected rows" action:@selector(remove:)];
-  self.detectButton = [NSButton buttonWithTitle:@"Detect Screens" target:self action:@selector(detectScreens:)];
-  [self.detectButton setControlSize:NSControlSizeSmall];
-  [self.detectButton setTranslatesAutoresizingMaskIntoConstraints:NO];
-  [self.detectButton setToolTip:@"Adds the connected screens, with their sizes, to the list"];
 
   self.table = [[NSTableView alloc] init];
   [self.table setStyle:NSTableViewStyleInset];
@@ -270,12 +267,17 @@ static NSString *DisplayValue(id value) {
   [self.placeholderView addSubview:self.placeholderTitle];
   [self.placeholderView setHidden:YES];
 
+  self.displaysView = [[ConfigurationDisplaysView alloc] init];
+  [self.displaysView setTranslatesAutoresizingMaskIntoConstraints:NO];
+  [self.displaysView setDelegate:self];
+  [self.displaysView setHidden:YES];
+
   self.settingsView = [[ConfigurationSettingsView alloc] init];
   [self.settingsView setTranslatesAutoresizingMaskIntoConstraints:NO];
   [self.settingsView setDelegate:self];
   [self.settingsView setHidden:YES];
 
-  for (NSView *view in @[self.titleLabel, self.infoLabel, self.addButton, self.removeButton, self.detectButton, self.filterBar, self.tableScroll, self.placeholderView, self.settingsView]) {
+  for (NSView *view in @[self.titleLabel, self.infoLabel, self.addButton, self.removeButton, self.filterBar, self.tableScroll, self.placeholderView, self.settingsView, self.displaysView]) {
     [self.detail addSubview:view];
   }
 
@@ -321,14 +323,16 @@ static NSString *DisplayValue(id value) {
     [self.removeButton.centerYAnchor constraintEqualToAnchor:self.titleLabel.bottomAnchor],
     [self.addButton.trailingAnchor constraintEqualToAnchor:self.removeButton.leadingAnchor constant:-6],
     [self.addButton.centerYAnchor constraintEqualToAnchor:self.removeButton.centerYAnchor],
-    [self.detectButton.trailingAnchor constraintEqualToAnchor:self.addButton.leadingAnchor constant:-10],
-    [self.detectButton.centerYAnchor constraintEqualToAnchor:self.removeButton.centerYAnchor],
 
     [self.filterBar.topAnchor constraintEqualToAnchor:self.infoLabel.bottomAnchor constant:6],
     [self.filterBar.leadingAnchor constraintEqualToAnchor:self.detail.leadingAnchor],
     [self.filterBar.trailingAnchor constraintEqualToAnchor:self.detail.trailingAnchor],
     [self.filterControl.leadingAnchor constraintEqualToAnchor:self.filterBar.leadingAnchor constant:20],
     [self.filterControl.centerYAnchor constraintEqualToAnchor:self.filterBar.centerYAnchor],
+    [self.displaysView.topAnchor constraintEqualToAnchor:self.infoLabel.bottomAnchor constant:6],
+    [self.displaysView.bottomAnchor constraintEqualToAnchor:self.detail.bottomAnchor],
+    [self.displaysView.leadingAnchor constraintEqualToAnchor:self.detail.leadingAnchor],
+    [self.displaysView.trailingAnchor constraintEqualToAnchor:self.detail.trailingAnchor],
     [self.settingsView.topAnchor constraintEqualToAnchor:self.infoLabel.bottomAnchor constant:6],
     [self.settingsView.bottomAnchor constraintEqualToAnchor:self.detail.bottomAnchor],
     [self.settingsView.leadingAnchor constraintEqualToAnchor:self.detail.leadingAnchor],
@@ -477,10 +481,12 @@ static NSString *DisplayValue(id value) {
   [self.infoLabel setStringValue:info.info];
   BOOL placeholder = IsPlaceholderSection(section);
   BOOL cards = IsSettingsSection(section);  // rows of switches and sliders instead of a table
-  [self.detectButton setHidden:section != ConfigurationFormSectionMonitors];
-  [self.addButton setHidden:placeholder || cards];
-  [self.removeButton setHidden:placeholder || cards];
-  [self.tableScroll setHidden:placeholder || cards];
+  BOOL displays = section == ConfigurationFormSectionMonitors;
+  [self.addButton setHidden:placeholder || cards || displays];
+  [self.removeButton setHidden:placeholder || cards || displays];
+  [self.tableScroll setHidden:placeholder || cards || displays];
+  [self.displaysView setHidden:!displays];
+  self.displaysView.document = displays ? self.document : nil;
   [self.settingsView setHidden:!cards];
   if (cards) self.settingsView.page = section == ConfigurationFormSectionAdvanced ? ConfigurationSettingsPageAdvanced : ConfigurationSettingsPageGeneral;
   self.settingsView.document = cards ? self.document : nil;
@@ -667,47 +673,7 @@ static NSString *DisplayValue(id value) {
   return [self textCell:DisplayValue(entry.value) column:column monospaced:YES placeholder:@""];
 }
 
-#pragma mark - Screens
-
-// The connected screens in the order screen numbers refer to them (left to right unless the file says otherwise).
-- (NSArray<NSScreen *> *)orderedScreens {
-  NSArray *screens = [NSScreen screens];
-  for (SlateConfigEntry *entry in self.document.settings) {
-    if ([entry.name isEqualToString:@"orderScreensLeftToRight"] && [[entry.value description] isEqualToString:@"false"]) return screens;
-  }
-  NSScreen *main = [screens firstObject];
-  return [screens sortedArrayUsingComparator:^NSComparisonResult(NSScreen *a, NSScreen *b) {
-    CGFloat ax = [a frame].origin.x - [main frame].origin.x, bx = [b frame].origin.x - [main frame].origin.x;
-    if (ax != bx) return ax < bx ? NSOrderedAscending : NSOrderedDescending;
-    return [b frame].origin.y < [a frame].origin.y ? NSOrderedAscending : NSOrderedDescending;
-  }];
-}
-
-- (IBAction)detectScreens:(id)sender {
-  NSMutableArray<NSString *> *added = [NSMutableArray array];
-  NSArray<NSScreen *> *screens = [self orderedScreens];
-  for (NSUInteger i = 0; i < [screens count]; i++) {
-    NSScreen *screen = screens[i];
-    NSString *slug = [[[screen localizedName] lowercaseString] stringByReplacingOccurrencesOfString:@" " withString:@"-"];
-    NSString *name = [@"monitor-" stringByAppendingString:slug];
-    NSString *size = [NSString stringWithFormat:@"%dx%d", (int)[screen frame].size.width, (int)[screen frame].size.height];
-    for (NSArray *pair in @[@[name, [NSString stringWithFormat:@"%lu", (unsigned long)i]], @[[name stringByAppendingString:@"-size"], size]]) {
-      BOOL exists = NO;
-      for (SlateConfigEntry *entry in self.document.monitors) if ([entry.name isEqualToString:pair[0]]) exists = YES;
-      if (exists) continue;
-      [self.document.monitors addObject:[SlateConfigEntry entryWithName:pair[0] value:pair[1]]];
-      [added addObject:pair[0]];
-    }
-  }
-  if ([added count] == 0) {
-    NSBeep();
-    return;
-  }
-  [self reloadRows];
-  [self documentChanged];
-}
-
-#pragma mark - General page
+#pragma mark - Settings and displays pages
 
 - (void)settingsViewDidChangeDocument:(ConfigurationSettingsView *)view {
   [self documentChanged];
@@ -727,6 +693,10 @@ static NSString *DisplayValue(id value) {
 
 - (void)settingsView:(ConfigurationSettingsView *)view setLaunchesAtLogin:(BOOL)launches {
   if ([self.delegate respondsToSelector:@selector(formView:setLaunchesAtLogin:)]) [self.delegate formView:self setLaunchesAtLogin:launches];
+}
+
+- (void)displaysViewDidChangeDocument:(ConfigurationDisplaysView *)view {
+  [self documentChanged];
 }
 
 #pragma mark - Actions

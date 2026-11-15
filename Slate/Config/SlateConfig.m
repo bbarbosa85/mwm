@@ -26,6 +26,7 @@
 #import "ScreenWrapper.h"
 #import "SlateConfig.h"
 #import "SlateConfigDocument.h"
+#import "SlateDisplays.h"
 #import "SlateLegacyMigration.h"
 #import "StringTokenizer.h"
 #import "Snapshot.h"
@@ -218,10 +219,24 @@ static SlateConfig *_instance = nil;
 }
 
 // Reads ~/.mwm.yml and registers its settings and bindings. Nothing in it is run.
+// What each screen role of the loaded config turned into, to notice when a
+// dock or undock changes it.
+static NSDictionary<NSString *, NSString *> *gLoadedRoleReferences = nil;
+
+static NSDictionary<NSString *, NSString *> *RoleReferencesForDocument(SlateConfigDocument *document) {
+  NSMutableDictionary *references = [NSMutableDictionary dictionary];
+  for (SlateConfigEntry *entry in document.monitors) {
+    NSString *value = [entry.value description];
+    if ([SlateDisplays isRole:value]) references[value] = [SlateDisplays referenceForValue:value];
+  }
+  return references;
+}
+
 - (BOOL)loadYAMLConfigAtPath:(NSString *)path error:(NSError **)error {
   SlateConfigDocument *document = [SlateConfigDocument documentWithContentsOfFile:path error:error];
   SlateResolvedConfig *resolved = [document resolve:error];
   if (resolved == nil) return NO;
+  gLoadedRoleReferences = RoleReferencesForDocument(document);
   SlateLogger(@"  Loading %@", path);
   for (SlateConfigEntry *setting in resolved.settings) {
     id value = setting.value;
@@ -523,9 +538,23 @@ static SlateConfig *_instance = nil;
 
 }
 
+// Screen roles are turned into screen numbers when the config loads, so docking
+// or undocking means loading it again, which MWM does by restarting.
+- (void)relaunchIfScreenRolesChanged {
+  if ([gLoadedRoleReferences count] == 0) return;
+  for (NSString *role in gLoadedRoleReferences) {
+    if ([[SlateDisplays referenceForValue:role] isEqualToString:gLoadedRoleReferences[role]]) continue;
+    SlateLogger(@"Screens changed for %@: restarting to load the config again", role);
+    gLoadedRoleReferences = nil;  // once is enough
+    [NSApp sendAction:NSSelectorFromString(@"relaunch") to:[NSApp delegate] from:nil];
+    return;
+  }
+}
+
 - (void)onScreenChange:(id)notification {
   SlateLogger(@"onScreenChange");
   if (![ScreenWrapper hasScreenConfigChanged]) return;
+  [self relaunchIfScreenRolesChanged];
   [self checkDefaults];
   [[JSController getInstance] runCallbacks:@"screenConfigurationChanged" payload:nil];
 }

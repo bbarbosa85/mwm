@@ -168,19 +168,6 @@ static NSString *const kConfig =
   XCTAssertEqual(self.changes, 1u);
 }
 
-- (void)testDetectScreensAddsThemOnce {
-  SlateConfigDocument *doc = [self document];
-  ConfigurationFormView *form = [self formWithDocument:doc];
-  form.selectedSection = ConfigurationFormSectionMonitors;
-  NSUInteger before = [doc.monitors count];
-  [form performSelector:@selector(detectScreens:) withObject:nil];
-  XCTAssertGreaterThan([doc.monitors count], before, @"each screen adds a name and a size");
-  XCTAssertEqual(self.changes, 1u);
-  NSUInteger after = [doc.monitors count];
-  [form performSelector:@selector(detectScreens:) withObject:nil];
-  XCTAssertEqual([doc.monitors count], after, @"detecting again adds nothing");
-}
-
 - (void)testToggleBindingAndSetting {
   SlateConfigDocument *doc = [self document];
   ConfigurationFormView *form = [self formWithDocument:doc];
