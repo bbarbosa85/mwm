@@ -16,6 +16,7 @@
 //  along with this program.  If not, see http://www.gnu.org/licenses
 
 #import "ConfigurationSettingsView.h"
+#import "ConfigurationBlockView.h"
 #import "SlateConfigDocument.h"
 #import "SlateConfig.h"
 
@@ -40,39 +41,6 @@ static id TypedValue(NSString *text) {
   if ([number numberOfMatchesInString:text options:0 range:NSMakeRange(0, [text length])] == 1) return @([text doubleValue]);
   return text;
 }
-
-// A scroll view puts a short document at the bottom unless the document is flipped.
-@interface ConfigurationFlippedView : NSView
-@end
-
-@implementation ConfigurationFlippedView
-- (BOOL)isFlipped { return YES; }
-@end
-
-@interface ConfigurationBlockView : NSView
-@end
-
-// A rounded, softly tinted row.
-@implementation ConfigurationBlockView
-- (instancetype)initWithFrame:(NSRect)frame {
-  self = [super initWithFrame:frame];
-  if (self) {
-    [self setWantsLayer:YES];
-    [[self layer] setCornerRadius:12];
-  }
-  return self;
-}
-- (void)viewDidChangeEffectiveAppearance {
-  [super viewDidChangeEffectiveAppearance];
-  [self.effectiveAppearance performAsCurrentDrawingAppearance:^{
-    [[self layer] setBackgroundColor:[[[NSColor labelColor] colorWithAlphaComponent:0.05] CGColor]];
-  }];
-}
-- (void)viewDidMoveToWindow {
-  [super viewDidMoveToWindow];
-  [self viewDidChangeEffectiveAppearance];
-}
-@end
 
 @interface ConfigurationSettingsView ()
 @property (strong) NSScrollView *scroll;
