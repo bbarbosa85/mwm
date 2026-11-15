@@ -23,6 +23,8 @@
 #import "ConfigurationActionView.h"
 #import "ConfigurationSettingsView.h"
 #import "ConfigurationDisplaysView.h"
+#import "ConfigurationSlotsView.h"
+#import "SlateSlots.h"
 
 static NSString *const kColEnabled = @"enabled";
 static NSString *const kColModifiers = @"mods";
@@ -59,7 +61,7 @@ static SectionInfo InfoFor(ConfigurationFormSection section) {
     case ConfigurationFormSectionMonitors:
       return (SectionInfo){@"Displays", @"display.2", @"Screens and their sizes, used as ${name} in shortcuts and slots."};
     case ConfigurationFormSectionPositions:
-      return (SectionInfo){@"Slots", @"rectangle.split.3x1", @"Named window areas, used as ${name} in shortcuts."};
+      return (SectionInfo){@"Custom slots", @"rectangle.split.3x1", @"Your own named window areas, used as ${name} in shortcuts."};
     case ConfigurationFormSectionAliases:
       return (SectionInfo){@"Other aliases", @"curlybraces", @"Other named values, used as ${name}."};
     case ConfigurationFormSectionApps:
@@ -149,7 +151,7 @@ static NSString *DisplayValue(id value) {
   return [value description] ?: @"";
 }
 
-@interface ConfigurationFormView () <ConfigurationShortcutViewDelegate, ConfigurationActionViewDelegate, ConfigurationSettingsViewDelegate, ConfigurationDisplaysViewDelegate>
+@interface ConfigurationFormView () <ConfigurationShortcutViewDelegate, ConfigurationActionViewDelegate, ConfigurationSettingsViewDelegate, ConfigurationDisplaysViewDelegate, ConfigurationSlotsViewDelegate>
 @property (strong) NSTableView *sidebar;
 @property (strong) NSView *detail;
 @property (strong) NSTextField *titleLabel;
@@ -162,6 +164,7 @@ static NSString *DisplayValue(id value) {
 @property (strong) NSLayoutConstraint *filterBarHeight;
 @property (strong) ConfigurationSettingsView *settingsView;
 @property (strong) ConfigurationDisplaysView *displaysView;
+@property (strong) ConfigurationSlotsView *slotsView;
 @property (strong) NSView *placeholderView;
 @property (strong) NSTextField *placeholderTitle;
 @property (strong) NSTableView *table;
@@ -267,6 +270,11 @@ static NSString *DisplayValue(id value) {
   [self.placeholderView addSubview:self.placeholderTitle];
   [self.placeholderView setHidden:YES];
 
+  self.slotsView = [[ConfigurationSlotsView alloc] init];
+  [self.slotsView setTranslatesAutoresizingMaskIntoConstraints:NO];
+  [self.slotsView setDelegate:self];
+  [self.slotsView setHidden:YES];
+
   self.displaysView = [[ConfigurationDisplaysView alloc] init];
   [self.displaysView setTranslatesAutoresizingMaskIntoConstraints:NO];
   [self.displaysView setDelegate:self];
@@ -277,7 +285,7 @@ static NSString *DisplayValue(id value) {
   [self.settingsView setDelegate:self];
   [self.settingsView setHidden:YES];
 
-  for (NSView *view in @[self.titleLabel, self.infoLabel, self.addButton, self.removeButton, self.filterBar, self.tableScroll, self.placeholderView, self.settingsView, self.displaysView]) {
+  for (NSView *view in @[self.titleLabel, self.infoLabel, self.addButton, self.removeButton, self.filterBar, self.tableScroll, self.placeholderView, self.settingsView, self.displaysView, self.slotsView]) {
     [self.detail addSubview:view];
   }
 
@@ -329,6 +337,10 @@ static NSString *DisplayValue(id value) {
     [self.filterBar.trailingAnchor constraintEqualToAnchor:self.detail.trailingAnchor],
     [self.filterControl.leadingAnchor constraintEqualToAnchor:self.filterBar.leadingAnchor constant:20],
     [self.filterControl.centerYAnchor constraintEqualToAnchor:self.filterBar.centerYAnchor],
+    [self.slotsView.topAnchor constraintEqualToAnchor:self.infoLabel.bottomAnchor constant:6],
+    [self.slotsView.bottomAnchor constraintEqualToAnchor:self.detail.bottomAnchor],
+    [self.slotsView.leadingAnchor constraintEqualToAnchor:self.detail.leadingAnchor],
+    [self.slotsView.trailingAnchor constraintEqualToAnchor:self.detail.trailingAnchor],
     [self.displaysView.topAnchor constraintEqualToAnchor:self.infoLabel.bottomAnchor constant:6],
     [self.displaysView.bottomAnchor constraintEqualToAnchor:self.detail.bottomAnchor],
     [self.displaysView.leadingAnchor constraintEqualToAnchor:self.detail.leadingAnchor],
@@ -482,11 +494,14 @@ static NSString *DisplayValue(id value) {
   BOOL placeholder = IsPlaceholderSection(section);
   BOOL cards = IsSettingsSection(section);  // rows of switches and sliders instead of a table
   BOOL displays = section == ConfigurationFormSectionMonitors;
-  [self.addButton setHidden:placeholder || cards || displays];
-  [self.removeButton setHidden:placeholder || cards || displays];
-  [self.tableScroll setHidden:placeholder || cards || displays];
+  BOOL slots = section == ConfigurationFormSectionPositions;
+  [self.addButton setHidden:placeholder || cards || displays || slots];
+  [self.removeButton setHidden:placeholder || cards || displays || slots];
+  [self.tableScroll setHidden:placeholder || cards || displays || slots];
   [self.displaysView setHidden:!displays];
   self.displaysView.document = displays ? self.document : nil;
+  [self.slotsView setHidden:!slots];
+  self.slotsView.document = slots ? self.document : nil;
   [self.settingsView setHidden:!cards];
   if (cards) self.settingsView.page = section == ConfigurationFormSectionAdvanced ? ConfigurationSettingsPageAdvanced : ConfigurationSettingsPageGeneral;
   self.settingsView.document = cards ? self.document : nil;
@@ -699,12 +714,27 @@ static NSString *DisplayValue(id value) {
   [self documentChanged];
 }
 
+- (void)slotsViewDidChangeDocument:(ConfigurationSlotsView *)view {
+  [self documentChanged];
+}
+
 #pragma mark - Actions
+
+// Every slot a shortcut can move to: the built-in ones, then the file's own.
+- (NSArray<SlateConfigEntry *> *)slotEntries {
+  NSMutableArray *entries = [NSMutableArray array];
+  NSSet *inFile = [NSSet setWithArray:[self.document.positions valueForKey:@"name"]];
+  for (SlateSlot *preset in [SlateSlots presets]) {
+    if (![inFile containsObject:preset.name]) [entries addObject:[SlateConfigEntry entryWithName:preset.name value:preset.formula]];
+  }
+  [entries addObjectsFromArray:self.document.positions];
+  return entries;
+}
 
 - (NSView *)actionCellForBinding:(SlateBindingEntry *)binding {
   ConfigurationActionView *view = [[ConfigurationActionView alloc] init];
   [view setDelegate:self];
-  [view setAction:binding.action ?: @"" positions:self.document.positions monitors:self.document.monitors];
+  [view setAction:binding.action ?: @"" positions:[self slotEntries] monitors:self.document.monitors];
   return view;
 }
 
@@ -1056,6 +1086,7 @@ static NSString *DisplayValue(id value) {
       if (![entry.name isEqualToString:name]) continue;
       [self setSelectedSection:section];
       [self selectRowObject:entry];
+      if (section == ConfigurationFormSectionPositions) [self.slotsView selectSlotNamed:name];
       return;
     }
   }

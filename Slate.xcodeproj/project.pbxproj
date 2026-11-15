@@ -7,6 +7,11 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		5E1A0C0B2D00000000000683 /* ConfigurationSlotCanvas.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D00000000000682 /* ConfigurationSlotCanvas.m */; };
+		5E1A0C0B2D00000000000687 /* ConfigurationSlotsView.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D00000000000686 /* ConfigurationSlotsView.m */; };
+		5E1A0C0B2D00000000000689 /* TestConfigurationSlots.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D00000000000688 /* TestConfigurationSlots.m */; };
+		5E1A0C0B2D00000000000673 /* SlateSlots.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D00000000000672 /* SlateSlots.m */; };
+		5E1A0C0B2D00000000000675 /* TestSlateSlots.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D00000000000674 /* TestSlateSlots.m */; };
 		5E1A0C0B2D00000000000663 /* ConfigurationBlockView.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D00000000000662 /* ConfigurationBlockView.m */; };
 		5E1A0C0B2D00000000000667 /* ConfigurationDisplaysView.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D00000000000666 /* ConfigurationDisplaysView.m */; };
 		5E1A0C0B2D00000000000653 /* SlateDisplays.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D00000000000652 /* SlateDisplays.m */; };
@@ -145,6 +150,14 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		5E1A0C0B2D00000000000680 /* ConfigurationSlotCanvas.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UI/ConfigurationSlotCanvas.h; sourceTree = "<group>"; };
+		5E1A0C0B2D00000000000682 /* ConfigurationSlotCanvas.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UI/ConfigurationSlotCanvas.m; sourceTree = "<group>"; };
+		5E1A0C0B2D00000000000684 /* ConfigurationSlotsView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UI/ConfigurationSlotsView.h; sourceTree = "<group>"; };
+		5E1A0C0B2D00000000000686 /* ConfigurationSlotsView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UI/ConfigurationSlotsView.m; sourceTree = "<group>"; };
+		5E1A0C0B2D00000000000688 /* TestConfigurationSlots.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TestConfigurationSlots.m; sourceTree = "<group>"; };
+		5E1A0C0B2D00000000000670 /* SlateSlots.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Config/SlateSlots.h; sourceTree = "<group>"; };
+		5E1A0C0B2D00000000000672 /* SlateSlots.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Config/SlateSlots.m; sourceTree = "<group>"; };
+		5E1A0C0B2D00000000000674 /* TestSlateSlots.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TestSlateSlots.m; sourceTree = "<group>"; };
 		5E1A0C0B2D00000000000660 /* ConfigurationBlockView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UI/ConfigurationBlockView.h; sourceTree = "<group>"; };
 		5E1A0C0B2D00000000000662 /* ConfigurationBlockView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UI/ConfigurationBlockView.m; sourceTree = "<group>"; };
 		5E1A0C0B2D00000000000664 /* ConfigurationDisplaysView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UI/ConfigurationDisplaysView.h; sourceTree = "<group>"; };
@@ -431,6 +444,8 @@
 				5E1A0C0B2D00000000000628 /* TestSlateShortcut.m */,
 				5E1A0C0B2D00000000000638 /* TestSlateAction.m */,
 				5E1A0C0B2D00000000000654 /* TestSlateDisplays.m */,
+				5E1A0C0B2D00000000000674 /* TestSlateSlots.m */,
+				5E1A0C0B2D00000000000688 /* TestConfigurationSlots.m */,
 				5E1A0C0B2D00000000000213 /* TestSlateLegacyMigration.m */,
 				5E1A0C0B2D00000000000514 /* TestConfigurationAutosave.m */,
 				5E1A0C0B2D00000000000414 /* TestConfigurationForm.m */,
@@ -491,6 +506,8 @@
 				5E1A0C0B2D00000000000632 /* SlateAction.m */,
 				5E1A0C0B2D00000000000650 /* SlateDisplays.h */,
 				5E1A0C0B2D00000000000652 /* SlateDisplays.m */,
+				5E1A0C0B2D00000000000670 /* SlateSlots.h */,
+				5E1A0C0B2D00000000000672 /* SlateSlots.m */,
 				5E1A0C0B2D00000000000210 /* SlateLegacyMigration.h */,
 				5E1A0C0B2D00000000000211 /* SlateLegacyMigration.m */,
 				5E1A0C0B2D00000000000312 /* SlateConfigValidator.m */,
@@ -674,6 +691,10 @@
 				5E1A0C0B2D00000000000662 /* ConfigurationBlockView.m */,
 				5E1A0C0B2D00000000000664 /* ConfigurationDisplaysView.h */,
 				5E1A0C0B2D00000000000666 /* ConfigurationDisplaysView.m */,
+				5E1A0C0B2D00000000000680 /* ConfigurationSlotCanvas.h */,
+				5E1A0C0B2D00000000000682 /* ConfigurationSlotCanvas.m */,
+				5E1A0C0B2D00000000000684 /* ConfigurationSlotsView.h */,
+				5E1A0C0B2D00000000000686 /* ConfigurationSlotsView.m */,
 				5E1A0C0B2D00000000000510 /* ConfigurationStatusBar.h */,
 				5E1A0C0B2D00000000000412 /* ConfigurationFormView.m */,
 				5E1A0C0B2D00000000000410 /* ConfigurationFormView.h */,
@@ -832,6 +853,7 @@
 				5E1A0C0B2D00000000000621 /* SlateShortcut.m in Sources */,
 				5E1A0C0B2D00000000000633 /* SlateAction.m in Sources */,
 				5E1A0C0B2D00000000000653 /* SlateDisplays.m in Sources */,
+				5E1A0C0B2D00000000000673 /* SlateSlots.m in Sources */,
 				5E1A0C0B2D00000000000212 /* SlateLegacyMigration.m in Sources */,
 				5E1A0C0B2D00000000000513 /* ConfigurationStatusBar.m in Sources */,
 				5E1A0C0B2D00000000000625 /* ConfigurationShortcutView.m in Sources */,
@@ -839,6 +861,8 @@
 				5E1A0C0B2D00000000000643 /* ConfigurationSettingsView.m in Sources */,
 				5E1A0C0B2D00000000000663 /* ConfigurationBlockView.m in Sources */,
 				5E1A0C0B2D00000000000667 /* ConfigurationDisplaysView.m in Sources */,
+				5E1A0C0B2D00000000000683 /* ConfigurationSlotCanvas.m in Sources */,
+				5E1A0C0B2D00000000000687 /* ConfigurationSlotsView.m in Sources */,
 				5E1A0C0B2D00000000000413 /* ConfigurationFormView.m in Sources */,
 				5E1A0C0B2D0000000000031B /* ConfigurationWindowController.m in Sources */,
 				5E1A0C0B2D00000000000313 /* SlateConfigValidator.m in Sources */,
@@ -917,6 +941,8 @@
 				5E1A0C0B2D00000000000629 /* TestSlateShortcut.m in Sources */,
 				5E1A0C0B2D00000000000639 /* TestSlateAction.m in Sources */,
 				5E1A0C0B2D00000000000655 /* TestSlateDisplays.m in Sources */,
+				5E1A0C0B2D00000000000675 /* TestSlateSlots.m in Sources */,
+				5E1A0C0B2D00000000000689 /* TestConfigurationSlots.m in Sources */,
 				5E1A0C0B2D00000000000214 /* TestSlateLegacyMigration.m in Sources */,
 				5E1A0C0B2D00000000000515 /* TestConfigurationAutosave.m in Sources */,
 				5E1A0C0B2D00000000000415 /* TestConfigurationForm.m in Sources */,
