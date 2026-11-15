@@ -20,6 +20,7 @@
 #import "SlateConfig.h"
 #import "SlateShortcut.h"
 #import "ConfigurationShortcutView.h"
+#import "ConfigurationActionView.h"
 
 static NSString *const kColEnabled = @"enabled";
 static NSString *const kColModifiers = @"mods";
@@ -80,12 +81,13 @@ static NSString *DisplayValue(id value) {
   return [value description] ?: @"";
 }
 
-@interface ConfigurationFormView () <ConfigurationShortcutViewDelegate>
+@interface ConfigurationFormView () <ConfigurationShortcutViewDelegate, ConfigurationActionViewDelegate>
 @property (strong) NSTableView *sidebar;
 @property (strong) NSView *detail;
 @property (strong) NSTextField *titleLabel;
 @property (strong) NSTextField *infoLabel;
 @property (strong) NSButton *addButton;
+@property (strong) NSButton *detectButton;
 @property (strong) NSButton *removeButton;
 @property (strong) NSScrollView *tableScroll;
 @property (strong) NSTableView *table;
@@ -156,6 +158,10 @@ static NSString *DisplayValue(id value) {
   [self.infoLabel setTranslatesAutoresizingMaskIntoConstraints:NO];
   self.addButton = [self symbolButton:@"plus" tip:@"Add" action:@selector(add:)];
   self.removeButton = [self symbolButton:@"minus" tip:@"Remove the selected rows" action:@selector(remove:)];
+  self.detectButton = [NSButton buttonWithTitle:@"Detect Screens" target:self action:@selector(detectScreens:)];
+  [self.detectButton setControlSize:NSControlSizeSmall];
+  [self.detectButton setTranslatesAutoresizingMaskIntoConstraints:NO];
+  [self.detectButton setToolTip:@"Adds the connected screens, with their sizes, to the list"];
 
   self.table = [[NSTableView alloc] init];
   [self.table setStyle:NSTableViewStyleInset];
@@ -167,7 +173,7 @@ static NSString *DisplayValue(id value) {
   [self.table setDelegate:self];
   self.tableScroll = [self scrollViewFor:self.table];
 
-  for (NSView *view in @[self.titleLabel, self.infoLabel, self.addButton, self.removeButton, self.tableScroll]) {
+  for (NSView *view in @[self.titleLabel, self.infoLabel, self.addButton, self.removeButton, self.detectButton, self.tableScroll]) {
     [self.detail addSubview:view];
   }
 
@@ -211,6 +217,8 @@ static NSString *DisplayValue(id value) {
     [self.removeButton.centerYAnchor constraintEqualToAnchor:self.titleLabel.bottomAnchor],
     [self.addButton.trailingAnchor constraintEqualToAnchor:self.removeButton.leadingAnchor constant:-6],
     [self.addButton.centerYAnchor constraintEqualToAnchor:self.removeButton.centerYAnchor],
+    [self.detectButton.trailingAnchor constraintEqualToAnchor:self.addButton.leadingAnchor constant:-10],
+    [self.detectButton.centerYAnchor constraintEqualToAnchor:self.removeButton.centerYAnchor],
 
     [self.tableScroll.topAnchor constraintEqualToAnchor:self.infoLabel.bottomAnchor constant:10],
     [self.tableScroll.leadingAnchor constraintEqualToAnchor:self.detail.leadingAnchor],
@@ -310,6 +318,7 @@ static NSString *DisplayValue(id value) {
   SectionInfo info = InfoFor(section);
   [self.titleLabel setStringValue:info.title];
   [self.infoLabel setStringValue:info.info];
+  [self.detectButton setHidden:self.selectedSection != ConfigurationFormSectionMonitors];
 
   // Empty the table first: changing columns makes it redraw, and the old
   // section's rows don't fit the new section's columns.
@@ -319,8 +328,8 @@ static NSString *DisplayValue(id value) {
   if ([self isBindingSection:section]) {
     [self.table addTableColumn:[self column:kColEnabled title:@"On" width:34]];
     [self.table addTableColumn:[self column:kColShortcut title:@"Shortcut" width:250]];
-    [self.table addTableColumn:[self column:kColAction title:@"Action" width:330]];
-    [self.table addTableColumn:[self column:kColNote title:@"Note" width:180]];
+    [self.table addTableColumn:[self column:kColAction title:@"Action" width:480]];
+    [self.table addTableColumn:[self column:kColNote title:@"Note" width:160]];
   } else if (section == ConfigurationFormSectionGeneral) {
     [self.table addTableColumn:[self column:kColName title:@"Setting" width:230]];
     [self.table addTableColumn:[self column:kColValue title:@"Value" width:200]];
@@ -447,7 +456,7 @@ static NSString *DisplayValue(id value) {
     SlateBindingEntry *binding = self.rows[row];
     if ([column isEqualToString:kColEnabled]) return [self checkboxCell:binding.enabled action:@selector(enabledToggled:)];
     if ([column isEqualToString:kColShortcut]) return [self shortcutCellForBinding:binding];
-    if ([column isEqualToString:kColAction]) return [self textCell:binding.action column:column monospaced:YES placeholder:@"operation"];
+    if ([column isEqualToString:kColAction]) return [self actionCellForBinding:binding];
     return [self textCell:binding.note column:column monospaced:NO placeholder:@""];
   }
 
@@ -464,6 +473,68 @@ static NSString *DisplayValue(id value) {
     return [self checkboxCell:[DisplayValue(entry.value) isEqualToString:@"true"] action:@selector(settingToggled:)];
   }
   return [self textCell:DisplayValue(entry.value) column:column monospaced:YES placeholder:@""];
+}
+
+#pragma mark - Screens
+
+// The connected screens in the order screen numbers refer to them (left to right unless the file says otherwise).
+- (NSArray<NSScreen *> *)orderedScreens {
+  NSArray *screens = [NSScreen screens];
+  for (SlateConfigEntry *entry in self.document.settings) {
+    if ([entry.name isEqualToString:@"orderScreensLeftToRight"] && [[entry.value description] isEqualToString:@"false"]) return screens;
+  }
+  NSScreen *main = [screens firstObject];
+  return [screens sortedArrayUsingComparator:^NSComparisonResult(NSScreen *a, NSScreen *b) {
+    CGFloat ax = [a frame].origin.x - [main frame].origin.x, bx = [b frame].origin.x - [main frame].origin.x;
+    if (ax != bx) return ax < bx ? NSOrderedAscending : NSOrderedDescending;
+    return [b frame].origin.y < [a frame].origin.y ? NSOrderedAscending : NSOrderedDescending;
+  }];
+}
+
+- (IBAction)detectScreens:(id)sender {
+  NSMutableArray<NSString *> *added = [NSMutableArray array];
+  NSArray<NSScreen *> *screens = [self orderedScreens];
+  for (NSUInteger i = 0; i < [screens count]; i++) {
+    NSScreen *screen = screens[i];
+    NSString *slug = [[[screen localizedName] lowercaseString] stringByReplacingOccurrencesOfString:@" " withString:@"-"];
+    NSString *name = [@"monitor-" stringByAppendingString:slug];
+    NSString *size = [NSString stringWithFormat:@"%dx%d", (int)[screen frame].size.width, (int)[screen frame].size.height];
+    for (NSArray *pair in @[@[name, [NSString stringWithFormat:@"%lu", (unsigned long)i]], @[[name stringByAppendingString:@"-size"], size]]) {
+      BOOL exists = NO;
+      for (SlateConfigEntry *entry in self.document.monitors) if ([entry.name isEqualToString:pair[0]]) exists = YES;
+      if (exists) continue;
+      [self.document.monitors addObject:[SlateConfigEntry entryWithName:pair[0] value:pair[1]]];
+      [added addObject:pair[0]];
+    }
+  }
+  if ([added count] == 0) {
+    NSBeep();
+    return;
+  }
+  [self reloadRows];
+  [self documentChanged];
+}
+
+#pragma mark - Actions
+
+- (NSView *)actionCellForBinding:(SlateBindingEntry *)binding {
+  ConfigurationActionView *view = [[ConfigurationActionView alloc] init];
+  [view setDelegate:self];
+  [view setAction:binding.action ?: @"" positions:self.document.positions monitors:self.document.monitors];
+  return view;
+}
+
+- (void)actionView:(ConfigurationActionView *)view didChangeAction:(NSString *)action {
+  NSInteger row = [self.table rowForView:view];
+  if (row < 0 || row >= (NSInteger)[self.rows count] || ![self isBindingSection:self.selectedSection]) return;
+  SlateBindingEntry *binding = self.rows[row];
+  if ([action length] == 0 || [action isEqualToString:binding.action]) return;
+  SlateBindingCategory before = [self.document categoryOfBinding:binding];
+  binding.action = action;
+  if ([self.document categoryOfBinding:binding] != before) {
+    dispatch_async(dispatch_get_main_queue(), ^{ [self reloadRows]; });
+  }
+  [self documentChanged];
 }
 
 #pragma mark - Shortcuts

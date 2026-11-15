@@ -152,20 +152,33 @@ static NSString *const kConfig =
   ConfigurationFormView *form = [self formWithDocument:doc];
   form.selectedSection = ConfigurationFormSectionWindowActions;
   NSTableView *table = [self tableOf:form];
-  NSTableCellView *cell = [table viewAtColumn:[table columnWithIdentifier:@"action"] row:0 makeIfNecessary:YES];
-  NSTextField *field = [[cell subviews] firstObject];
-  XCTAssertEqualObjects([field stringValue], @"resize +5% +0");
+  NSView *cell = [table viewAtColumn:[table columnWithIdentifier:@"action"] row:0 makeIfNecessary:YES];
+  XCTAssertEqualObjects(doc.bindings[3].action, @"resize +5% +0");
 
-  [field setStringValue:@"resize +10% +0"];
-  [form performSelector:@selector(cellEdited:) withObject:field];
+  // The action is edited with fields: "resize" has an x and a y.
+  NSMutableArray<NSTextField *> *fields = [NSMutableArray array];
+  for (NSView *v in [(NSStackView *)[[cell subviews] firstObject] arrangedSubviews]) {
+    if ([v isKindOfClass:[NSTextField class]] && [(NSTextField *)v isEditable]) [fields addObject:(NSTextField *)v];
+  }
+  XCTAssertEqual([fields count], 2u);
+  XCTAssertEqualObjects([fields[0] stringValue], @"+5%");
+  [fields[0] setStringValue:@"+10%"];
+  [NSApp sendAction:[fields[0] action] to:[fields[0] target] from:fields[0]];
   XCTAssertEqualObjects(doc.bindings[3].action, @"resize +10% +0");
   XCTAssertEqual(self.changes, 1u);
+}
 
-  [field setStringValue:@""];
-  [form performSelector:@selector(cellEdited:) withObject:field];
-  XCTAssertEqualObjects(doc.bindings[3].action, @"resize +10% +0", @"an empty action is refused");
-  XCTAssertEqualObjects([field stringValue], @"resize +10% +0");
+- (void)testDetectScreensAddsThemOnce {
+  SlateConfigDocument *doc = [self document];
+  ConfigurationFormView *form = [self formWithDocument:doc];
+  form.selectedSection = ConfigurationFormSectionMonitors;
+  NSUInteger before = [doc.monitors count];
+  [form performSelector:@selector(detectScreens:) withObject:nil];
+  XCTAssertGreaterThan([doc.monitors count], before, @"each screen adds a name and a size");
   XCTAssertEqual(self.changes, 1u);
+  NSUInteger after = [doc.monitors count];
+  [form performSelector:@selector(detectScreens:) withObject:nil];
+  XCTAssertEqual([doc.monitors count], after, @"detecting again adds nothing");
 }
 
 - (void)testToggleBindingAndSetting {
