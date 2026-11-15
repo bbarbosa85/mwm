@@ -47,6 +47,12 @@
   BOOL hasUndoOperation;
 }
 
+// Launch at login, shared by the status menu and the configuration window.
+- (BOOL)isInLoginItems;
+- (void)addToLoginItems;
+- (void)deleteFromLoginItems;
+- (void)setLaunchOnLoginItemStatus;
+
 @property HintOperation *currentHintOperation;
 @property GridOperation *currentGridOperation;
 @property Binding *currentSwitchBinding;

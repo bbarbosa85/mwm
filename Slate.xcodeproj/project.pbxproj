@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		5E1A0C0B2D00000000000643 /* ConfigurationSettingsView.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D00000000000642 /* ConfigurationSettingsView.m */; };
 		5E1A0C0B2D00000000000633 /* SlateAction.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D00000000000632 /* SlateAction.m */; };
 		5E1A0C0B2D00000000000637 /* ConfigurationActionView.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D00000000000636 /* ConfigurationActionView.m */; };
 		5E1A0C0B2D00000000000639 /* TestSlateAction.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D00000000000638 /* TestSlateAction.m */; };
@@ -140,6 +141,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		5E1A0C0B2D00000000000640 /* ConfigurationSettingsView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UI/ConfigurationSettingsView.h; sourceTree = "<group>"; };
+		5E1A0C0B2D00000000000642 /* ConfigurationSettingsView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UI/ConfigurationSettingsView.m; sourceTree = "<group>"; };
 		5E1A0C0B2D00000000000630 /* SlateAction.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Config/SlateAction.h; sourceTree = "<group>"; };
 		5E1A0C0B2D00000000000632 /* SlateAction.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Config/SlateAction.m; sourceTree = "<group>"; };
 		5E1A0C0B2D00000000000634 /* ConfigurationActionView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UI/ConfigurationActionView.h; sourceTree = "<group>"; };
@@ -651,6 +654,8 @@
 				5E1A0C0B2D00000000000624 /* ConfigurationShortcutView.m */,
 				5E1A0C0B2D00000000000634 /* ConfigurationActionView.h */,
 				5E1A0C0B2D00000000000636 /* ConfigurationActionView.m */,
+				5E1A0C0B2D00000000000640 /* ConfigurationSettingsView.h */,
+				5E1A0C0B2D00000000000642 /* ConfigurationSettingsView.m */,
 				5E1A0C0B2D00000000000510 /* ConfigurationStatusBar.h */,
 				5E1A0C0B2D00000000000412 /* ConfigurationFormView.m */,
 				5E1A0C0B2D00000000000410 /* ConfigurationFormView.h */,
@@ -812,6 +817,7 @@
 				5E1A0C0B2D00000000000513 /* ConfigurationStatusBar.m in Sources */,
 				5E1A0C0B2D00000000000625 /* ConfigurationShortcutView.m in Sources */,
 				5E1A0C0B2D00000000000637 /* ConfigurationActionView.m in Sources */,
+				5E1A0C0B2D00000000000643 /* ConfigurationSettingsView.m in Sources */,
 				5E1A0C0B2D00000000000413 /* ConfigurationFormView.m in Sources */,
 				5E1A0C0B2D0000000000031B /* ConfigurationWindowController.m in Sources */,
 				5E1A0C0B2D00000000000313 /* SlateConfigValidator.m in Sources */,

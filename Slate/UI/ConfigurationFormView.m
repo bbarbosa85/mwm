@@ -21,6 +21,7 @@
 #import "SlateShortcut.h"
 #import "ConfigurationShortcutView.h"
 #import "ConfigurationActionView.h"
+#import "ConfigurationSettingsView.h"
 
 static NSString *const kColEnabled = @"enabled";
 static NSString *const kColModifiers = @"mods";
@@ -31,7 +32,7 @@ static NSString *const kColNote = @"note";
 static NSString *const kColName = @"name";
 static NSString *const kColValue = @"value";
 static NSString *const kColDefault = @"default";
-static const CGFloat kSidebarWidth = 190;
+static const CGFloat kSidebarWidth = 200;
 
 // Only ever holds string literals, so unretained is safe under ARC.
 typedef struct {
@@ -42,14 +43,22 @@ typedef struct {
 
 static SectionInfo InfoFor(ConfigurationFormSection section) {
   switch (section) {
+    case ConfigurationFormSectionKeyboard:
+      return (SectionInfo){@"Keyboard", @"keyboard", @"Every shortcut, with what it does."};
+    case ConfigurationFormSectionAdvanced:
+      return (SectionInfo){@"Advanced", @"slider.horizontal.3", @"Key repeat, how percentages are measured, and other settings."};
+    case ConfigurationFormSectionSnapshots:
+      return (SectionInfo){@"Snapshots", @"camera", @"Saved window arrangements."};
+    case ConfigurationFormSectionBackup:
+      return (SectionInfo){@"Backup", @"icloud", @"Back up your configuration to GitHub."};
     case ConfigurationFormSectionGeneral:
-      return (SectionInfo){@"General", @"gearshape", @"Global settings. Anything not listed uses MWM's default."};
+      return (SectionInfo){@"General", @"gearshape", @"Everyday settings. Anything not listed uses MWM's default."};
     case ConfigurationFormSectionModifiers:
       return (SectionInfo){@"Modifiers", @"command", @"Named modifier combinations, used as ${name} in bindings."};
     case ConfigurationFormSectionMonitors:
-      return (SectionInfo){@"Monitors", @"display.2", @"Screen references and resolutions, used as ${name} in bindings and positions."};
+      return (SectionInfo){@"Displays", @"display.2", @"Screens and their sizes, used as ${name} in shortcuts and slots."};
     case ConfigurationFormSectionPositions:
-      return (SectionInfo){@"Positions", @"rectangle.split.3x1", @"Named window positions, used as ${name} in bindings."};
+      return (SectionInfo){@"Slots", @"rectangle.split.3x1", @"Named window areas, used as ${name} in shortcuts."};
     case ConfigurationFormSectionAliases:
       return (SectionInfo){@"Other aliases", @"curlybraces", @"Other named values, used as ${name}."};
     case ConfigurationFormSectionApps:
@@ -61,6 +70,64 @@ static SectionInfo InfoFor(ConfigurationFormSection section) {
     default:
       return (SectionInfo){@"Features", @"sparkles", @"Window hints, grid, app switcher, relaunch, and other operations."};
   }
+}
+
+#pragma mark - Navigation
+
+// The sidebar: group headings and the pages under them.
+static NSArray<NSDictionary *> *NavRows(void) {
+  static NSArray *rows;
+  static dispatch_once_t once;
+  dispatch_once(&once, ^{
+    rows = @[
+      @{@"header": @"Shortcuts"},
+      @{@"section": @(ConfigurationFormSectionKeyboard)},
+      @{@"section": @(ConfigurationFormSectionModifiers)},
+      @{@"header": @"Screens"},
+      @{@"section": @(ConfigurationFormSectionMonitors)},
+      @{@"section": @(ConfigurationFormSectionPositions)},
+      @{@"section": @(ConfigurationFormSectionSnapshots)},
+      @{@"header": @"Settings"},
+      @{@"section": @(ConfigurationFormSectionGeneral)},
+      @{@"section": @(ConfigurationFormSectionAdvanced)},
+      @{@"section": @(ConfigurationFormSectionAliases)},
+      @{@"section": @(ConfigurationFormSectionBackup)},
+    ];
+  });
+  return rows;
+}
+
+static NSInteger NavRowForSection(ConfigurationFormSection section) {
+  NSArray *rows = NavRows();
+  for (NSUInteger i = 0; i < [rows count]; i++) {
+    if ([rows[i][@"section"] integerValue] == section && rows[i][@"section"] != nil) return (NSInteger)i;
+  }
+  return -1;
+}
+
+static NSInteger NavSectionForRow(NSInteger row) {
+  NSArray *rows = NavRows();
+  if (row < 0 || row >= (NSInteger)[rows count] || rows[row][@"section"] == nil) return -1;
+  return [rows[row][@"section"] integerValue];
+}
+
+// The settings people change day to day; the rest are on the Advanced page.
+static BOOL IsEverydaySetting(NSString *name) {
+  static NSSet *names;
+  static dispatch_once_t once;
+  dispatch_once(&once, ^{
+    names = [NSSet setWithObjects:@"defaultToCurrentScreen", @"keyboardLayout", @"windowHintsShowIcons",
+                                  @"windowHintsSpread", @"windowHintsIgnoreHiddenWindows", nil];
+  });
+  return [names containsObject:name];
+}
+
+static BOOL IsSettingsSection(ConfigurationFormSection section) {
+  return section == ConfigurationFormSectionGeneral || section == ConfigurationFormSectionAdvanced;
+}
+
+static BOOL IsPlaceholderSection(ConfigurationFormSection section) {
+  return section == ConfigurationFormSectionSnapshots || section == ConfigurationFormSectionBackup;
 }
 
 static BOOL IsBoolean(id value) {
@@ -81,7 +148,7 @@ static NSString *DisplayValue(id value) {
   return [value description] ?: @"";
 }
 
-@interface ConfigurationFormView () <ConfigurationShortcutViewDelegate, ConfigurationActionViewDelegate>
+@interface ConfigurationFormView () <ConfigurationShortcutViewDelegate, ConfigurationActionViewDelegate, ConfigurationSettingsViewDelegate>
 @property (strong) NSTableView *sidebar;
 @property (strong) NSView *detail;
 @property (strong) NSTextField *titleLabel;
@@ -90,6 +157,12 @@ static NSString *DisplayValue(id value) {
 @property (strong) NSButton *detectButton;
 @property (strong) NSButton *removeButton;
 @property (strong) NSScrollView *tableScroll;
+@property (strong) NSView *filterBar;
+@property (strong) NSSegmentedControl *filterControl;
+@property (strong) NSLayoutConstraint *filterBarHeight;
+@property (strong) ConfigurationSettingsView *settingsView;
+@property (strong) NSView *placeholderView;
+@property (strong) NSTextField *placeholderTitle;
 @property (strong) NSTableView *table;
 @property (strong) NSView *unavailableView;
 @property (strong) NSTextField *unavailableLabel;
@@ -103,6 +176,8 @@ static NSString *DisplayValue(id value) {
   self = [super initWithFrame:frame];
   if (self) {
     _rows = @[];
+    _keyboardFilter = -1;
+    _selectedSection = ConfigurationFormSectionKeyboard;
     [self buildInterface];
   }
   return self;
@@ -139,6 +214,7 @@ static NSString *DisplayValue(id value) {
   [self.sidebar setHeaderView:nil];
   [self.sidebar setStyle:NSTableViewStyleSourceList];
   [self.sidebar setRowHeight:28];
+  [self.sidebar setFloatsGroupRows:NO];
   [self.sidebar setDataSource:self];
   [self.sidebar setDelegate:self];
   NSScrollView *sidebarScroll = [self scrollViewFor:self.sidebar];
@@ -173,7 +249,33 @@ static NSString *DisplayValue(id value) {
   [self.table setDelegate:self];
   self.tableScroll = [self scrollViewFor:self.table];
 
-  for (NSView *view in @[self.titleLabel, self.infoLabel, self.addButton, self.removeButton, self.detectButton, self.tableScroll]) {
+  // Keyboard page: filter the shortcuts by what they do.
+  self.filterBar = [[NSView alloc] init];
+  [self.filterBar setTranslatesAutoresizingMaskIntoConstraints:NO];
+  self.filterControl = [NSSegmentedControl segmentedControlWithLabels:@[@"All", @"Layout", @"Window actions", @"Apps", @"Features"]
+                                                         trackingMode:NSSegmentSwitchTrackingSelectOne
+                                                               target:self action:@selector(keyboardFilterChanged:)];
+  [self.filterControl setSelectedSegment:0];
+  [self.filterControl setTranslatesAutoresizingMaskIntoConstraints:NO];
+  [self.filterBar addSubview:self.filterControl];
+  [self.filterBar setHidden:YES];
+
+  // Pages that aren't built yet
+  self.placeholderTitle = [NSTextField labelWithString:@""];
+  [self.placeholderTitle setFont:[NSFont systemFontOfSize:15 weight:NSFontWeightMedium]];
+  [self.placeholderTitle setTextColor:[NSColor secondaryLabelColor]];
+  [self.placeholderTitle setTranslatesAutoresizingMaskIntoConstraints:NO];
+  self.placeholderView = [[NSView alloc] init];
+  [self.placeholderView setTranslatesAutoresizingMaskIntoConstraints:NO];
+  [self.placeholderView addSubview:self.placeholderTitle];
+  [self.placeholderView setHidden:YES];
+
+  self.settingsView = [[ConfigurationSettingsView alloc] init];
+  [self.settingsView setTranslatesAutoresizingMaskIntoConstraints:NO];
+  [self.settingsView setDelegate:self];
+  [self.settingsView setHidden:YES];
+
+  for (NSView *view in @[self.titleLabel, self.infoLabel, self.addButton, self.removeButton, self.detectButton, self.filterBar, self.tableScroll, self.placeholderView, self.settingsView]) {
     [self.detail addSubview:view];
   }
 
@@ -195,6 +297,8 @@ static NSString *DisplayValue(id value) {
     [self addSubview:view];
   }
 
+  self.filterBarHeight = [self.filterBar.heightAnchor constraintEqualToConstant:0];
+  self.filterBarHeight.active = YES;
   [NSLayoutConstraint activateConstraints:@[
     [sidebarScroll.topAnchor constraintEqualToAnchor:self.topAnchor],
     [sidebarScroll.bottomAnchor constraintEqualToAnchor:self.bottomAnchor],
@@ -220,7 +324,22 @@ static NSString *DisplayValue(id value) {
     [self.detectButton.trailingAnchor constraintEqualToAnchor:self.addButton.leadingAnchor constant:-10],
     [self.detectButton.centerYAnchor constraintEqualToAnchor:self.removeButton.centerYAnchor],
 
-    [self.tableScroll.topAnchor constraintEqualToAnchor:self.infoLabel.bottomAnchor constant:10],
+    [self.filterBar.topAnchor constraintEqualToAnchor:self.infoLabel.bottomAnchor constant:6],
+    [self.filterBar.leadingAnchor constraintEqualToAnchor:self.detail.leadingAnchor],
+    [self.filterBar.trailingAnchor constraintEqualToAnchor:self.detail.trailingAnchor],
+    [self.filterControl.leadingAnchor constraintEqualToAnchor:self.filterBar.leadingAnchor constant:20],
+    [self.filterControl.centerYAnchor constraintEqualToAnchor:self.filterBar.centerYAnchor],
+    [self.settingsView.topAnchor constraintEqualToAnchor:self.infoLabel.bottomAnchor constant:6],
+    [self.settingsView.bottomAnchor constraintEqualToAnchor:self.detail.bottomAnchor],
+    [self.settingsView.leadingAnchor constraintEqualToAnchor:self.detail.leadingAnchor],
+    [self.settingsView.trailingAnchor constraintEqualToAnchor:self.detail.trailingAnchor],
+    [self.placeholderView.topAnchor constraintEqualToAnchor:self.infoLabel.bottomAnchor],
+    [self.placeholderView.bottomAnchor constraintEqualToAnchor:self.detail.bottomAnchor],
+    [self.placeholderView.leadingAnchor constraintEqualToAnchor:self.detail.leadingAnchor],
+    [self.placeholderView.trailingAnchor constraintEqualToAnchor:self.detail.trailingAnchor],
+    [self.placeholderTitle.centerXAnchor constraintEqualToAnchor:self.placeholderView.centerXAnchor],
+    [self.placeholderTitle.centerYAnchor constraintEqualToAnchor:self.placeholderView.centerYAnchor constant:-30],
+    [self.tableScroll.topAnchor constraintEqualToAnchor:self.filterBar.bottomAnchor constant:4],
     [self.tableScroll.leadingAnchor constraintEqualToAnchor:self.detail.leadingAnchor],
     [self.tableScroll.trailingAnchor constraintEqualToAnchor:self.detail.trailingAnchor],
     [self.tableScroll.bottomAnchor constraintEqualToAnchor:self.detail.bottomAnchor],
@@ -247,8 +366,15 @@ static NSString *DisplayValue(id value) {
     if (view != self.unavailableView) [view setHidden:NO];
   }
   [self.sidebar reloadData];
-  [self.sidebar selectRowIndexes:[NSIndexSet indexSetWithIndex:self.selectedSection] byExtendingSelection:NO];
+  [self selectNavRow];
   [self showSection];
+}
+
+// Highlights the sidebar row of the current page (none for pages the sidebar doesn't list).
+- (void)selectNavRow {
+  NSInteger row = NavRowForSection(self.selectedSection);
+  if (row >= 0) [self.sidebar selectRowIndexes:[NSIndexSet indexSetWithIndex:row] byExtendingSelection:NO];
+  else [self.sidebar deselectAll:nil];
 }
 
 - (void)showUnavailableMessage:(NSString *)message {
@@ -260,14 +386,29 @@ static NSString *DisplayValue(id value) {
 - (void)setSelectedSection:(ConfigurationFormSection)section {
   if (section < 0 || section >= ConfigurationFormSectionCount) section = ConfigurationFormSectionGeneral;
   _selectedSection = section;
-  if ([self.sidebar selectedRow] != section) {
-    [self.sidebar selectRowIndexes:[NSIndexSet indexSetWithIndex:section] byExtendingSelection:NO];
-  }
+  [self selectNavRow];
   [self showSection];
 }
 
+- (void)setKeyboardFilter:(NSInteger)filter {
+  _keyboardFilter = filter;
+  [self.filterControl setSelectedSegment:filter < 0 ? 0 : [[self filterCategories] indexOfObject:@(filter)] + 1];
+  if (self.selectedSection == ConfigurationFormSectionKeyboard) [self reloadRows];
+}
+
+// The kinds the filter offers, in the order of its segments after "All".
+- (NSArray<NSNumber *> *)filterCategories {
+  return @[@(SlateBindingCategoryLayout), @(SlateBindingCategoryWindowActions), @(SlateBindingCategoryApps), @(SlateBindingCategoryFeatures)];
+}
+
+- (void)keyboardFilterChanged:(NSSegmentedControl *)control {
+  NSInteger segment = [control selectedSegment];
+  _keyboardFilter = segment <= 0 ? -1 : [[self filterCategories][segment - 1] integerValue];
+  [self reloadRows];
+}
+
 - (BOOL)isBindingSection:(ConfigurationFormSection)section {
-  return section >= ConfigurationFormSectionApps && section <= ConfigurationFormSectionFeatures;
+  return (section >= ConfigurationFormSectionApps && section <= ConfigurationFormSectionFeatures) || section == ConfigurationFormSectionKeyboard;
 }
 
 - (SlateBindingCategory)categoryForSection:(ConfigurationFormSection)section {
@@ -281,7 +422,8 @@ static NSString *DisplayValue(id value) {
 
 - (NSMutableArray<SlateConfigEntry *> *)entriesForSection:(ConfigurationFormSection)section {
   switch (section) {
-    case ConfigurationFormSectionGeneral: return self.document.settings;
+    case ConfigurationFormSectionGeneral:
+    case ConfigurationFormSectionAdvanced: return self.document.settings;
     case ConfigurationFormSectionModifiers: return self.document.modifiers;
     case ConfigurationFormSectionMonitors: return self.document.monitors;
     case ConfigurationFormSectionPositions: return self.document.positions;
@@ -291,18 +433,33 @@ static NSString *DisplayValue(id value) {
 }
 
 - (NSArray<SlateBindingEntry *> *)bindingsForSection:(ConfigurationFormSection)section {
-  SlateBindingCategory category = [self categoryForSection:section];
+  BOOL all = section == ConfigurationFormSectionKeyboard;
+  BOOL filtered = all && self.keyboardFilter >= 0;
+  SlateBindingCategory category = all ? (SlateBindingCategory)self.keyboardFilter : [self categoryForSection:section];
   NSMutableArray *result = [NSMutableArray array];
   for (SlateBindingEntry *binding in self.document.bindings) {
-    if ([self.document categoryOfBinding:binding] == category) [result addObject:binding];
+    if ((all && !filtered) || [self.document categoryOfBinding:binding] == category) [result addObject:binding];
   }
   return result;
 }
 
+// The entries a page lists: the settings are split between General and Advanced.
+- (NSArray<SlateConfigEntry *> *)visibleEntriesForSection:(ConfigurationFormSection)section {
+  NSArray *entries = [self entriesForSection:section] ?: @[];
+  if (!IsSettingsSection(section)) return entries;
+  BOOL everyday = section == ConfigurationFormSectionGeneral;
+  NSMutableArray *visible = [NSMutableArray array];
+  for (SlateConfigEntry *entry in entries) {
+    if (IsEverydaySetting(entry.name) == everyday) [visible addObject:entry];
+  }
+  return visible;
+}
+
 - (NSUInteger)countForSection:(ConfigurationFormSection)section {
-  if (self.document == nil) return 0;
+  if (self.document == nil || IsPlaceholderSection(section)) return 0;
+  if (section == ConfigurationFormSectionKeyboard) return [self.document.bindings count];
   if ([self isBindingSection:section]) return [[self bindingsForSection:section] count];
-  return [[self entriesForSection:section] count];
+  return [[self visibleEntriesForSection:section] count];
 }
 
 - (NSTableColumn *)column:(NSString *)identifier title:(NSString *)title width:(CGFloat)width {
@@ -318,7 +475,20 @@ static NSString *DisplayValue(id value) {
   SectionInfo info = InfoFor(section);
   [self.titleLabel setStringValue:info.title];
   [self.infoLabel setStringValue:info.info];
-  [self.detectButton setHidden:self.selectedSection != ConfigurationFormSectionMonitors];
+  BOOL placeholder = IsPlaceholderSection(section);
+  BOOL cards = IsSettingsSection(section);  // rows of switches and sliders instead of a table
+  [self.detectButton setHidden:section != ConfigurationFormSectionMonitors];
+  [self.addButton setHidden:placeholder || cards];
+  [self.removeButton setHidden:placeholder || cards];
+  [self.tableScroll setHidden:placeholder || cards];
+  [self.settingsView setHidden:!cards];
+  if (cards) self.settingsView.page = section == ConfigurationFormSectionAdvanced ? ConfigurationSettingsPageAdvanced : ConfigurationSettingsPageGeneral;
+  self.settingsView.document = cards ? self.document : nil;
+  [self.placeholderView setHidden:!placeholder];
+  [self.placeholderTitle setStringValue:placeholder ? @"This page is coming soon" : @""];
+  BOOL showsFilter = section == ConfigurationFormSectionKeyboard;
+  [self.filterBar setHidden:!showsFilter];
+  self.filterBarHeight.constant = showsFilter ? 34 : 0;
 
   // Empty the table first: changing columns makes it redraw, and the old
   // section's rows don't fit the new section's columns.
@@ -330,7 +500,7 @@ static NSString *DisplayValue(id value) {
     [self.table addTableColumn:[self column:kColShortcut title:@"Shortcut" width:250]];
     [self.table addTableColumn:[self column:kColAction title:@"Action" width:480]];
     [self.table addTableColumn:[self column:kColNote title:@"Note" width:160]];
-  } else if (section == ConfigurationFormSectionGeneral) {
+  } else if (IsSettingsSection(section)) {
     [self.table addTableColumn:[self column:kColName title:@"Setting" width:230]];
     [self.table addTableColumn:[self column:kColValue title:@"Value" width:200]];
     [self.table addTableColumn:[self column:kColDefault title:@"Default" width:180]];
@@ -346,7 +516,7 @@ static NSString *DisplayValue(id value) {
   if ([self isBindingSection:section]) {
     self.rows = [self bindingsForSection:section];
   } else {
-    self.rows = [[self entriesForSection:section] copy] ?: @[];
+    self.rows = [[self visibleEntriesForSection:section] copy] ?: @[];
   }
   [self.table reloadData];
 }
@@ -354,7 +524,7 @@ static NSString *DisplayValue(id value) {
 // Section counts change as rows are added, removed, or move between categories.
 - (void)reloadSidebarKeepingSelection {
   [self.sidebar reloadData];
-  [self.sidebar selectRowIndexes:[NSIndexSet indexSetWithIndex:self.selectedSection] byExtendingSelection:NO];
+  [self selectNavRow];
 }
 
 - (void)documentChanged {
@@ -365,26 +535,48 @@ static NSString *DisplayValue(id value) {
 #pragma mark - Table data
 
 - (NSInteger)numberOfRowsInTableView:(NSTableView *)tableView {
-  if (tableView == self.sidebar) return self.document ? ConfigurationFormSectionCount : 0;
+  if (tableView == self.sidebar) return self.document ? (NSInteger)[NavRows() count] : 0;
   return [self.rows count];
 }
 
 - (void)tableViewSelectionDidChange:(NSNotification *)notification {
   if ([notification object] != self.sidebar) return;
-  NSInteger row = [self.sidebar selectedRow];
-  if (row >= 0 && row != self.selectedSection) {
-    _selectedSection = row;
+  NSInteger section = NavSectionForRow([self.sidebar selectedRow]);
+  if (section >= 0 && section != self.selectedSection) {
+    _selectedSection = (ConfigurationFormSection)section;
     [self showSection];
   }
 }
 
-- (NSView *)sidebarCellForRow:(NSInteger)row {
+- (BOOL)tableView:(NSTableView *)tableView isGroupRow:(NSInteger)row {
+  return tableView == self.sidebar && NavRows()[row][@"header"] != nil;
+}
+
+- (BOOL)tableView:(NSTableView *)tableView shouldSelectRow:(NSInteger)row {
+  return tableView != self.sidebar || NavRows()[row][@"header"] == nil;
+}
+
+- (NSView *)sidebarCellForRow:(NSInteger)navRow {
   NSTableCellView *cell = [[NSTableCellView alloc] init];
-  SectionInfo info = InfoFor(row);
+  NSString *header = NavRows()[navRow][@"header"];
+  if (header != nil) {
+    NSTextField *label = [NSTextField labelWithString:[header uppercaseString]];
+    [label setFont:[NSFont systemFontOfSize:11 weight:NSFontWeightSemibold]];
+    [label setTextColor:[NSColor tertiaryLabelColor]];
+    [label setTranslatesAutoresizingMaskIntoConstraints:NO];
+    [cell addSubview:label];
+    [NSLayoutConstraint activateConstraints:@[
+      [label.leadingAnchor constraintEqualToAnchor:cell.leadingAnchor constant:4],
+      [label.bottomAnchor constraintEqualToAnchor:cell.bottomAnchor constant:-3],
+    ]];
+    return cell;
+  }
+  NSInteger row = NavSectionForRow(navRow);
+  SectionInfo info = InfoFor((ConfigurationFormSection)row);
   NSImageView *icon = [NSImageView imageViewWithImage:[NSImage imageWithSystemSymbolName:info.symbol accessibilityDescription:nil]];
   NSTextField *title = [NSTextField labelWithString:info.title];
   [title setLineBreakMode:NSLineBreakByTruncatingTail];
-  NSUInteger count = [self countForSection:row];
+  NSUInteger count = [self countForSection:(ConfigurationFormSection)row];
   NSTextField *countLabel = [NSTextField labelWithString:count > 0 ? [NSString stringWithFormat:@"%lu", (unsigned long)count] : @""];
   [countLabel setTextColor:[NSColor secondaryLabelColor]];
   [countLabel setFont:[NSFont monospacedDigitSystemFontOfSize:[NSFont smallSystemFontSize] weight:NSFontWeightRegular]];
@@ -469,7 +661,7 @@ static NSString *DisplayValue(id value) {
     [label setLineBreakMode:NSLineBreakByTruncatingTail];
     return [self cellWith:label];
   }
-  if (self.selectedSection == ConfigurationFormSectionGeneral && [self isBooleanSetting:entry]) {
+  if (IsSettingsSection(self.selectedSection) && [self isBooleanSetting:entry]) {
     return [self checkboxCell:[DisplayValue(entry.value) isEqualToString:@"true"] action:@selector(settingToggled:)];
   }
   return [self textCell:DisplayValue(entry.value) column:column monospaced:YES placeholder:@""];
@@ -513,6 +705,28 @@ static NSString *DisplayValue(id value) {
   }
   [self reloadRows];
   [self documentChanged];
+}
+
+#pragma mark - General page
+
+- (void)settingsViewDidChangeDocument:(ConfigurationSettingsView *)view {
+  [self documentChanged];
+}
+
+- (void)settingsViewWantsTextEditor:(ConfigurationSettingsView *)view {
+  [self.delegate formViewWantsTextEditor:self];
+}
+
+- (void)settingsViewWantsFinder:(ConfigurationSettingsView *)view {
+  if ([self.delegate respondsToSelector:@selector(formViewWantsFinder:)]) [self.delegate formViewWantsFinder:self];
+}
+
+- (BOOL)settingsViewLaunchesAtLogin:(ConfigurationSettingsView *)view {
+  return [self.delegate respondsToSelector:@selector(formViewLaunchesAtLogin:)] && [self.delegate formViewLaunchesAtLogin:self];
+}
+
+- (void)settingsView:(ConfigurationSettingsView *)view setLaunchesAtLogin:(BOOL)launches {
+  if ([self.delegate respondsToSelector:@selector(formView:setLaunchesAtLogin:)]) [self.delegate formView:self setLaunchesAtLogin:launches];
 }
 
 #pragma mark - Actions
@@ -698,11 +912,11 @@ static NSString *DisplayValue(id value) {
       }
       changed = ![text isEqualToString:entry.name];
       entry.name = text;
-      if (self.selectedSection == ConfigurationFormSectionGeneral) {
+      if (IsSettingsSection(self.selectedSection)) {
         dispatch_async(dispatch_get_main_queue(), ^{ [self reloadRows]; });  // default column follows the name
       }
     } else {
-      id value = self.selectedSection == ConfigurationFormSectionGeneral ? TypedSettingValue(text) : text;
+      id value = IsSettingsSection(self.selectedSection) ? TypedSettingValue(text) : text;
       changed = ![DisplayValue(value) isEqualToString:DisplayValue(entry.value)] || IsBoolean(value) != IsBoolean(entry.value);
       entry.value = value;
     }
@@ -748,6 +962,8 @@ static NSString *DisplayValue(id value) {
     }
     case ConfigurationFormSectionWindowActions:
       return [SlateBindingEntry bindingWithKey:@"f12" modifiers:hyper action:@"resize +10% +0"];
+    case ConfigurationFormSectionKeyboard:
+      return [SlateBindingEntry bindingWithKey:@"f12" modifiers:hyper action:@"focus left"];
     default:
       return [SlateBindingEntry bindingWithKey:@"f12" modifiers:hyper action:@"relaunch"];
   }
@@ -763,7 +979,7 @@ static NSString *DisplayValue(id value) {
 
 - (IBAction)add:(id)sender {
   ConfigurationFormSection section = self.selectedSection;
-  if (section == ConfigurationFormSectionGeneral) {
+  if (IsSettingsSection(section)) {
     [self showSettingsMenu];
     return;
   }
@@ -812,10 +1028,12 @@ static NSString *DisplayValue(id value) {
 - (void)addSetting:(NSMenuItem *)item {
   NSString *name = [item representedObject];
   NSString *fallback = [[SlateConfig getInstance] getConfigDefault:name] ?: @"";
-  [self.document.settings addObject:[SlateConfigEntry entryWithName:name value:TypedSettingValue(fallback)]];
+  SlateConfigEntry *entry = [SlateConfigEntry entryWithName:name value:TypedSettingValue(fallback)];
+  [self.document.settings addObject:entry];
   [self reloadRows];
   [self documentChanged];
-  [self beginEditingRow:[self.rows count] - 1 column:kColValue];
+  NSUInteger row = [self.rows indexOfObjectIdenticalTo:entry];  // it may belong on the other settings page
+  if (row != NSNotFound) [self beginEditingRow:row column:kColValue];
 }
 
 - (IBAction)remove:(id)sender {
@@ -853,19 +1071,18 @@ static NSString *DisplayValue(id value) {
 - (void)revealBindingAtIndex:(NSUInteger)index {
   if (self.document == nil || index >= [self.document.bindings count]) return;
   SlateBindingEntry *binding = self.document.bindings[index];
-  SlateBindingCategory category = [self.document categoryOfBinding:binding];
-  for (ConfigurationFormSection section = ConfigurationFormSectionApps; section <= ConfigurationFormSectionFeatures; section++) {
-    if ([self categoryForSection:section] != category) continue;
-    [self setSelectedSection:section];
-    [self selectRowObject:binding];
-    return;
-  }
+  self.keyboardFilter = -1;  // the shortcut must be in the list
+  [self setSelectedSection:ConfigurationFormSectionKeyboard];
+  [self selectRowObject:binding];
 }
 
 - (void)revealEntryNamed:(NSString *)name {
   if (self.document == nil) return;
-  for (ConfigurationFormSection section = ConfigurationFormSectionGeneral; section <= ConfigurationFormSectionAliases; section++) {
-    for (SlateConfigEntry *entry in [self entriesForSection:section]) {
+  NSArray *pages = @[@(ConfigurationFormSectionGeneral), @(ConfigurationFormSectionAdvanced), @(ConfigurationFormSectionModifiers), @(ConfigurationFormSectionMonitors),
+                     @(ConfigurationFormSectionPositions), @(ConfigurationFormSectionAliases)];
+  for (NSNumber *page in pages) {
+    ConfigurationFormSection section = (ConfigurationFormSection)[page integerValue];
+    for (SlateConfigEntry *entry in [self visibleEntriesForSection:section]) {
       if (![entry.name isEqualToString:name]) continue;
       [self setSelectedSection:section];
       [self selectRowObject:entry];

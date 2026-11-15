@@ -36,6 +36,12 @@ typedef NS_ENUM(NSInteger, ConfigurationFormSection) {
   ConfigurationFormSectionLayout,
   ConfigurationFormSectionWindowActions,
   ConfigurationFormSectionFeatures,
+  // Pages of the grouped navigation: every shortcut with a kind filter, the
+  // settings that aren't everyday ones, and pages still to be built.
+  ConfigurationFormSectionKeyboard,
+  ConfigurationFormSectionAdvanced,
+  ConfigurationFormSectionSnapshots,
+  ConfigurationFormSectionBackup,
   ConfigurationFormSectionCount,
 };
 
@@ -46,6 +52,11 @@ typedef NS_ENUM(NSInteger, ConfigurationFormSection) {
 - (void)formViewWantsTextEditor:(ConfigurationFormView *)formView;
 // or to read it again after fixing it.
 - (void)formViewWantsReload:(ConfigurationFormView *)formView;
+@optional
+- (void)formViewWantsFinder:(ConfigurationFormView *)formView;
+// Launch at login isn't in the file, so the app answers for it.
+- (BOOL)formViewLaunchesAtLogin:(ConfigurationFormView *)formView;
+- (void)formView:(ConfigurationFormView *)formView setLaunchesAtLogin:(BOOL)launches;
 @end
 
 @interface ConfigurationFormView : NSView <NSTableViewDataSource, NSTableViewDelegate>
@@ -56,6 +67,9 @@ typedef NS_ENUM(NSInteger, ConfigurationFormSection) {
 @property (strong, nonatomic, nullable) SlateConfigDocument *document;
 
 @property (assign, nonatomic) ConfigurationFormSection selectedSection;
+
+// Keyboard page only: show one kind of shortcut (a SlateBindingCategory), or -1 for all.
+@property (assign, nonatomic) NSInteger keyboardFilter;
 
 // Shown instead of the form when the file can't be edited as a form.
 - (void)showUnavailableMessage:(NSString *)message;
