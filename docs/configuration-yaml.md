@@ -75,3 +75,7 @@ On startup, `SlateLegacyMigration` converts the older files into `~/.mwm.yml`:
 - **`~/.slate.js`** written by the earlier configuration window (a `config` object passed to `slate.applyConfig`) is evaluated once in a bare `JSContext` with no Slate API, files or shell, and its config is converted. Custom code after its marker isn't carried over. Any other JavaScript can't be converted: the file is renamed to `~/.slate.js.unused-<timestamp>` and an alert explains it.
 - Precedence matches the old load order: `~/.slate`, then `~/.slate.js`, then `~/.slate.yml`, then an existing `~/.mwm.yml`, with later files winning where they set the same thing. If `~/.mwm.yml` already exists, MWM asks whether to merge, postpone, or stop using the old files.
 - Converted files are renamed to `<file>.migrated-<timestamp>` (a symlink itself is renamed, not its target). If the result wouldn't load (for example, a binding uses an undefined alias), nothing is changed.
+
+### Actions
+
+The Action column edits an action with dropdowns: **Move to** a position (with a preview) on a monitor, **Focus app**, **Focus window** by direction, **Throw to screen**, **Nudge**, **Resize**, **Push**, **Window hints**, **Grid**, **Switch windows** and **Relaunch**. **Advanced…** edits the plain text, and any action the window doesn't recognize (`chain`, `shell`, ...) stays there unchanged. In the Monitors section, **Detect Screens** adds the connected screens and their sizes.

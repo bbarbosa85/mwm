@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		5E1A0C0B2D00000000000633 /* SlateAction.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D00000000000632 /* SlateAction.m */; };
+		5E1A0C0B2D00000000000637 /* ConfigurationActionView.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D00000000000636 /* ConfigurationActionView.m */; };
+		5E1A0C0B2D00000000000639 /* TestSlateAction.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D00000000000638 /* TestSlateAction.m */; };
 		5E1A0C0B2D00000000000515 /* TestConfigurationAutosave.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D00000000000514 /* TestConfigurationAutosave.m */; };
 		5E1A0C0B2D00000000000513 /* ConfigurationStatusBar.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D00000000000512 /* ConfigurationStatusBar.m */; };
 		5E1A0C0B2D00000000000415 /* TestConfigurationForm.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D00000000000414 /* TestConfigurationForm.m */; };
@@ -137,6 +140,11 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		5E1A0C0B2D00000000000630 /* SlateAction.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Config/SlateAction.h; sourceTree = "<group>"; };
+		5E1A0C0B2D00000000000632 /* SlateAction.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Config/SlateAction.m; sourceTree = "<group>"; };
+		5E1A0C0B2D00000000000634 /* ConfigurationActionView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UI/ConfigurationActionView.h; sourceTree = "<group>"; };
+		5E1A0C0B2D00000000000636 /* ConfigurationActionView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UI/ConfigurationActionView.m; sourceTree = "<group>"; };
+		5E1A0C0B2D00000000000638 /* TestSlateAction.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TestSlateAction.m; sourceTree = "<group>"; };
 		5E1A0C0B2D00000000000514 /* TestConfigurationAutosave.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TestConfigurationAutosave.m; sourceTree = "<group>"; };
 		5E1A0C0B2D00000000000512 /* ConfigurationStatusBar.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UI/ConfigurationStatusBar.m; sourceTree = "<group>"; };
 		5E1A0C0B2D00000000000510 /* ConfigurationStatusBar.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UI/ConfigurationStatusBar.h; sourceTree = "<group>"; };
@@ -407,6 +415,7 @@
 				5E1A0C0B2D00000000000115 /* TestSlateConfigDocument.m */,
 				5E1A0C0B2D00000000000612 /* TestSlateYAML.m */,
 				5E1A0C0B2D00000000000628 /* TestSlateShortcut.m */,
+				5E1A0C0B2D00000000000638 /* TestSlateAction.m */,
 				5E1A0C0B2D00000000000213 /* TestSlateLegacyMigration.m */,
 				5E1A0C0B2D00000000000514 /* TestConfigurationAutosave.m */,
 				5E1A0C0B2D00000000000414 /* TestConfigurationForm.m */,
@@ -463,6 +472,8 @@
 				5E1A0C0B2D00000000000610 /* SlateYAML.m */,
 				5E1A0C0B2D00000000000619 /* SlateShortcut.h */,
 				5E1A0C0B2D00000000000620 /* SlateShortcut.m */,
+				5E1A0C0B2D00000000000630 /* SlateAction.h */,
+				5E1A0C0B2D00000000000632 /* SlateAction.m */,
 				5E1A0C0B2D00000000000210 /* SlateLegacyMigration.h */,
 				5E1A0C0B2D00000000000211 /* SlateLegacyMigration.m */,
 				5E1A0C0B2D00000000000312 /* SlateConfigValidator.m */,
@@ -638,6 +649,8 @@
 				5E1A0C0B2D00000000000512 /* ConfigurationStatusBar.m */,
 				5E1A0C0B2D00000000000623 /* ConfigurationShortcutView.h */,
 				5E1A0C0B2D00000000000624 /* ConfigurationShortcutView.m */,
+				5E1A0C0B2D00000000000634 /* ConfigurationActionView.h */,
+				5E1A0C0B2D00000000000636 /* ConfigurationActionView.m */,
 				5E1A0C0B2D00000000000510 /* ConfigurationStatusBar.h */,
 				5E1A0C0B2D00000000000412 /* ConfigurationFormView.m */,
 				5E1A0C0B2D00000000000410 /* ConfigurationFormView.h */,
@@ -794,9 +807,11 @@
 				5E1A0C0B2D00000000000114 /* SlateConfigDocument.m in Sources */,
 				5E1A0C0B2D00000000000611 /* SlateYAML.m in Sources */,
 				5E1A0C0B2D00000000000621 /* SlateShortcut.m in Sources */,
+				5E1A0C0B2D00000000000633 /* SlateAction.m in Sources */,
 				5E1A0C0B2D00000000000212 /* SlateLegacyMigration.m in Sources */,
 				5E1A0C0B2D00000000000513 /* ConfigurationStatusBar.m in Sources */,
 				5E1A0C0B2D00000000000625 /* ConfigurationShortcutView.m in Sources */,
+				5E1A0C0B2D00000000000637 /* ConfigurationActionView.m in Sources */,
 				5E1A0C0B2D00000000000413 /* ConfigurationFormView.m in Sources */,
 				5E1A0C0B2D0000000000031B /* ConfigurationWindowController.m in Sources */,
 				5E1A0C0B2D00000000000313 /* SlateConfigValidator.m in Sources */,
@@ -873,6 +888,7 @@
 				5E1A0C0B2D00000000000116 /* TestSlateConfigDocument.m in Sources */,
 				5E1A0C0B2D00000000000613 /* TestSlateYAML.m in Sources */,
 				5E1A0C0B2D00000000000629 /* TestSlateShortcut.m in Sources */,
+				5E1A0C0B2D00000000000639 /* TestSlateAction.m in Sources */,
 				5E1A0C0B2D00000000000214 /* TestSlateLegacyMigration.m in Sources */,
 				5E1A0C0B2D00000000000515 /* TestConfigurationAutosave.m in Sources */,
 				5E1A0C0B2D00000000000415 /* TestConfigurationForm.m in Sources */,
