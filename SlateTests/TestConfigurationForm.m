@@ -201,12 +201,199 @@ static NSString *const kConfig =
   XCTAssertTrue([[doc stringRepresentation] containsString:@"defaultToCurrentScreen: false\n"]);
 }
 
+#pragma mark - Shell
+
+- (NSTableView *)sidebarOf:(ConfigurationFormView *)form {
+  return [form valueForKey:@"sidebar"];
+}
+
+- (void)testSidebarGroupsPages {
+  ConfigurationFormView *form = [self formWithDocument:[self document]];
+  NSTableView *sidebar = [self sidebarOf:form];
+  NSMutableArray *headers = [NSMutableArray array];
+  for (NSInteger row = 0; row < [sidebar numberOfRows]; row++) {
+    if ([form tableView:sidebar isGroupRow:row]) [headers addObject:@(row)];
+  }
+  XCTAssertEqualObjects(headers, (@[@0, @3, @7]), @"Shortcuts, Screens and Settings headings");
+  XCTAssertFalse([form tableView:sidebar shouldSelectRow:0], @"headings can't be selected");
+  XCTAssertEqual(form.selectedSection, ConfigurationFormSectionKeyboard, @"opens on the keyboard page");
+  XCTAssertEqual([sidebar selectedRow], 1);
+}
+
+- (void)testClickingAPageShowsIt {
+  ConfigurationFormView *form = [self formWithDocument:[self document]];
+  NSTableView *sidebar = [self sidebarOf:form];
+  [sidebar selectRowIndexes:[NSIndexSet indexSetWithIndex:5] byExtendingSelection:NO];  // Slots
+  XCTAssertEqual(form.selectedSection, ConfigurationFormSectionPositions);
+  XCTAssertEqual([[self tableOf:form] numberOfRows], 2);
+  form.selectedSection = ConfigurationFormSectionMonitors;
+  XCTAssertEqual([sidebar selectedRow], 4, @"choosing a page from code moves the highlight");
+}
+
+- (void)testKeyboardPageFiltersByKind {
+  ConfigurationFormView *form = [self formWithDocument:[self document]];
+  form.selectedSection = ConfigurationFormSectionKeyboard;
+  XCTAssertEqual([[self tableOf:form] numberOfRows], 7, @"all shortcuts");
+  form.keyboardFilter = SlateBindingCategoryLayout;
+  XCTAssertEqual([[self tableOf:form] numberOfRows], 2);
+  form.keyboardFilter = SlateBindingCategoryFeatures;
+  XCTAssertEqual([[self tableOf:form] numberOfRows], 2);
+  form.keyboardFilter = -1;
+  XCTAssertEqual([[self tableOf:form] numberOfRows], 7);
+}
+
+- (void)testSettingsAreSplitBetweenGeneralAndAdvanced {
+  SlateConfigDocument *doc = [SlateConfigDocument documentFromString:
+      @"settings:\n  defaultToCurrentScreen: true\n  windowHintsSpread: true\n  secondsBeforeRepeat: 0.4\n  nudgePercentOf: screenSize\n" error:nil];
+  ConfigurationFormView *form = [self formWithDocument:doc];
+  form.selectedSection = ConfigurationFormSectionGeneral;
+  XCTAssertEqual([[self tableOf:form] numberOfRows], 2);
+  form.selectedSection = ConfigurationFormSectionAdvanced;
+  XCTAssertEqual([[self tableOf:form] numberOfRows], 2);
+  [form revealEntryNamed:@"secondsBeforeRepeat"];
+  XCTAssertEqual(form.selectedSection, ConfigurationFormSectionAdvanced);
+  [form revealEntryNamed:@"windowHintsSpread"];
+  XCTAssertEqual(form.selectedSection, ConfigurationFormSectionGeneral);
+}
+
+- (NSArray *)subviewsOf:(NSView *)view ofClass:(Class)cls {
+  NSMutableArray *found = [NSMutableArray array];
+  if ([view isKindOfClass:cls]) [found addObject:view];
+  for (NSView *child in [view subviews]) [found addObjectsFromArray:[self subviewsOf:child ofClass:cls]];
+  return found;
+}
+
+- (void)testGeneralPageHasSwitchesNotATable {
+  SlateConfigDocument *doc = [self document];
+  ConfigurationFormView *form = [self formWithDocument:doc];
+  form.selectedSection = ConfigurationFormSectionGeneral;
+  NSView *general = [form valueForKey:@"settingsView"];
+  XCTAssertFalse([general isHidden]);
+  XCTAssertTrue([[form valueForKey:@"tableScroll"] isHidden]);
+  NSMutableArray *ids = [NSMutableArray array];
+  for (NSSwitch *toggle in [self subviewsOf:general ofClass:[NSSwitch class]]) [ids addObject:[toggle identifier]];
+  XCTAssertEqualObjects(ids, (@[@"launchAtLogin", @"defaultToCurrentScreen", @"windowHintsShowIcons", @"windowHintsSpread", @"windowHintsIgnoreHiddenWindows"]));
+}
+
+- (ConfigurationFormView *)advancedFormWithSettings:(NSString *)settings document:(SlateConfigDocument **)outDoc {
+  SlateConfigDocument *doc = [SlateConfigDocument documentFromString:[@"settings:\n" stringByAppendingString:settings] error:nil];
+  ConfigurationFormView *form = [self formWithDocument:doc];
+  form.selectedSection = ConfigurationFormSectionAdvanced;
+  *outDoc = doc;
+  return form;
+}
+
+- (id)controlIn:(NSView *)root ofClass:(Class)cls identifier:(NSString *)identifier {
+  for (NSView *view in [self subviewsOf:root ofClass:cls]) {
+    if ([[view identifier] isEqualToString:identifier]) return view;
+  }
+  return nil;
+}
+
+- (void)testAdvancedPageEditsPercentagesAndRepeat {
+  SlateConfigDocument *doc = nil;
+  ConfigurationFormView *form = [self advancedFormWithSettings:@"  secondsBeforeRepeat: 0.4\n" document:&doc];
+  XCTAssertTrue([[form valueForKey:@"tableScroll"] isHidden]);
+  NSView *page = [form valueForKey:@"settingsView"];
+
+  NSSegmentedControl *nudge = [self controlIn:page ofClass:[NSSegmentedControl class] identifier:@"nudgePercentOf"];
+  XCTAssertEqual([nudge selectedSegment], 0, @"screen size is the default");
+  [nudge setSelectedSegment:1];
+  [NSApp sendAction:[nudge action] to:[nudge target] from:nudge];
+  XCTAssertEqualObjects([doc.settings lastObject], [SlateConfigEntry entryWithName:@"nudgePercentOf" value:@"windowSize"]);
+
+  NSSlider *before = [self controlIn:page ofClass:[NSSlider class] identifier:@"secondsBeforeRepeat"];
+  XCTAssertEqualWithAccuracy([before doubleValue], 0.4, 0.001);
+  [before setDoubleValue:0.55];
+  [NSApp sendAction:[before action] to:[before target] from:before];
+  XCTAssertEqualObjects(doc.settings[0], [SlateConfigEntry entryWithName:@"secondsBeforeRepeat" value:@0.55]);
+}
+
+- (void)testOtherSettingsAreEditedAndRemoved {
+  SlateConfigDocument *doc = nil;
+  ConfigurationFormView *form = [self advancedFormWithSettings:@"  orderScreensLeftToRight: true\n  madeUpSetting: 3\n  defaultToCurrentScreen: true\n" document:&doc];
+  NSView *page = [form valueForKey:@"settingsView"];
+  XCTAssertNil([self controlIn:page ofClass:[NSTextField class] identifier:@"defaultToCurrentScreen"], @"everyday settings stay on General");
+
+  NSTextField *order = [self controlIn:page ofClass:[NSTextField class] identifier:@"orderScreensLeftToRight"];
+  XCTAssertEqualObjects([order stringValue], @"true");
+  [order setStringValue:@"false"];
+  [NSApp sendAction:[order action] to:[order target] from:order];
+  XCTAssertEqualObjects(doc.settings[0], [SlateConfigEntry entryWithName:@"orderScreensLeftToRight" value:@NO]);
+
+  NSButton *remove = [self controlIn:page ofClass:[NSButton class] identifier:@"madeUpSetting"];
+  [NSApp sendAction:[remove action] to:[remove target] from:remove];
+  XCTAssertEqual([doc.settings count], 2u);
+  XCTAssertEqualObjects([doc.settings valueForKey:@"name"], (@[@"orderScreensLeftToRight", @"defaultToCurrentScreen"]));
+}
+
+- (void)testGeneralRowsStartAtTheTop {
+  ConfigurationFormView *form = [[ConfigurationFormView alloc] initWithFrame:NSMakeRect(0, 0, 1000, 700)];
+  NSWindow *window = [[NSWindow alloc] initWithContentRect:NSMakeRect(0, 0, 1000, 700) styleMask:NSWindowStyleMaskTitled backing:NSBackingStoreBuffered defer:NO];
+  [window setContentView:form];
+  form.document = [self document];
+  form.selectedSection = ConfigurationFormSectionGeneral;
+  [window layoutIfNeeded];
+  NSView *general = [form valueForKey:@"settingsView"];
+  NSStackView *stack = [general valueForKey:@"stack"];
+  NSView *first = [[stack arrangedSubviews] firstObject];
+  NSRect inGeneral = [general convertRect:[first frame] fromView:stack];
+  CGFloat gapAbove = NSHeight([general bounds]) - NSMaxY(inGeneral);
+  if ([general isFlipped]) gapAbove = NSMinY(inGeneral);
+  XCTAssertLessThan(gapAbove, 40, @"the first row is at the top, not pushed down by empty space");
+}
+
+- (void)testTogglingAGeneralSettingEditsTheDocument {
+  SlateConfigDocument *doc = [self document];
+  ConfigurationFormView *form = [self formWithDocument:doc];
+  form.selectedSection = ConfigurationFormSectionGeneral;
+  NSView *general = [form valueForKey:@"settingsView"];
+  NSSwitch *screen = nil, *spread = nil;
+  for (NSSwitch *toggle in [self subviewsOf:general ofClass:[NSSwitch class]]) {
+    if ([[toggle identifier] isEqualToString:@"defaultToCurrentScreen"]) screen = toggle;
+    if ([[toggle identifier] isEqualToString:@"windowHintsSpread"]) spread = toggle;
+  }
+  XCTAssertEqual([screen state], NSControlStateValueOn, @"the file says true");
+  [screen setState:NSControlStateValueOff];
+  [NSApp sendAction:[screen action] to:[screen target] from:screen];
+  XCTAssertEqualObjects(doc.settings[0], [SlateConfigEntry entryWithName:@"defaultToCurrentScreen" value:@NO]);
+  XCTAssertEqual(self.changes, 1u);
+
+  // A setting the file doesn't have yet is added when switched.
+  XCTAssertNotNil(spread);
+  [spread setState:NSControlStateValueOff];
+  [NSApp sendAction:[spread action] to:[spread target] from:spread];
+  XCTAssertEqualObjects([doc.settings lastObject], [SlateConfigEntry entryWithName:@"windowHintsSpread" value:@NO]);
+  XCTAssertTrue([[doc stringRepresentation] containsString:@"windowHintsSpread: false\n"]);
+}
+
+- (void)testKeyboardLayoutIsChosenFromAList {
+  SlateConfigDocument *doc = [self document];
+  ConfigurationFormView *form = [self formWithDocument:doc];
+  form.selectedSection = ConfigurationFormSectionGeneral;
+  NSPopUpButton *popup = [[self subviewsOf:[form valueForKey:@"settingsView"] ofClass:[NSPopUpButton class]] firstObject];
+  XCTAssertEqualObjects([popup titleOfSelectedItem], @"QWERTY", @"the default when the file doesn't say");
+  [popup selectItemWithTitle:@"DVORAK"];
+  [NSApp sendAction:[popup action] to:[popup target] from:popup];
+  XCTAssertEqualObjects([doc.settings lastObject], [SlateConfigEntry entryWithName:@"keyboardLayout" value:@"dvorak"]);
+}
+
+- (void)testUnbuiltPagesShowAPlaceholder {
+  ConfigurationFormView *form = [self formWithDocument:[self document]];
+  form.selectedSection = ConfigurationFormSectionSnapshots;
+  XCTAssertTrue([[form valueForKey:@"tableScroll"] isHidden]);
+  XCTAssertFalse([[form valueForKey:@"placeholderView"] isHidden]);
+  form.selectedSection = ConfigurationFormSectionKeyboard;
+  XCTAssertFalse([[form valueForKey:@"tableScroll"] isHidden]);
+  XCTAssertTrue([[form valueForKey:@"placeholderView"] isHidden]);
+}
+
 - (void)testRevealSelectsTheRow {
   SlateConfigDocument *doc = [self document];
   ConfigurationFormView *form = [self formWithDocument:doc];
   [form revealBindingAtIndex:5];
-  XCTAssertEqual(form.selectedSection, ConfigurationFormSectionFeatures);
-  XCTAssertEqual([[self tableOf:form] selectedRow], 0);
+  XCTAssertEqual(form.selectedSection, ConfigurationFormSectionKeyboard);
+  XCTAssertEqual([[self tableOf:form] selectedRow], 5, @"the Keyboard page lists every shortcut");
   [form revealEntryNamed:@"samsung-full"];
   XCTAssertEqual(form.selectedSection, ConfigurationFormSectionPositions);
   XCTAssertEqual([[self tableOf:form] selectedRow], 1);

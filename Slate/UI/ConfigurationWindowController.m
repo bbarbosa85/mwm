@@ -58,7 +58,7 @@ typedef NS_ENUM(NSInteger, SaveState) {
 }
 
 - (instancetype)init {
-  NSWindow *window = [[NSWindow alloc] initWithContentRect:NSMakeRect(0, 0, 980, 640)
+  NSWindow *window = [[NSWindow alloc] initWithContentRect:NSMakeRect(0, 0, 1200, 780)
                                                  styleMask:NSWindowStyleMaskTitled | NSWindowStyleMaskClosable |
                                                            NSWindowStyleMaskMiniaturizable | NSWindowStyleMaskResizable
                                                    backing:NSBackingStoreBuffered
@@ -66,11 +66,11 @@ typedef NS_ENUM(NSInteger, SaveState) {
   self = [super initWithWindow:window];
   if (self) {
     [window setTitle:@"MWM configuration"];
-    [window setMinSize:NSMakeSize(640, 360)];
+    [window setMinSize:NSMakeSize(900, 520)];
     [window setReleasedWhenClosed:NO];
     [window setDelegate:self];
     [window center];
-    [window setFrameAutosaveName:@"MWMConfiguration"];
+    [window setFrameAutosaveName:@"MWMConfiguration2"];
     [self buildInterface];
   }
   return self;
@@ -186,6 +186,20 @@ typedef NS_ENUM(NSInteger, SaveState) {
                      withApplicationAtURL:textEdit
                             configuration:[NSWorkspaceOpenConfiguration configuration]
                         completionHandler:nil];
+}
+
+- (void)formViewWantsFinder:(ConfigurationFormView *)formView {
+  [[NSWorkspace sharedWorkspace] activateFileViewerSelectingURLs:@[[NSURL fileURLWithPath:[self configPath]]]];
+}
+
+- (BOOL)formViewLaunchesAtLogin:(ConfigurationFormView *)formView {
+  return [(SlateAppDelegate *)[NSApp delegate] isInLoginItems];
+}
+
+- (void)formView:(ConfigurationFormView *)formView setLaunchesAtLogin:(BOOL)launches {
+  SlateAppDelegate *delegate = (SlateAppDelegate *)[NSApp delegate];
+  if (launches) [delegate addToLoginItems]; else [delegate deleteFromLoginItems];
+  [delegate setLaunchOnLoginItemStatus];  // keeps the menu item in step
 }
 
 - (void)formViewWantsReload:(ConfigurationFormView *)formView {
