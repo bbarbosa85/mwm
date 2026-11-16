@@ -7,6 +7,14 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		5E1A0C0B2D00000000000733 /* ConfigurationKeyboardMapView.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D00000000000732 /* ConfigurationKeyboardMapView.m */; };
+		5E1A0C0B2D00000000000713 /* ConfigurationKeyViews.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D00000000000712 /* ConfigurationKeyViews.m */; };
+		5E1A0C0B2D00000000000717 /* ConfigurationShortcutListView.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D00000000000716 /* ConfigurationShortcutListView.m */; };
+		5E1A0C0B2D00000000000721 /* ConfigurationKeyboardView.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D00000000000720 /* ConfigurationKeyboardView.m */; };
+		5E1A0C0B2D00000000000723 /* TestConfigurationKeyboard.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D00000000000722 /* TestConfigurationKeyboard.m */; };
+		5E1A0C0B2D00000000000703 /* SlateReservedShortcuts.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D00000000000702 /* SlateReservedShortcuts.m */; };
+		5E1A0C0B2D00000000000707 /* SlateShortcutIndex.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D00000000000706 /* SlateShortcutIndex.m */; };
+		5E1A0C0B2D00000000000709 /* TestSlateShortcutIndex.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D00000000000708 /* TestSlateShortcutIndex.m */; };
 		5E1A0C0B2D00000000000693 /* ConfigurationPresetsView.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D00000000000692 /* ConfigurationPresetsView.m */; };
 		5E1A0C0B2D00000000000683 /* ConfigurationSlotCanvas.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D00000000000682 /* ConfigurationSlotCanvas.m */; };
 		5E1A0C0B2D00000000000687 /* ConfigurationSlotsView.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D00000000000686 /* ConfigurationSlotsView.m */; };
@@ -151,6 +159,20 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		5E1A0C0B2D00000000000730 /* ConfigurationKeyboardMapView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UI/ConfigurationKeyboardMapView.h; sourceTree = "<group>"; };
+		5E1A0C0B2D00000000000732 /* ConfigurationKeyboardMapView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UI/ConfigurationKeyboardMapView.m; sourceTree = "<group>"; };
+		5E1A0C0B2D00000000000710 /* ConfigurationKeyViews.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UI/ConfigurationKeyViews.h; sourceTree = "<group>"; };
+		5E1A0C0B2D00000000000712 /* ConfigurationKeyViews.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UI/ConfigurationKeyViews.m; sourceTree = "<group>"; };
+		5E1A0C0B2D00000000000714 /* ConfigurationShortcutListView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UI/ConfigurationShortcutListView.h; sourceTree = "<group>"; };
+		5E1A0C0B2D00000000000716 /* ConfigurationShortcutListView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UI/ConfigurationShortcutListView.m; sourceTree = "<group>"; };
+		5E1A0C0B2D00000000000718 /* ConfigurationKeyboardView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UI/ConfigurationKeyboardView.h; sourceTree = "<group>"; };
+		5E1A0C0B2D00000000000720 /* ConfigurationKeyboardView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UI/ConfigurationKeyboardView.m; sourceTree = "<group>"; };
+		5E1A0C0B2D00000000000722 /* TestConfigurationKeyboard.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TestConfigurationKeyboard.m; sourceTree = "<group>"; };
+		5E1A0C0B2D00000000000700 /* SlateReservedShortcuts.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Config/SlateReservedShortcuts.h; sourceTree = "<group>"; };
+		5E1A0C0B2D00000000000702 /* SlateReservedShortcuts.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Config/SlateReservedShortcuts.m; sourceTree = "<group>"; };
+		5E1A0C0B2D00000000000704 /* SlateShortcutIndex.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Config/SlateShortcutIndex.h; sourceTree = "<group>"; };
+		5E1A0C0B2D00000000000706 /* SlateShortcutIndex.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Config/SlateShortcutIndex.m; sourceTree = "<group>"; };
+		5E1A0C0B2D00000000000708 /* TestSlateShortcutIndex.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TestSlateShortcutIndex.m; sourceTree = "<group>"; };
 		5E1A0C0B2D00000000000690 /* ConfigurationPresetsView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UI/ConfigurationPresetsView.h; sourceTree = "<group>"; };
 		5E1A0C0B2D00000000000692 /* ConfigurationPresetsView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UI/ConfigurationPresetsView.m; sourceTree = "<group>"; };
 		5E1A0C0B2D00000000000680 /* ConfigurationSlotCanvas.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UI/ConfigurationSlotCanvas.h; sourceTree = "<group>"; };
@@ -449,6 +471,8 @@
 				5E1A0C0B2D00000000000654 /* TestSlateDisplays.m */,
 				5E1A0C0B2D00000000000674 /* TestSlateSlots.m */,
 				5E1A0C0B2D00000000000688 /* TestConfigurationSlots.m */,
+				5E1A0C0B2D00000000000708 /* TestSlateShortcutIndex.m */,
+				5E1A0C0B2D00000000000722 /* TestConfigurationKeyboard.m */,
 				5E1A0C0B2D00000000000213 /* TestSlateLegacyMigration.m */,
 				5E1A0C0B2D00000000000514 /* TestConfigurationAutosave.m */,
 				5E1A0C0B2D00000000000414 /* TestConfigurationForm.m */,
@@ -511,6 +535,10 @@
 				5E1A0C0B2D00000000000652 /* SlateDisplays.m */,
 				5E1A0C0B2D00000000000670 /* SlateSlots.h */,
 				5E1A0C0B2D00000000000672 /* SlateSlots.m */,
+				5E1A0C0B2D00000000000700 /* SlateReservedShortcuts.h */,
+				5E1A0C0B2D00000000000702 /* SlateReservedShortcuts.m */,
+				5E1A0C0B2D00000000000704 /* SlateShortcutIndex.h */,
+				5E1A0C0B2D00000000000706 /* SlateShortcutIndex.m */,
 				5E1A0C0B2D00000000000210 /* SlateLegacyMigration.h */,
 				5E1A0C0B2D00000000000211 /* SlateLegacyMigration.m */,
 				5E1A0C0B2D00000000000312 /* SlateConfigValidator.m */,
@@ -700,6 +728,14 @@
 				5E1A0C0B2D00000000000686 /* ConfigurationSlotsView.m */,
 				5E1A0C0B2D00000000000690 /* ConfigurationPresetsView.h */,
 				5E1A0C0B2D00000000000692 /* ConfigurationPresetsView.m */,
+				5E1A0C0B2D00000000000710 /* ConfigurationKeyViews.h */,
+				5E1A0C0B2D00000000000712 /* ConfigurationKeyViews.m */,
+				5E1A0C0B2D00000000000714 /* ConfigurationShortcutListView.h */,
+				5E1A0C0B2D00000000000716 /* ConfigurationShortcutListView.m */,
+				5E1A0C0B2D00000000000718 /* ConfigurationKeyboardView.h */,
+				5E1A0C0B2D00000000000720 /* ConfigurationKeyboardView.m */,
+				5E1A0C0B2D00000000000730 /* ConfigurationKeyboardMapView.h */,
+				5E1A0C0B2D00000000000732 /* ConfigurationKeyboardMapView.m */,
 				5E1A0C0B2D00000000000510 /* ConfigurationStatusBar.h */,
 				5E1A0C0B2D00000000000412 /* ConfigurationFormView.m */,
 				5E1A0C0B2D00000000000410 /* ConfigurationFormView.h */,
@@ -859,6 +895,8 @@
 				5E1A0C0B2D00000000000633 /* SlateAction.m in Sources */,
 				5E1A0C0B2D00000000000653 /* SlateDisplays.m in Sources */,
 				5E1A0C0B2D00000000000673 /* SlateSlots.m in Sources */,
+				5E1A0C0B2D00000000000703 /* SlateReservedShortcuts.m in Sources */,
+				5E1A0C0B2D00000000000707 /* SlateShortcutIndex.m in Sources */,
 				5E1A0C0B2D00000000000212 /* SlateLegacyMigration.m in Sources */,
 				5E1A0C0B2D00000000000513 /* ConfigurationStatusBar.m in Sources */,
 				5E1A0C0B2D00000000000625 /* ConfigurationShortcutView.m in Sources */,
@@ -869,6 +907,10 @@
 				5E1A0C0B2D00000000000683 /* ConfigurationSlotCanvas.m in Sources */,
 				5E1A0C0B2D00000000000687 /* ConfigurationSlotsView.m in Sources */,
 				5E1A0C0B2D00000000000693 /* ConfigurationPresetsView.m in Sources */,
+				5E1A0C0B2D00000000000713 /* ConfigurationKeyViews.m in Sources */,
+				5E1A0C0B2D00000000000717 /* ConfigurationShortcutListView.m in Sources */,
+				5E1A0C0B2D00000000000721 /* ConfigurationKeyboardView.m in Sources */,
+				5E1A0C0B2D00000000000733 /* ConfigurationKeyboardMapView.m in Sources */,
 				5E1A0C0B2D00000000000413 /* ConfigurationFormView.m in Sources */,
 				5E1A0C0B2D0000000000031B /* ConfigurationWindowController.m in Sources */,
 				5E1A0C0B2D00000000000313 /* SlateConfigValidator.m in Sources */,
@@ -949,6 +991,8 @@
 				5E1A0C0B2D00000000000655 /* TestSlateDisplays.m in Sources */,
 				5E1A0C0B2D00000000000675 /* TestSlateSlots.m in Sources */,
 				5E1A0C0B2D00000000000689 /* TestConfigurationSlots.m in Sources */,
+				5E1A0C0B2D00000000000709 /* TestSlateShortcutIndex.m in Sources */,
+				5E1A0C0B2D00000000000723 /* TestConfigurationKeyboard.m in Sources */,
 				5E1A0C0B2D00000000000214 /* TestSlateLegacyMigration.m in Sources */,
 				5E1A0C0B2D00000000000515 /* TestConfigurationAutosave.m in Sources */,
 				5E1A0C0B2D00000000000415 /* TestConfigurationForm.m in Sources */,

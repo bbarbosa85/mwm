@@ -42,6 +42,28 @@
 }
 @end
 
+@implementation ConfigurationClickView
+- (instancetype)initWithFrame:(NSRect)frame {
+  self = [super initWithFrame:frame];
+  if (self) {
+    _cornerRadius = 9;
+    [self setWantsLayer:YES];
+  }
+  return self;
+}
+- (BOOL)acceptsFirstMouse:(NSEvent *)event { return YES; }
+- (void)mouseDown:(NSEvent *)event { if (self.onClick) self.onClick(); }
+- (void)setSelected:(BOOL)selected { _selected = selected; [self updateTint]; }
+- (void)updateTint {
+  [self.effectiveAppearance performAsCurrentDrawingAppearance:^{
+    [[self layer] setCornerRadius:self.cornerRadius];
+    [[self layer] setBackgroundColor:self.selected ? [[[NSColor controlAccentColor] colorWithAlphaComponent:0.16] CGColor] : [[NSColor clearColor] CGColor]];
+  }];
+}
+- (void)viewDidChangeEffectiveAppearance { [super viewDidChangeEffectiveAppearance]; [self updateTint]; }
+- (void)viewDidMoveToWindow { [super viewDidMoveToWindow]; [self updateTint]; }
+@end
+
 @implementation ConfigurationSlotThumbnail
 - (NSSize)intrinsicContentSize { return NSMakeSize(NSViewNoIntrinsicMetric, 84); }
 - (void)drawRect:(NSRect)dirtyRect {

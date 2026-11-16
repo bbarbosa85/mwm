@@ -1,0 +1,136 @@
+//
+//  ConfigurationKeyViews.m
+//
+//  This program is free software: you can redistribute it and/or modify
+//  it under the terms of the GNU General Public License as published by
+//  the Free Software Foundation, either version 3 of the License, or
+//  (at your option) any later version.
+//
+//  This program is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//  GNU General Public License for more details.
+//
+//  You should have received a copy of the GNU General Public License
+//  along with this program.  If not, see http://www.gnu.org/licenses
+
+#import "ConfigurationKeyViews.h"
+#import "SlateShortcut.h"
+
+// A key cap: a rounded outline whose colors follow light and dark mode.
+@interface ConfigurationCapView : NSView
+@end
+
+@implementation ConfigurationCapView
+- (void)viewDidChangeEffectiveAppearance {
+  [super viewDidChangeEffectiveAppearance];
+  [self.effectiveAppearance performAsCurrentDrawingAppearance:^{
+    [[self layer] setBorderColor:[[NSColor tertiaryLabelColor] CGColor]];
+    [[self layer] setBackgroundColor:[[[NSColor labelColor] colorWithAlphaComponent:0.06] CGColor]];
+  }];
+}
+- (void)viewDidMoveToWindow { [super viewDidMoveToWindow]; [self viewDidChangeEffectiveAppearance]; }
+@end
+
+// A rounded tint behind a group's name.
+@interface ConfigurationPillView : NSView
+@end
+
+@implementation ConfigurationPillView
+- (void)viewDidChangeEffectiveAppearance {
+  [super viewDidChangeEffectiveAppearance];
+  [self.effectiveAppearance performAsCurrentDrawingAppearance:^{
+    [[self layer] setBackgroundColor:[[[NSColor controlAccentColor] colorWithAlphaComponent:0.16] CGColor]];
+  }];
+}
+- (void)viewDidMoveToWindow { [super viewDidMoveToWindow]; [self viewDidChangeEffectiveAppearance]; }
+@end
+
+@implementation ConfigurationKeyViews
+
++ (NSView *)capWithText:(NSString *)text size:(CGFloat)size {
+  NSTextField *label = [NSTextField labelWithString:text];
+  [label setFont:[NSFont systemFontOfSize:size * 0.5 weight:NSFontWeightMedium]];
+  [label setAlignment:NSTextAlignmentCenter];
+  [label setTranslatesAutoresizingMaskIntoConstraints:NO];
+  NSView *cap = [[ConfigurationCapView alloc] init];
+  [cap setWantsLayer:YES];
+  [[cap layer] setCornerRadius:size * 0.25];
+  [[cap layer] setBorderWidth:0.5];
+  [cap setTranslatesAutoresizingMaskIntoConstraints:NO];
+  [cap addSubview:label];
+  [NSLayoutConstraint activateConstraints:@[
+    [label.centerYAnchor constraintEqualToAnchor:cap.centerYAnchor],
+    [label.leadingAnchor constraintEqualToAnchor:cap.leadingAnchor constant:size * 0.22], [label.trailingAnchor constraintEqualToAnchor:cap.trailingAnchor constant:-size * 0.22],
+    [cap.heightAnchor constraintEqualToConstant:size], [cap.widthAnchor constraintGreaterThanOrEqualToConstant:size],
+  ]];
+  return cap;
+}
+
++ (NSView *)modifierCaps:(NSArray<NSString *> *)modifierNames size:(CGFloat)size {
+  NSMutableArray *caps = [NSMutableArray array];
+  for (NSString *name in modifierNames) [caps addObject:[self capWithText:[SlateShortcut symbolForModifierName:name] size:size]];
+  NSStackView *stack = [NSStackView stackViewWithViews:caps];
+  [stack setSpacing:3];
+  return stack;
+}
+
++ (NSView *)keyCapsForModifiers:(NSArray<NSString *> *)modifierNames keyName:(NSString *)keyName size:(CGFloat)size {
+  NSMutableArray *caps = [NSMutableArray array];
+  for (NSString *name in modifierNames) [caps addObject:[self capWithText:[SlateShortcut symbolForModifierName:name] size:size]];
+  [caps addObject:[self capWithText:[SlateShortcut displayForKeyName:keyName] size:size]];
+  NSStackView *stack = [NSStackView stackViewWithViews:caps];
+  [stack setSpacing:3];
+  return stack;
+}
+
++ (NSView *)pillWithText:(NSString *)text {
+  NSTextField *label = [NSTextField labelWithString:text];
+  [label setFont:[NSFont systemFontOfSize:11 weight:NSFontWeightMedium]];
+  [label setTextColor:[NSColor controlAccentColor]];
+  [label setTranslatesAutoresizingMaskIntoConstraints:NO];
+  NSView *pill = [[ConfigurationPillView alloc] init];
+  [pill setWantsLayer:YES];
+  [[pill layer] setCornerRadius:9];
+  [pill setTranslatesAutoresizingMaskIntoConstraints:NO];
+  [pill addSubview:label];
+  [NSLayoutConstraint activateConstraints:@[
+    [label.leadingAnchor constraintEqualToAnchor:pill.leadingAnchor constant:8], [label.trailingAnchor constraintEqualToAnchor:pill.trailingAnchor constant:-8],
+    [label.topAnchor constraintEqualToAnchor:pill.topAnchor constant:2], [label.bottomAnchor constraintEqualToAnchor:pill.bottomAnchor constant:-2],
+  ]];
+  return pill;
+}
+
++ (NSView *)shortcutViewForInfo:(SlateShortcutInfo *)info size:(CGFloat)size {
+  NSMutableArray *views = [NSMutableArray array];
+  if (info.groupName != nil) [views addObject:[self pillWithText:info.groupName]];
+  [views addObject:[self keyCapsForModifiers:info.groupName != nil ? @[] : info.modifierNames keyName:info.keyName size:size]];
+  NSStackView *stack = [NSStackView stackViewWithViews:views];
+  [stack setSpacing:6];
+  [stack setAlignment:NSLayoutAttributeCenterY];
+  return stack;
+}
+
++ (NSColor *)colorForKind:(SlateShortcutKind)kind {
+  switch (kind) {
+    case SlateShortcutKindMoveToSlot: return [NSColor controlAccentColor];
+    case SlateShortcutKindFocusApp:
+    case SlateShortcutKindFocusWindow:
+    case SlateShortcutKindResizeNudge: return [NSColor systemGreenColor];
+    case SlateShortcutKindFeature:
+    case SlateShortcutKindOther: return [NSColor systemPurpleColor];
+  }
+}
+
++ (NSString *)symbolForKind:(SlateShortcutKind)kind {
+  switch (kind) {
+    case SlateShortcutKindMoveToSlot: return @"rectangle.split.3x1";
+    case SlateShortcutKindFocusApp: return @"app.badge";
+    case SlateShortcutKindFocusWindow: return @"eye";
+    case SlateShortcutKindResizeNudge: return @"arrow.up.left.and.arrow.down.right";
+    case SlateShortcutKindFeature: return @"sparkles";
+    case SlateShortcutKindOther: return @"chevron.left.forwardslash.chevron.right";
+  }
+}
+
+@end
