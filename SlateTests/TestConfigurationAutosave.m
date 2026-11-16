@@ -68,6 +68,47 @@ static NSString *const kOriginal =
   return [NSString stringWithContentsOfFile:path encoding:NSUTF8StringEncoding error:nil];
 }
 
+// Editing a slot is a sublevel page: its header and the bottom bar step aside, and
+// the file only changes when its own Save is clicked.
+- (void)testEditingASlotHidesTheBarAndSavesOnlyOnSave {
+  NSString *text = @"positions:\n  centre: move screenOriginX+screenSizeX/4;screenOriginY screenSizeX/2;screenSizeY\n";
+  [text writeToFile:self.path atomically:YES encoding:NSUTF8StringEncoding error:nil];
+  [self load];
+  ConfigurationFormView *form = self.controller.formView;
+  NSView *bar = [self.controller valueForKey:@"bar"];
+  form.selectedSection = ConfigurationFormSectionPositions;
+  XCTAssertFalse([bar isHidden], @"the gallery shows the bottom bar");
+  XCTAssertFalse(form.sublevelActive);
+
+  id slots = [form valueForKey:@"slotsView"];
+  [slots performSelector:@selector(selectSlotNamed:) withObject:@"centre"];
+  XCTAssertTrue(form.sublevelActive);
+  XCTAssertTrue([bar isHidden], @"no saved/apply/close bar while a slot is open");
+  XCTAssertTrue([[form valueForKey:@"titleLabel"] isHidden], @"the back button is the header");
+  XCTAssertTrue([[form valueForKey:@"slotsSwitcher"] isHidden], @"so is the switcher");
+
+  [slots setValue:[NSValue valueWithRect:NSMakeRect(0.1, 0, 0.3, 1)] forKey:@"draftRect"];
+  XCTAssertEqualObjects([self onDisk:self.path], text, @"nothing is written until Save");
+  [slots performSelector:NSSelectorFromString(@"save")];
+  XCTAssertNotEqualObjects([self onDisk:self.path], text, @"Save writes the file");
+  XCTAssertFalse(form.sublevelActive, @"saving goes back to the gallery");
+  XCTAssertFalse([bar isHidden]);
+  XCTAssertFalse([[form valueForKey:@"titleLabel"] isHidden]);
+  XCTAssertFalse([[form valueForKey:@"slotsSwitcher"] isHidden], @"the switcher is back in the gallery header");
+}
+
+- (void)testLeavingThePageClosesTheSublevel {
+  [@"positions:\n  centre: move screenOriginX+screenSizeX/4;screenOriginY screenSizeX/2;screenSizeY\n" writeToFile:self.path atomically:YES encoding:NSUTF8StringEncoding error:nil];
+  [self load];
+  ConfigurationFormView *form = self.controller.formView;
+  form.selectedSection = ConfigurationFormSectionPositions;
+  [[form valueForKey:@"slotsView"] performSelector:@selector(selectSlotNamed:) withObject:@"centre"];
+  XCTAssertTrue(form.sublevelActive);
+  form.selectedSection = ConfigurationFormSectionGeneral;
+  XCTAssertFalse(form.sublevelActive);
+  XCTAssertFalse([[self.controller valueForKey:@"bar"] isHidden], @"the bar is back on the other pages");
+}
+
 - (void)testOpeningDoesNotRewriteTheFile {
   [kOriginal writeToFile:self.path atomically:YES encoding:NSUTF8StringEncoding error:nil];
   [self load];

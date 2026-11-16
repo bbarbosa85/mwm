@@ -22,196 +22,24 @@
 #import "SlateDisplays.h"
 #import "SlateSlots.h"
 
-static const CGFloat kListWidth = 270;
-
-#pragma mark - List cell
-
-// A list row: a small picture of the slot, its name, what size it is, and a remove button for custom ones.
-@interface ConfigurationSlotCell : NSTableCellView
-@property (assign) CGRect rect;
-@property (assign) BOOL valid;
-@property (copy) void (^onRemove)(void);
-- (instancetype)initWithName:(NSString *)name summary:(NSString *)summary rect:(CGRect)rect valid:(BOOL)valid removable:(BOOL)removable;
-@end
-
-@implementation ConfigurationSlotCell
-
-- (instancetype)initWithName:(NSString *)name summary:(NSString *)summary rect:(CGRect)rect valid:(BOOL)valid removable:(BOOL)removable {
-  self = [super initWithFrame:NSZeroRect];
-  if (self) {
-    _rect = rect;
-    _valid = valid;
-    [self setIdentifier:name];
-    NSTextField *title = [NSTextField labelWithString:name];
-    [title setFont:[NSFont systemFontOfSize:13]];
-    [title setLineBreakMode:NSLineBreakByTruncatingTail];
-    NSTextField *detail = [NSTextField labelWithString:summary];
-    [detail setFont:[NSFont systemFontOfSize:11]];
-    [detail setTextColor:[NSColor secondaryLabelColor]];
-    [detail setLineBreakMode:NSLineBreakByTruncatingTail];
-    NSStackView *text = [NSStackView stackViewWithViews:@[title, detail]];
-    [text setOrientation:NSUserInterfaceLayoutOrientationVertical];
-    [text setAlignment:NSLayoutAttributeLeading];
-    [text setSpacing:0];
-    [text setTranslatesAutoresizingMaskIntoConstraints:NO];
-    [self addSubview:text];
-    [self setTextField:title];
-    [NSLayoutConstraint activateConstraints:@[
-      [text.leadingAnchor constraintEqualToAnchor:self.leadingAnchor constant:46],
-      [text.trailingAnchor constraintEqualToAnchor:self.trailingAnchor constant:removable ? -28 : -4],
-      [text.centerYAnchor constraintEqualToAnchor:self.centerYAnchor],
-    ]];
-    if (removable) {
-      NSButton *remove = [NSButton buttonWithImage:[NSImage imageWithSystemSymbolName:@"minus.circle" accessibilityDescription:@"Remove slot"] target:self action:@selector(removePressed:)];
-      [remove setBordered:NO];
-      [remove setToolTip:@"Remove this slot"];
-      [remove setTranslatesAutoresizingMaskIntoConstraints:NO];
-      [self addSubview:remove];
-      [NSLayoutConstraint activateConstraints:@[
-        [remove.trailingAnchor constraintEqualToAnchor:self.trailingAnchor constant:-2],
-        [remove.centerYAnchor constraintEqualToAnchor:self.centerYAnchor],
-      ]];
-    }
-  }
-  return self;
-}
-
-- (void)removePressed:(id)sender { if (self.onRemove) self.onRemove(); }
-
-- (void)drawRect:(NSRect)dirtyRect {
-  NSRect picture = NSMakeRect(2, (NSHeight([self bounds]) - 22) / 2, 36, 22);
-  NSBezierPath *frame = [NSBezierPath bezierPathWithRoundedRect:picture xRadius:3 yRadius:3];
-  [[NSColor tertiaryLabelColor] setStroke];
-  [frame setLineWidth:1];
-  [frame stroke];
-  if (!self.valid) return;
-  NSRect slot = NSMakeRect(NSMinX(picture) + 2 + self.rect.origin.x * (NSWidth(picture) - 4),
-                           NSMaxY(picture) - 2 - (self.rect.origin.y + self.rect.size.height) * (NSHeight(picture) - 4),
-                           self.rect.size.width * (NSWidth(picture) - 4), self.rect.size.height * (NSHeight(picture) - 4));
-  [[[NSColor controlAccentColor] colorWithAlphaComponent:0.6] setFill];
-  [[NSBezierPath bezierPathWithRoundedRect:slot xRadius:1.5 yRadius:1.5] fill];
-}
-
-@end
-
-#pragma mark - Presets popover
-
-// The built-in presets, for reading: grouped, each with a picture, its name, and how to use it.
-@interface ConfigurationPresetsView : NSView
-@end
-
-@implementation ConfigurationPresetsView
-
-- (NSView *)cardForPreset:(SlateSlot *)preset {
-  ConfigurationSlotCell *picture = [[ConfigurationSlotCell alloc] initWithName:preset.name summary:[preset summary] rect:preset.rect valid:YES removable:NO];
-  [picture setTranslatesAutoresizingMaskIntoConstraints:NO];
-  [[picture.widthAnchor constraintEqualToConstant:200] setActive:YES];
-  [[picture.heightAnchor constraintEqualToConstant:38] setActive:YES];
-  return picture;
-}
-
-- (instancetype)initWithFrame:(NSRect)frame {
-  self = [super initWithFrame:frame];
-  if (self) {
-    NSMutableArray *blocks = [NSMutableArray array];
-    NSTextField *title = [NSTextField labelWithString:@"Built-in presets"];
-    [title setFont:[NSFont systemFontOfSize:15 weight:NSFontWeightSemibold]];
-    NSTextField *note = [NSTextField wrappingLabelWithString:@"These work in shortcuts without being in your file, as ${name}. They can't be changed, so custom slots need different names."];
-    [note setFont:[NSFont systemFontOfSize:11]];
-    [note setTextColor:[NSColor secondaryLabelColor]];
-    [blocks addObject:title];
-    [blocks addObject:note];
-    NSArray *groups = @[@[@"Whole screen", @[@"full"]],
-                        @[@"Halves", @[@"lefthalf", @"righthalf", @"tophalf", @"bottomhalf"]],
-                        @[@"Thirds, side by side", @[@"third1", @"third2", @"third3"]],
-                        @[@"Thirds, stacked", @[@"thirdrow1", @"thirdrow2", @"thirdrow3"]],
-                        @[@"Quarters, side by side", @[@"quarter1", @"quarter2", @"quarter3", @"quarter4"]],
-                        @[@"Quarters, stacked", @[@"quarterrow1", @"quarterrow2", @"quarterrow3", @"quarterrow4"]]];
-    for (NSArray *group in groups) {
-      NSTextField *heading = [NSTextField labelWithString:[group[0] uppercaseString]];
-      [heading setFont:[NSFont systemFontOfSize:10 weight:NSFontWeightSemibold]];
-      [heading setTextColor:[NSColor tertiaryLabelColor]];
-      NSMutableArray *cards = [NSMutableArray array];
-      for (NSString *name in group[1]) [cards addObject:[self cardForPreset:[SlateSlots presetNamed:name]]];
-      // Two cards to a row.
-      NSMutableArray *rows = [NSMutableArray array];
-      for (NSUInteger i = 0; i < [cards count]; i += 2) {
-        NSArray *pair = [cards subarrayWithRange:NSMakeRange(i, MIN(2, [cards count] - i))];
-        NSStackView *row = [NSStackView stackViewWithViews:pair];
-        [row setSpacing:8];
-        [row setAlignment:NSLayoutAttributeTop];
-        [rows addObject:row];
-      }
-      NSStackView *section = [NSStackView stackViewWithViews:[@[heading] arrayByAddingObjectsFromArray:rows]];
-      [section setOrientation:NSUserInterfaceLayoutOrientationVertical];
-      [section setAlignment:NSLayoutAttributeLeading];
-      [section setSpacing:4];
-      [blocks addObject:section];
-    }
-    NSStackView *stack = [NSStackView stackViewWithViews:blocks];
-    [stack setOrientation:NSUserInterfaceLayoutOrientationVertical];
-    [stack setAlignment:NSLayoutAttributeLeading];
-    [stack setSpacing:12];
-    [stack setEdgeInsets:NSEdgeInsetsMake(16, 16, 16, 16)];
-    [stack setTranslatesAutoresizingMaskIntoConstraints:NO];
-    [[note.widthAnchor constraintEqualToConstant:408] setActive:YES];
-    [self addSubview:stack];
-    [NSLayoutConstraint activateConstraints:@[
-      [stack.topAnchor constraintEqualToAnchor:self.topAnchor], [stack.bottomAnchor constraintEqualToAnchor:self.bottomAnchor],
-      [stack.leadingAnchor constraintEqualToAnchor:self.leadingAnchor], [stack.trailingAnchor constraintEqualToAnchor:self.trailingAnchor],
-    ]];
-  }
-  return self;
-}
-
-@end
 
 #pragma mark - Gallery cards
 
-// A screen with the slot drawn on it.
-@interface ConfigurationSlotThumbnail : NSView
-@property (assign) CGRect rect;
-@property (assign) BOOL valid;
-@end
-
-@implementation ConfigurationSlotThumbnail
-- (NSSize)intrinsicContentSize { return NSMakeSize(NSViewNoIntrinsicMetric, 84); }
-- (void)drawRect:(NSRect)dirtyRect {
-  NSRect bounds = NSInsetRect([self bounds], 1, 1);
-  CGFloat height = MIN(NSHeight(bounds), NSWidth(bounds) / 1.7), width = height * 1.7;
-  NSRect screen = NSMakeRect(NSMidX(bounds) - width / 2, NSMidY(bounds) - height / 2, width, height);
-  NSBezierPath *frame = [NSBezierPath bezierPathWithRoundedRect:screen xRadius:6 yRadius:6];
-  [[[NSColor labelColor] colorWithAlphaComponent:0.05] setFill];
-  [frame fill];
-  [[NSColor tertiaryLabelColor] setStroke];
-  [frame setLineWidth:1.2];
-  [frame stroke];
-  if (!self.valid) return;
-  NSRect slot = NSMakeRect(NSMinX(screen) + 3 + self.rect.origin.x * (NSWidth(screen) - 6),
-                           NSMaxY(screen) - 3 - (self.rect.origin.y + self.rect.size.height) * (NSHeight(screen) - 6),
-                           self.rect.size.width * (NSWidth(screen) - 6), self.rect.size.height * (NSHeight(screen) - 6));
-  NSBezierPath *path = [NSBezierPath bezierPathWithRoundedRect:slot xRadius:3 yRadius:3];
-  [[[NSColor controlAccentColor] colorWithAlphaComponent:0.25] setFill];
-  [path fill];
-  [[NSColor controlAccentColor] setStroke];
-  [path setLineWidth:1.5];
-  [path stroke];
-}
-@end
-
-// A card in the gallery: a picture of the slot, its name and size. Clicking opens it;
-// the New slot card has a dashed edge.
+// A card in the gallery, picture first: a screen with the slot drawn on it, a size badge,
+// a quiet ✕ to remove it, and under it the name and how many shortcuts use it. Clicking
+// opens it. The New Slot card has a dashed edge.
 @interface ConfigurationSlotCard : ConfigurationBlockView
 @property (copy) void (^onOpen)(void);
 @property (copy) void (^onRemove)(void);
 @property (assign) BOOL isNewCard;
-- (instancetype)initWithName:(NSString *)name summary:(NSString *)summary rect:(CGRect)rect valid:(BOOL)valid removable:(BOOL)removable;
+@property (strong) NSView *badgeView;
+- (instancetype)initWithName:(NSString *)name badge:(NSString *)badge usage:(NSString *)usage rect:(CGRect)rect valid:(BOOL)valid;
 - (instancetype)initNewCard;
 @end
 
 @implementation ConfigurationSlotCard
 
-- (instancetype)initWithName:(NSString *)name summary:(NSString *)summary rect:(CGRect)rect valid:(BOOL)valid removable:(BOOL)removable {
+- (instancetype)initWithName:(NSString *)name badge:(NSString *)badge usage:(NSString *)usage rect:(CGRect)rect valid:(BOOL)valid {
   self = [super initWithFrame:NSZeroRect];
   if (self) {
     [self setIdentifier:name];
@@ -219,37 +47,56 @@ static const CGFloat kListWidth = 270;
     ConfigurationSlotThumbnail *thumbnail = [[ConfigurationSlotThumbnail alloc] init];
     thumbnail.rect = rect;
     thumbnail.valid = valid;
+    [thumbnail setTranslatesAutoresizingMaskIntoConstraints:NO];
+    [[thumbnail.heightAnchor constraintGreaterThanOrEqualToConstant:96] setActive:YES];
     NSTextField *title = [NSTextField labelWithString:name];
     [title setFont:[NSFont systemFontOfSize:13 weight:NSFontWeightMedium]];
     [title setLineBreakMode:NSLineBreakByTruncatingTail];
-    NSTextField *detail = [NSTextField labelWithString:summary];
+    NSTextField *detail = [NSTextField labelWithString:usage];
     [detail setFont:[NSFont systemFontOfSize:11]];
     [detail setTextColor:[NSColor secondaryLabelColor]];
-    [detail setLineBreakMode:NSLineBreakByTruncatingTail];
-    NSStackView *stack = [NSStackView stackViewWithViews:@[thumbnail, title, detail]];
+    NSView *gap = [[NSView alloc] init];
+    [gap setContentHuggingPriority:1 forOrientation:NSLayoutConstraintOrientationHorizontal];
+    NSStackView *footer = [NSStackView stackViewWithViews:@[title, gap, detail]];
+    [footer setAlignment:NSLayoutAttributeFirstBaseline];
+    [footer setSpacing:8];
+    NSStackView *stack = [NSStackView stackViewWithViews:@[thumbnail, footer]];
     [stack setOrientation:NSUserInterfaceLayoutOrientationVertical];
     [stack setAlignment:NSLayoutAttributeLeading];
-    [stack setSpacing:2];
-    [stack setCustomSpacing:8 afterView:thumbnail];
-    [stack setEdgeInsets:NSEdgeInsetsMake(10, 10, 10, 10)];
+    [stack setSpacing:8];
+    [stack setEdgeInsets:NSEdgeInsetsMake(10, 10, 12, 10)];
     [stack setTranslatesAutoresizingMaskIntoConstraints:NO];
     [[thumbnail.widthAnchor constraintEqualToAnchor:stack.widthAnchor constant:-20] setActive:YES];
+    [[footer.widthAnchor constraintEqualToAnchor:stack.widthAnchor constant:-20] setActive:YES];
     [self addSubview:stack];
+
+    // The size, on the picture's top left.
+    NSTextField *size = [NSTextField labelWithString:badge];
+    [size setFont:[NSFont systemFontOfSize:10 weight:NSFontWeightMedium]];
+    [size setTextColor:[NSColor secondaryLabelColor]];
+    [size setTranslatesAutoresizingMaskIntoConstraints:NO];
+    NSView *badgeView = [[NSView alloc] init];
+    [badgeView setWantsLayer:YES];
+    [[badgeView layer] setCornerRadius:9];
+    [badgeView setTranslatesAutoresizingMaskIntoConstraints:NO];
+    [badgeView addSubview:size];
+    [self addSubview:badgeView];
+
+    NSButton *remove = [NSButton buttonWithImage:[NSImage imageWithSystemSymbolName:@"xmark" accessibilityDescription:@"Remove slot"] target:self action:@selector(removePressed:)];
+    [remove setBordered:NO];
+    [remove setToolTip:@"Remove this slot"];
+    [remove setContentTintColor:[NSColor tertiaryLabelColor]];
+    [remove setTranslatesAutoresizingMaskIntoConstraints:NO];
+    [self addSubview:remove];
     [NSLayoutConstraint activateConstraints:@[
       [stack.topAnchor constraintEqualToAnchor:self.topAnchor], [stack.bottomAnchor constraintEqualToAnchor:self.bottomAnchor],
       [stack.leadingAnchor constraintEqualToAnchor:self.leadingAnchor], [stack.trailingAnchor constraintEqualToAnchor:self.trailingAnchor],
+      [size.leadingAnchor constraintEqualToAnchor:badgeView.leadingAnchor constant:8], [size.trailingAnchor constraintEqualToAnchor:badgeView.trailingAnchor constant:-8],
+      [size.topAnchor constraintEqualToAnchor:badgeView.topAnchor constant:2], [size.bottomAnchor constraintEqualToAnchor:badgeView.bottomAnchor constant:-2],
+      [badgeView.leadingAnchor constraintEqualToAnchor:self.leadingAnchor constant:18], [badgeView.topAnchor constraintEqualToAnchor:self.topAnchor constant:18],
+      [remove.topAnchor constraintEqualToAnchor:self.topAnchor constant:14], [remove.trailingAnchor constraintEqualToAnchor:self.trailingAnchor constant:-14],
     ]];
-    if (removable) {
-      NSButton *remove = [NSButton buttonWithImage:[NSImage imageWithSystemSymbolName:@"minus.circle.fill" accessibilityDescription:@"Remove slot"] target:self action:@selector(removePressed:)];
-      [remove setBordered:NO];
-      [remove setToolTip:@"Remove this slot"];
-      [remove setContentTintColor:[NSColor tertiaryLabelColor]];
-      [remove setTranslatesAutoresizingMaskIntoConstraints:NO];
-      [self addSubview:remove];
-      [NSLayoutConstraint activateConstraints:@[
-        [remove.topAnchor constraintEqualToAnchor:self.topAnchor constant:8], [remove.trailingAnchor constraintEqualToAnchor:self.trailingAnchor constant:-8],
-      ]];
-    }
+    _badgeView = badgeView;
   }
   return self;
 }
@@ -263,7 +110,7 @@ static const CGFloat kListWidth = 270;
     NSImageView *plus = [NSImageView imageViewWithImage:[NSImage imageWithSystemSymbolName:@"plus" accessibilityDescription:nil]];
     [plus setSymbolConfiguration:[NSImageSymbolConfiguration configurationWithPointSize:22 weight:NSFontWeightRegular]];
     [plus setContentTintColor:[NSColor secondaryLabelColor]];
-    NSTextField *label = [NSTextField labelWithString:@"New slot"];
+    NSTextField *label = [NSTextField labelWithString:@"New Slot"];
     [label setTextColor:[NSColor secondaryLabelColor]];
     NSStackView *stack = [NSStackView stackViewWithViews:@[plus, label]];
     [stack setOrientation:NSUserInterfaceLayoutOrientationVertical];
@@ -272,10 +119,17 @@ static const CGFloat kListWidth = 270;
     [self addSubview:stack];
     [NSLayoutConstraint activateConstraints:@[
       [stack.centerXAnchor constraintEqualToAnchor:self.centerXAnchor], [stack.centerYAnchor constraintEqualToAnchor:self.centerYAnchor],
-      [self.heightAnchor constraintGreaterThanOrEqualToConstant:140],
+      [self.heightAnchor constraintGreaterThanOrEqualToConstant:150],
     ]];
   }
   return self;
+}
+
+- (void)viewDidChangeEffectiveAppearance {
+  [super viewDidChangeEffectiveAppearance];
+  [self.effectiveAppearance performAsCurrentDrawingAppearance:^{
+    [[self.badgeView layer] setBackgroundColor:[[[NSColor windowBackgroundColor] colorWithAlphaComponent:0.9] CGColor]];
+  }];
 }
 
 - (BOOL)acceptsFirstMouse:(NSEvent *)event { return YES; }
@@ -303,14 +157,17 @@ static const CGFloat kListWidth = 270;
 @property (strong) ConfigurationSlotCanvas *canvas;
 @property (strong) NSSearchField *search;
 @property (strong) NSPopUpButton *screenPopup;
-@property (strong) NSPopUpButton *gridPopup;
+@property (strong) NSSegmentedControl *gridControl;
+@property (strong) NSTextField *editorTitle;
+@property (strong) NSTextField *changesLabel;
+@property (strong) NSView *changesPill;
+@property (strong) NSLayoutConstraint *canvasHeight;
 @property (strong) NSTextField *nameField;
 @property (strong) NSArray<NSTextField *> *valueFields;
 @property (strong) NSTextField *messageLabel;
-@property (strong) NSTextField *hintLabel;
 @property (strong) NSButton *cancelButton;
 @property (strong) NSButton *saveButton;
-@property (strong) NSPopover *presetsPopover;
+@property (assign) BOOL lastEditing;
 // What's being edited: an existing custom slot, or a new one. Nothing selected means the gallery shows.
 @property (copy) NSString *selectedName;
 @property (assign) BOOL selectedIsNew;
@@ -379,7 +236,7 @@ static const CGFloat kListWidth = 270;
 }
 
 // The gallery: search on top, a card for each slot and one to make a new one,
-// and, under a line, the presets.
+
 - (void)buildGalleryPage {
   self.search = [[NSSearchField alloc] init];
   [self.search setPlaceholderString:@"Search slots"];
@@ -413,86 +270,41 @@ static const CGFloat kListWidth = 270;
     [document.trailingAnchor constraintEqualToAnchor:clip.trailingAnchor],
   ]];
 
-  // The presets, in a row of their own under a line.
-  NSBox *line = [[NSBox alloc] init];
-  [line setBoxType:NSBoxSeparator];
-  NSImageView *lock = [NSImageView imageViewWithImage:[NSImage imageWithSystemSymbolName:@"lock" accessibilityDescription:nil]];
-  [lock setContentTintColor:[NSColor secondaryLabelColor]];
-  NSTextField *presetTitle = [NSTextField labelWithString:@"Built-in presets"];
-  [presetTitle setFont:[NSFont systemFontOfSize:13 weight:NSFontWeightMedium]];
-  NSTextField *presetNote = [self captionLabel:@"Halves, thirds and quarters, ready to use in shortcuts. They can't be changed."];
-  NSStackView *presetText = [NSStackView stackViewWithViews:@[presetTitle, presetNote]];
-  [presetText setOrientation:NSUserInterfaceLayoutOrientationVertical];
-  [presetText setAlignment:NSLayoutAttributeLeading];
-  [presetText setSpacing:1];
-  NSView *presetSpacer = [[NSView alloc] init];
-  [presetSpacer setContentHuggingPriority:1 forOrientation:NSLayoutConstraintOrientationHorizontal];
-  NSButton *presets = [self buttonTitled:@"View Presets" action:@selector(showPresets:)];
-  NSStackView *presetRow = [NSStackView stackViewWithViews:@[lock, presetText, presetSpacer, presets]];
-  [presetRow setSpacing:10];
-  [presetRow setAlignment:NSLayoutAttributeCenterY];
-
-  NSStackView *page = [NSStackView stackViewWithViews:@[top, scroll, line, presetRow]];
+  NSStackView *page = [NSStackView stackViewWithViews:@[top, scroll]];
   [page setOrientation:NSUserInterfaceLayoutOrientationVertical];
   [page setAlignment:NSLayoutAttributeLeading];
   [page setSpacing:12];
   [page setEdgeInsets:NSEdgeInsetsMake(8, 20, 16, 20)];
   [page setTranslatesAutoresizingMaskIntoConstraints:NO];
-  for (NSView *view in @[top, scroll, line, presetRow]) [[view.widthAnchor constraintEqualToAnchor:page.widthAnchor constant:-40] setActive:YES];
+  for (NSView *view in @[top, scroll]) [[view.widthAnchor constraintEqualToAnchor:page.widthAnchor constant:-40] setActive:YES];
   [[self.galleryRows.widthAnchor constraintEqualToAnchor:scroll.widthAnchor] setActive:YES];
   self.galleryPage = [[NSView alloc] init];
   [self pinView:page toEdgesOf:self.galleryPage];
 }
 
-// The editor: a back arrow, the preview and drag column on the left, the form on the right.
+// The editor: a header with the back button and the title, a card with the form on the
+// left, the canvas and its view toolbar on the right, and under a line the save bar.
 - (void)buildEditorPage {
-  NSButton *back = [NSButton buttonWithTitle:@"Custom slots" target:self action:@selector(backPressed:)];
+  NSButton *back = [NSButton buttonWithTitle:@"Slots" target:self action:@selector(backPressed:)];
   [back setImage:[NSImage imageWithSystemSymbolName:@"chevron.left" accessibilityDescription:@"Back"]];
   [back setImagePosition:NSImageLeft];
   [back setBordered:NO];
   [back setContentTintColor:[NSColor controlAccentColor]];
-  [back setFont:[NSFont systemFontOfSize:13 weight:NSFontWeightMedium]];
-  NSView *backSpacer = [[NSView alloc] init];
-  [backSpacer setContentHuggingPriority:1 forOrientation:NSLayoutConstraintOrientationHorizontal];
-  NSStackView *backRow = [NSStackView stackViewWithViews:@[back, backSpacer]];
+  [back setFont:[NSFont systemFontOfSize:15 weight:NSFontWeightMedium]];
+  self.editorTitle = [NSTextField labelWithString:@"Editing Slot"];
+  [self.editorTitle setFont:[NSFont systemFontOfSize:17 weight:NSFontWeightMedium]];
+  NSView *headerSpacer = [[NSView alloc] init];
+  [headerSpacer setContentHuggingPriority:1 forOrientation:NSLayoutConstraintOrientationHorizontal];
+  NSStackView *header = [NSStackView stackViewWithViews:@[back, self.editorTitle, headerSpacer]];
+  [header setSpacing:14];
+  [header setAlignment:NSLayoutAttributeCenterY];
+  [header setEdgeInsets:NSEdgeInsetsMake(14, 20, 4, 20)];
 
-  // Left: Preview on and Grid at the top of the canvas.
-  self.screenPopup = [[NSPopUpButton alloc] initWithFrame:NSZeroRect pullsDown:NO];
-  [self.screenPopup setTarget:self];
-  [self.screenPopup setAction:@selector(screenChanged:)];
-  self.gridPopup = [[NSPopUpButton alloc] initWithFrame:NSZeroRect pullsDown:NO];
-  for (NSArray *option in @[@[@"Off", @0], @[@"Halves", @2], @[@"Thirds", @3], @[@"Quarters", @4], @[@"Sixths", @6], @[@"Eighths", @8], @[@"Twelfths", @12]]) {
-    [self.gridPopup addItemWithTitle:option[0]];
-    [[self.gridPopup lastItem] setRepresentedObject:option[1]];
-  }
-  [self.gridPopup selectItemWithTitle:@"Quarters"];
-  [self.gridPopup setTarget:self];
-  [self.gridPopup setAction:@selector(gridChanged:)];
-  NSStackView *previewRow = [NSStackView stackViewWithViews:@[[self captioned:self.screenPopup with:@"Preview on"], [self captioned:self.gridPopup with:@"Grid"]]];
-  [previewRow setSpacing:12];
-  [previewRow setDistribution:NSStackViewDistributionFillEqually];
-  [previewRow setAlignment:NSLayoutAttributeTop];
-
-  self.canvas = [[ConfigurationSlotCanvas alloc] init];
-  [self.canvas setDelegate:self];
-  [self.canvas setTranslatesAutoresizingMaskIntoConstraints:NO];
-  [[self.canvas.heightAnchor constraintGreaterThanOrEqualToConstant:260] setActive:YES];
-  [self.canvas setContentHuggingPriority:1 forOrientation:NSLayoutConstraintOrientationVertical];
-  self.hintLabel = [self captionLabel:@"Drag the slot to move it, or its sides and corners to resize it. Hold ⌥ for free movement."];
-  [self.hintLabel setTextColor:[NSColor tertiaryLabelColor]];
-
-  NSStackView *previewColumn = [NSStackView stackViewWithViews:@[previewRow, self.canvas, self.hintLabel]];
-  [previewColumn setOrientation:NSUserInterfaceLayoutOrientationVertical];
-  [previewColumn setAlignment:NSLayoutAttributeLeading];
-  [previewColumn setSpacing:10];
-  [previewColumn setTranslatesAutoresizingMaskIntoConstraints:NO];
-  for (NSView *view in @[previewRow, self.canvas]) [[view.widthAnchor constraintEqualToAnchor:previewColumn.widthAnchor] setActive:YES];
-
-  // Right: the form, then Cancel and Save.
+  // Left: the form card.
   self.nameField = [NSTextField textFieldWithString:@""];
   [self.nameField setPlaceholderString:@"Name this slot"];
-  [self.nameField setFont:[NSFont systemFontOfSize:14 weight:NSFontWeightMedium]];
   [self.nameField setDelegate:self];
+  NSStackView *nameBlock = [self captioned:self.nameField with:@"Name"];
   self.valueFields = @[[self valueField:@"x"], [self valueField:@"y"], [self valueField:@"width"], [self valueField:@"height"]];
   NSArray *captions = @[@"x (from left)", @"y (from top)", @"Width", @"Height"];
   NSMutableArray *captioned = [NSMutableArray array];
@@ -500,47 +312,123 @@ static const CGFloat kListWidth = 270;
   NSStackView *positionRow = [NSStackView stackViewWithViews:@[captioned[0], captioned[1]]];
   NSStackView *sizeRow = [NSStackView stackViewWithViews:@[captioned[2], captioned[3]]];
   for (NSStackView *row in @[positionRow, sizeRow]) { [row setDistribution:NSStackViewDistributionFillEqually]; [row setSpacing:10]; [row setAlignment:NSLayoutAttributeTop]; }
-  NSStackView *nameBlock = [self captioned:self.nameField with:@"Name"];
-
+  NSBox *cardLine = [[NSBox alloc] init];
+  [cardLine setBoxType:NSBoxSeparator];
   self.messageLabel = [NSTextField wrappingLabelWithString:@""];
   [self.messageLabel setFont:[NSFont systemFontOfSize:11]];
+  NSStackView *cardContent = [NSStackView stackViewWithViews:@[nameBlock, cardLine, positionRow, sizeRow, self.messageLabel]];
+  [cardContent setOrientation:NSUserInterfaceLayoutOrientationVertical];
+  [cardContent setAlignment:NSLayoutAttributeLeading];
+  [cardContent setSpacing:12];
+  [cardContent setEdgeInsets:NSEdgeInsetsMake(14, 14, 14, 14)];
+  [cardContent setTranslatesAutoresizingMaskIntoConstraints:NO];
+  for (NSView *view in @[nameBlock, cardLine, positionRow, sizeRow, self.messageLabel]) [[view.widthAnchor constraintEqualToAnchor:cardContent.widthAnchor constant:-28] setActive:YES];
+  ConfigurationBlockView *card = [[ConfigurationBlockView alloc] init];
+  [card setTranslatesAutoresizingMaskIntoConstraints:NO];
+  [card addSubview:cardContent];
+  // The card is exactly as tall as its content, whatever room the page has.
+  [cardContent setContentHuggingPriority:NSLayoutPriorityRequired forOrientation:NSLayoutConstraintOrientationVertical];
+  [NSLayoutConstraint activateConstraints:@[
+    [cardContent.topAnchor constraintEqualToAnchor:card.topAnchor],
+    [cardContent.leadingAnchor constraintEqualToAnchor:card.leadingAnchor], [cardContent.trailingAnchor constraintEqualToAnchor:card.trailingAnchor],
+    [card.heightAnchor constraintEqualToAnchor:cardContent.heightAnchor],
+    [card.widthAnchor constraintEqualToConstant:230],
+  ]];
+
+  // Right: the canvas, and under it one line for the preview screen and the grid.
+  self.canvas = [[ConfigurationSlotCanvas alloc] init];
+  [self.canvas setDelegate:self];
+  [self.canvas setTranslatesAutoresizingMaskIntoConstraints:NO];
+  [self.canvas setContentHuggingPriority:1 forOrientation:NSLayoutConstraintOrientationHorizontal];
+
+  self.screenPopup = [[NSPopUpButton alloc] initWithFrame:NSZeroRect pullsDown:NO];
+  [self.screenPopup setControlSize:NSControlSizeSmall];
+  [self.screenPopup setTarget:self];
+  [self.screenPopup setAction:@selector(screenChanged:)];
+  self.gridControl = [NSSegmentedControl segmentedControlWithLabels:@[@"Off", @"2", @"3", @"4", @"6", @"8", @"12"] trackingMode:NSSegmentSwitchTrackingSelectOne target:self action:@selector(gridChanged:)];
+  [self.gridControl setControlSize:NSControlSizeSmall];
+  [self.gridControl setSelectedSegment:3];  // quarters
+  [self.gridControl setToolTip:@"The grid is made of this many equal parts, and the slot snaps to its lines"];
+  NSView *toolbarSpacer = [[NSView alloc] init];
+  [toolbarSpacer setContentHuggingPriority:1 forOrientation:NSLayoutConstraintOrientationHorizontal];
+  NSStackView *toolbarRow = [NSStackView stackViewWithViews:@[[self captionLabel:@"Preview on"], self.screenPopup, toolbarSpacer, [self captionLabel:@"Grid"], self.gridControl]];
+  [toolbarRow setSpacing:8];
+  [toolbarRow setAlignment:NSLayoutAttributeCenterY];
+  [toolbarRow setEdgeInsets:NSEdgeInsetsMake(6, 10, 6, 10)];
+  [toolbarRow setTranslatesAutoresizingMaskIntoConstraints:NO];
+  ConfigurationBlockView *toolbar = [[ConfigurationBlockView alloc] init];
+  [toolbar setTranslatesAutoresizingMaskIntoConstraints:NO];
+  [toolbar addSubview:toolbarRow];
+  [NSLayoutConstraint activateConstraints:@[
+    [toolbarRow.topAnchor constraintEqualToAnchor:toolbar.topAnchor], [toolbarRow.bottomAnchor constraintEqualToAnchor:toolbar.bottomAnchor],
+    [toolbarRow.leadingAnchor constraintEqualToAnchor:toolbar.leadingAnchor], [toolbarRow.trailingAnchor constraintEqualToAnchor:toolbar.trailingAnchor],
+  ]];
+  NSStackView *canvasColumn = [NSStackView stackViewWithViews:@[self.canvas, toolbar]];
+  [canvasColumn setOrientation:NSUserInterfaceLayoutOrientationVertical];
+  [canvasColumn setAlignment:NSLayoutAttributeLeading];
+  [canvasColumn setSpacing:8];
+  for (NSView *view in @[self.canvas, toolbar]) [[view.widthAnchor constraintEqualToAnchor:canvasColumn.widthAnchor] setActive:YES];
+
+  // The card keeps the height of its content, at the top; the space below it stays empty.
+  NSView *cardHolder = [[NSView alloc] init];
+  [cardHolder setTranslatesAutoresizingMaskIntoConstraints:NO];
+  [cardHolder addSubview:card];
+  [NSLayoutConstraint activateConstraints:@[
+    [card.topAnchor constraintEqualToAnchor:cardHolder.topAnchor], [card.leadingAnchor constraintEqualToAnchor:cardHolder.leadingAnchor],
+    [card.trailingAnchor constraintEqualToAnchor:cardHolder.trailingAnchor],
+    [cardHolder.widthAnchor constraintEqualToConstant:230],
+  ]];
+  NSStackView *columns = [NSStackView stackViewWithViews:@[cardHolder, canvasColumn]];
+  [columns setSpacing:16];
+  [columns setAlignment:NSLayoutAttributeTop];
+  // Both columns start at the top and take the height their content needs.
+  [[cardHolder.topAnchor constraintEqualToAnchor:columns.topAnchor] setActive:YES];
+  [[canvasColumn.topAnchor constraintEqualToAnchor:columns.topAnchor] setActive:YES];
+  [columns setEdgeInsets:NSEdgeInsetsMake(8, 20, 16, 20)];
+  [columns setContentHuggingPriority:1 forOrientation:NSLayoutConstraintOrientationVertical];
+
+  // The save bar, under a line: whether there's anything to save, then Cancel and Save.
+  NSBox *saveLine = [[NSBox alloc] init];
+  [saveLine setBoxType:NSBoxSeparator];
+  self.changesLabel = [NSTextField labelWithString:@"No changes"];
+  [self.changesLabel setFont:[NSFont systemFontOfSize:11 weight:NSFontWeightMedium]];
+  [self.changesLabel setTranslatesAutoresizingMaskIntoConstraints:NO];
+  self.changesPill = [[NSView alloc] init];
+  [self.changesPill setWantsLayer:YES];
+  [[self.changesPill layer] setCornerRadius:10];
+  [self.changesPill setTranslatesAutoresizingMaskIntoConstraints:NO];
+  [self.changesPill addSubview:self.changesLabel];
+  [NSLayoutConstraint activateConstraints:@[
+    [self.changesLabel.leadingAnchor constraintEqualToAnchor:self.changesPill.leadingAnchor constant:10], [self.changesLabel.trailingAnchor constraintEqualToAnchor:self.changesPill.trailingAnchor constant:-10],
+    [self.changesLabel.topAnchor constraintEqualToAnchor:self.changesPill.topAnchor constant:3], [self.changesLabel.bottomAnchor constraintEqualToAnchor:self.changesPill.bottomAnchor constant:-3],
+  ]];
   self.cancelButton = [self buttonTitled:@"Cancel" action:@selector(cancelPressed:)];
   self.saveButton = [self buttonTitled:@"Save" action:@selector(savePressed:)];
   [self.saveButton setKeyEquivalent:@"\r"];
-  NSStackView *actions = [NSStackView stackViewWithViews:@[self.cancelButton, self.saveButton]];
-  [actions setDistribution:NSStackViewDistributionFillEqually];
-  [actions setSpacing:8];
+  NSView *barSpacer = [[NSView alloc] init];
+  [barSpacer setContentHuggingPriority:1 forOrientation:NSLayoutConstraintOrientationHorizontal];
+  NSStackView *saveBar = [NSStackView stackViewWithViews:@[self.changesPill, barSpacer, self.cancelButton, self.saveButton]];
+  [saveBar setSpacing:8];
+  [saveBar setAlignment:NSLayoutAttributeCenterY];
+  [saveBar setEdgeInsets:NSEdgeInsetsMake(10, 20, 12, 20)];
 
-  NSView *formSpacer = [[NSView alloc] init];
-  [formSpacer setContentHuggingPriority:1 forOrientation:NSLayoutConstraintOrientationVertical];
-  for (NSView *view in @[nameBlock, positionRow, sizeRow, self.messageLabel, actions]) [view setContentHuggingPriority:NSLayoutPriorityRequired forOrientation:NSLayoutConstraintOrientationVertical];
-  NSStackView *formColumn = [NSStackView stackViewWithViews:@[nameBlock, positionRow, sizeRow, formSpacer, self.messageLabel, actions]];
-  [formColumn setOrientation:NSUserInterfaceLayoutOrientationVertical];
-  [formColumn setAlignment:NSLayoutAttributeLeading];
-  [formColumn setSpacing:14];
-  [formColumn setTranslatesAutoresizingMaskIntoConstraints:NO];
-  [[formColumn.widthAnchor constraintEqualToConstant:230] setActive:YES];
-  for (NSView *view in @[nameBlock, positionRow, sizeRow, self.messageLabel, actions]) [[view.widthAnchor constraintEqualToAnchor:formColumn.widthAnchor] setActive:YES];
-
-  NSStackView *columns = [NSStackView stackViewWithViews:@[previewColumn, formColumn]];
-  [columns setSpacing:20];
-  [columns setAlignment:NSLayoutAttributeTop];
-  [columns setTranslatesAutoresizingMaskIntoConstraints:NO];
-  [[formColumn.topAnchor constraintEqualToAnchor:columns.topAnchor] setActive:YES];
-  [[formColumn.bottomAnchor constraintEqualToAnchor:columns.bottomAnchor] setActive:YES];
-  [[previewColumn.topAnchor constraintEqualToAnchor:columns.topAnchor] setActive:YES];
-  [previewColumn setContentHuggingPriority:1 forOrientation:NSLayoutConstraintOrientationHorizontal];
-  [columns setContentHuggingPriority:1 forOrientation:NSLayoutConstraintOrientationVertical];
-
-  NSStackView *page = [NSStackView stackViewWithViews:@[backRow, columns]];
-  [page setOrientation:NSUserInterfaceLayoutOrientationVertical];
-  [page setAlignment:NSLayoutAttributeLeading];
-  [page setSpacing:10];
-  [page setEdgeInsets:NSEdgeInsetsMake(8, 20, 16, 20)];
-  [page setTranslatesAutoresizingMaskIntoConstraints:NO];
-  for (NSView *view in @[backRow, columns]) [[view.widthAnchor constraintEqualToAnchor:page.widthAnchor constant:-40] setActive:YES];
+  // Laid out with constraints: the columns take whatever height is left between the header and the save bar.
   self.editorPage = [[NSView alloc] init];
-  [self pinView:page toEdgesOf:self.editorPage];
+  for (NSView *view in @[header, columns, saveLine, saveBar]) {
+    [view setTranslatesAutoresizingMaskIntoConstraints:NO];
+    [self.editorPage addSubview:view];
+    [[view.leadingAnchor constraintEqualToAnchor:self.editorPage.leadingAnchor] setActive:YES];
+    [[view.trailingAnchor constraintEqualToAnchor:self.editorPage.trailingAnchor] setActive:YES];
+  }
+  [NSLayoutConstraint activateConstraints:@[
+    [header.topAnchor constraintEqualToAnchor:self.editorPage.topAnchor],
+    [columns.topAnchor constraintEqualToAnchor:header.bottomAnchor],
+    [columns.bottomAnchor constraintEqualToAnchor:saveLine.topAnchor],
+    [saveLine.bottomAnchor constraintEqualToAnchor:saveBar.topAnchor],
+    [saveBar.bottomAnchor constraintEqualToAnchor:self.editorPage.bottomAnchor],
+    [header.heightAnchor constraintEqualToConstant:48],   // fixed, so the columns are the part that stretches
+    [saveBar.heightAnchor constraintEqualToConstant:48],
+  ]];
 }
 
 #pragma mark - Model
@@ -659,8 +547,9 @@ static const CGFloat kListWidth = 270;
   for (SlateSlot *slot in [self customSlots]) {
     if ([query length] > 0 && ![slot.name.lowercaseString containsString:query]) continue;
     BOOL valid = !CGRectIsNull(slot.rect);
-    ConfigurationSlotCard *card = [[ConfigurationSlotCard alloc] initWithName:slot.name summary:valid ? [slot summary] : @"Written as a formula"
-                                                                         rect:slot.rect valid:valid removable:YES];
+    NSString *badge = valid ? [NSString stringWithFormat:@"%@ × %@", [self wholePercent:slot.rect.size.width], [self wholePercent:slot.rect.size.height]] : @"formula";
+    ConfigurationSlotCard *card = [[ConfigurationSlotCard alloc] initWithName:slot.name badge:badge usage:[self usageTextForSlotNamed:slot.name]
+                                                                         rect:slot.rect valid:valid];
     NSString *name = slot.name;
     if (valid) card.onOpen = ^{ [weakSelf selectSlotNamed:name]; };
     card.onRemove = ^{ [weakSelf removeSlotNamed:name]; };
@@ -686,19 +575,17 @@ static const CGFloat kListWidth = 270;
   }
 }
 
-#pragma mark - Presets
+// "50" for half of the screen, "33.3" for a third, as a size badge.
+- (NSString *)wholePercent:(CGFloat)fraction {
+  double percent = round(fraction * 1000) / 10;
+  return percent == floor(percent) ? [NSString stringWithFormat:@"%.0f", percent] : [NSString stringWithFormat:@"%.1f", percent];
+}
 
-- (void)showPresets:(NSButton *)sender {
-  if (self.presetsPopover == nil) {
-    NSViewController *controller = [[NSViewController alloc] init];
-    ConfigurationPresetsView *content = [[ConfigurationPresetsView alloc] init];
-    [controller setView:content];
-    self.presetsPopover = [[NSPopover alloc] init];
-    [self.presetsPopover setBehavior:NSPopoverBehaviorTransient];
-    [self.presetsPopover setContentViewController:controller];
-  }
-  if ([self.presetsPopover isShown]) { [self.presetsPopover close]; return; }
-  [self.presetsPopover showRelativeToRect:[sender bounds] ofView:sender preferredEdge:NSRectEdgeMaxY];
+// "3 shortcuts", "1 shortcut", or "Not used yet".
+- (NSString *)usageTextForSlotNamed:(NSString *)name {
+  NSUInteger uses = [self usesOfSlotNamed:name];
+  if (uses == 0) return @"Not used yet";
+  return [NSString stringWithFormat:@"%lu shortcut%@", (unsigned long)uses, uses == 1 ? @"" : @"s"];
 }
 
 #pragma mark - The editor
@@ -717,7 +604,12 @@ static const CGFloat kListWidth = 270;
 }
 
 - (void)screenChanged:(id)sender {
-  self.canvas.aspect = [[[self.screenPopup selectedItem] representedObject] doubleValue];
+  CGFloat aspect = [[[self.screenPopup selectedItem] representedObject] doubleValue];
+  self.canvas.aspect = aspect;
+  // The canvas is as tall as the screen it shows (plus the ruler), not as tall as the window.
+  if (self.canvasHeight != nil) self.canvasHeight.active = NO;
+  self.canvasHeight = [self.canvas.heightAnchor constraintEqualToAnchor:self.canvas.widthAnchor multiplier:1 / MAX(self.canvas.aspect, 0.2) constant:36];
+  self.canvasHeight.active = YES;
 }
 
 // Shows the gallery, or the editor when a slot is open, and fills in the editor.
@@ -725,13 +617,21 @@ static const CGFloat kListWidth = 270;
   BOOL has = self.selectedName != nil;
   [self.galleryPage setHidden:has];
   [self.editorPage setHidden:!has];
+  if (has != self.lastEditing) {
+    self.lastEditing = has;
+    if ([self.delegate respondsToSelector:@selector(slotsView:didChangeEditing:)]) [self.delegate slotsView:self didChangeEditing:has];  // the window hides its header and bottom bar while a slot is open
+  }
   self.canvas.hasSlot = has;
   self.canvas.editable = has;
   self.canvas.title = self.draftName;
   if (has) self.canvas.rect = self.draftRect;
+  [self.editorTitle setStringValue:self.selectedIsNew ? @"New Slot" : @"Editing Slot"];
   BOOL dirty = [self hasUnsavedChanges];
   NSString *problem = [self problem];
   [self.saveButton setEnabled:dirty && problem == nil];
+  [self.changesLabel setStringValue:dirty ? @"● Unsaved changes" : @"No changes"];
+  [self.changesLabel setTextColor:dirty ? [NSColor systemOrangeColor] : [NSColor tertiaryLabelColor]];
+  [[self.changesPill layer] setBackgroundColor:dirty ? [[[NSColor systemOrangeColor] colorWithAlphaComponent:0.16] CGColor] : [[NSColor clearColor] CGColor]];
   if (has && [self.nameField currentEditor] == nil && ![[self.nameField stringValue] isEqualToString:self.draftName ?: @""]) [self.nameField setStringValue:self.draftName ?: @""];
   if (has) {
     NSArray *numbers = @[@(self.draftRect.origin.x), @(self.draftRect.origin.y), @(self.draftRect.size.width), @(self.draftRect.size.height)];
@@ -741,7 +641,8 @@ static const CGFloat kListWidth = 270;
     }
   }
   if (!dirty) {
-    [self.messageLabel setStringValue:@""];
+    [self.messageLabel setStringValue:@"Drag the slot on the canvas, or type exact values."];
+    [self.messageLabel setTextColor:[NSColor tertiaryLabelColor]];
   } else if (problem != nil) {
     [self.messageLabel setStringValue:problem];
     [self.messageLabel setTextColor:[NSColor systemOrangeColor]];
@@ -789,7 +690,9 @@ static const CGFloat kListWidth = 270;
 }
 
 - (void)gridChanged:(id)sender {
-  self.canvas.gridDivisions = [[[self.gridPopup selectedItem] representedObject] integerValue];
+  static const NSInteger kDivisions[] = {0, 2, 3, 4, 6, 8, 12};
+  NSInteger segment = [self.gridControl selectedSegment];
+  self.canvas.gridDivisions = segment >= 0 && segment < 7 ? kDivisions[segment] : 4;
 }
 - (void)newSlotPressed:(id)sender { [self startNewSlot]; }
 - (void)cancelPressed:(id)sender { [self closeEditor]; }

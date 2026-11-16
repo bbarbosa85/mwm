@@ -2,9 +2,9 @@
 //  ConfigurationSlotsView.h
 //  Slate
 //
-//  The Slots page: a list of slots (locked presets and the user's own) next to
-//  a canvas where a custom slot is dragged and resized, a name, exact values
-//  under "Advanced", and Save and Revert when something has changed.
+//  The Custom Slots page: a gallery of the user's own slots, and an editor for
+//  one slot: a canvas to drag and resize it on, a name, exact values, and Save
+//  and Cancel. The built-in presets have their own page.
 //
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -28,6 +28,9 @@ NS_ASSUME_NONNULL_BEGIN
 @protocol ConfigurationSlotsViewDelegate <NSObject>
 // The positions in the document were changed; save it.
 - (void)slotsViewDidChangeDocument:(ConfigurationSlotsView *)view;
+@optional
+// A slot was opened for editing (YES) or closed (NO). The window hides its header and bottom bar while one is open.
+- (void)slotsView:(ConfigurationSlotsView *)view didChangeEditing:(BOOL)editing;
 @end
 
 @interface ConfigurationSlotsView : NSView

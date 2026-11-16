@@ -33,6 +33,8 @@ typedef NS_ENUM(NSInteger, SaveState) {
 @interface ConfigurationWindowController () <ConfigurationFormViewDelegate>
 @property (strong) ConfigurationFormView *formView;
 @property (strong) ConfigurationStatusBar *bar;
+@property (strong) NSLayoutConstraint *formBottomAboveBar;
+@property (strong) NSLayoutConstraint *formBottomAtWindow;
 @property (strong) SlateConfigValidationResult *lastResult;
 @property (assign) SaveState saveState;
 // The file's text as read or last written (nil if there's no file).
@@ -84,11 +86,14 @@ typedef NS_ENUM(NSInteger, SaveState) {
   self.bar = [[ConfigurationStatusBar alloc] initWithTarget:self path:[[self configPath] stringByAbbreviatingWithTildeInPath]];
   [content addSubview:self.formView];
   [content addSubview:self.bar];
+  // The form ends at the bottom bar, or at the window's edge while a sublevel page hides the bar.
+  self.formBottomAboveBar = [self.formView.bottomAnchor constraintEqualToAnchor:self.bar.topAnchor];
+  self.formBottomAtWindow = [self.formView.bottomAnchor constraintEqualToAnchor:content.bottomAnchor];
   [NSLayoutConstraint activateConstraints:@[
     [self.formView.topAnchor constraintEqualToAnchor:content.topAnchor],
     [self.formView.leadingAnchor constraintEqualToAnchor:content.leadingAnchor],
     [self.formView.trailingAnchor constraintEqualToAnchor:content.trailingAnchor],
-    [self.formView.bottomAnchor constraintEqualToAnchor:self.bar.topAnchor],
+    self.formBottomAboveBar,
     [self.bar.leadingAnchor constraintEqualToAnchor:content.leadingAnchor],
     [self.bar.trailingAnchor constraintEqualToAnchor:content.trailingAnchor],
     [self.bar.bottomAnchor constraintEqualToAnchor:content.bottomAnchor],
@@ -186,6 +191,13 @@ typedef NS_ENUM(NSInteger, SaveState) {
                      withApplicationAtURL:textEdit
                             configuration:[NSWorkspaceOpenConfiguration configuration]
                         completionHandler:nil];
+}
+
+// A sublevel page (editing a slot) has its own Save and Cancel, so the saved/apply/close bar steps aside.
+- (void)formView:(ConfigurationFormView *)formView didChangeSublevel:(BOOL)active {
+  [self.bar setHidden:active];
+  if (active) { self.formBottomAboveBar.active = NO; self.formBottomAtWindow.active = YES; }
+  else { self.formBottomAtWindow.active = NO; self.formBottomAboveBar.active = YES; }
 }
 
 - (void)formViewWantsFinder:(ConfigurationFormView *)formView {

@@ -31,4 +31,10 @@ NS_ASSUME_NONNULL_BEGIN
 @interface ConfigurationBlockView : NSView
 @end
 
+// A screen with a slot drawn on it (fractions of the screen, origin at the top left).
+@interface ConfigurationSlotThumbnail : NSView
+@property (assign) CGRect rect;
+@property (assign) BOOL valid;
+@end
+
 NS_ASSUME_NONNULL_END

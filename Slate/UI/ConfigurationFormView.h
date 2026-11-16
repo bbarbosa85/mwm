@@ -53,6 +53,9 @@ typedef NS_ENUM(NSInteger, ConfigurationFormSection) {
 // or to read it again after fixing it.
 - (void)formViewWantsReload:(ConfigurationFormView *)formView;
 @optional
+// A page opened a sublevel (a slot being edited) or closed it. The window hides
+// its bottom bar while one is open.
+- (void)formView:(ConfigurationFormView *)formView didChangeSublevel:(BOOL)active;
 - (void)formViewWantsFinder:(ConfigurationFormView *)formView;
 // Launch at login isn't in the file, so the app answers for it.
 - (BOOL)formViewLaunchesAtLogin:(ConfigurationFormView *)formView;
@@ -73,6 +76,9 @@ typedef NS_ENUM(NSInteger, ConfigurationFormSection) {
 
 // Shown instead of the form when the file can't be edited as a form.
 - (void)showUnavailableMessage:(NSString *)message;
+
+// YES while a page has a sublevel open (the header is replaced by its back button).
+@property (readonly) BOOL sublevelActive;
 
 // Shows and selects a binding (by index in the document) or a setting/alias (by name).
 - (void)revealBindingAtIndex:(NSUInteger)index;

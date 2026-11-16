@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		5E1A0C0B2D00000000000693 /* ConfigurationPresetsView.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D00000000000692 /* ConfigurationPresetsView.m */; };
 		5E1A0C0B2D00000000000683 /* ConfigurationSlotCanvas.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D00000000000682 /* ConfigurationSlotCanvas.m */; };
 		5E1A0C0B2D00000000000687 /* ConfigurationSlotsView.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D00000000000686 /* ConfigurationSlotsView.m */; };
 		5E1A0C0B2D00000000000689 /* TestConfigurationSlots.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D00000000000688 /* TestConfigurationSlots.m */; };
@@ -150,6 +151,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		5E1A0C0B2D00000000000690 /* ConfigurationPresetsView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UI/ConfigurationPresetsView.h; sourceTree = "<group>"; };
+		5E1A0C0B2D00000000000692 /* ConfigurationPresetsView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UI/ConfigurationPresetsView.m; sourceTree = "<group>"; };
 		5E1A0C0B2D00000000000680 /* ConfigurationSlotCanvas.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UI/ConfigurationSlotCanvas.h; sourceTree = "<group>"; };
 		5E1A0C0B2D00000000000682 /* ConfigurationSlotCanvas.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UI/ConfigurationSlotCanvas.m; sourceTree = "<group>"; };
 		5E1A0C0B2D00000000000684 /* ConfigurationSlotsView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UI/ConfigurationSlotsView.h; sourceTree = "<group>"; };
@@ -695,6 +698,8 @@
 				5E1A0C0B2D00000000000682 /* ConfigurationSlotCanvas.m */,
 				5E1A0C0B2D00000000000684 /* ConfigurationSlotsView.h */,
 				5E1A0C0B2D00000000000686 /* ConfigurationSlotsView.m */,
+				5E1A0C0B2D00000000000690 /* ConfigurationPresetsView.h */,
+				5E1A0C0B2D00000000000692 /* ConfigurationPresetsView.m */,
 				5E1A0C0B2D00000000000510 /* ConfigurationStatusBar.h */,
 				5E1A0C0B2D00000000000412 /* ConfigurationFormView.m */,
 				5E1A0C0B2D00000000000410 /* ConfigurationFormView.h */,
@@ -863,6 +868,7 @@
 				5E1A0C0B2D00000000000667 /* ConfigurationDisplaysView.m in Sources */,
 				5E1A0C0B2D00000000000683 /* ConfigurationSlotCanvas.m in Sources */,
 				5E1A0C0B2D00000000000687 /* ConfigurationSlotsView.m in Sources */,
+				5E1A0C0B2D00000000000693 /* ConfigurationPresetsView.m in Sources */,
 				5E1A0C0B2D00000000000413 /* ConfigurationFormView.m in Sources */,
 				5E1A0C0B2D0000000000031B /* ConfigurationWindowController.m in Sources */,
 				5E1A0C0B2D00000000000313 /* SlateConfigValidator.m in Sources */,

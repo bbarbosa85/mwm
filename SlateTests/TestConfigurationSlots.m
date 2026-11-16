@@ -80,17 +80,51 @@ static NSString *const kConfig =
   XCTAssertTrue([[page valueForKey:@"galleryPage"] isHidden]);
 }
 
-- (void)testThePresetsPopoverListsAllNineteen {
-  NSView *content = [[NSClassFromString(@"ConfigurationPresetsView") alloc] initWithFrame:NSMakeRect(0, 0, 440, 700)];
-  NSUInteger cards = 0;
-  NSMutableArray *queue = [NSMutableArray arrayWithObject:content];
+- (void)testThePresetsPageListsAllNineteen {
+  NSView *page = [[NSClassFromString(@"ConfigurationPresetsView") alloc] initWithFrame:NSMakeRect(0, 0, 700, 600)];
+  NSMutableArray *names = [NSMutableArray array];
+  NSMutableArray *queue = [NSMutableArray arrayWithObject:page];
   while ([queue count] > 0) {
     NSView *view = [queue lastObject];
     [queue removeLastObject];
-    if ([NSStringFromClass([view class]) containsString:@"SlotCell"]) cards++;
+    if ([view isKindOfClass:[NSButton class]] && [SlateSlots presetNamed:[view identifier]] != nil) [names addObject:[view identifier]];
     [queue addObjectsFromArray:[view subviews]];
   }
-  XCTAssertEqual(cards, 19u);
+  XCTAssertEqual([names count], 19u);
+  XCTAssertEqual([[NSSet setWithArray:names] count], 19u);
+}
+
+- (void)testClickingAPresetNameCopiesIt {
+  NSView *page = [[NSClassFromString(@"ConfigurationPresetsView") alloc] initWithFrame:NSMakeRect(0, 0, 700, 600)];
+  NSMutableArray *queue = [NSMutableArray arrayWithObject:page];
+  NSButton *third2 = nil;
+  while ([queue count] > 0) {
+    NSView *view = [queue lastObject];
+    [queue removeLastObject];
+    if ([view isKindOfClass:[NSButton class]] && [[view identifier] isEqualToString:@"third2"]) third2 = (NSButton *)view;
+    [queue addObjectsFromArray:[view subviews]];
+  }
+  [NSApp sendAction:[third2 action] to:[third2 target] from:third2];
+  XCTAssertEqualObjects([[NSPasteboard generalPasteboard] stringForType:NSPasteboardTypeString], @"${third2}");
+}
+
+- (void)testCardsSayHowManyShortcutsUseTheSlot {
+  SlateConfigDocument *doc;
+  ConfigurationSlotsView *page = [self pageWithConfig:
+      @"positions:\n  used: move screenOriginX;screenOriginY screenSizeX/5;screenSizeY\n  twice: move screenOriginX+screenSizeX/5;screenOriginY screenSizeX/5;screenSizeY\n  idle: move screenOriginX+(2*screenSizeX/5);screenOriginY screenSizeX/5;screenSizeY\n"
+       "bindings:\n  - key: a\n    mods: ctrl\n    action: ${used}\n  - key: b\n    mods: ctrl\n    action: ${twice}\n  - key: c\n    mods: ctrl\n    action: ${twice}\n" document:&doc];
+  NSMutableArray *texts = [NSMutableArray array];
+  NSMutableArray *queue = [NSMutableArray arrayWithObject:page];
+  while ([queue count] > 0) {
+    NSView *view = [queue lastObject];
+    [queue removeLastObject];
+    if ([view isKindOfClass:[NSTextField class]]) [texts addObject:[(NSTextField *)view stringValue]];
+    [queue addObjectsFromArray:[view subviews]];
+  }
+  XCTAssertTrue([texts containsObject:@"1 shortcut"]);
+  XCTAssertTrue([texts containsObject:@"2 shortcuts"]);
+  XCTAssertTrue([texts containsObject:@"Not used yet"]);
+  XCTAssertTrue([texts containsObject:@"20 × 100"], @"the size badge");
 }
 
 - (void)testOpensOnTheGallery {
@@ -115,6 +149,38 @@ static NSString *const kConfig =
   [page save];
   XCTAssertNil(page.selectedName, @"saving goes back to the gallery");
   XCTAssertFalse([[page valueForKey:@"galleryPage"] isHidden]);
+}
+
+- (NSString *)textOf:(NSString *)key in:(ConfigurationSlotsView *)page {
+  return [[page valueForKey:key] stringValue];
+}
+
+- (void)testTheEditorTitleAndSaveBarSayWhatIsGoingOn {
+  SlateConfigDocument *doc;
+  ConfigurationSlotsView *page = [self pageWithConfig:kConfig document:&doc];
+  [page selectSlotNamed:@"centre"];
+  XCTAssertEqualObjects([self textOf:@"editorTitle" in:page], @"Editing Slot");
+  XCTAssertEqualObjects([self textOf:@"changesLabel" in:page], @"No changes");
+  XCTAssertFalse([[page valueForKey:@"saveButton"] isEnabled], @"Save is dimmed until something changes");
+  page.draftRect = CGRectMake(0.1, 0, 0.5, 1);
+  [page performSelector:NSSelectorFromString(@"refresh")];
+  XCTAssertTrue([[self textOf:@"changesLabel" in:page] containsString:@"Unsaved changes"]);
+  XCTAssertTrue([[page valueForKey:@"saveButton"] isEnabled]);
+  [page startNewSlot];
+  XCTAssertEqualObjects([self textOf:@"editorTitle" in:page], @"New Slot");
+}
+
+- (void)testTheGridControlSetsTheSnappingGrid {
+  SlateConfigDocument *doc;
+  ConfigurationSlotsView *page = [self pageWithConfig:kConfig document:&doc];
+  NSSegmentedControl *grid = [page valueForKey:@"gridControl"];
+  XCTAssertEqual(page.canvas.gridDivisions, 4, @"quarters to start with");
+  [grid setSelectedSegment:2];  // 3
+  [NSApp sendAction:[grid action] to:[grid target] from:grid];
+  XCTAssertEqual(page.canvas.gridDivisions, 3);
+  [grid setSelectedSegment:0];  // Off
+  [NSApp sendAction:[grid action] to:[grid target] from:grid];
+  XCTAssertEqual(page.canvas.gridDivisions, 0);
 }
 
 - (void)testCancelThrowsAwayTheChangesAndGoesBack {
