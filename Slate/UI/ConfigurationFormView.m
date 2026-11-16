@@ -23,6 +23,9 @@
 #import "ConfigurationActionView.h"
 #import "ConfigurationSettingsView.h"
 #import "ConfigurationDisplaysView.h"
+#import "ConfigurationSlotsView.h"
+#import "ConfigurationPresetsView.h"
+#import "SlateSlots.h"
 
 static NSString *const kColEnabled = @"enabled";
 static NSString *const kColModifiers = @"mods";
@@ -149,7 +152,7 @@ static NSString *DisplayValue(id value) {
   return [value description] ?: @"";
 }
 
-@interface ConfigurationFormView () <ConfigurationShortcutViewDelegate, ConfigurationActionViewDelegate, ConfigurationSettingsViewDelegate, ConfigurationDisplaysViewDelegate>
+@interface ConfigurationFormView () <ConfigurationShortcutViewDelegate, ConfigurationActionViewDelegate, ConfigurationSettingsViewDelegate, ConfigurationDisplaysViewDelegate, ConfigurationSlotsViewDelegate>
 @property (strong) NSTableView *sidebar;
 @property (strong) NSView *detail;
 @property (strong) NSTextField *titleLabel;
@@ -162,6 +165,12 @@ static NSString *DisplayValue(id value) {
 @property (strong) NSLayoutConstraint *filterBarHeight;
 @property (strong) ConfigurationSettingsView *settingsView;
 @property (strong) ConfigurationDisplaysView *displaysView;
+@property (strong) ConfigurationSlotsView *slotsView;
+@property (strong) ConfigurationPresetsView *presetsView;
+@property (strong) NSSegmentedControl *slotsSwitcher;
+@property (strong) NSLayoutConstraint *slotsTopBelowHeader;
+@property (strong) NSLayoutConstraint *slotsTopFull;
+@property (assign) BOOL sublevelActive;
 @property (strong) NSView *placeholderView;
 @property (strong) NSTextField *placeholderTitle;
 @property (strong) NSTableView *table;
@@ -267,6 +276,21 @@ static NSString *DisplayValue(id value) {
   [self.placeholderView addSubview:self.placeholderTitle];
   [self.placeholderView setHidden:YES];
 
+  self.presetsView = [[ConfigurationPresetsView alloc] init];
+  [self.presetsView setTranslatesAutoresizingMaskIntoConstraints:NO];
+  [self.presetsView setHidden:YES];
+
+  self.slotsSwitcher = [NSSegmentedControl segmentedControlWithLabels:@[@"Custom", @"Presets"] trackingMode:NSSegmentSwitchTrackingSelectOne target:self action:@selector(slotsModeChanged:)];
+  [self.slotsSwitcher setSelectedSegment:0];
+  [self.slotsSwitcher setSegmentStyle:NSSegmentStyleRounded];
+  [self.slotsSwitcher setTranslatesAutoresizingMaskIntoConstraints:NO];
+  [self.slotsSwitcher setHidden:YES];
+
+  self.slotsView = [[ConfigurationSlotsView alloc] init];
+  [self.slotsView setTranslatesAutoresizingMaskIntoConstraints:NO];
+  [self.slotsView setDelegate:self];
+  [self.slotsView setHidden:YES];
+
   self.displaysView = [[ConfigurationDisplaysView alloc] init];
   [self.displaysView setTranslatesAutoresizingMaskIntoConstraints:NO];
   [self.displaysView setDelegate:self];
@@ -277,7 +301,7 @@ static NSString *DisplayValue(id value) {
   [self.settingsView setDelegate:self];
   [self.settingsView setHidden:YES];
 
-  for (NSView *view in @[self.titleLabel, self.infoLabel, self.addButton, self.removeButton, self.filterBar, self.tableScroll, self.placeholderView, self.settingsView, self.displaysView]) {
+  for (NSView *view in @[self.titleLabel, self.infoLabel, self.addButton, self.removeButton, self.filterBar, self.tableScroll, self.placeholderView, self.settingsView, self.displaysView, self.slotsView, self.presetsView, self.slotsSwitcher]) {
     [self.detail addSubview:view];
   }
 
@@ -299,6 +323,10 @@ static NSString *DisplayValue(id value) {
     [self addSubview:view];
   }
 
+  // The Custom Slots page sits under the header, or at the very top while a slot is being edited.
+  self.slotsTopBelowHeader = [self.slotsView.topAnchor constraintEqualToAnchor:self.infoLabel.bottomAnchor constant:6];
+  self.slotsTopFull = [self.slotsView.topAnchor constraintEqualToAnchor:self.detail.topAnchor];
+  self.slotsTopBelowHeader.active = YES;
   self.filterBarHeight = [self.filterBar.heightAnchor constraintEqualToConstant:0];
   self.filterBarHeight.active = YES;
   [NSLayoutConstraint activateConstraints:@[
@@ -329,6 +357,15 @@ static NSString *DisplayValue(id value) {
     [self.filterBar.trailingAnchor constraintEqualToAnchor:self.detail.trailingAnchor],
     [self.filterControl.leadingAnchor constraintEqualToAnchor:self.filterBar.leadingAnchor constant:20],
     [self.filterControl.centerYAnchor constraintEqualToAnchor:self.filterBar.centerYAnchor],
+    [self.slotsSwitcher.trailingAnchor constraintEqualToAnchor:self.detail.trailingAnchor constant:-20],
+    [self.slotsSwitcher.centerYAnchor constraintEqualToAnchor:self.titleLabel.centerYAnchor constant:4],
+    [self.presetsView.topAnchor constraintEqualToAnchor:self.infoLabel.bottomAnchor constant:6],
+    [self.presetsView.bottomAnchor constraintEqualToAnchor:self.detail.bottomAnchor],
+    [self.presetsView.leadingAnchor constraintEqualToAnchor:self.detail.leadingAnchor],
+    [self.presetsView.trailingAnchor constraintEqualToAnchor:self.detail.trailingAnchor],
+    [self.slotsView.bottomAnchor constraintEqualToAnchor:self.detail.bottomAnchor],
+    [self.slotsView.leadingAnchor constraintEqualToAnchor:self.detail.leadingAnchor],
+    [self.slotsView.trailingAnchor constraintEqualToAnchor:self.detail.trailingAnchor],
     [self.displaysView.topAnchor constraintEqualToAnchor:self.infoLabel.bottomAnchor constant:6],
     [self.displaysView.bottomAnchor constraintEqualToAnchor:self.detail.bottomAnchor],
     [self.displaysView.leadingAnchor constraintEqualToAnchor:self.detail.leadingAnchor],
@@ -482,11 +519,15 @@ static NSString *DisplayValue(id value) {
   BOOL placeholder = IsPlaceholderSection(section);
   BOOL cards = IsSettingsSection(section);  // rows of switches and sliders instead of a table
   BOOL displays = section == ConfigurationFormSectionMonitors;
-  [self.addButton setHidden:placeholder || cards || displays];
-  [self.removeButton setHidden:placeholder || cards || displays];
-  [self.tableScroll setHidden:placeholder || cards || displays];
+  BOOL slots = section == ConfigurationFormSectionPositions;
+  [self.addButton setHidden:placeholder || cards || displays || slots];
+  [self.removeButton setHidden:placeholder || cards || displays || slots];
+  [self.tableScroll setHidden:placeholder || cards || displays || slots];
+  if (!slots) [self setSublevelActive:NO];  // leaving the page closes anything open on it
   [self.displaysView setHidden:!displays];
   self.displaysView.document = displays ? self.document : nil;
+  self.slotsView.document = slots ? self.document : nil;
+  [self showSlotsMode];
   [self.settingsView setHidden:!cards];
   if (cards) self.settingsView.page = section == ConfigurationFormSectionAdvanced ? ConfigurationSettingsPageAdvanced : ConfigurationSettingsPageGeneral;
   self.settingsView.document = cards ? self.document : nil;
@@ -699,12 +740,61 @@ static NSString *DisplayValue(id value) {
   [self documentChanged];
 }
 
+- (void)slotsViewDidChangeDocument:(ConfigurationSlotsView *)view {
+  [self documentChanged];
+}
+
+- (void)slotsView:(ConfigurationSlotsView *)view didChangeEditing:(BOOL)editing {
+  [self setSublevelActive:editing];
+}
+
+// The Custom | Presets switcher at the top right of the Slots title.
+- (void)slotsModeChanged:(NSSegmentedControl *)control {
+  [self showSlotsMode];
+}
+
+- (BOOL)showsPresets {
+  return [self.slotsSwitcher selectedSegment] == 1;
+}
+
+// Shows the user's own slots or the read-only presets, and the line under the title that goes with them.
+- (void)showSlotsMode {
+  BOOL slotsPage = self.selectedSection == ConfigurationFormSectionPositions;
+  BOOL presets = slotsPage && [self showsPresets];
+  [self.slotsView setHidden:!slotsPage || presets];
+  [self.presetsView setHidden:!presets];
+  [self.slotsSwitcher setHidden:!slotsPage || self.sublevelActive];
+  [self.infoLabel setStringValue:presets ? @"Built in. They can't be changed, so your own slots need different names." : @"Named window areas, used as ${name} in shortcuts."];
+}
+
+// While a slot is open its back button is the header, and the window's bottom bar goes away.
+- (void)setSublevelActive:(BOOL)active {
+  if (_sublevelActive == active) return;
+  _sublevelActive = active;
+  for (NSView *view in @[self.titleLabel, self.infoLabel]) [view setHidden:active];
+  [self.slotsSwitcher setHidden:active || self.selectedSection != ConfigurationFormSectionPositions];
+  if (active) { self.slotsTopBelowHeader.active = NO; self.slotsTopFull.active = YES; }
+  else { self.slotsTopFull.active = NO; self.slotsTopBelowHeader.active = YES; }
+  if ([self.delegate respondsToSelector:@selector(formView:didChangeSublevel:)]) [self.delegate formView:self didChangeSublevel:active];
+}
+
 #pragma mark - Actions
+
+// Every slot a shortcut can move to: the built-in ones, then the file's own.
+- (NSArray<SlateConfigEntry *> *)slotEntries {
+  NSMutableArray *entries = [NSMutableArray array];
+  NSSet *inFile = [NSSet setWithArray:[self.document.positions valueForKey:@"name"]];
+  for (SlateSlot *preset in [SlateSlots presets]) {
+    if (![inFile containsObject:preset.name]) [entries addObject:[SlateConfigEntry entryWithName:preset.name value:preset.formula]];
+  }
+  [entries addObjectsFromArray:self.document.positions];
+  return entries;
+}
 
 - (NSView *)actionCellForBinding:(SlateBindingEntry *)binding {
   ConfigurationActionView *view = [[ConfigurationActionView alloc] init];
   [view setDelegate:self];
-  [view setAction:binding.action ?: @"" positions:self.document.positions monitors:self.document.monitors];
+  [view setAction:binding.action ?: @"" positions:[self slotEntries] monitors:self.document.monitors];
   return view;
 }
 
@@ -1056,6 +1146,11 @@ static NSString *DisplayValue(id value) {
       if (![entry.name isEqualToString:name]) continue;
       [self setSelectedSection:section];
       [self selectRowObject:entry];
+      if (section == ConfigurationFormSectionPositions) {
+        [self.slotsSwitcher setSelectedSegment:0];
+        [self showSlotsMode];
+        [self.slotsView selectSlotNamed:name];
+      }
       return;
     }
   }

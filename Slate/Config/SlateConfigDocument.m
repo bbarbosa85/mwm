@@ -17,6 +17,7 @@
 
 #import "SlateConfigDocument.h"
 #import "SlateDisplays.h"
+#import "SlateSlots.h"
 #import "SlateYAML.h"
 
 NSString *const SlateConfigDocumentErrorDomain = @"SlateConfigDocumentErrorDomain";
@@ -387,6 +388,10 @@ static const NSUInteger kMaxAliasDepth = 20;
       table[entry.name] = section == self.monitors ? [SlateDisplays referenceForValue:ScalarText(entry.value) displays:displays] : ScalarText(entry.value);
     }
   }
+  // The built-in slots (${full}, ${lefthalf}, ...) work without being in the file.
+  for (SlateSlot *preset in [SlateSlots presets]) {
+    if (table[preset.name] == nil) table[preset.name] = preset.formula;
+  }
 
   NSMutableArray *settings = [NSMutableArray array];
   for (SlateConfigEntry *entry in self.settings) {
@@ -435,6 +440,9 @@ static const NSUInteger kMaxAliasDepth = 20;
       NSString *text = [entry.value description];
       table[entry.name] = section == self.monitors ? [SlateDisplays referenceForValue:text] : text;
     }
+  }
+  for (SlateSlot *preset in [SlateSlots presets]) {
+    if (table[preset.name] == nil) table[preset.name] = preset.formula;
   }
   NSRegularExpression *reference = [NSRegularExpression regularExpressionWithPattern:@"\\$\\{([^}]*)\\}" options:0 error:nil];
   NSString *result = text ?: @"";

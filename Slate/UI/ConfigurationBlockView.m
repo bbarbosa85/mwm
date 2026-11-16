@@ -41,3 +41,29 @@
   [self viewDidChangeEffectiveAppearance];
 }
 @end
+
+@implementation ConfigurationSlotThumbnail
+- (NSSize)intrinsicContentSize { return NSMakeSize(NSViewNoIntrinsicMetric, 84); }
+- (void)drawRect:(NSRect)dirtyRect {
+  NSRect bounds = NSInsetRect([self bounds], 1, 1);
+  CGFloat height = MIN(NSHeight(bounds), NSWidth(bounds) / 1.7), width = height * 1.7;
+  NSRect screen = NSMakeRect(NSMidX(bounds) - width / 2, NSMidY(bounds) - height / 2, width, height);
+  NSBezierPath *frame = [NSBezierPath bezierPathWithRoundedRect:screen xRadius:6 yRadius:6];
+  [[[NSColor labelColor] colorWithAlphaComponent:0.05] setFill];
+  [frame fill];
+  [[NSColor tertiaryLabelColor] setStroke];
+  [frame setLineWidth:1.2];
+  [frame stroke];
+  if (!self.valid) return;
+  NSRect slot = NSMakeRect(NSMinX(screen) + 3 + self.rect.origin.x * (NSWidth(screen) - 6),
+                           NSMaxY(screen) - 3 - (self.rect.origin.y + self.rect.size.height) * (NSHeight(screen) - 6),
+                           self.rect.size.width * (NSWidth(screen) - 6), self.rect.size.height * (NSHeight(screen) - 6));
+  NSBezierPath *path = [NSBezierPath bezierPathWithRoundedRect:slot xRadius:3 yRadius:3];
+  [[[NSColor controlAccentColor] colorWithAlphaComponent:0.25] setFill];
+  [path fill];
+  [[NSColor controlAccentColor] setStroke];
+  [path setLineWidth:1.5];
+  [path stroke];
+}
+@end
+

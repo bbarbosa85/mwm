@@ -365,6 +365,27 @@ static NSString *const kConfig =
   XCTAssertEqualObjects([doc.settings lastObject], [SlateConfigEntry entryWithName:@"keyboardLayout" value:@"dvorak"]);
 }
 
+- (void)testSlotsPageSwitchesBetweenCustomAndPresets {
+  ConfigurationFormView *form = [self formWithDocument:[self document]];
+  NSSegmentedControl *switcher = [form valueForKey:@"slotsSwitcher"];
+  XCTAssertTrue([switcher isHidden], @"only the Slots page has the switcher");
+  form.selectedSection = ConfigurationFormSectionPositions;
+  XCTAssertFalse([switcher isHidden]);
+  XCTAssertEqualObjects([switcher labelForSegment:0], @"Custom");
+  XCTAssertEqualObjects([switcher labelForSegment:1], @"Presets");
+  XCTAssertFalse([[form valueForKey:@"slotsView"] isHidden]);
+  XCTAssertTrue([[form valueForKey:@"presetsView"] isHidden]);
+  [switcher setSelectedSegment:1];
+  [NSApp sendAction:[switcher action] to:[switcher target] from:switcher];
+  XCTAssertTrue([[form valueForKey:@"slotsView"] isHidden]);
+  XCTAssertFalse([[form valueForKey:@"presetsView"] isHidden], @"the read-only presets");
+  [switcher setSelectedSegment:0];
+  [NSApp sendAction:[switcher action] to:[switcher target] from:switcher];
+  XCTAssertFalse([[form valueForKey:@"slotsView"] isHidden]);
+  form.selectedSection = ConfigurationFormSectionGeneral;
+  XCTAssertTrue([switcher isHidden]);
+}
+
 - (void)testUnbuiltPagesShowAPlaceholder {
   ConfigurationFormView *form = [self formWithDocument:[self document]];
   form.selectedSection = ConfigurationFormSectionSnapshots;
