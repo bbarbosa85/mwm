@@ -19,14 +19,15 @@
 
 // A key cap: a rounded outline whose colors follow light and dark mode.
 @interface ConfigurationCapView : NSView
+@property (strong, nullable) NSColor *tint;
 @end
 
 @implementation ConfigurationCapView
 - (void)viewDidChangeEffectiveAppearance {
   [super viewDidChangeEffectiveAppearance];
   [self.effectiveAppearance performAsCurrentDrawingAppearance:^{
-    [[self layer] setBorderColor:[[NSColor tertiaryLabelColor] CGColor]];
-    [[self layer] setBackgroundColor:[[[NSColor labelColor] colorWithAlphaComponent:0.06] CGColor]];
+    [[self layer] setBorderColor:[(self.tint ?: [NSColor tertiaryLabelColor]) CGColor]];
+    [[self layer] setBackgroundColor:[[(self.tint ?: [NSColor labelColor]) colorWithAlphaComponent:0.08] CGColor]];
   }];
 }
 - (void)viewDidMoveToWindow { [super viewDidMoveToWindow]; [self viewDidChangeEffectiveAppearance]; }
@@ -34,13 +35,14 @@
 
 // A rounded tint behind a group's name.
 @interface ConfigurationPillView : NSView
+@property (strong, nullable) NSColor *tint;
 @end
 
 @implementation ConfigurationPillView
 - (void)viewDidChangeEffectiveAppearance {
   [super viewDidChangeEffectiveAppearance];
   [self.effectiveAppearance performAsCurrentDrawingAppearance:^{
-    [[self layer] setBackgroundColor:[[[NSColor controlAccentColor] colorWithAlphaComponent:0.16] CGColor]];
+    [[self layer] setBackgroundColor:[[(self.tint ?: [NSColor controlAccentColor]) colorWithAlphaComponent:0.16] CGColor]];
   }];
 }
 - (void)viewDidMoveToWindow { [super viewDidMoveToWindow]; [self viewDidChangeEffectiveAppearance]; }
@@ -48,12 +50,14 @@
 
 @implementation ConfigurationKeyViews
 
-+ (NSView *)capWithText:(NSString *)text size:(CGFloat)size {
++ (NSView *)capWithText:(NSString *)text size:(CGFloat)size tint:(NSColor *)tint {
   NSTextField *label = [NSTextField labelWithString:text];
   [label setFont:[NSFont systemFontOfSize:size * 0.5 weight:NSFontWeightMedium]];
+  if (tint != nil) [label setTextColor:tint];
   [label setAlignment:NSTextAlignmentCenter];
   [label setTranslatesAutoresizingMaskIntoConstraints:NO];
-  NSView *cap = [[ConfigurationCapView alloc] init];
+  ConfigurationCapView *cap = [[ConfigurationCapView alloc] init];
+  cap.tint = tint;
   [cap setWantsLayer:YES];
   [[cap layer] setCornerRadius:size * 0.25];
   [[cap layer] setBorderWidth:0.5];
@@ -67,6 +71,10 @@
   return cap;
 }
 
++ (NSView *)capWithText:(NSString *)text size:(CGFloat)size {
+  return [self capWithText:text size:size tint:nil];
+}
+
 + (NSView *)modifierCaps:(NSArray<NSString *> *)modifierNames size:(CGFloat)size {
   NSMutableArray *caps = [NSMutableArray array];
   for (NSString *name in modifierNames) [caps addObject:[self capWithText:[SlateShortcut symbolForModifierName:name] size:size]];
@@ -76,20 +84,29 @@
 }
 
 + (NSView *)keyCapsForModifiers:(NSArray<NSString *> *)modifierNames keyName:(NSString *)keyName size:(CGFloat)size {
+  return [self keyCapsForModifiers:modifierNames keyName:keyName size:size tint:nil];
+}
+
++ (NSView *)keyCapsForModifiers:(NSArray<NSString *> *)modifierNames keyName:(NSString *)keyName size:(CGFloat)size tint:(NSColor *)tint {
   NSMutableArray *caps = [NSMutableArray array];
-  for (NSString *name in modifierNames) [caps addObject:[self capWithText:[SlateShortcut symbolForModifierName:name] size:size]];
-  [caps addObject:[self capWithText:[SlateShortcut displayForKeyName:keyName] size:size]];
+  for (NSString *name in modifierNames) [caps addObject:[self capWithText:[SlateShortcut symbolForModifierName:name] size:size tint:tint]];
+  [caps addObject:[self capWithText:[SlateShortcut displayForKeyName:keyName] size:size tint:tint]];
   NSStackView *stack = [NSStackView stackViewWithViews:caps];
   [stack setSpacing:3];
   return stack;
 }
 
 + (NSView *)pillWithText:(NSString *)text {
+  return [self pillWithText:text tint:nil];
+}
+
++ (NSView *)pillWithText:(NSString *)text tint:(NSColor *)tint {
   NSTextField *label = [NSTextField labelWithString:text];
   [label setFont:[NSFont systemFontOfSize:11 weight:NSFontWeightMedium]];
-  [label setTextColor:[NSColor controlAccentColor]];
+  [label setTextColor:tint ?: [NSColor controlAccentColor]];
   [label setTranslatesAutoresizingMaskIntoConstraints:NO];
-  NSView *pill = [[ConfigurationPillView alloc] init];
+  ConfigurationPillView *pill = [[ConfigurationPillView alloc] init];
+  pill.tint = tint;
   [pill setWantsLayer:YES];
   [[pill layer] setCornerRadius:9];
   [pill setTranslatesAutoresizingMaskIntoConstraints:NO];

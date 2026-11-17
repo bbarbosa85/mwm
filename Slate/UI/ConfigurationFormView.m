@@ -834,7 +834,7 @@ static NSString *DisplayValue(id value) {
   [self.slotsView setHidden:!slotsPage || presets];
   [self.presetsView setHidden:!presets];
   [self.slotsSwitcher setHidden:!slotsPage || self.sublevelActive];
-  [self.infoLabel setStringValue:presets ? @"Built in. They can't be changed, so your own slots need different names." : @"Named window areas, used as ${name} in shortcuts."];
+  if (slotsPage) [self.infoLabel setStringValue:presets ? @"Built in. They can't be changed, so your own slots need different names." : @"Named window areas, used as ${name} in shortcuts."];
 }
 
 // While a slot is open its back button is the header, and the window's bottom bar goes away.

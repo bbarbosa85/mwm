@@ -10,6 +10,7 @@
 		5E1A0C0B2D00000000000733 /* ConfigurationKeyboardMapView.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D00000000000732 /* ConfigurationKeyboardMapView.m */; };
 		5E1A0C0B2D00000000000713 /* ConfigurationKeyViews.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D00000000000712 /* ConfigurationKeyViews.m */; };
 		5E1A0C0B2D00000000000717 /* ConfigurationShortcutListView.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D00000000000716 /* ConfigurationShortcutListView.m */; };
+		5E1A0C0B2D00000000000742 /* ConfigurationShortcutEditorView.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D00000000000741 /* ConfigurationShortcutEditorView.m */; };
 		5E1A0C0B2D00000000000721 /* ConfigurationKeyboardView.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D00000000000720 /* ConfigurationKeyboardView.m */; };
 		5E1A0C0B2D00000000000723 /* TestConfigurationKeyboard.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D00000000000722 /* TestConfigurationKeyboard.m */; };
 		5E1A0C0B2D00000000000703 /* SlateReservedShortcuts.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D00000000000702 /* SlateReservedShortcuts.m */; };
@@ -165,6 +166,8 @@
 		5E1A0C0B2D00000000000712 /* ConfigurationKeyViews.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UI/ConfigurationKeyViews.m; sourceTree = "<group>"; };
 		5E1A0C0B2D00000000000714 /* ConfigurationShortcutListView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UI/ConfigurationShortcutListView.h; sourceTree = "<group>"; };
 		5E1A0C0B2D00000000000716 /* ConfigurationShortcutListView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UI/ConfigurationShortcutListView.m; sourceTree = "<group>"; };
+		5E1A0C0B2D00000000000740 /* ConfigurationShortcutEditorView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UI/ConfigurationShortcutEditorView.h; sourceTree = "<group>"; };
+		5E1A0C0B2D00000000000741 /* ConfigurationShortcutEditorView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UI/ConfigurationShortcutEditorView.m; sourceTree = "<group>"; };
 		5E1A0C0B2D00000000000718 /* ConfigurationKeyboardView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UI/ConfigurationKeyboardView.h; sourceTree = "<group>"; };
 		5E1A0C0B2D00000000000720 /* ConfigurationKeyboardView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UI/ConfigurationKeyboardView.m; sourceTree = "<group>"; };
 		5E1A0C0B2D00000000000722 /* TestConfigurationKeyboard.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TestConfigurationKeyboard.m; sourceTree = "<group>"; };
@@ -732,6 +735,8 @@
 				5E1A0C0B2D00000000000712 /* ConfigurationKeyViews.m */,
 				5E1A0C0B2D00000000000714 /* ConfigurationShortcutListView.h */,
 				5E1A0C0B2D00000000000716 /* ConfigurationShortcutListView.m */,
+				5E1A0C0B2D00000000000740 /* ConfigurationShortcutEditorView.h */,
+				5E1A0C0B2D00000000000741 /* ConfigurationShortcutEditorView.m */,
 				5E1A0C0B2D00000000000718 /* ConfigurationKeyboardView.h */,
 				5E1A0C0B2D00000000000720 /* ConfigurationKeyboardView.m */,
 				5E1A0C0B2D00000000000730 /* ConfigurationKeyboardMapView.h */,
@@ -909,6 +914,7 @@
 				5E1A0C0B2D00000000000693 /* ConfigurationPresetsView.m in Sources */,
 				5E1A0C0B2D00000000000713 /* ConfigurationKeyViews.m in Sources */,
 				5E1A0C0B2D00000000000717 /* ConfigurationShortcutListView.m in Sources */,
+				5E1A0C0B2D00000000000742 /* ConfigurationShortcutEditorView.m in Sources */,
 				5E1A0C0B2D00000000000721 /* ConfigurationKeyboardView.m in Sources */,
 				5E1A0C0B2D00000000000733 /* ConfigurationKeyboardMapView.m in Sources */,
 				5E1A0C0B2D00000000000413 /* ConfigurationFormView.m in Sources */,

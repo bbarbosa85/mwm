@@ -20,7 +20,7 @@
 
 #import <Cocoa/Cocoa.h>
 
-@class ConfigurationKeyboardView, SlateConfigDocument, SlateShortcutIndex;
+@class ConfigurationShortcutEditorView, ConfigurationKeyboardView, SlateConfigDocument, SlateShortcutIndex;
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -52,6 +52,10 @@ typedef NS_ENUM(NSInteger, ConfigurationKeyboardMode) {
 // Opens a shortcut for editing (by index in the document's bindings), or a new one.
 - (void)openBindingAtIndex:(NSUInteger)index;
 - (void)startNewShortcut;
+- (void)startNewShortcutInGroup:(nullable NSString *)groupName keyName:(nullable NSString *)keyName;
+// The shortcut editor page, shown while a shortcut is open.
+@property (readonly) ConfigurationShortcutEditorView *editor;
+@property (readonly) BOOL isEditing;
 
 // Rebuilds from the document, after something outside changed it.
 - (void)reload;

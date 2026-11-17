@@ -31,8 +31,11 @@ NS_ASSUME_NONNULL_BEGIN
 + (NSView *)modifierCaps:(NSArray<NSString *> *)modifierNames size:(CGFloat)size;
 // The modifiers and then the key: ⌃ ⌥ ⌘ 8.
 + (NSView *)keyCapsForModifiers:(NSArray<NSString *> *)modifierNames keyName:(NSString *)keyName size:(CGFloat)size;
+// The same in a warning color (for shortcuts that share keys with another).
++ (NSView *)keyCapsForModifiers:(NSArray<NSString *> *)modifierNames keyName:(NSString *)keyName size:(CGFloat)size tint:(nullable NSColor *)tint;
 // A rounded pill with a group's name.
 + (NSView *)pillWithText:(NSString *)text;
++ (NSView *)pillWithText:(NSString *)text tint:(nullable NSColor *)tint;
 // The group pill (if the modifiers form a group) and the key caps, side by side.
 + (NSView *)shortcutViewForInfo:(SlateShortcutInfo *)info size:(CGFloat)size;
 // The color that goes with what a shortcut does: blue for moving to a slot, green for

@@ -17,12 +17,15 @@
 #import "ConfigurationKeyboardView.h"
 #import "ConfigurationShortcutListView.h"
 #import "ConfigurationKeyboardMapView.h"
+#import "ConfigurationShortcutEditorView.h"
 #import "SlateConfigDocument.h"
 #import "SlateShortcutIndex.h"
 
-@interface ConfigurationKeyboardView () <ConfigurationShortcutListViewDelegate, ConfigurationKeyboardMapViewDelegate>
+@interface ConfigurationKeyboardView () <ConfigurationShortcutListViewDelegate, ConfigurationKeyboardMapViewDelegate, ConfigurationShortcutEditorViewDelegate>
 @property (strong) ConfigurationShortcutListView *listView;
 @property (strong) ConfigurationKeyboardMapView *mapView;
+@property (strong, readwrite) ConfigurationShortcutEditorView *editor;
+@property (assign, readwrite) BOOL isEditing;
 @end
 
 @implementation ConfigurationKeyboardView
@@ -38,6 +41,10 @@
     _mapView = [[ConfigurationKeyboardMapView alloc] init];
     [_mapView setDelegate:self];
     [self pinView:_mapView];
+    _editor = [[ConfigurationShortcutEditorView alloc] init];
+    [_editor setDelegate:self];
+    [self pinView:_editor];
+    [_editor setHidden:YES];
   }
   return self;
 }
@@ -63,6 +70,8 @@
   _document = document;
   self.listView.document = document;
   self.mapView.document = document;
+  self.editor.document = document;
+  [self closeEditor];
   [self showMode];
 }
 
@@ -72,9 +81,19 @@
 }
 
 - (void)showMode {
-  [self.listView setHidden:self.mode != ConfigurationKeyboardModeList];
-  [self.mapView setHidden:self.mode != ConfigurationKeyboardModeMap];
+  [self.listView setHidden:self.isEditing || self.mode != ConfigurationKeyboardModeList];
+  [self.mapView setHidden:self.isEditing || self.mode != ConfigurationKeyboardModeMap];
+  [self.editor setHidden:!self.isEditing];
 }
+
+- (void)setEditing:(BOOL)editing {
+  if (self.isEditing == editing) return;
+  self.isEditing = editing;
+  [self showMode];
+  if ([self.delegate respondsToSelector:@selector(keyboardView:didChangeEditing:)]) [self.delegate keyboardView:self didChangeEditing:editing];
+}
+
+- (void)closeEditor { [self setEditing:NO]; }
 
 - (void)reload {
   [self.listView reload];
@@ -89,9 +108,29 @@
 }
 
 - (void)openBindingAtIndex:(NSUInteger)index {
+  [self.editor editBindingAtIndex:index];
+  [self setEditing:YES];
 }
 
 - (void)startNewShortcut {
+  [self startNewShortcutInGroup:nil keyName:nil];
+}
+
+- (void)startNewShortcutInGroup:(NSString *)groupName keyName:(NSString *)keyName {
+  [self.editor startNewWithGroup:groupName keyName:keyName];
+  [self setEditing:YES];
+}
+
+#pragma mark - Editor
+
+- (void)shortcutEditorViewDidSave:(ConfigurationShortcutEditorView *)view {
+  [self.listView reload];
+  [self.mapView reload];
+  [self.delegate keyboardViewDidChangeDocument:self];
+}
+
+- (void)shortcutEditorViewDidClose:(ConfigurationShortcutEditorView *)view {
+  [self setEditing:NO];
 }
 
 #pragma mark - List view
@@ -113,7 +152,7 @@
 }
 
 - (void)keyboardMapView:(ConfigurationKeyboardMapView *)view wantsNewShortcutInGroup:(NSString *)groupName keyName:(NSString *)keyName {
-  [self startNewShortcut];
+  [self startNewShortcutInGroup:groupName keyName:keyName];
 }
 
 - (void)keyboardMapViewWantsGroups:(ConfigurationKeyboardMapView *)view {

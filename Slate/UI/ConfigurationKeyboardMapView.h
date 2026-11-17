@@ -34,6 +34,10 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)keyboardMapView:(ConfigurationKeyboardMapView *)view wantsNewShortcutInGroup:(nullable NSString *)groupName keyName:(NSString *)keyName;
 // The user wants to look at or change the groups themselves.
 - (void)keyboardMapViewWantsGroups:(ConfigurationKeyboardMapView *)view;
+@optional
+// Picker mode: the user chose keys ("Use these keys"), or backed out.
+- (void)keyboardMapView:(ConfigurationKeyboardMapView *)view didPickKey:(NSString *)keyName modifierNames:(NSArray<NSString *> *)modifierNames groupName:(nullable NSString *)groupName;
+- (void)keyboardMapViewDidCancelPicking:(ConfigurationKeyboardMapView *)view;
 @end
 
 @interface ConfigurationKeyboardMapView : NSView
@@ -45,6 +49,13 @@ NS_ASSUME_NONNULL_BEGIN
 @property (copy, nonatomic, nullable) NSString *selectedKeyName;
 // Tests turn this off so removing doesn't ask.
 @property (assign) BOOL confirmsRemoval;
+
+// Picker mode (used by the shortcut editor): the details card becomes "use these keys".
+@property (assign, nonatomic) BOOL pickerMode;
+// The shortcut being edited, which doesn't count as taking its own keys.
+@property (strong, nullable) id ignoredBinding;
+// The modifiers the Custom group uses while picking (ctrl, alt, shift, cmd).
+@property (copy, nullable) NSArray<NSString *> *customModifiers;
 
 - (void)reload;
 // Selects a key as a click would.

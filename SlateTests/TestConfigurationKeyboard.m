@@ -19,6 +19,7 @@
 #import "ConfigurationKeyboardView.h"
 #import "ConfigurationShortcutListView.h"
 #import "ConfigurationKeyboardMapView.h"
+#import "ConfigurationShortcutEditorView.h"
 #import "SlateConfigDocument.h"
 #import "SlateShortcutIndex.h"
 
@@ -175,7 +176,7 @@ static NSString *const kConfig =
   [map selectKeyNamed:@"pad9"];
   NSArray *texts = [self textsIn:map];
   XCTAssertTrue([texts containsObject:@"Move to half"]);
-  XCTAssertTrue([texts containsObject:@"Does this"]);
+  XCTAssertTrue([texts containsObject:@"To"]);
   XCTAssertTrue([texts containsObject:@"Remove"] || [self viewIn:map identifier:@"x"] == nil);
 }
 
@@ -194,7 +195,7 @@ static NSString *const kConfig =
   XCTAssertTrue([[self textsIn:map] containsObject:@"Nothing yet. This key is free in this group."]);
   map.groupName = @"Custom";
   [map selectKeyNamed:@"c"];
-  XCTAssertTrue([[self textsIn:map] containsObject:@"Does this"]);
+  XCTAssertTrue([[self textsIn:map] containsObject:@"To"]);
 }
 
 - (void)testRemovingAShortcutFromTheMapSaves {
@@ -206,6 +207,115 @@ static NSString *const kConfig =
   XCTAssertEqual([doc.bindings count], before - 1);
   XCTAssertEqual(self.changes, 1u);
   XCTAssertNil(map.selectedKeyName);
+}
+
+
+#pragma mark - Editor
+
+- (ConfigurationShortcutEditorView *)editorWith:(SlateConfigDocument **)outDoc {
+  SlateConfigDocument *doc = [SlateConfigDocument documentFromString:kConfig error:nil];
+  ConfigurationShortcutEditorView *editor = [[ConfigurationShortcutEditorView alloc] initWithFrame:NSMakeRect(0, 0, 1000, 640)];
+  NSWindow *window = [[NSWindow alloc] initWithContentRect:NSMakeRect(0, 0, 1000, 640) styleMask:NSWindowStyleMaskTitled backing:NSBackingStoreBuffered defer:NO];
+  [window setContentView:editor];
+  editor.confirmsDiscard = NO;
+  editor.document = doc;
+  objc_setAssociatedObject(editor, "window", window, OBJC_ASSOCIATION_RETAIN);
+  *outDoc = doc;
+  return editor;
+}
+
+- (void)testEditingAShortcutStartsWithoutChangesAndSavesWhatChanged {
+  SlateConfigDocument *doc;
+  ConfigurationShortcutEditorView *editor = [self editorWith:&doc];
+  [editor editBindingAtIndex:0];
+  XCTAssertFalse(editor.isNew);
+  XCTAssertFalse(editor.hasUnsavedChanges);
+  XCTAssertNil(editor.problem);
+  NSString *keyBefore = editor.draftKeyName;
+  [editor selectKind:SlateActionKindRelaunch];
+  XCTAssertTrue(editor.hasUnsavedChanges);
+  [editor save];
+  XCTAssertEqualObjects([[doc.bindings objectAtIndex:0] key], keyBefore);
+  XCTAssertEqualObjects([SlateAction parse:[[doc.bindings objectAtIndex:0] action]].string, [SlateAction actionOfKind:SlateActionKindRelaunch].string);
+}
+
+- (void)testANewShortcutNeedsKeysAndAnApplicationThenAddsABinding {
+  SlateConfigDocument *doc;
+  ConfigurationShortcutEditorView *editor = [self editorWith:&doc];
+  NSUInteger before = [doc.bindings count];
+  [editor startNewWithGroup:nil keyName:nil];
+  XCTAssertTrue(editor.isNew);
+  XCTAssertNotNil(editor.problem, @"no keys yet");
+  [editor useKeyName:@"j" modifierNames:@[@"ctrl", @"alt"] groupName:nil];
+  XCTAssertNotNil(editor.problem, @"no application yet");
+  editor.draftAction.a = @"Finder";
+  XCTAssertNil(editor.problem);
+  [editor save];
+  XCTAssertEqual([doc.bindings count], before + 1);
+  SlateBindingEntry *added = [doc.bindings lastObject];
+  XCTAssertEqualObjects(added.key, @"j");
+  XCTAssertTrue(added.enabled);
+  XCTAssertTrue([added.action containsString:@"Finder"]);
+}
+
+- (void)testAGroupWritesItsNameAndAReservedComboBlocksSave {
+  SlateConfigDocument *doc;
+  ConfigurationShortcutEditorView *editor = [self editorWith:&doc];
+  [editor startNewWithGroup:@"hyper" keyName:@"j"];
+  editor.draftAction.a = @"Finder";
+  XCTAssertNil(editor.problem);
+  [editor save];
+  XCTAssertEqualObjects([[doc.bindings lastObject] modifiers], @"${hyper}");
+  [editor startNewWithGroup:nil keyName:nil];
+  editor.draftAction.a = @"Finder";
+  [editor useKeyName:@"s" modifierNames:@[@"cmd"] groupName:nil];
+  XCTAssertNotNil(editor.problem, @"cmd+S belongs to macOS");
+}
+
+- (void)testRecordingTakesKeysOnEnterAndEscapeCancels {
+  SlateConfigDocument *doc;
+  ConfigurationShortcutEditorView *editor = [self editorWith:&doc];
+  [editor startNewWithGroup:nil keyName:nil];
+  [editor beginRecording];
+  XCTAssertTrue(editor.recording);
+  [editor recordKeyCode:38 modifierFlags:NSEventModifierFlagControl | NSEventModifierFlagOption];   // J
+  XCTAssertNil(editor.draftKeyName, @"nothing is taken until Enter");
+  [editor recordKeyCode:36 modifierFlags:0];
+  XCTAssertFalse(editor.recording);
+  XCTAssertEqualObjects(editor.draftKeyName, @"j");
+  XCTAssertEqualObjects(editor.draftModifierNames, (@[@"ctrl", @"alt"]));
+  [editor beginRecording];
+  [editor recordKeyCode:40 modifierFlags:NSEventModifierFlagControl];
+  [editor recordKeyCode:53 modifierFlags:0];
+  XCTAssertFalse(editor.recording);
+  XCTAssertEqualObjects(editor.draftKeyName, @"j", @"Esc keeps the old keys");
+}
+
+- (void)testEnterDoesNotTakeAKeyMacOSKeeps {
+  SlateConfigDocument *doc;
+  ConfigurationShortcutEditorView *editor = [self editorWith:&doc];
+  [editor startNewWithGroup:nil keyName:nil];
+  [editor beginRecording];
+  [editor recordKeyCode:1 modifierFlags:NSEventModifierFlagCommand];   // cmd+S
+  [editor recordKeyCode:36 modifierFlags:0];
+  XCTAssertTrue(editor.recording, @"still waiting");
+  XCTAssertNil(editor.draftKeyName);
+  [editor cancelRecording];
+}
+
+- (void)testTheKeyboardViewOpensTheEditorAndShowsThePageAgainAfterSaving {
+  SlateConfigDocument *doc = [SlateConfigDocument documentFromString:kConfig error:nil];
+  ConfigurationKeyboardView *keyboard = [[ConfigurationKeyboardView alloc] initWithFrame:NSMakeRect(0, 0, 1000, 640)];
+  keyboard.delegate = self;
+  keyboard.document = doc;
+  [keyboard openBindingAtIndex:0];
+  XCTAssertTrue(keyboard.isEditing);
+  XCTAssertFalse([keyboard.editor isHidden]);
+  [keyboard.editor close];
+  XCTAssertFalse(keyboard.isEditing);
+  [keyboard startNewShortcutInGroup:@"hyper" keyName:@"j"];
+  XCTAssertTrue(keyboard.editor.isNew);
+  XCTAssertEqualObjects(keyboard.editor.draftKeyName, @"j");
 }
 
 @end
