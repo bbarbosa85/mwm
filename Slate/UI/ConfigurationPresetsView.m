@@ -17,6 +17,7 @@
 
 #import "ConfigurationPresetsView.h"
 #import "MWMTheme.h"
+#import "MWMComponents.h"
 #import "ConfigurationBlockView.h"
 #import "SlateSlots.h"
 
@@ -47,9 +48,7 @@
   [name setToolTip:[NSString stringWithFormat:@"Click to copy ${%@}", preset.name]];
   [name setContentHuggingPriority:1 forOrientation:NSLayoutConstraintOrientationHorizontal];
 
-  NSTextField *size = [NSTextField labelWithString:[preset summary]];
-  [size setFont:[MWMTheme fontSmall]];
-  [size setTextColor:[MWMTheme textSecondary]];
+  NSTextField *size = [MWMComponents secondaryLabel:[preset summary]];
   [size setAlignment:NSTextAlignmentRight];
 
   NSStackView *row = [NSStackView stackViewWithViews:@[picture, name, size]];
@@ -64,9 +63,7 @@
   if (self) {
     NSMutableArray *blocks = [NSMutableArray array];
     for (NSArray *group in [[self class] groups]) {
-      NSTextField *heading = [NSTextField labelWithString:group[0]];
-      [heading setFont:[NSFont systemFontOfSize:11 weight:NSFontWeightSemibold]];
-      [heading setTextColor:[MWMTheme textTertiary]];
+      NSTextField *heading = [MWMComponents sectionHeading:group[0]];
       [blocks addObject:heading];
       [blocks addObject:[NSNull null]];  // a line under the heading
       NSArray *names = group[1];
@@ -85,9 +82,7 @@
     for (NSUInteger i = 0; i < [views count]; i++) {
       id item = views[i];
       if (item == [NSNull null]) {
-        NSBox *line = [[NSBox alloc] init];
-        [line setBoxType:NSBoxSeparator];
-        [line setTranslatesAutoresizingMaskIntoConstraints:NO];
+        NSView *line = [MWMComponents separator];
         [stack addArrangedSubview:line];
         [[line.widthAnchor constraintEqualToAnchor:stack.widthAnchor constant:-40] setActive:YES];
         continue;
@@ -104,26 +99,12 @@
       }
     }
 
-    NSView *document = [[ConfigurationFlippedView alloc] init];
-    [document setTranslatesAutoresizingMaskIntoConstraints:NO];
-    [document addSubview:stack];
-    NSScrollView *scroll = [[NSScrollView alloc] init];
-    [scroll setTranslatesAutoresizingMaskIntoConstraints:NO];
-    [scroll setHasVerticalScroller:YES];
-    [scroll setAutohidesScrollers:YES];
-    [scroll setDrawsBackground:NO];
-    NSClipView *clip = [[NSClipView alloc] init];
-    [clip setDrawsBackground:NO];
-    [scroll setContentView:clip];
-    [scroll setDocumentView:document];
+    NSScrollView *scroll = [MWMComponents scrollViewWithContent:stack];
 
-    NSTextField *footer = [NSTextField labelWithString:@"19 presets · click a name to copy it"];
+    NSTextField *footer = [MWMComponents secondaryLabel:@"19 presets · click a name to copy it"];
     [footer setFont:[MWMTheme fontCaption]];
-    [footer setTextColor:[MWMTheme textSecondary]];
     [footer setTranslatesAutoresizingMaskIntoConstraints:NO];
-    NSBox *footerLine = [[NSBox alloc] init];
-    [footerLine setBoxType:NSBoxSeparator];
-    [footerLine setTranslatesAutoresizingMaskIntoConstraints:NO];
+    NSView *footerLine = [MWMComponents separator];
 
     [self addSubview:scroll];
     [self addSubview:footerLine];
@@ -134,10 +115,6 @@
       [footerLine.leadingAnchor constraintEqualToAnchor:self.leadingAnchor constant:20], [footerLine.trailingAnchor constraintEqualToAnchor:self.trailingAnchor constant:-20],
       [footerLine.bottomAnchor constraintEqualToAnchor:footer.topAnchor constant:-8],
       [footer.leadingAnchor constraintEqualToAnchor:self.leadingAnchor constant:20], [footer.bottomAnchor constraintEqualToAnchor:self.bottomAnchor constant:-12],
-      [stack.topAnchor constraintEqualToAnchor:document.topAnchor], [stack.bottomAnchor constraintEqualToAnchor:document.bottomAnchor],
-      [stack.leadingAnchor constraintEqualToAnchor:document.leadingAnchor], [stack.trailingAnchor constraintEqualToAnchor:document.trailingAnchor],
-      [document.topAnchor constraintEqualToAnchor:clip.topAnchor], [document.leadingAnchor constraintEqualToAnchor:clip.leadingAnchor],
-      [document.trailingAnchor constraintEqualToAnchor:clip.trailingAnchor],
     ]];
   }
   return self;

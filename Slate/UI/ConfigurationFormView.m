@@ -17,6 +17,7 @@
 
 #import "ConfigurationFormView.h"
 #import "MWMTheme.h"
+#import "MWMComponents.h"
 #import "SlateConfigDocument.h"
 #import "SlateConfig.h"
 #import "SlateShortcut.h"
@@ -237,9 +238,7 @@ static NSString *DisplayValue(id value) {
   [self.sidebar setDelegate:self];
   NSScrollView *sidebarScroll = [self scrollViewFor:self.sidebar];
 
-  NSBox *divider = [[NSBox alloc] init];
-  [divider setBoxType:NSBoxSeparator];
-  [divider setTranslatesAutoresizingMaskIntoConstraints:NO];
+  NSView *divider = [MWMComponents separator];
 
   // Detail: header, then the table
   self.detail = [[NSView alloc] init];

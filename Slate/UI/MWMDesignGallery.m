@@ -194,7 +194,28 @@ static NSStackView *HorizontalStack(NSArray<NSView *> *views, CGFloat spacing) {
     [rowViews addObject:row];
   }
   NSStackView *rows = HorizontalStack(rowViews, MWMSpacingM);
-  return VerticalStack(@[chips, buttons, tileRow, keys, misc, rows], MWMSpacingL);
+  // List rows with a count, and a settings block.
+  NSMutableArray *countRows = [NSMutableArray array];
+  for (NSNumber *selected in @[@NO, @YES]) {
+    NSView *row = [MWMComponents countRowWithTitle:[selected boolValue] ? @"hyper" : @"shyper" count:[selected boolValue] ? 27 : 6
+                                            detail:[ConfigurationKeyViews modifierCaps:@[@"ctrl", @"alt", @"cmd"] size:20] detailSpacing:6
+                                            insets:NSEdgeInsetsMake(10, 12, 10, 12) boldTitle:YES selected:[selected boolValue] onClick:^{}];
+    [[row.widthAnchor constraintEqualToConstant:188] setActive:YES];
+    [countRows addObject:row];
+  }
+  NSStackView *counts = HorizontalStack(countRows, MWMSpacingM);
+  NSSwitch *toggle = [[NSSwitch alloc] init];
+  [toggle setControlSize:NSControlSizeSmall];
+  [toggle setState:NSControlStateValueOn];
+  NSView *settingsBlock = [MWMComponents settingsBlockWithSymbol:@"power" title:@"Startup" subtitle:@"Runs quietly in the menu bar" rows:@[[MWMComponents controlRowWithTitle:@"Launch MWM at login" subtitle:nil control:toggle]] titleColumnWidth:200];
+  [[settingsBlock.widthAnchor constraintEqualToConstant:520] setActive:YES];
+  // The top and bottom of a page opened from another.
+  MWMSublevelHeader *header = [MWMSublevelHeader headerWithBackTitle:@"Keyboard" title:@"Editing Shortcut" target:nil action:nil];
+  [[header.widthAnchor constraintEqualToConstant:520] setActive:YES];
+  MWMSaveBar *saveBar = [MWMSaveBar barWithTarget:nil cancel:nil save:nil];
+  [saveBar setDirty:YES canSave:YES];
+  [[saveBar.widthAnchor constraintEqualToConstant:520] setActive:YES];
+  return VerticalStack(@[chips, buttons, tileRow, keys, misc, rows, counts, settingsBlock, header, saveBar], MWMSpacingL);
 }
 
 + (NSView *)galleryViewWithWidth:(CGFloat)width {

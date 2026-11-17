@@ -23,6 +23,9 @@
 #import <XCTest/XCTest.h>
 #import <objc/runtime.h>
 #import "ConfigurationKeyboardMapView.h"
+#import "ConfigurationSettingsView.h"
+#import "ConfigurationShortcutListView.h"
+#import "ConfigurationSlotsView.h"
 #import "ConfigurationShortcutEditorView.h"
 #import "MWMDesignGallery.h"
 #import "SlateConfigDocument.h"
@@ -135,6 +138,36 @@ static NSString *const kConfig =
     editor.document = doc;
     [editor editBindingAtIndex:0];
     [self checkView:editor size:NSMakeSize(1000, 640) name:@"shortcut-editor" dark:[dark boolValue]];
+  }
+}
+
+
+- (void)testTheShortcutListLooksTheSame {
+  for (NSNumber *dark in @[@NO, @YES]) {
+    SlateConfigDocument *doc = [SlateConfigDocument documentFromString:kConfig error:nil];
+    ConfigurationShortcutListView *list = [[ConfigurationShortcutListView alloc] initWithFrame:NSMakeRect(0, 0, 1000, 520)];
+    list.document = doc;
+    [self checkView:list size:NSMakeSize(1000, 520) name:@"shortcut-list" dark:[dark boolValue]];
+  }
+}
+
+- (void)testTheSlotsEditorLooksTheSame {
+  for (NSNumber *dark in @[@NO, @YES]) {
+    SlateConfigDocument *doc = [SlateConfigDocument documentFromString:kConfig error:nil];
+    ConfigurationSlotsView *slots = [[ConfigurationSlotsView alloc] initWithFrame:NSMakeRect(0, 0, 1000, 640)];
+    slots.document = doc;
+    [slots selectSlotNamed:@"half"];
+    [self checkView:slots size:NSMakeSize(1000, 640) name:@"slots-editor" dark:[dark boolValue]];
+  }
+}
+
+- (void)testTheSettingsPagesLookTheSame {
+  for (NSNumber *dark in @[@NO, @YES]) {
+    SlateConfigDocument *doc = [SlateConfigDocument documentFromString:kConfig error:nil];
+    ConfigurationSettingsView *settings = [[ConfigurationSettingsView alloc] initWithFrame:NSMakeRect(0, 0, 1000, 640)];
+    settings.page = ConfigurationSettingsPageGeneral;
+    settings.document = doc;
+    [self checkView:settings size:NSMakeSize(1000, 640) name:@"settings-general" dark:[dark boolValue]];
   }
 }
 

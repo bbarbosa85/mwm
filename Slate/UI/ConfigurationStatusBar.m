@@ -17,6 +17,7 @@
 
 #import "ConfigurationStatusBar.h"
 #import "MWMTheme.h"
+#import "MWMComponents.h"
 
 static const CGFloat kBarHeight = 44;
 
@@ -45,9 +46,7 @@ static const CGFloat kBarHeight = 44;
   if (self) {
     [self setTranslatesAutoresizingMaskIntoConstraints:NO];
 
-    NSBox *separator = [[NSBox alloc] init];
-    [separator setBoxType:NSBoxSeparator];
-    [separator setTranslatesAutoresizingMaskIntoConstraints:NO];
+    NSView *separator = [MWMComponents separator];
 
     self.savedIcon = [[NSImageView alloc] init];
     [self.savedIcon setTranslatesAutoresizingMaskIntoConstraints:NO];

@@ -17,6 +17,7 @@
 
 #import "ConfigurationSettingsView.h"
 #import "MWMTheme.h"
+#import "MWMComponents.h"
 #import "ConfigurationBlockView.h"
 #import "SlateConfigDocument.h"
 #import "SlateConfig.h"
@@ -60,32 +61,9 @@ static id TypedValue(NSString *text) {
     [_stack setEdgeInsets:NSEdgeInsetsMake(8, 20, 20, 20)];
     [_stack setTranslatesAutoresizingMaskIntoConstraints:NO];
 
-    NSView *flipped = [[ConfigurationFlippedView alloc] init];
-    [flipped setTranslatesAutoresizingMaskIntoConstraints:NO];
-    [flipped addSubview:_stack];
-    _scroll = [[NSScrollView alloc] init];
-    [_scroll setTranslatesAutoresizingMaskIntoConstraints:NO];
-    [_scroll setHasVerticalScroller:YES];
-    [_scroll setAutohidesScrollers:YES];
-    [_scroll setDrawsBackground:NO];
-    NSClipView *clip = [[NSClipView alloc] init];
-    [clip setDrawsBackground:NO];
-    [_scroll setContentView:clip];
-    [_scroll setDocumentView:flipped];
+    _scroll = [MWMComponents scrollViewWithContent:_stack];
     [self addSubview:_scroll];
-    [NSLayoutConstraint activateConstraints:@[
-      [_scroll.topAnchor constraintEqualToAnchor:self.topAnchor],
-      [_scroll.bottomAnchor constraintEqualToAnchor:self.bottomAnchor],
-      [_scroll.leadingAnchor constraintEqualToAnchor:self.leadingAnchor],
-      [_scroll.trailingAnchor constraintEqualToAnchor:self.trailingAnchor],
-      [flipped.topAnchor constraintEqualToAnchor:clip.topAnchor],
-      [flipped.leadingAnchor constraintEqualToAnchor:clip.leadingAnchor],
-      [flipped.trailingAnchor constraintEqualToAnchor:clip.trailingAnchor],
-      [_stack.topAnchor constraintEqualToAnchor:flipped.topAnchor],
-      [_stack.bottomAnchor constraintEqualToAnchor:flipped.bottomAnchor],
-      [_stack.leadingAnchor constraintEqualToAnchor:flipped.leadingAnchor],
-      [_stack.trailingAnchor constraintEqualToAnchor:flipped.trailingAnchor],
-    ]];
+    [MWMComponents pinView:_scroll toEdgesOf:self insets:NSEdgeInsetsMake(0, 0, 0, 0)];
   }
   return self;
 }
@@ -131,22 +109,11 @@ static id TypedValue(NSString *text) {
 #pragma mark - Controls
 
 - (NSTextField *)labelWithText:(NSString *)text size:(CGFloat)size color:(NSColor *)color weight:(NSFontWeight)weight {
-  NSTextField *label = [NSTextField wrappingLabelWithString:text];
-  [label setFont:[NSFont systemFontOfSize:size weight:weight]];
-  [label setTextColor:color];
-  [label setSelectable:NO];
-  return label;
+  return [MWMComponents wrappingLabelWithText:text size:size color:color weight:weight];
 }
 
-// A label with an optional smaller line under it.
 - (NSView *)textWithTitle:(NSString *)title subtitle:(NSString *)subtitle {
-  NSMutableArray *lines = [NSMutableArray arrayWithObject:[self labelWithText:title size:13 color:[MWMTheme textPrimary] weight:NSFontWeightRegular]];
-  if ([subtitle length] > 0) [lines addObject:[self labelWithText:subtitle size:11 color:[MWMTheme textSecondary] weight:NSFontWeightRegular]];
-  NSStackView *stack = [NSStackView stackViewWithViews:lines];
-  [stack setOrientation:NSUserInterfaceLayoutOrientationVertical];
-  [stack setAlignment:NSLayoutAttributeLeading];
-  [stack setSpacing:1];
-  return stack;
+  return [MWMComponents titleWithSubtitle:title subtitle:subtitle];
 }
 
 - (NSSwitch *)switchNamed:(NSString *)name on:(BOOL)on {
@@ -161,15 +128,7 @@ static id TypedValue(NSString *text) {
 
 // Text on the left, a control on the right.
 - (NSView *)rowWithTitle:(NSString *)title subtitle:(NSString *)subtitle control:(NSView *)control {
-  NSView *text = [self textWithTitle:title subtitle:subtitle];
-  NSView *spacer = [[NSView alloc] init];
-  [spacer setContentHuggingPriority:1 forOrientation:NSLayoutConstraintOrientationHorizontal];
-  NSStackView *row = [NSStackView stackViewWithViews:@[text, spacer, control]];
-  [row setOrientation:NSUserInterfaceLayoutOrientationHorizontal];
-  [row setAlignment:NSLayoutAttributeCenterY];
-  [row setSpacing:12];
-  [control setContentHuggingPriority:NSLayoutPriorityRequired forOrientation:NSLayoutConstraintOrientationHorizontal];
-  return row;
+  return [MWMComponents controlRowWithTitle:title subtitle:subtitle control:control];
 }
 
 - (NSView *)toggleRowTitle:(NSString *)title subtitle:(NSString *)subtitle setting:(NSString *)name {
@@ -179,43 +138,7 @@ static id TypedValue(NSString *text) {
 
 // A block: icon, title and description on the left, the rows on the right.
 - (NSView *)blockWithSymbol:(NSString *)symbol title:(NSString *)title subtitle:(NSString *)subtitle rows:(NSArray<NSView *> *)rows {
-  ConfigurationBlockView *block = [[ConfigurationBlockView alloc] init];
-  [block setTranslatesAutoresizingMaskIntoConstraints:NO];
-
-  NSImageView *icon = [NSImageView imageViewWithImage:[NSImage imageWithSystemSymbolName:symbol accessibilityDescription:nil]];
-  [icon setContentTintColor:[MWMTheme textSecondary]];
-  [icon setSymbolConfiguration:[NSImageSymbolConfiguration configurationWithPointSize:16 weight:NSFontWeightRegular]];
-  [icon setContentHuggingPriority:NSLayoutPriorityRequired forOrientation:NSLayoutConstraintOrientationHorizontal];
-  NSView *heading = [self textWithTitle:title subtitle:subtitle];
-  [(NSTextField *)[[(NSStackView *)heading arrangedSubviews] firstObject] setFont:[MWMTheme fontBodyStrong]];
-  NSStackView *left = [NSStackView stackViewWithViews:@[icon, heading]];
-  [left setOrientation:NSUserInterfaceLayoutOrientationHorizontal];
-  [left setAlignment:NSLayoutAttributeTop];
-  [left setSpacing:10];
-  [left setTranslatesAutoresizingMaskIntoConstraints:NO];
-
-  NSStackView *right = [NSStackView stackViewWithViews:rows];
-  [right setOrientation:NSUserInterfaceLayoutOrientationVertical];
-  [right setAlignment:NSLayoutAttributeLeading];
-  [right setSpacing:10];
-  [right setTranslatesAutoresizingMaskIntoConstraints:NO];
-  for (NSView *row in rows) {
-    [[row.widthAnchor constraintEqualToAnchor:right.widthAnchor] setActive:YES];
-  }
-
-  [block addSubview:left];
-  [block addSubview:right];
-  [NSLayoutConstraint activateConstraints:@[
-    [left.leadingAnchor constraintEqualToAnchor:block.leadingAnchor constant:14],
-    [left.topAnchor constraintEqualToAnchor:block.topAnchor constant:14],
-    [left.widthAnchor constraintEqualToConstant:kTitleColumnWidth],
-    [right.leadingAnchor constraintEqualToAnchor:left.trailingAnchor constant:16],
-    [right.trailingAnchor constraintEqualToAnchor:block.trailingAnchor constant:-14],
-    [right.topAnchor constraintEqualToAnchor:block.topAnchor constant:14],
-    [right.bottomAnchor constraintEqualToAnchor:block.bottomAnchor constant:-14],
-    [block.bottomAnchor constraintGreaterThanOrEqualToAnchor:left.bottomAnchor constant:14],
-  ]];
-  return block;
+  return [MWMComponents settingsBlockWithSymbol:symbol title:title subtitle:subtitle rows:rows titleColumnWidth:kTitleColumnWidth];
 }
 
 - (void)addBlock:(NSView *)block {
@@ -343,8 +266,7 @@ static id TypedValue(NSString *text) {
 
   NSMutableArray *rows = [NSMutableArray array];
   for (SlateConfigEntry *entry in [self otherSettings]) [rows addObject:[self otherSettingRow:entry]];
-  NSButton *add = [NSButton buttonWithTitle:@"Add setting…" target:self action:@selector(showAddMenu:)];
-  [add setBezelStyle:NSBezelStyleRounded];
+  NSButton *add = [MWMComponents secondaryButtonWithTitle:@"Add setting…" target:self action:@selector(showAddMenu:)];
   [rows addObject:add];
   [self addBlock:[self blockWithSymbol:@"slider.horizontal.3" title:@"Other settings" subtitle:@"Anything else MWM can be told" rows:rows]];
 }

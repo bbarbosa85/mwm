@@ -57,8 +57,7 @@
     NSTextField *detail = [NSTextField labelWithString:usage];
     [detail setFont:[MWMTheme fontCaption]];
     [detail setTextColor:[MWMTheme textSecondary]];
-    NSView *gap = [[NSView alloc] init];
-    [gap setContentHuggingPriority:1 forOrientation:NSLayoutConstraintOrientationHorizontal];
+    NSView *gap = [MWMComponents spacer];
     NSStackView *footer = [NSStackView stackViewWithViews:@[title, gap, detail]];
     [footer setAlignment:NSLayoutAttributeFirstBaseline];
     [footer setSpacing:8];
@@ -162,6 +161,7 @@
 @property (strong) NSSegmentedControl *gridControl;
 @property (strong) NSTextField *editorTitle;
 @property (strong) MWMChipView *changesChip;
+@property (strong) MWMSaveBar *saveBar;
 @property (strong) NSLayoutConstraint *canvasHeight;
 @property (strong) NSTextField *nameField;
 @property (strong) NSArray<NSTextField *> *valueFields;
@@ -185,12 +185,6 @@
 }
 
 #pragma mark - Interface
-
-- (NSButton *)buttonTitled:(NSString *)title action:(SEL)action {
-  NSButton *button = [NSButton buttonWithTitle:title target:self action:action];
-  [button setBezelStyle:NSBezelStyleRounded];
-  return button;
-}
 
 - (NSTextField *)captionLabel:(NSString *)text {
   NSTextField *label = [NSTextField labelWithString:text];
@@ -243,8 +237,7 @@
   [self.search setPlaceholderString:@"Search slots"];
   [self.search setDelegate:self];
   [[self.search.widthAnchor constraintEqualToConstant:220] setActive:YES];
-  NSView *spacer = [[NSView alloc] init];
-  [spacer setContentHuggingPriority:1 forOrientation:NSLayoutConstraintOrientationHorizontal];
+  NSView *spacer = [MWMComponents spacer];
   NSStackView *top = [NSStackView stackViewWithViews:@[spacer, self.search]];
 
   self.galleryRows = [NSStackView stackViewWithViews:@[]];
@@ -252,24 +245,7 @@
   [self.galleryRows setAlignment:NSLayoutAttributeLeading];
   [self.galleryRows setSpacing:12];
   [self.galleryRows setTranslatesAutoresizingMaskIntoConstraints:NO];
-  NSView *document = [[ConfigurationFlippedView alloc] init];
-  [document setTranslatesAutoresizingMaskIntoConstraints:NO];
-  [document addSubview:self.galleryRows];
-  NSScrollView *scroll = [[NSScrollView alloc] init];
-  [scroll setHasVerticalScroller:YES];
-  [scroll setAutohidesScrollers:YES];
-  [scroll setDrawsBackground:NO];
-  NSClipView *clip = [[NSClipView alloc] init];
-  [clip setDrawsBackground:NO];
-  [scroll setContentView:clip];
-  [scroll setDocumentView:document];
-  [scroll setTranslatesAutoresizingMaskIntoConstraints:NO];
-  [NSLayoutConstraint activateConstraints:@[
-    [self.galleryRows.topAnchor constraintEqualToAnchor:document.topAnchor], [self.galleryRows.bottomAnchor constraintEqualToAnchor:document.bottomAnchor],
-    [self.galleryRows.leadingAnchor constraintEqualToAnchor:document.leadingAnchor], [self.galleryRows.trailingAnchor constraintEqualToAnchor:document.trailingAnchor],
-    [document.topAnchor constraintEqualToAnchor:clip.topAnchor], [document.leadingAnchor constraintEqualToAnchor:clip.leadingAnchor],
-    [document.trailingAnchor constraintEqualToAnchor:clip.trailingAnchor],
-  ]];
+  NSScrollView *scroll = [MWMComponents scrollViewWithContent:self.galleryRows];
 
   NSStackView *page = [NSStackView stackViewWithViews:@[top, scroll]];
   [page setOrientation:NSUserInterfaceLayoutOrientationVertical];
@@ -286,20 +262,8 @@
 // The editor: a header with the back button and the title, a card with the form on the
 // left, the canvas and its view toolbar on the right, and under a line the save bar.
 - (void)buildEditorPage {
-  NSButton *back = [NSButton buttonWithTitle:@"Slots" target:self action:@selector(backPressed:)];
-  [back setImage:[NSImage imageWithSystemSymbolName:@"chevron.left" accessibilityDescription:@"Back"]];
-  [back setImagePosition:NSImageLeft];
-  [back setBordered:NO];
-  [back setContentTintColor:[MWMTheme accent]];
-  [back setFont:[MWMTheme fontHeading]];
-  self.editorTitle = [NSTextField labelWithString:@"Editing Slot"];
-  [self.editorTitle setFont:[MWMTheme fontTitle]];
-  NSView *headerSpacer = [[NSView alloc] init];
-  [headerSpacer setContentHuggingPriority:1 forOrientation:NSLayoutConstraintOrientationHorizontal];
-  NSStackView *header = [NSStackView stackViewWithViews:@[back, self.editorTitle, headerSpacer]];
-  [header setSpacing:14];
-  [header setAlignment:NSLayoutAttributeCenterY];
-  [header setEdgeInsets:NSEdgeInsetsMake(14, 20, 4, 20)];
+  MWMSublevelHeader *header = [MWMSublevelHeader headerWithBackTitle:@"Slots" title:@"Editing Slot" target:self action:@selector(backPressed:)];
+  self.editorTitle = header.titleLabel;
 
   // Left: the form card.
   self.nameField = [NSTextField textFieldWithString:@""];
@@ -313,8 +277,7 @@
   NSStackView *positionRow = [NSStackView stackViewWithViews:@[captioned[0], captioned[1]]];
   NSStackView *sizeRow = [NSStackView stackViewWithViews:@[captioned[2], captioned[3]]];
   for (NSStackView *row in @[positionRow, sizeRow]) { [row setDistribution:NSStackViewDistributionFillEqually]; [row setSpacing:10]; [row setAlignment:NSLayoutAttributeTop]; }
-  NSBox *cardLine = [[NSBox alloc] init];
-  [cardLine setBoxType:NSBoxSeparator];
+  NSView *cardLine = [MWMComponents separator];
   self.messageLabel = [NSTextField wrappingLabelWithString:@""];
   [self.messageLabel setFont:[MWMTheme fontCaption]];
   NSStackView *cardContent = [NSStackView stackViewWithViews:@[nameBlock, cardLine, positionRow, sizeRow, self.messageLabel]];
@@ -350,8 +313,7 @@
   [self.gridControl setControlSize:NSControlSizeSmall];
   [self.gridControl setSelectedSegment:3];  // quarters
   [self.gridControl setToolTip:@"The grid is made of this many equal parts, and the slot snaps to its lines"];
-  NSView *toolbarSpacer = [[NSView alloc] init];
-  [toolbarSpacer setContentHuggingPriority:1 forOrientation:NSLayoutConstraintOrientationHorizontal];
+  NSView *toolbarSpacer = [MWMComponents spacer];
   NSStackView *toolbarRow = [NSStackView stackViewWithViews:@[[self captionLabel:@"Preview on"], self.screenPopup, toolbarSpacer, [self captionLabel:@"Grid"], self.gridControl]];
   [toolbarRow setSpacing:8];
   [toolbarRow setAlignment:NSLayoutAttributeCenterY];
@@ -389,22 +351,15 @@
   [columns setContentHuggingPriority:1 forOrientation:NSLayoutConstraintOrientationVertical];
 
   // The save bar, under a line: whether there's anything to save, then Cancel and Save.
-  NSBox *saveLine = [[NSBox alloc] init];
-  [saveLine setBoxType:NSBoxSeparator];
-  self.changesChip = [MWMChipView chipWithText:@"No changes" color:nil];
-  self.cancelButton = [self buttonTitled:@"Cancel" action:@selector(cancelPressed:)];
-  self.saveButton = [self buttonTitled:@"Save" action:@selector(savePressed:)];
-  [self.saveButton setKeyEquivalent:@"\r"];
-  NSView *barSpacer = [[NSView alloc] init];
-  [barSpacer setContentHuggingPriority:1 forOrientation:NSLayoutConstraintOrientationHorizontal];
-  NSStackView *saveBar = [NSStackView stackViewWithViews:@[self.changesChip, barSpacer, self.cancelButton, self.saveButton]];
-  [saveBar setSpacing:8];
-  [saveBar setAlignment:NSLayoutAttributeCenterY];
-  [saveBar setEdgeInsets:NSEdgeInsetsMake(10, 20, 12, 20)];
+  MWMSaveBar *saveBar = [MWMSaveBar barWithTarget:self cancel:@selector(cancelPressed:) save:@selector(savePressed:)];
+  self.saveBar = saveBar;
+  self.changesChip = saveBar.chip;
+  self.cancelButton = saveBar.cancelButton;
+  self.saveButton = saveBar.saveButton;
 
   // Laid out with constraints: the columns take whatever height is left between the header and the save bar.
   self.editorPage = [[NSView alloc] init];
-  for (NSView *view in @[header, columns, saveLine, saveBar]) {
+  for (NSView *view in @[header, columns, saveBar]) {
     [view setTranslatesAutoresizingMaskIntoConstraints:NO];
     [self.editorPage addSubview:view];
     [[view.leadingAnchor constraintEqualToAnchor:self.editorPage.leadingAnchor] setActive:YES];
@@ -413,11 +368,8 @@
   [NSLayoutConstraint activateConstraints:@[
     [header.topAnchor constraintEqualToAnchor:self.editorPage.topAnchor],
     [columns.topAnchor constraintEqualToAnchor:header.bottomAnchor],
-    [columns.bottomAnchor constraintEqualToAnchor:saveLine.topAnchor],
-    [saveLine.bottomAnchor constraintEqualToAnchor:saveBar.topAnchor],
+    [columns.bottomAnchor constraintEqualToAnchor:saveBar.topAnchor],
     [saveBar.bottomAnchor constraintEqualToAnchor:self.editorPage.bottomAnchor],
-    [header.heightAnchor constraintEqualToConstant:48],   // fixed, so the columns are the part that stretches
-    [saveBar.heightAnchor constraintEqualToConstant:48],
   ]];
 }
 
@@ -618,9 +570,7 @@
   [self.editorTitle setStringValue:self.selectedIsNew ? @"New Slot" : @"Editing Slot"];
   BOOL dirty = [self hasUnsavedChanges];
   NSString *problem = [self problem];
-  [self.saveButton setEnabled:dirty && problem == nil];
-  self.changesChip.text = dirty ? @"● Unsaved changes" : @"No changes";
-  self.changesChip.color = dirty ? [MWMTheme warning] : nil;
+  [self.saveBar setDirty:dirty canSave:problem == nil];
   if (has && [self.nameField currentEditor] == nil && ![[self.nameField stringValue] isEqualToString:self.draftName ?: @""]) [self.nameField setStringValue:self.draftName ?: @""];
   if (has) {
     NSArray *numbers = @[@(self.draftRect.origin.x), @(self.draftRect.origin.y), @(self.draftRect.size.width), @(self.draftRect.size.height)];

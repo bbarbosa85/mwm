@@ -17,6 +17,7 @@
 
 #import "ConfigurationActionView.h"
 #import "MWMTheme.h"
+#import "MWMComponents.h"
 #import "SlateAction.h"
 #import "SlateConfigDocument.h"
 
@@ -243,8 +244,7 @@ static NSArray<NSString *> *ApplicationNames(void) {
   // Kinds without a text box leave the rest of the cell empty instead of stretching a dropdown.
   NSView *last = [[self.stack arrangedSubviews] lastObject];
   if (![last isKindOfClass:[NSTextField class]] && ![last isKindOfClass:[NSComboBox class]]) {
-    NSView *spacer = [[NSView alloc] init];
-    [spacer setContentHuggingPriority:1 forOrientation:NSLayoutConstraintOrientationHorizontal];
+    NSView *spacer = [MWMComponents spacer];
     [self.stack addArrangedSubview:spacer];
   }
 }
