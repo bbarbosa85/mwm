@@ -16,6 +16,7 @@
 //  along with this program.  If not, see http://www.gnu.org/licenses
 
 #import "ConfigurationFormView.h"
+#import "MWMTheme.h"
 #import "SlateConfigDocument.h"
 #import "SlateConfig.h"
 #import "SlateShortcut.h"
@@ -247,7 +248,7 @@ static NSString *DisplayValue(id value) {
   [self.titleLabel setFont:[NSFont boldSystemFontOfSize:15]];
   [self.titleLabel setTranslatesAutoresizingMaskIntoConstraints:NO];
   self.infoLabel = [NSTextField wrappingLabelWithString:@""];
-  [self.infoLabel setTextColor:[NSColor secondaryLabelColor]];
+  [self.infoLabel setTextColor:[MWMTheme textSecondary]];
   [self.infoLabel setTranslatesAutoresizingMaskIntoConstraints:NO];
   self.addButton = [self symbolButton:@"plus" tip:@"Add" action:@selector(add:)];
   self.removeButton = [self symbolButton:@"minus" tip:@"Remove the selected rows" action:@selector(remove:)];
@@ -275,8 +276,8 @@ static NSString *DisplayValue(id value) {
 
   // Pages that aren't built yet
   self.placeholderTitle = [NSTextField labelWithString:@""];
-  [self.placeholderTitle setFont:[NSFont systemFontOfSize:15 weight:NSFontWeightMedium]];
-  [self.placeholderTitle setTextColor:[NSColor secondaryLabelColor]];
+  [self.placeholderTitle setFont:[MWMTheme fontHeading]];
+  [self.placeholderTitle setTextColor:[MWMTheme textSecondary]];
   [self.placeholderTitle setTranslatesAutoresizingMaskIntoConstraints:NO];
   self.placeholderView = [[NSView alloc] init];
   [self.placeholderView setTranslatesAutoresizingMaskIntoConstraints:NO];
@@ -300,7 +301,7 @@ static NSString *DisplayValue(id value) {
   [self.conflictsButton setImage:[NSImage imageWithSystemSymbolName:@"exclamationmark.triangle.fill" accessibilityDescription:@"Conflicts"]];
   [self.conflictsButton setImagePosition:NSImageLeft];
   [self.conflictsButton setBordered:NO];
-  [self.conflictsButton setContentTintColor:[NSColor systemOrangeColor]];
+  [self.conflictsButton setContentTintColor:[MWMTheme warning]];
   [self.conflictsButton setTranslatesAutoresizingMaskIntoConstraints:NO];
   [self.conflictsButton setHidden:YES];
 
@@ -646,7 +647,7 @@ static NSString *DisplayValue(id value) {
   if (header != nil) {
     NSTextField *label = [NSTextField labelWithString:[header uppercaseString]];
     [label setFont:[NSFont systemFontOfSize:11 weight:NSFontWeightSemibold]];
-    [label setTextColor:[NSColor tertiaryLabelColor]];
+    [label setTextColor:[MWMTheme textTertiary]];
     [label setTranslatesAutoresizingMaskIntoConstraints:NO];
     [cell addSubview:label];
     [NSLayoutConstraint activateConstraints:@[
@@ -662,7 +663,7 @@ static NSString *DisplayValue(id value) {
   [title setLineBreakMode:NSLineBreakByTruncatingTail];
   NSUInteger count = [self countForSection:(ConfigurationFormSection)row];
   NSTextField *countLabel = [NSTextField labelWithString:count > 0 ? [NSString stringWithFormat:@"%lu", (unsigned long)count] : @""];
-  [countLabel setTextColor:[NSColor secondaryLabelColor]];
+  [countLabel setTextColor:[MWMTheme textSecondary]];
   [countLabel setFont:[NSFont monospacedDigitSystemFontOfSize:[NSFont smallSystemFontSize] weight:NSFontWeightRegular]];
   for (NSView *view in @[icon, title, countLabel]) {
     [view setTranslatesAutoresizingMaskIntoConstraints:NO];
@@ -707,7 +708,7 @@ static NSString *DisplayValue(id value) {
   [field setPlaceholderString:placeholder];
   [field setLineBreakMode:NSLineBreakByTruncatingTail];
   [[field cell] setSendsActionOnEndEditing:YES];
-  [field setFont:monospaced ? [NSFont monospacedSystemFontOfSize:12 weight:NSFontWeightRegular] : [NSFont systemFontOfSize:13]];
+  [field setFont:monospaced ? [MWMTheme fontMono] : [MWMTheme fontBody]];
   return [self cellWith:field];
 }
 
@@ -741,7 +742,7 @@ static NSString *DisplayValue(id value) {
   if ([column isEqualToString:kColDefault]) {
     NSString *fallback = [[SlateConfig getInstance] getConfigDefault:entry.name];
     NSTextField *label = [NSTextField labelWithString:fallback == nil ? @"Unknown setting" : ([fallback length] > 0 ? fallback : @"(empty)")];
-    [label setTextColor:fallback == nil ? [NSColor systemOrangeColor] : [NSColor secondaryLabelColor]];
+    [label setTextColor:fallback == nil ? [MWMTheme warning] : [MWMTheme textSecondary]];
     [label setLineBreakMode:NSLineBreakByTruncatingTail];
     return [self cellWith:label];
   }

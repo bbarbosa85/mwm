@@ -16,6 +16,7 @@
 //  along with this program.  If not, see http://www.gnu.org/licenses
 
 #import "ConfigurationActionView.h"
+#import "MWMTheme.h"
 #import "SlateAction.h"
 #import "SlateConfigDocument.h"
 
@@ -38,7 +39,7 @@
   NSRect window = NSMakeRect(screen.origin.x + f.origin.x * screen.size.width,
                              screen.origin.y + (1 - f.origin.y - f.size.height) * screen.size.height,
                              f.size.width * screen.size.width, f.size.height * screen.size.height);
-  [[[NSColor controlAccentColor] colorWithAlphaComponent:0.55] setFill];
+  [[[MWMTheme accent] colorWithAlphaComponent:0.55] setFill];
   [NSBezierPath fillRect:NSIntersectionRect(window, screen)];
 }
 @end
@@ -109,7 +110,7 @@ static NSArray<NSString *> *ApplicationNames(void) {
 - (NSPopUpButton *)popupWithTitles:(NSArray<NSString *> *)titles values:(NSArray<NSString *> *)values selected:(NSString *)selected action:(SEL)action {
   NSPopUpButton *popup = [[NSPopUpButton alloc] initWithFrame:NSZeroRect pullsDown:NO];
   [popup setControlSize:NSControlSizeSmall];
-  [popup setFont:[NSFont systemFontOfSize:12]];
+  [popup setFont:[MWMTheme fontSmall]];
   NSUInteger selectedIndex = NSNotFound;
   for (NSUInteger i = 0; i < [titles count]; i++) {
     [popup addItemWithTitle:titles[i]];
@@ -131,7 +132,7 @@ static NSArray<NSString *> *ApplicationNames(void) {
 - (NSTextField *)fieldWithText:(NSString *)text placeholder:(NSString *)placeholder width:(CGFloat)width monospaced:(BOOL)monospaced action:(SEL)action {
   NSTextField *field = [NSTextField textFieldWithString:text ?: @""];
   [field setControlSize:NSControlSizeSmall];
-  [field setFont:monospaced ? [NSFont monospacedSystemFontOfSize:12 weight:NSFontWeightRegular] : [NSFont systemFontOfSize:12]];
+  [field setFont:monospaced ? [MWMTheme fontMono] : [MWMTheme fontSmall]];
   [field setPlaceholderString:placeholder];
   [field setLineBreakMode:NSLineBreakByTruncatingTail];
   [field setTarget:self];
@@ -144,8 +145,8 @@ static NSArray<NSString *> *ApplicationNames(void) {
 
 - (NSTextField *)labelWithText:(NSString *)text {
   NSTextField *label = [NSTextField labelWithString:text];
-  [label setFont:[NSFont systemFontOfSize:12]];
-  [label setTextColor:[NSColor secondaryLabelColor]];
+  [label setFont:[MWMTheme fontSmall]];
+  [label setTextColor:[MWMTheme textSecondary]];
   [label setContentHuggingPriority:NSLayoutPriorityRequired forOrientation:NSLayoutConstraintOrientationHorizontal];
   return label;
 }
@@ -192,7 +193,7 @@ static NSArray<NSString *> *ApplicationNames(void) {
     case SlateActionKindFocusApp: {
       NSComboBox *combo = [[NSComboBox alloc] initWithFrame:NSZeroRect];
       [combo setControlSize:NSControlSizeSmall];
-      [combo setFont:[NSFont systemFontOfSize:12]];
+      [combo setFont:[MWMTheme fontSmall]];
       [combo addItemsWithObjectValues:ApplicationNames()];
       [combo setCompletes:YES];
       [combo setStringValue:m.a];

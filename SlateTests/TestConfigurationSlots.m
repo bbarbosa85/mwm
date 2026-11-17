@@ -160,11 +160,11 @@ static NSString *const kConfig =
   ConfigurationSlotsView *page = [self pageWithConfig:kConfig document:&doc];
   [page selectSlotNamed:@"centre"];
   XCTAssertEqualObjects([self textOf:@"editorTitle" in:page], @"Editing Slot");
-  XCTAssertEqualObjects([self textOf:@"changesLabel" in:page], @"No changes");
+  XCTAssertEqualObjects([[page valueForKey:@"changesChip"] text], @"No changes");
   XCTAssertFalse([[page valueForKey:@"saveButton"] isEnabled], @"Save is dimmed until something changes");
   page.draftRect = CGRectMake(0.1, 0, 0.5, 1);
   [page performSelector:NSSelectorFromString(@"refresh")];
-  XCTAssertTrue([[self textOf:@"changesLabel" in:page] containsString:@"Unsaved changes"]);
+  XCTAssertTrue([[[page valueForKey:@"changesChip"] text] containsString:@"Unsaved changes"]);
   XCTAssertTrue([[page valueForKey:@"saveButton"] isEnabled]);
   [page startNewSlot];
   XCTAssertEqualObjects([self textOf:@"editorTitle" in:page], @"New Slot");

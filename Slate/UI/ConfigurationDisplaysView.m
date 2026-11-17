@@ -16,6 +16,7 @@
 //  along with this program.  If not, see http://www.gnu.org/licenses
 
 #import "ConfigurationDisplaysView.h"
+#import "MWMTheme.h"
 #import "ConfigurationBlockView.h"
 #import "SlateConfigDocument.h"
 #import "SlateDisplays.h"
@@ -50,16 +51,16 @@ static const CGFloat kStatusWidth = 170;
   CGFloat scale = MIN(area.size.width / (maxX - minX), area.size.height / (maxY - minY));
   CGFloat offsetX = area.origin.x + (area.size.width - (maxX - minX) * scale) / 2;
   CGFloat offsetY = area.origin.y + (area.size.height - (maxY - minY) * scale) / 2;
-  NSDictionary *nameAttributes = @{NSFontAttributeName: [NSFont systemFontOfSize:12 weight:NSFontWeightMedium], NSForegroundColorAttributeName: [NSColor labelColor]};
-  NSDictionary *sizeAttributes = @{NSFontAttributeName: [NSFont systemFontOfSize:11], NSForegroundColorAttributeName: [NSColor secondaryLabelColor]};
+  NSDictionary *nameAttributes = @{NSFontAttributeName: [NSFont systemFontOfSize:12 weight:NSFontWeightMedium], NSForegroundColorAttributeName: [MWMTheme textPrimary]};
+  NSDictionary *sizeAttributes = @{NSFontAttributeName: [MWMTheme fontCaption], NSForegroundColorAttributeName: [MWMTheme textSecondary]};
   for (SlateDisplay *d in self.displays) {
     // y grows downward in the model; this view isn't flipped.
     NSRect rect = NSMakeRect(offsetX + (d.originX - minX) * scale,
                              offsetY + (maxY - d.originY - d.height) * scale, d.width * scale, d.height * scale);
     NSBezierPath *path = [NSBezierPath bezierPathWithRoundedRect:rect xRadius:6 yRadius:6];
-    [[[NSColor controlAccentColor] colorWithAlphaComponent:0.12] setFill];
+    [[[MWMTheme accent] colorWithAlphaComponent:0.12] setFill];
     [path fill];
-    [[NSColor tertiaryLabelColor] setStroke];
+    [[MWMTheme textTertiary] setStroke];
     [path setLineWidth:1.5];
     [path stroke];
     NSString *title = d.builtIn ? @"Built-in" : d.name;
@@ -188,7 +189,7 @@ static const CGFloat kStatusWidth = 170;
 }
 
 - (NSView *)statusText:(NSString *)text {
-  return [self columnText:text width:kStatusWidth color:[NSColor secondaryLabelColor]];
+  return [self columnText:text width:kStatusWidth color:[MWMTheme textSecondary]];
 }
 
 - (NSButton *)iconButton:(NSString *)symbol tip:(NSString *)tip action:(SEL)action identifier:(NSString *)identifier {
@@ -202,7 +203,7 @@ static const CGFloat kStatusWidth = 170;
 - (NSTextField *)nameFieldForEntry:(SlateConfigEntry *)entry {
   NSTextField *field = [NSTextField textFieldWithString:entry.name];
   [field setIdentifier:entry.name];
-  [field setFont:[NSFont monospacedSystemFontOfSize:12 weight:NSFontWeightRegular]];
+  [field setFont:[MWMTheme fontMono]];
   [field setTarget:self];
   [field setAction:@selector(nameEdited:)];
   [[field cell] setSendsActionOnEndEditing:YES];
@@ -224,8 +225,8 @@ static const CGFloat kStatusWidth = 170;
   NSView *spacer = [[NSView alloc] init];
   [spacer setContentHuggingPriority:1 forOrientation:NSLayoutConstraintOrientationHorizontal];
   NSMutableArray *views = [NSMutableArray arrayWithObjects:name,
-      [self columnText:details[0] width:kScreenWidth color:[NSColor secondaryLabelColor]],
-      [self columnText:details[1] width:kSizeWidth color:[NSColor secondaryLabelColor]],
+      [self columnText:details[0] width:kScreenWidth color:[MWMTheme textSecondary]],
+      [self columnText:details[1] width:kSizeWidth color:[MWMTheme textSecondary]],
       status, spacer, nil];
   [views addObjectsFromArray:actions];
   NSStackView *row = [NSStackView stackViewWithViews:views];
@@ -247,7 +248,7 @@ static const CGFloat kStatusWidth = 170;
 - (NSView *)columnHeaderWithStatusTitle:(NSString *)statusTitle {
   NSMutableArray *views = [NSMutableArray array];
   for (NSArray *column in @[@[@"Name", @(kNameWidth)], @[@"Screen", @(kScreenWidth)], @[@"Size", @(kSizeWidth)], @[statusTitle, @(kStatusWidth)]]) {
-    [views addObject:[self columnText:column[0] width:[column[1] doubleValue] color:[NSColor tertiaryLabelColor]]];
+    [views addObject:[self columnText:column[0] width:[column[1] doubleValue] color:[MWMTheme textTertiary]]];
   }
   NSStackView *header = [NSStackView stackViewWithViews:views];
   [header setSpacing:12];
@@ -296,7 +297,7 @@ static const CGFloat kStatusWidth = 170;
 
   // Top: what was detected, and the button to look again.
   NSString *count = [NSString stringWithFormat:@"%lu screen%@ connected", (unsigned long)[self.displays count], [self.displays count] == 1 ? @"" : @"s"];
-  NSTextField *status = [self labelWithText:count size:13 color:[NSColor labelColor] weight:NSFontWeightMedium];
+  NSTextField *status = [self labelWithText:count size:13 color:[MWMTheme textPrimary] weight:NSFontWeightMedium];
   NSButton *detect = [NSButton buttonWithTitle:@"Detect Again" target:self action:@selector(detectPressed:)];
   [detect setToolTip:@"Look at the connected screens again and add any that aren't named yet"];
   NSView *spacer = [[NSView alloc] init];
@@ -324,8 +325,8 @@ static const CGFloat kStatusWidth = 170;
   for (SlateDisplay *display in [self unnamedDisplays]) {
     NSButton *add = [NSButton buttonWithTitle:@"Add" target:self action:@selector(addDisplay:)];
     [add setIdentifier:[SlateDisplays roleForDisplay:display in:self.displays]];
-    NSTextField *name = [self labelWithText:[SlateDisplays suggestedNameForDisplay:display in:self.displays] size:12 color:[NSColor secondaryLabelColor] weight:NSFontWeightRegular];
-    [name setFont:[NSFont monospacedSystemFontOfSize:12 weight:NSFontWeightRegular]];
+    NSTextField *name = [self labelWithText:[SlateDisplays suggestedNameForDisplay:display in:self.displays] size:12 color:[MWMTheme textSecondary] weight:NSFontWeightRegular];
+    [name setFont:[MWMTheme fontMono]];
     [[name.widthAnchor constraintEqualToConstant:kNameWidth] setActive:YES];
     [self addFullWidth:[self rowWithName:name details:[self detailsForDisplay:display]
                                   status:[self statusText:@"Not named yet"] actions:@[add] dimmed:NO]];
@@ -341,8 +342,8 @@ static const CGFloat kStatusWidth = 170;
   NSMutableArray *others = [NSMutableArray array];
   for (SlateConfigEntry *entry in self.document.monitors) if (![SlateDisplays isRole:[entry.value description]]) [others addObject:entry];
   if ([others count] > 0) {
-    NSTextField *title = [self labelWithText:@"Other references" size:13 color:[NSColor labelColor] weight:NSFontWeightMedium];
-    NSTextField *note = [self labelWithText:@"Numbers and sizes still work. A screen number changes when you plug or unplug a screen; a role doesn't." size:11 color:[NSColor secondaryLabelColor] weight:NSFontWeightRegular];
+    NSTextField *title = [self labelWithText:@"Other references" size:13 color:[MWMTheme textPrimary] weight:NSFontWeightMedium];
+    NSTextField *note = [self labelWithText:@"Numbers and sizes still work. A screen number changes when you plug or unplug a screen; a role doesn't." size:11 color:[MWMTheme textSecondary] weight:NSFontWeightRegular];
     NSStackView *heading = [NSStackView stackViewWithViews:@[title, note]];
     [heading setOrientation:NSUserInterfaceLayoutOrientationVertical];
     [heading setAlignment:NSLayoutAttributeLeading];
@@ -365,7 +366,7 @@ static const CGFloat kStatusWidth = 170;
 - (NSView *)otherRowForEntry:(SlateConfigEntry *)entry {
   NSTextField *value = [NSTextField textFieldWithString:[entry.value description]];
   [value setIdentifier:entry.name];
-  [value setFont:[NSFont monospacedSystemFontOfSize:12 weight:NSFontWeightRegular]];
+  [value setFont:[MWMTheme fontMono]];
   [value setTarget:self];
   [value setAction:@selector(valueEdited:)];
   [[value cell] setSendsActionOnEndEditing:YES];

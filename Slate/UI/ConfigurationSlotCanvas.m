@@ -16,6 +16,7 @@
 //  along with this program.  If not, see http://www.gnu.org/licenses
 
 #import "ConfigurationSlotCanvas.h"
+#import "MWMTheme.h"
 #import "SlateSlots.h"
 
 static const CGFloat kRulerHeight = 20;
@@ -76,9 +77,9 @@ typedef NS_OPTIONS(NSUInteger, SlotEdges) {
 - (void)drawRect:(NSRect)dirtyRect {
   NSRect screen = [self screenRect];
   NSBezierPath *frame = [NSBezierPath bezierPathWithRoundedRect:screen xRadius:10 yRadius:10];
-  [[[NSColor labelColor] colorWithAlphaComponent:0.05] setFill];
+  [[MWMTheme surface] setFill];
   [frame fill];
-  [[NSColor tertiaryLabelColor] setStroke];
+  [[MWMTheme textTertiary] setStroke];
   [frame setLineWidth:1.5];
   [frame stroke];
 
@@ -92,11 +93,11 @@ typedef NS_OPTIONS(NSUInteger, SlotEdges) {
       [lines moveToPoint:NSMakePoint(NSMinX(screen), y)]; [lines lineToPoint:NSMakePoint(NSMaxX(screen), y)];
     }
     [lines setLineWidth:1];
-    [[[NSColor labelColor] colorWithAlphaComponent:0.12] setStroke];
+    [[[MWMTheme textPrimary] colorWithAlphaComponent:0.12] setStroke];
     [lines stroke];
   }
   // The ruler above the screen follows the grid (every line when there are few).
-  NSDictionary *tick = @{NSFontAttributeName: [NSFont systemFontOfSize:10], NSForegroundColorAttributeName: [NSColor tertiaryLabelColor]};
+  NSDictionary *tick = @{NSFontAttributeName: [NSFont systemFontOfSize:10], NSForegroundColorAttributeName: [MWMTheme textTertiary]};
   NSMutableArray *marks = [NSMutableArray array];
   if (n >= 2 && n <= 6) for (NSInteger i = 0; i <= n; i++) [marks addObject:@((CGFloat)i / n)];
   else [marks addObjectsFromArray:@[@0, @0.5, @1]];
@@ -110,7 +111,7 @@ typedef NS_OPTIONS(NSUInteger, SlotEdges) {
 
   if (!self.hasSlot) return;
   NSRect slot = [self viewRectForSlot:self.rect];
-  NSColor *accent = self.editable ? [NSColor controlAccentColor] : [NSColor secondaryLabelColor];
+  NSColor *accent = self.editable ? [MWMTheme accent] : [MWMTheme textSecondary];
   NSBezierPath *path = [NSBezierPath bezierPathWithRoundedRect:slot xRadius:7 yRadius:7];
   [[accent colorWithAlphaComponent:0.18] setFill];
   [path fill];
@@ -119,7 +120,7 @@ typedef NS_OPTIONS(NSUInteger, SlotEdges) {
   [path stroke];
 
   NSDictionary *nameAttributes = @{NSFontAttributeName: [NSFont systemFontOfSize:14 weight:NSFontWeightMedium], NSForegroundColorAttributeName: accent};
-  NSDictionary *summaryAttributes = @{NSFontAttributeName: [NSFont systemFontOfSize:11], NSForegroundColorAttributeName: [accent colorWithAlphaComponent:0.85]};
+  NSDictionary *summaryAttributes = @{NSFontAttributeName: [MWMTheme fontCaption], NSForegroundColorAttributeName: [accent colorWithAlphaComponent:0.85]};
   NSString *name = [self.title length] > 0 ? self.title : @"New slot";
   NSString *summary = [[SlateSlot slotNamed:@"" rect:self.rect preset:NO] summary];
   NSSize nameSize = [name sizeWithAttributes:nameAttributes], summarySize = [summary sizeWithAttributes:summaryAttributes];

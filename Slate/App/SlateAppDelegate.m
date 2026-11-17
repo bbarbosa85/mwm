@@ -21,6 +21,7 @@
 #import <ServiceManagement/ServiceManagement.h>
 #import "Constants.h"
 #import "SlateAppDelegate.h"
+#import "MWMDesignGallery.h"
 #import "SlateConfig.h"
 #import "JSController.h"
 #import "Binding.h"
@@ -73,6 +74,10 @@ static EventHandlerRef modifiersEvent;
   NSString *relaunchScript = [NSString stringWithFormat:@"while kill -0 %@ 2>/dev/null; do sleep 0.1; done; open -n \"%@\"", processID, appPath];
   [NSTask launchedTaskWithLaunchPath:@"/bin/sh" arguments:[NSArray arrayWithObjects:@"-c", relaunchScript, nil]];
   [NSApp terminate:self];
+}
+
+- (void)showDesignGallery {
+  [MWMDesignGallery showWindow];
 }
 
 - (IBAction)configureSlate {
@@ -460,6 +465,9 @@ OSStatus OnModifiersChangedEvent(EventHandlerCallRef nextHandler, EventRef theEv
   [self addItem:@"About MWM" action:@selector(aboutWindow) key:@"" to:menu];
   [menu addItem:[NSMenuItem separatorItem]];
   [self addItem:@"Configure MWM…" action:@selector(configureSlate) key:@"," to:menu];
+  NSMenuItem *gallery = [self addItem:@"Design System…" action:@selector(showDesignGallery) key:@"," to:menu];   // shown while Option is held
+  [gallery setKeyEquivalentModifierMask:NSEventModifierFlagCommand | NSEventModifierFlagOption];
+  [gallery setAlternate:YES];
   [[self addItem:@"Reload Configuration" action:@selector(relaunch) key:@"" to:menu]
     setToolTip:@"Restart MWM to load the configuration file again"];
   launchOnLoginItem = [self addItem:@"Launch MWM at Login" action:@selector(updateLaunchState) key:@"" to:menu];

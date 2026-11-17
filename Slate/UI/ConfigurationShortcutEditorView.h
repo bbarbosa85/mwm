@@ -64,6 +64,9 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)confirmRecording;
 - (void)cancelRecording;
 
+// Picks the slot a Move shortcut goes to, as clicking its row would.
+- (void)chooseSlotNamed:(NSString *)name;
+
 - (void)save;
 - (void)close;
 

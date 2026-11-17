@@ -318,4 +318,36 @@ static NSString *const kConfig =
   XCTAssertEqualObjects(keyboard.editor.draftKeyName, @"j");
 }
 
+
+- (NSUInteger)slotRowsIn:(NSView *)root {
+  NSUInteger count = 0;
+  NSMutableArray *queue = [NSMutableArray arrayWithObject:root];
+  while ([queue count] > 0) {
+    NSView *view = [queue lastObject];
+    [queue removeLastObject];
+    if ([[view identifier] hasPrefix:@"slot-"] && ![[view identifier] isEqualToString:@"slot-search"] && ![[view identifier] isEqualToString:@"slot-filter"] && ![[view identifier] isEqualToString:@"slot-list"]) count++;
+    [queue addObjectsFromArray:[view subviews]];
+  }
+  return count;
+}
+
+- (void)testTheSlotPickerListsSlotsFiltersThemAndPicksOne {
+  SlateConfigDocument *doc;
+  ConfigurationShortcutEditorView *editor = [self editorWith:&doc];
+  [editor startNewWithGroup:nil keyName:nil];
+  [editor selectKind:SlateActionKindMove];
+  [[editor window] layoutIfNeeded];
+  NSUInteger all = [self slotRowsIn:editor];
+  XCTAssertGreaterThanOrEqual(all, 19u, @"the presets are all there");
+  NSSearchField *search = (NSSearchField *)[self viewIn:editor identifier:@"slot-search"];
+  XCTAssertNotNil(search);
+  [search setStringValue:@"third"];
+  [[NSNotificationCenter defaultCenter] postNotificationName:NSControlTextDidChangeNotification object:search];
+  NSUInteger filtered = [self slotRowsIn:editor];
+  XCTAssertLessThan(filtered, all);
+  XCTAssertGreaterThan(filtered, 0u);
+  [editor chooseSlotNamed:@"lefthalf"];
+  XCTAssertEqualObjects(editor.draftAction.a, @"lefthalf");
+}
+
 @end

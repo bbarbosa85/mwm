@@ -16,6 +16,7 @@
 //  along with this program.  If not, see http://www.gnu.org/licenses
 
 #import "ConfigurationSettingsView.h"
+#import "MWMTheme.h"
 #import "ConfigurationBlockView.h"
 #import "SlateConfigDocument.h"
 #import "SlateConfig.h"
@@ -139,8 +140,8 @@ static id TypedValue(NSString *text) {
 
 // A label with an optional smaller line under it.
 - (NSView *)textWithTitle:(NSString *)title subtitle:(NSString *)subtitle {
-  NSMutableArray *lines = [NSMutableArray arrayWithObject:[self labelWithText:title size:13 color:[NSColor labelColor] weight:NSFontWeightRegular]];
-  if ([subtitle length] > 0) [lines addObject:[self labelWithText:subtitle size:11 color:[NSColor secondaryLabelColor] weight:NSFontWeightRegular]];
+  NSMutableArray *lines = [NSMutableArray arrayWithObject:[self labelWithText:title size:13 color:[MWMTheme textPrimary] weight:NSFontWeightRegular]];
+  if ([subtitle length] > 0) [lines addObject:[self labelWithText:subtitle size:11 color:[MWMTheme textSecondary] weight:NSFontWeightRegular]];
   NSStackView *stack = [NSStackView stackViewWithViews:lines];
   [stack setOrientation:NSUserInterfaceLayoutOrientationVertical];
   [stack setAlignment:NSLayoutAttributeLeading];
@@ -182,11 +183,11 @@ static id TypedValue(NSString *text) {
   [block setTranslatesAutoresizingMaskIntoConstraints:NO];
 
   NSImageView *icon = [NSImageView imageViewWithImage:[NSImage imageWithSystemSymbolName:symbol accessibilityDescription:nil]];
-  [icon setContentTintColor:[NSColor secondaryLabelColor]];
+  [icon setContentTintColor:[MWMTheme textSecondary]];
   [icon setSymbolConfiguration:[NSImageSymbolConfiguration configurationWithPointSize:16 weight:NSFontWeightRegular]];
   [icon setContentHuggingPriority:NSLayoutPriorityRequired forOrientation:NSLayoutConstraintOrientationHorizontal];
   NSView *heading = [self textWithTitle:title subtitle:subtitle];
-  [(NSTextField *)[[(NSStackView *)heading arrangedSubviews] firstObject] setFont:[NSFont systemFontOfSize:13 weight:NSFontWeightMedium]];
+  [(NSTextField *)[[(NSStackView *)heading arrangedSubviews] firstObject] setFont:[MWMTheme fontBodyStrong]];
   NSStackView *left = [NSStackView stackViewWithViews:@[icon, heading]];
   [left setOrientation:NSUserInterfaceLayoutOrientationHorizontal];
   [left setAlignment:NSLayoutAttributeTop];
@@ -287,7 +288,7 @@ static id TypedValue(NSString *text) {
   [slider setIdentifier:name];
   [slider setContinuous:YES];
   [[slider.widthAnchor constraintGreaterThanOrEqualToConstant:160] setActive:YES];
-  NSTextField *value = [self labelWithText:[NSString stringWithFormat:@"%.2f s", [slider doubleValue]] size:12 color:[NSColor secondaryLabelColor] weight:NSFontWeightRegular];
+  NSTextField *value = [self labelWithText:[NSString stringWithFormat:@"%.2f s", [slider doubleValue]] size:12 color:[MWMTheme textSecondary] weight:NSFontWeightRegular];
   [value setIdentifier:[name stringByAppendingString:@".value"]];
   [[value.widthAnchor constraintEqualToConstant:48] setActive:YES];
   [value setAlignment:NSTextAlignmentRight];
@@ -308,14 +309,14 @@ static id TypedValue(NSString *text) {
 
 - (NSView *)otherSettingRow:(SlateConfigEntry *)entry {
   NSString *fallback = [[SlateConfig getInstance] getConfigDefault:entry.name];
-  NSTextField *name = [self labelWithText:entry.name size:12 color:fallback == nil ? [NSColor systemOrangeColor] : [NSColor labelColor] weight:NSFontWeightRegular];
-  [name setFont:[NSFont monospacedSystemFontOfSize:12 weight:NSFontWeightRegular]];
+  NSTextField *name = [self labelWithText:entry.name size:12 color:fallback == nil ? [MWMTheme warning] : [MWMTheme textPrimary] weight:NSFontWeightRegular];
+  [name setFont:[MWMTheme fontMono]];
   [[name.widthAnchor constraintEqualToConstant:210] setActive:YES];
   [name setToolTip:fallback == nil ? @"MWM doesn't know this setting" : [NSString stringWithFormat:@"Default: %@", [fallback length] > 0 ? fallback : @"(empty)"]];
   NSString *shown = [self valueOfSetting:entry.name];
   NSTextField *value = [NSTextField textFieldWithString:shown];
   [value setIdentifier:entry.name];
-  [value setFont:[NSFont monospacedSystemFontOfSize:12 weight:NSFontWeightRegular]];
+  [value setFont:[MWMTheme fontMono]];
   [value setTarget:self];
   [value setAction:@selector(otherSettingEdited:)];
   [[value cell] setSendsActionOnEndEditing:YES];

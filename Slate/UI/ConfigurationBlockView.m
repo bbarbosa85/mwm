@@ -16,6 +16,7 @@
 //  along with this program.  If not, see http://www.gnu.org/licenses
 
 #import "ConfigurationBlockView.h"
+#import "MWMTheme.h"
 
 @implementation ConfigurationFlippedView
 - (BOOL)isFlipped { return YES; }
@@ -33,7 +34,7 @@
 - (void)viewDidChangeEffectiveAppearance {
   [super viewDidChangeEffectiveAppearance];
   [self.effectiveAppearance performAsCurrentDrawingAppearance:^{
-    [[self layer] setBackgroundColor:[[[NSColor labelColor] colorWithAlphaComponent:0.05] CGColor]];
+    [[self layer] setBackgroundColor:[[MWMTheme surface] CGColor]];
   }];
 }
 - (void)viewDidMoveToWindow {
@@ -57,7 +58,7 @@
 - (void)updateTint {
   [self.effectiveAppearance performAsCurrentDrawingAppearance:^{
     [[self layer] setCornerRadius:self.cornerRadius];
-    [[self layer] setBackgroundColor:self.selected ? [[[NSColor controlAccentColor] colorWithAlphaComponent:0.16] CGColor] : [[NSColor clearColor] CGColor]];
+    [[self layer] setBackgroundColor:self.selected ? [[[MWMTheme accent] colorWithAlphaComponent:0.16] CGColor] : [[NSColor clearColor] CGColor]];
   }];
 }
 - (void)viewDidChangeEffectiveAppearance { [super viewDidChangeEffectiveAppearance]; [self updateTint]; }
@@ -71,9 +72,9 @@
   CGFloat height = MIN(NSHeight(bounds), NSWidth(bounds) / 1.7), width = height * 1.7;
   NSRect screen = NSMakeRect(NSMidX(bounds) - width / 2, NSMidY(bounds) - height / 2, width, height);
   NSBezierPath *frame = [NSBezierPath bezierPathWithRoundedRect:screen xRadius:6 yRadius:6];
-  [[[NSColor labelColor] colorWithAlphaComponent:0.05] setFill];
+  [[MWMTheme surface] setFill];
   [frame fill];
-  [[NSColor tertiaryLabelColor] setStroke];
+  [[MWMTheme textTertiary] setStroke];
   [frame setLineWidth:1.2];
   [frame stroke];
   if (!self.valid) return;
@@ -81,9 +82,9 @@
                            NSMaxY(screen) - 3 - (self.rect.origin.y + self.rect.size.height) * (NSHeight(screen) - 6),
                            self.rect.size.width * (NSWidth(screen) - 6), self.rect.size.height * (NSHeight(screen) - 6));
   NSBezierPath *path = [NSBezierPath bezierPathWithRoundedRect:slot xRadius:3 yRadius:3];
-  [[[NSColor controlAccentColor] colorWithAlphaComponent:0.25] setFill];
+  [[[MWMTheme accent] colorWithAlphaComponent:0.25] setFill];
   [path fill];
-  [[NSColor controlAccentColor] setStroke];
+  [[MWMTheme accent] setStroke];
   [path setLineWidth:1.5];
   [path stroke];
 }

@@ -16,6 +16,7 @@
 //  along with this program.  If not, see http://www.gnu.org/licenses
 
 #import "ConfigurationWindowController.h"
+#import "MWMTheme.h"
 #import "ConfigurationFormView.h"
 #import "ConfigurationStatusBar.h"
 #import "SlateAppDelegate.h"
@@ -166,7 +167,7 @@ typedef NS_ENUM(NSInteger, SaveState) {
   [self.formView showUnavailableMessage:message];
   self.baselineText = @"";
   self.lastResult = nil;
-  [self.bar setStatusText:@"Can't be read" symbol:@"xmark.octagon.fill" color:[NSColor systemRedColor] tip:nil];
+  [self.bar setStatusText:@"Can't be read" symbol:@"xmark.octagon.fill" color:[MWMTheme danger] tip:nil];
   [self updateSaveState:SaveStateUnreadable];
 }
 
@@ -303,13 +304,13 @@ typedef NS_ENUM(NSInteger, SaveState) {
   NSColor *color;
   switch (state) {
     case SaveStateSaved:
-      text = @"Saved"; symbol = @"checkmark.circle.fill"; color = [NSColor secondaryLabelColor]; break;
+      text = @"Saved"; symbol = @"checkmark.circle.fill"; color = [MWMTheme textSecondary]; break;
     case SaveStateNotCreated:
-      text = @"Not created yet"; symbol = @"doc.badge.plus"; color = [NSColor secondaryLabelColor]; break;
+      text = @"Not created yet"; symbol = @"doc.badge.plus"; color = [MWMTheme textSecondary]; break;
     case SaveStateBlocked:
-      text = @"Not saved"; symbol = @"exclamationmark.circle.fill"; color = [NSColor systemRedColor]; break;
+      text = @"Not saved"; symbol = @"exclamationmark.circle.fill"; color = [MWMTheme danger]; break;
     case SaveStateUnreadable:
-      text = @"Not loaded"; symbol = @"exclamationmark.circle.fill"; color = [NSColor systemRedColor]; break;
+      text = @"Not loaded"; symbol = @"exclamationmark.circle.fill"; color = [MWMTheme danger]; break;
   }
   [self.bar setSavedText:text symbol:symbol color:color];
   [[self window] setDocumentEdited:state == SaveStateBlocked];
@@ -335,12 +336,12 @@ typedef NS_ENUM(NSInteger, SaveState) {
                       [self plural:result.settingCount of:@"setting"]];
   if (result.errorCount > 0) {
     [self setStatus:[NSString stringWithFormat:@"%@ · %@", [self plural:result.errorCount of:@"error"], [self messageFor:result.issues[0]]]
-             symbol:@"xmark.octagon.fill" color:[NSColor systemRedColor]];
+             symbol:@"xmark.octagon.fill" color:[MWMTheme danger]];
   } else if (result.warningCount > 0) {
     [self setStatus:[NSString stringWithFormat:@"Valid · %@ · %@", counts, [self plural:result.warningCount of:@"warning"]]
-             symbol:@"exclamationmark.triangle.fill" color:[NSColor systemOrangeColor]];
+             symbol:@"exclamationmark.triangle.fill" color:[MWMTheme warning]];
   } else {
-    [self setStatus:[@"Valid · " stringByAppendingString:counts] symbol:@"checkmark.circle.fill" color:[NSColor systemGreenColor]];
+    [self setStatus:[@"Valid · " stringByAppendingString:counts] symbol:@"checkmark.circle.fill" color:[MWMTheme success]];
   }
   return result;
 }
@@ -361,7 +362,7 @@ typedef NS_ENUM(NSInteger, SaveState) {
     [item setTarget:self];
     [item setRepresentedObject:issue];
     [item setImage:[ConfigurationStatusBar symbol:issue.isError ? @"xmark.octagon.fill" : @"exclamationmark.triangle.fill"
-                                            color:issue.isError ? [NSColor systemRedColor] : [NSColor systemOrangeColor]]];
+                                            color:issue.isError ? [MWMTheme danger] : [MWMTheme warning]]];
   }
   [menu popUpMenuPositioningItem:nil atLocation:NSMakePoint(0, NSHeight([sender bounds]) + 4) inView:sender];
 }

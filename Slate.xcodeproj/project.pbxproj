@@ -7,6 +7,11 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		5E1A0C0B2D00000000000771 /* TestSnapshots.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D00000000000770 /* TestSnapshots.m */; };
+		5E1A0C0B2D00000000000768 /* MWMDesignGallery.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D00000000000767 /* MWMDesignGallery.m */; };
+		5E1A0C0B2D00000000000765 /* MWMComponents.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D00000000000764 /* MWMComponents.m */; };
+		5E1A0C0B2D00000000000762 /* MWMTheme.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D00000000000761 /* MWMTheme.m */; };
+		5E1A0C0B2D00000000000751 /* MWMColors.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D00000000000750 /* MWMColors.xcassets */; };
 		5E1A0C0B2D00000000000733 /* ConfigurationKeyboardMapView.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D00000000000732 /* ConfigurationKeyboardMapView.m */; };
 		5E1A0C0B2D00000000000713 /* ConfigurationKeyViews.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D00000000000712 /* ConfigurationKeyViews.m */; };
 		5E1A0C0B2D00000000000717 /* ConfigurationShortcutListView.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D00000000000716 /* ConfigurationShortcutListView.m */; };
@@ -160,6 +165,14 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		5E1A0C0B2D00000000000770 /* TestSnapshots.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TestSnapshots.m; sourceTree = "<group>"; };
+		5E1A0C0B2D00000000000766 /* MWMDesignGallery.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UI/MWMDesignGallery.h; sourceTree = "<group>"; };
+		5E1A0C0B2D00000000000767 /* MWMDesignGallery.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UI/MWMDesignGallery.m; sourceTree = "<group>"; };
+		5E1A0C0B2D00000000000763 /* MWMComponents.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UI/MWMComponents.h; sourceTree = "<group>"; };
+		5E1A0C0B2D00000000000764 /* MWMComponents.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UI/MWMComponents.m; sourceTree = "<group>"; };
+		5E1A0C0B2D00000000000760 /* MWMTheme.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UI/MWMTheme.h; sourceTree = "<group>"; };
+		5E1A0C0B2D00000000000761 /* MWMTheme.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UI/MWMTheme.m; sourceTree = "<group>"; };
+		5E1A0C0B2D00000000000750 /* MWMColors.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Resources/MWMColors.xcassets; sourceTree = "<group>"; };
 		5E1A0C0B2D00000000000730 /* ConfigurationKeyboardMapView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UI/ConfigurationKeyboardMapView.h; sourceTree = "<group>"; };
 		5E1A0C0B2D00000000000732 /* ConfigurationKeyboardMapView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UI/ConfigurationKeyboardMapView.m; sourceTree = "<group>"; };
 		5E1A0C0B2D00000000000710 /* ConfigurationKeyViews.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UI/ConfigurationKeyViews.h; sourceTree = "<group>"; };
@@ -475,6 +488,7 @@
 				5E1A0C0B2D00000000000674 /* TestSlateSlots.m */,
 				5E1A0C0B2D00000000000688 /* TestConfigurationSlots.m */,
 				5E1A0C0B2D00000000000708 /* TestSlateShortcutIndex.m */,
+				5E1A0C0B2D00000000000770 /* TestSnapshots.m */,
 				5E1A0C0B2D00000000000722 /* TestConfigurationKeyboard.m */,
 				5E1A0C0B2D00000000000213 /* TestSlateLegacyMigration.m */,
 				5E1A0C0B2D00000000000514 /* TestConfigurationAutosave.m */,
@@ -737,6 +751,13 @@
 				5E1A0C0B2D00000000000716 /* ConfigurationShortcutListView.m */,
 				5E1A0C0B2D00000000000740 /* ConfigurationShortcutEditorView.h */,
 				5E1A0C0B2D00000000000741 /* ConfigurationShortcutEditorView.m */,
+				5E1A0C0B2D00000000000750 /* MWMColors.xcassets */,
+				5E1A0C0B2D00000000000760 /* MWMTheme.h */,
+				5E1A0C0B2D00000000000761 /* MWMTheme.m */,
+				5E1A0C0B2D00000000000763 /* MWMComponents.h */,
+				5E1A0C0B2D00000000000764 /* MWMComponents.m */,
+				5E1A0C0B2D00000000000766 /* MWMDesignGallery.h */,
+				5E1A0C0B2D00000000000767 /* MWMDesignGallery.m */,
 				5E1A0C0B2D00000000000718 /* ConfigurationKeyboardView.h */,
 				5E1A0C0B2D00000000000720 /* ConfigurationKeyboardView.m */,
 				5E1A0C0B2D00000000000730 /* ConfigurationKeyboardMapView.h */,
@@ -856,6 +877,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				5E1A0C0B2D00000000000751 /* MWMColors.xcassets in Resources */,
 				47C4A29E1384E8890066B6DE /* InfoPlist.strings in Resources */,
 				47C4A2A41384E8890066B6DE /* Credits.rtf in Resources */,
 				4747E1EF13877C160005180C /* icon.icns in Resources */,
@@ -915,6 +937,9 @@
 				5E1A0C0B2D00000000000713 /* ConfigurationKeyViews.m in Sources */,
 				5E1A0C0B2D00000000000717 /* ConfigurationShortcutListView.m in Sources */,
 				5E1A0C0B2D00000000000742 /* ConfigurationShortcutEditorView.m in Sources */,
+				5E1A0C0B2D00000000000762 /* MWMTheme.m in Sources */,
+				5E1A0C0B2D00000000000765 /* MWMComponents.m in Sources */,
+				5E1A0C0B2D00000000000768 /* MWMDesignGallery.m in Sources */,
 				5E1A0C0B2D00000000000721 /* ConfigurationKeyboardView.m in Sources */,
 				5E1A0C0B2D00000000000733 /* ConfigurationKeyboardMapView.m in Sources */,
 				5E1A0C0B2D00000000000413 /* ConfigurationFormView.m in Sources */,
@@ -998,6 +1023,7 @@
 				5E1A0C0B2D00000000000675 /* TestSlateSlots.m in Sources */,
 				5E1A0C0B2D00000000000689 /* TestConfigurationSlots.m in Sources */,
 				5E1A0C0B2D00000000000709 /* TestSlateShortcutIndex.m in Sources */,
+				5E1A0C0B2D00000000000771 /* TestSnapshots.m in Sources */,
 				5E1A0C0B2D00000000000723 /* TestConfigurationKeyboard.m in Sources */,
 				5E1A0C0B2D00000000000214 /* TestSlateLegacyMigration.m in Sources */,
 				5E1A0C0B2D00000000000515 /* TestConfigurationAutosave.m in Sources */,
