@@ -16,6 +16,7 @@
 //  along with this program.  If not, see http://www.gnu.org/licenses
 
 #import "ConfigurationShortcutView.h"
+#import "MWMTheme.h"
 #import "SlateShortcut.h"
 
 static const UInt16 kEscapeKeyCode = 53;
@@ -105,7 +106,7 @@ static const UInt16 kEscapeKeyCode = 53;
 - (NSTextField *)noteWithText:(NSString *)text color:(NSColor *)color {
   NSTextField *label = [NSTextField labelWithString:text];
   [label setTextColor:color];
-  [label setFont:[NSFont systemFontOfSize:12]];
+  [label setFont:[MWMTheme fontSmall]];
   [label setLineBreakMode:NSLineBreakByTruncatingTail];
   return label;
 }
@@ -115,31 +116,31 @@ static const UInt16 kEscapeKeyCode = 53;
     [self.stack removeArrangedSubview:view];
     [view removeFromSuperview];
   }
-  [[self layer] setBackgroundColor:self.recording ? [[[NSColor controlAccentColor] colorWithAlphaComponent:0.12] CGColor] : [[NSColor clearColor] CGColor]];
+  [[self layer] setBackgroundColor:self.recording ? [[[MWMTheme accent] colorWithAlphaComponent:0.12] CGColor] : [[NSColor clearColor] CGColor]];
   [[self layer] setBorderWidth:self.recording ? 1 : 0];
-  [[self layer] setBorderColor:[[NSColor controlAccentColor] CGColor]];
+  [[self layer] setBorderColor:[[MWMTheme accent] CGColor]];
 
   if (self.recording) {
     for (NSString *name in self.heldModifiers) [self.stack addArrangedSubview:[self chipWithText:[SlateShortcut symbolForModifierName:name]]];
     [self.stack addArrangedSubview:[self noteWithText:self.hint ?: ([self.heldModifiers count] > 0 ? @"…" : @"Press the keys")
-                                                color:self.hint ? [NSColor systemOrangeColor] : [NSColor secondaryLabelColor]]];
+                                                color:self.hint ? [MWMTheme warning] : [MWMTheme textSecondary]]];
     [self setToolTip:@"Esc to cancel"];
     return;
   }
 
   [self setToolTip:self.conflict ?: @"Click to record a shortcut"];
   if (self.rawText != nil) {
-    NSTextField *raw = [self noteWithText:self.rawText color:[NSColor systemOrangeColor]];
-    [raw setFont:[NSFont monospacedSystemFontOfSize:12 weight:NSFontWeightRegular]];
+    NSTextField *raw = [self noteWithText:self.rawText color:[MWMTheme warning]];
+    [raw setFont:[MWMTheme fontMono]];
     [self.stack addArrangedSubview:raw];
     return;
   }
   for (NSString *name in self.modifierNames) [self.stack addArrangedSubview:[self chipWithText:[SlateShortcut symbolForModifierName:name]]];
   [self.stack addArrangedSubview:[self chipWithText:[SlateShortcut displayForKeyName:self.keyName ?: @"?"]]];
-  if ([self.aliasName length] > 0) [self.stack addArrangedSubview:[self noteWithText:self.aliasName color:[NSColor secondaryLabelColor]]];
+  if ([self.aliasName length] > 0) [self.stack addArrangedSubview:[self noteWithText:self.aliasName color:[MWMTheme textSecondary]]];
   if (self.conflict != nil) {
     NSImageView *warning = [NSImageView imageViewWithImage:[NSImage imageWithSystemSymbolName:@"exclamationmark.triangle.fill" accessibilityDescription:@"Conflict"]];
-    [warning setContentTintColor:[NSColor systemOrangeColor]];
+    [warning setContentTintColor:[MWMTheme warning]];
     [self.stack addArrangedSubview:warning];
   }
 }

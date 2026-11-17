@@ -15,6 +15,7 @@
 //  along with this program.  If not, see http://www.gnu.org/licenses
 
 #import "ConfigurationShortcutListView.h"
+#import "MWMTheme.h"
 #import "ConfigurationBlockView.h"
 #import "ConfigurationKeyViews.h"
 #import "SlateConfigDocument.h"
@@ -89,8 +90,8 @@ static const CGFloat kKeysColumnWidth = 210;
   [[self.filterStack.widthAnchor constraintEqualToAnchor:filterScroll.widthAnchor] setActive:YES];
 
   self.countLabel = [NSTextField labelWithString:@""];
-  [self.countLabel setFont:[NSFont systemFontOfSize:12]];
-  [self.countLabel setTextColor:[NSColor secondaryLabelColor]];
+  [self.countLabel setFont:[MWMTheme fontSmall]];
+  [self.countLabel setTextColor:[MWMTheme textSecondary]];
   NSButton *add = [NSButton buttonWithTitle:@"New Shortcut" target:self action:@selector(newPressed:)];
   [add setImage:[NSImage imageWithSystemSymbolName:@"plus" accessibilityDescription:nil]];
   [add setImagePosition:NSImageLeft];
@@ -174,7 +175,7 @@ static const CGFloat kKeysColumnWidth = 210;
 }
 
 - (NSTextField *)heading:(NSString *)text {
-  NSTextField *label = [self labelWithText:text size:11 color:[NSColor tertiaryLabelColor] weight:NSFontWeightSemibold];
+  NSTextField *label = [self labelWithText:text size:11 color:[MWMTheme textTertiary] weight:NSFontWeightSemibold];
   return label;
 }
 
@@ -184,8 +185,8 @@ static const CGFloat kKeysColumnWidth = 210;
   [row setTranslatesAutoresizingMaskIntoConstraints:NO];
   row.selected = selected;
   row.onClick = action;
-  NSTextField *name = [self labelWithText:title size:13 color:selected ? [NSColor controlAccentColor] : [NSColor labelColor] weight:selected ? NSFontWeightMedium : NSFontWeightRegular];
-  NSTextField *number = [self labelWithText:[NSString stringWithFormat:@"%lu", (unsigned long)count] size:11 color:[NSColor secondaryLabelColor] weight:NSFontWeightRegular];
+  NSTextField *name = [self labelWithText:title size:13 color:selected ? [MWMTheme accent] : [MWMTheme textPrimary] weight:selected ? NSFontWeightMedium : NSFontWeightRegular];
+  NSTextField *number = [self labelWithText:[NSString stringWithFormat:@"%lu", (unsigned long)count] size:11 color:[MWMTheme textSecondary] weight:NSFontWeightRegular];
   NSView *gap = [[NSView alloc] init];
   [gap setContentHuggingPriority:1 forOrientation:NSLayoutConstraintOrientationHorizontal];
   NSStackView *top = [NSStackView stackViewWithViews:@[name, gap, number]];
@@ -269,16 +270,16 @@ static const CGFloat kKeysColumnWidth = 210;
 
   NSView *keys = [ConfigurationKeyViews shortcutViewForInfo:info size:22];
   [[keys.widthAnchor constraintEqualToConstant:kKeysColumnWidth] setActive:YES];
-  NSTextField *title = [self labelWithText:info.title size:13 color:[NSColor labelColor] weight:NSFontWeightRegular];
+  NSTextField *title = [self labelWithText:info.title size:13 color:[MWMTheme textPrimary] weight:NSFontWeightRegular];
   NSMutableArray *textViews = [NSMutableArray arrayWithObject:title];
-  if ([info.detail length] > 0) [textViews addObject:[self labelWithText:info.detail size:12 color:[NSColor secondaryLabelColor] weight:NSFontWeightRegular]];
+  if ([info.detail length] > 0) [textViews addObject:[self labelWithText:info.detail size:12 color:[MWMTheme textSecondary] weight:NSFontWeightRegular]];
   NSStackView *text = [NSStackView stackViewWithViews:textViews];
   [text setSpacing:8];
   [text setContentHuggingPriority:1 forOrientation:NSLayoutConstraintOrientationHorizontal];
   NSMutableArray *views = [NSMutableArray arrayWithObjects:keys, text, nil];
   if (info.conflict) {
     NSImageView *warn = [NSImageView imageViewWithImage:[NSImage imageWithSystemSymbolName:@"exclamationmark.triangle.fill" accessibilityDescription:@"Conflict"]];
-    [warn setContentTintColor:[NSColor systemOrangeColor]];
+    [warn setContentTintColor:[MWMTheme warning]];
     [warn setToolTip:@"Another shortcut has the same keys"];
     [views addObject:warn];
   }
@@ -325,7 +326,7 @@ static const CGFloat kKeysColumnWidth = 210;
   NSString *scope = self.groupFilter != nil ? [NSString stringWithFormat:@" in %@", self.groupFilter] : @"";
   [self.countLabel setStringValue:[NSString stringWithFormat:@"%lu shortcut%@%@", (unsigned long)shown, shown == 1 ? @"" : @"s", scope]];
   if (shown == 0) {
-    NSTextField *empty = [self labelWithText:@"No shortcuts match." size:13 color:[NSColor tertiaryLabelColor] weight:NSFontWeightRegular];
+    NSTextField *empty = [self labelWithText:@"No shortcuts match." size:13 color:[MWMTheme textTertiary] weight:NSFontWeightRegular];
     [self.rowsStack addArrangedSubview:empty];
   }
 }

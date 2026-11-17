@@ -16,6 +16,7 @@
 //  along with this program.  If not, see http://www.gnu.org/licenses
 
 #import "ConfigurationStatusBar.h"
+#import "MWMTheme.h"
 
 static const CGFloat kBarHeight = 44;
 
@@ -53,7 +54,7 @@ static const CGFloat kBarHeight = 44;
     self.savedLabel = [self label];
     NSTextField *pathLabel = [self label];
     [pathLabel setStringValue:[path stringByAbbreviatingWithTildeInPath]];
-    [pathLabel setTextColor:[NSColor secondaryLabelColor]];
+    [pathLabel setTextColor:[MWMTheme textSecondary]];
 
     self.statusButton = [NSButton buttonWithTitle:@"" target:target action:@selector(showIssues:)];
     [self.statusButton setTranslatesAutoresizingMaskIntoConstraints:NO];
@@ -65,7 +66,7 @@ static const CGFloat kBarHeight = 44;
 
     NSButton *apply = [NSButton buttonWithTitle:@"Apply" target:target action:@selector(apply:)];
     [apply setTranslatesAutoresizingMaskIntoConstraints:NO];
-    [apply setBezelColor:[NSColor controlAccentColor]];
+    [apply setBezelColor:[MWMTheme accent]];
     [apply setToolTip:@"Close and restart MWM to apply ~/.mwm.yml"];
     NSButton *close = [NSButton buttonWithTitle:@"Close" target:target action:@selector(closeWindow:)];
     [close setTranslatesAutoresizingMaskIntoConstraints:NO];

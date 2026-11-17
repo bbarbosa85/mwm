@@ -16,6 +16,8 @@
 //  along with this program.  If not, see http://www.gnu.org/licenses
 
 #import "ConfigurationSlotsView.h"
+#import "MWMTheme.h"
+#import "MWMComponents.h"
 #import "ConfigurationBlockView.h"
 #import "ConfigurationSlotCanvas.h"
 #import "SlateConfigDocument.h"
@@ -50,11 +52,11 @@
     [thumbnail setTranslatesAutoresizingMaskIntoConstraints:NO];
     [[thumbnail.heightAnchor constraintGreaterThanOrEqualToConstant:96] setActive:YES];
     NSTextField *title = [NSTextField labelWithString:name];
-    [title setFont:[NSFont systemFontOfSize:13 weight:NSFontWeightMedium]];
+    [title setFont:[MWMTheme fontBodyStrong]];
     [title setLineBreakMode:NSLineBreakByTruncatingTail];
     NSTextField *detail = [NSTextField labelWithString:usage];
-    [detail setFont:[NSFont systemFontOfSize:11]];
-    [detail setTextColor:[NSColor secondaryLabelColor]];
+    [detail setFont:[MWMTheme fontCaption]];
+    [detail setTextColor:[MWMTheme textSecondary]];
     NSView *gap = [[NSView alloc] init];
     [gap setContentHuggingPriority:1 forOrientation:NSLayoutConstraintOrientationHorizontal];
     NSStackView *footer = [NSStackView stackViewWithViews:@[title, gap, detail]];
@@ -73,7 +75,7 @@
     // The size, on the picture's top left.
     NSTextField *size = [NSTextField labelWithString:badge];
     [size setFont:[NSFont systemFontOfSize:10 weight:NSFontWeightMedium]];
-    [size setTextColor:[NSColor secondaryLabelColor]];
+    [size setTextColor:[MWMTheme textSecondary]];
     [size setTranslatesAutoresizingMaskIntoConstraints:NO];
     NSView *badgeView = [[NSView alloc] init];
     [badgeView setWantsLayer:YES];
@@ -85,7 +87,7 @@
     NSButton *remove = [NSButton buttonWithImage:[NSImage imageWithSystemSymbolName:@"xmark" accessibilityDescription:@"Remove slot"] target:self action:@selector(removePressed:)];
     [remove setBordered:NO];
     [remove setToolTip:@"Remove this slot"];
-    [remove setContentTintColor:[NSColor tertiaryLabelColor]];
+    [remove setContentTintColor:[MWMTheme textTertiary]];
     [remove setTranslatesAutoresizingMaskIntoConstraints:NO];
     [self addSubview:remove];
     [NSLayoutConstraint activateConstraints:@[
@@ -109,9 +111,9 @@
     [self setTranslatesAutoresizingMaskIntoConstraints:NO];
     NSImageView *plus = [NSImageView imageViewWithImage:[NSImage imageWithSystemSymbolName:@"plus" accessibilityDescription:nil]];
     [plus setSymbolConfiguration:[NSImageSymbolConfiguration configurationWithPointSize:22 weight:NSFontWeightRegular]];
-    [plus setContentTintColor:[NSColor secondaryLabelColor]];
+    [plus setContentTintColor:[MWMTheme textSecondary]];
     NSTextField *label = [NSTextField labelWithString:@"New Slot"];
-    [label setTextColor:[NSColor secondaryLabelColor]];
+    [label setTextColor:[MWMTheme textSecondary]];
     NSStackView *stack = [NSStackView stackViewWithViews:@[plus, label]];
     [stack setOrientation:NSUserInterfaceLayoutOrientationVertical];
     [stack setSpacing:4];
@@ -142,7 +144,7 @@
   CGFloat dash[2] = {5, 4};
   [edge setLineDash:dash count:2 phase:0];
   [edge setLineWidth:1.5];
-  [[NSColor tertiaryLabelColor] setStroke];
+  [[MWMTheme textTertiary] setStroke];
   [edge stroke];
 }
 
@@ -159,8 +161,7 @@
 @property (strong) NSPopUpButton *screenPopup;
 @property (strong) NSSegmentedControl *gridControl;
 @property (strong) NSTextField *editorTitle;
-@property (strong) NSTextField *changesLabel;
-@property (strong) NSView *changesPill;
+@property (strong) MWMChipView *changesChip;
 @property (strong) NSLayoutConstraint *canvasHeight;
 @property (strong) NSTextField *nameField;
 @property (strong) NSArray<NSTextField *> *valueFields;
@@ -193,8 +194,8 @@
 
 - (NSTextField *)captionLabel:(NSString *)text {
   NSTextField *label = [NSTextField labelWithString:text];
-  [label setFont:[NSFont systemFontOfSize:11]];
-  [label setTextColor:[NSColor secondaryLabelColor]];
+  [label setFont:[MWMTheme fontCaption]];
+  [label setTextColor:[MWMTheme textSecondary]];
   return label;
 }
 
@@ -289,10 +290,10 @@
   [back setImage:[NSImage imageWithSystemSymbolName:@"chevron.left" accessibilityDescription:@"Back"]];
   [back setImagePosition:NSImageLeft];
   [back setBordered:NO];
-  [back setContentTintColor:[NSColor controlAccentColor]];
-  [back setFont:[NSFont systemFontOfSize:15 weight:NSFontWeightMedium]];
+  [back setContentTintColor:[MWMTheme accent]];
+  [back setFont:[MWMTheme fontHeading]];
   self.editorTitle = [NSTextField labelWithString:@"Editing Slot"];
-  [self.editorTitle setFont:[NSFont systemFontOfSize:17 weight:NSFontWeightMedium]];
+  [self.editorTitle setFont:[MWMTheme fontTitle]];
   NSView *headerSpacer = [[NSView alloc] init];
   [headerSpacer setContentHuggingPriority:1 forOrientation:NSLayoutConstraintOrientationHorizontal];
   NSStackView *header = [NSStackView stackViewWithViews:@[back, self.editorTitle, headerSpacer]];
@@ -315,7 +316,7 @@
   NSBox *cardLine = [[NSBox alloc] init];
   [cardLine setBoxType:NSBoxSeparator];
   self.messageLabel = [NSTextField wrappingLabelWithString:@""];
-  [self.messageLabel setFont:[NSFont systemFontOfSize:11]];
+  [self.messageLabel setFont:[MWMTheme fontCaption]];
   NSStackView *cardContent = [NSStackView stackViewWithViews:@[nameBlock, cardLine, positionRow, sizeRow, self.messageLabel]];
   [cardContent setOrientation:NSUserInterfaceLayoutOrientationVertical];
   [cardContent setAlignment:NSLayoutAttributeLeading];
@@ -390,24 +391,13 @@
   // The save bar, under a line: whether there's anything to save, then Cancel and Save.
   NSBox *saveLine = [[NSBox alloc] init];
   [saveLine setBoxType:NSBoxSeparator];
-  self.changesLabel = [NSTextField labelWithString:@"No changes"];
-  [self.changesLabel setFont:[NSFont systemFontOfSize:11 weight:NSFontWeightMedium]];
-  [self.changesLabel setTranslatesAutoresizingMaskIntoConstraints:NO];
-  self.changesPill = [[NSView alloc] init];
-  [self.changesPill setWantsLayer:YES];
-  [[self.changesPill layer] setCornerRadius:10];
-  [self.changesPill setTranslatesAutoresizingMaskIntoConstraints:NO];
-  [self.changesPill addSubview:self.changesLabel];
-  [NSLayoutConstraint activateConstraints:@[
-    [self.changesLabel.leadingAnchor constraintEqualToAnchor:self.changesPill.leadingAnchor constant:10], [self.changesLabel.trailingAnchor constraintEqualToAnchor:self.changesPill.trailingAnchor constant:-10],
-    [self.changesLabel.topAnchor constraintEqualToAnchor:self.changesPill.topAnchor constant:3], [self.changesLabel.bottomAnchor constraintEqualToAnchor:self.changesPill.bottomAnchor constant:-3],
-  ]];
+  self.changesChip = [MWMChipView chipWithText:@"No changes" color:nil];
   self.cancelButton = [self buttonTitled:@"Cancel" action:@selector(cancelPressed:)];
   self.saveButton = [self buttonTitled:@"Save" action:@selector(savePressed:)];
   [self.saveButton setKeyEquivalent:@"\r"];
   NSView *barSpacer = [[NSView alloc] init];
   [barSpacer setContentHuggingPriority:1 forOrientation:NSLayoutConstraintOrientationHorizontal];
-  NSStackView *saveBar = [NSStackView stackViewWithViews:@[self.changesPill, barSpacer, self.cancelButton, self.saveButton]];
+  NSStackView *saveBar = [NSStackView stackViewWithViews:@[self.changesChip, barSpacer, self.cancelButton, self.saveButton]];
   [saveBar setSpacing:8];
   [saveBar setAlignment:NSLayoutAttributeCenterY];
   [saveBar setEdgeInsets:NSEdgeInsetsMake(10, 20, 12, 20)];
@@ -629,9 +619,8 @@
   BOOL dirty = [self hasUnsavedChanges];
   NSString *problem = [self problem];
   [self.saveButton setEnabled:dirty && problem == nil];
-  [self.changesLabel setStringValue:dirty ? @"● Unsaved changes" : @"No changes"];
-  [self.changesLabel setTextColor:dirty ? [NSColor systemOrangeColor] : [NSColor tertiaryLabelColor]];
-  [[self.changesPill layer] setBackgroundColor:dirty ? [[[NSColor systemOrangeColor] colorWithAlphaComponent:0.16] CGColor] : [[NSColor clearColor] CGColor]];
+  self.changesChip.text = dirty ? @"● Unsaved changes" : @"No changes";
+  self.changesChip.color = dirty ? [MWMTheme warning] : nil;
   if (has && [self.nameField currentEditor] == nil && ![[self.nameField stringValue] isEqualToString:self.draftName ?: @""]) [self.nameField setStringValue:self.draftName ?: @""];
   if (has) {
     NSArray *numbers = @[@(self.draftRect.origin.x), @(self.draftRect.origin.y), @(self.draftRect.size.width), @(self.draftRect.size.height)];
@@ -642,13 +631,13 @@
   }
   if (!dirty) {
     [self.messageLabel setStringValue:@"Drag the slot on the canvas, or type exact values."];
-    [self.messageLabel setTextColor:[NSColor tertiaryLabelColor]];
+    [self.messageLabel setTextColor:[MWMTheme textTertiary]];
   } else if (problem != nil) {
     [self.messageLabel setStringValue:problem];
-    [self.messageLabel setTextColor:[NSColor systemOrangeColor]];
+    [self.messageLabel setTextColor:[MWMTheme warning]];
   } else {
     [self.messageLabel setStringValue:@"Name is free · Area is new"];
-    [self.messageLabel setTextColor:[NSColor systemGreenColor]];
+    [self.messageLabel setTextColor:[MWMTheme success]];
   }
 }
 

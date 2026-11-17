@@ -15,6 +15,8 @@
 //  along with this program.  If not, see http://www.gnu.org/licenses
 
 #import "ConfigurationShortcutEditorView.h"
+#import "MWMTheme.h"
+#import "MWMComponents.h"
 #import "ConfigurationBlockView.h"
 #import "ConfigurationKeyViews.h"
 #import "ConfigurationKeyboardMapView.h"
@@ -53,8 +55,7 @@ static NSArray<NSString *> *InstalledApplicationNames(void) {
 @property (strong) NSSearchField *kindSearch;
 @property (strong) NSStackView *kindStack;
 @property (strong) NSStackView *formStack;
-@property (strong) NSTextField *changesLabel;
-@property (strong) NSView *changesPill;
+@property (strong) MWMChipView *changesChip;
 @property (strong) NSButton *saveButton;
 @property (strong) NSButton *cancelButton;
 @property (strong) NSView *pickerPage;
@@ -89,11 +90,7 @@ static NSArray<NSString *> *InstalledApplicationNames(void) {
 #pragma mark - Layout
 
 - (NSTextField *)labelWithText:(NSString *)text size:(CGFloat)size color:(NSColor *)color weight:(NSFontWeight)weight {
-  NSTextField *label = [NSTextField labelWithString:text];
-  [label setFont:[NSFont systemFontOfSize:size weight:weight]];
-  [label setTextColor:color];
-  [label setLineBreakMode:NSLineBreakByTruncatingTail];
-  return label;
+  return [MWMComponents labelWithText:text font:[NSFont systemFontOfSize:size weight:weight] color:color];
 }
 
 - (void)buildInterface {
@@ -101,9 +98,9 @@ static NSArray<NSString *> *InstalledApplicationNames(void) {
   [back setImage:[NSImage imageWithSystemSymbolName:@"chevron.left" accessibilityDescription:@"Back"]];
   [back setImagePosition:NSImageLeft];
   [back setBordered:NO];
-  [back setContentTintColor:[NSColor controlAccentColor]];
-  [back setFont:[NSFont systemFontOfSize:15 weight:NSFontWeightMedium]];
-  self.titleLabel = [self labelWithText:@"New Shortcut" size:17 color:[NSColor labelColor] weight:NSFontWeightMedium];
+  [back setContentTintColor:[MWMTheme accent]];
+  [back setFont:[MWMTheme fontHeading]];
+  self.titleLabel = [self labelWithText:@"New Shortcut" size:17 color:[MWMTheme textPrimary] weight:NSFontWeightMedium];
   NSView *headerSpacer = [[NSView alloc] init];
   [headerSpacer setContentHuggingPriority:1 forOrientation:NSLayoutConstraintOrientationHorizontal];
   NSStackView *header = [NSStackView stackViewWithViews:@[back, self.titleLabel, headerSpacer]];
@@ -154,24 +151,14 @@ static NSArray<NSString *> *InstalledApplicationNames(void) {
   // Save bar under a line.
   NSBox *saveLine = [[NSBox alloc] init];
   [saveLine setBoxType:NSBoxSeparator];
-  self.changesLabel = [self labelWithText:@"No changes" size:11 color:[NSColor tertiaryLabelColor] weight:NSFontWeightMedium];
-  [self.changesLabel setTranslatesAutoresizingMaskIntoConstraints:NO];
-  self.changesPill = [[NSView alloc] init];
-  [self.changesPill setWantsLayer:YES];
-  [[self.changesPill layer] setCornerRadius:10];
-  [self.changesPill setTranslatesAutoresizingMaskIntoConstraints:NO];
-  [self.changesPill addSubview:self.changesLabel];
-  [NSLayoutConstraint activateConstraints:@[
-    [self.changesLabel.leadingAnchor constraintEqualToAnchor:self.changesPill.leadingAnchor constant:10], [self.changesLabel.trailingAnchor constraintEqualToAnchor:self.changesPill.trailingAnchor constant:-10],
-    [self.changesLabel.topAnchor constraintEqualToAnchor:self.changesPill.topAnchor constant:3], [self.changesLabel.bottomAnchor constraintEqualToAnchor:self.changesPill.bottomAnchor constant:-3],
-  ]];
+  self.changesChip = [MWMChipView chipWithText:@"No changes" color:nil];
   self.cancelButton = [NSButton buttonWithTitle:@"Cancel" target:self action:@selector(cancelPressed:)];
   self.saveButton = [NSButton buttonWithTitle:@"Save" target:self action:@selector(savePressed:)];
   [self.saveButton setKeyEquivalent:@"\r"];
   for (NSButton *button in @[self.cancelButton, self.saveButton]) [button setBezelStyle:NSBezelStyleRounded];
   NSView *barSpacer = [[NSView alloc] init];
   [barSpacer setContentHuggingPriority:1 forOrientation:NSLayoutConstraintOrientationHorizontal];
-  NSStackView *saveBar = [NSStackView stackViewWithViews:@[self.changesPill, barSpacer, self.cancelButton, self.saveButton]];
+  NSStackView *saveBar = [NSStackView stackViewWithViews:@[self.changesChip, barSpacer, self.cancelButton, self.saveButton]];
   [saveBar setSpacing:8];
   [saveBar setAlignment:NSLayoutAttributeCenterY];
   [saveBar setEdgeInsets:NSEdgeInsetsMake(10, 20, 12, 20)];
@@ -200,7 +187,7 @@ static NSArray<NSString *> *InstalledApplicationNames(void) {
   self.picker = [[ConfigurationKeyboardMapView alloc] init];
   [self.picker setDelegate:self];
   self.picker.pickerMode = YES;
-  NSTextField *pickTitle = [self labelWithText:@"Pick the keys" size:17 color:[NSColor labelColor] weight:NSFontWeightMedium];
+  NSTextField *pickTitle = [self labelWithText:@"Pick the keys" size:17 color:[MWMTheme textPrimary] weight:NSFontWeightMedium];
   NSStackView *pickHeader = [NSStackView stackViewWithViews:@[pickTitle]];
   [pickHeader setEdgeInsets:NSEdgeInsetsMake(14, 20, 4, 20)];
   self.pickerPage = [[NSView alloc] init];
@@ -341,9 +328,8 @@ static NSArray<NSString *> *InstalledApplicationNames(void) {
   [self rebuildForm];
   BOOL dirty = [self hasUnsavedChanges];
   [self.saveButton setEnabled:dirty && [self problem] == nil && !self.recording];
-  [self.changesLabel setStringValue:dirty ? @"● Unsaved changes" : @"No changes"];
-  [self.changesLabel setTextColor:dirty ? [NSColor systemOrangeColor] : [NSColor tertiaryLabelColor]];
-  [[self.changesPill layer] setBackgroundColor:dirty ? [[[NSColor systemOrangeColor] colorWithAlphaComponent:0.16] CGColor] : [[NSColor clearColor] CGColor]];
+  self.changesChip.text = dirty ? @"● Unsaved changes" : @"No changes";
+  self.changesChip.color = dirty ? [MWMTheme warning] : nil;
 }
 
 - (void)rebuildKinds {
@@ -364,7 +350,7 @@ static NSArray<NSString *> *InstalledApplicationNames(void) {
     click.cornerRadius = 8;
     click.selected = selected;
     click.onClick = ^{ [weakSelf selectKind:kind]; };
-    NSTextField *label = [self labelWithText:title size:13 color:selected ? [NSColor controlAccentColor] : [NSColor labelColor] weight:selected ? NSFontWeightMedium : NSFontWeightRegular];
+    NSTextField *label = [self labelWithText:title size:13 color:selected ? [MWMTheme accent] : [MWMTheme textPrimary] weight:selected ? NSFontWeightMedium : NSFontWeightRegular];
     [label setTranslatesAutoresizingMaskIntoConstraints:NO];
     [row addSubview:label];
     [row addSubview:click];
@@ -399,7 +385,7 @@ static NSArray<NSString *> *InstalledApplicationNames(void) {
     [self.formStack addArrangedSubview:line];
     [[line.widthAnchor constraintEqualToAnchor:self.formStack.widthAnchor] setActive:YES];
   }
-  NSTextField *name = [self labelWithText:label size:12 color:[NSColor secondaryLabelColor] weight:NSFontWeightRegular];
+  NSTextField *name = [self labelWithText:label size:12 color:[MWMTheme textSecondary] weight:NSFontWeightRegular];
   [name setTranslatesAutoresizingMaskIntoConstraints:NO];
   NSStackView *content = [NSStackView stackViewWithViews:views];
   [content setSpacing:10];
@@ -422,7 +408,7 @@ static NSArray<NSString *> *InstalledApplicationNames(void) {
 
 - (NSPopUpButton *)popupWithTitles:(NSArray<NSString *> *)titles values:(NSArray<NSString *> *)values selected:(NSString *)selected placeholder:(NSString *)placeholder action:(SEL)action {
   NSPopUpButton *popup = [[NSPopUpButton alloc] initWithFrame:NSZeroRect pullsDown:NO];
-  [popup setFont:[NSFont systemFontOfSize:13]];
+  [popup setFont:[MWMTheme fontBody]];
   BOOL found = NO;
   if (placeholder != nil && [selected length] == 0) { [popup addItemWithTitle:placeholder]; [[popup lastItem] setRepresentedObject:@""]; found = YES; }
   for (NSUInteger i = 0; i < [titles count]; i++) {
@@ -443,7 +429,7 @@ static NSArray<NSString *> *InstalledApplicationNames(void) {
 
 - (NSTextField *)fieldWithText:(NSString *)text placeholder:(NSString *)placeholder width:(CGFloat)width action:(SEL)action identifier:(NSString *)identifier {
   NSTextField *field = [NSTextField textFieldWithString:text ?: @""];
-  [field setFont:[NSFont monospacedSystemFontOfSize:12 weight:NSFontWeightRegular]];
+  [field setFont:[MWMTheme fontMono]];
   [field setPlaceholderString:placeholder];
   [field setTarget:self];
   [field setAction:action];
@@ -526,7 +512,7 @@ static NSArray<NSString *> *InstalledApplicationNames(void) {
       break;
     case SlateActionKindSwitch:
     case SlateActionKindRelaunch:
-      [self addRowWithLabel:@"Settings" content:@[[self labelWithText:@"This action has no settings." size:13 color:[NSColor tertiaryLabelColor] weight:NSFontWeightRegular]] identifier:@"row-none"];
+      [self addRowWithLabel:@"Settings" content:@[[self labelWithText:@"This action has no settings." size:13 color:[MWMTheme textTertiary] weight:NSFontWeightRegular]] identifier:@"row-none"];
       break;
   }
   [self addKeysRow];
@@ -638,18 +624,18 @@ static NSArray<NSString *> *InstalledApplicationNames(void) {
       thumb = [[NSView alloc] init];
     }
     [thumb setTranslatesAutoresizingMaskIntoConstraints:NO];
-    NSTextField *title = [self labelWithText:name size:13 color:selected ? [NSColor controlAccentColor] : [NSColor labelColor] weight:NSFontWeightMedium];
+    NSTextField *title = [self labelWithText:name size:13 color:selected ? [MWMTheme accent] : [MWMTheme textPrimary] weight:NSFontWeightMedium];
     NSString *summaryText = hasRect ? [[SlateSlot slotNamed:name rect:rect preset:isPreset] summary] : @"Set by a formula";
-    NSTextField *summary = [self labelWithText:summaryText size:11 color:[NSColor secondaryLabelColor] weight:NSFontWeightRegular];
+    NSTextField *summary = [self labelWithText:summaryText size:11 color:[MWMTheme textSecondary] weight:NSFontWeightRegular];
     NSStackView *texts = [NSStackView stackViewWithViews:@[title, summary]];
     [texts setOrientation:NSUserInterfaceLayoutOrientationVertical];
     [texts setAlignment:NSLayoutAttributeLeading];
     [texts setSpacing:1];
     [texts setTranslatesAutoresizingMaskIntoConstraints:NO];
-    NSTextField *kind = [self labelWithText:isPreset ? @"Preset" : @"Custom" size:11 color:[NSColor tertiaryLabelColor] weight:NSFontWeightRegular];
+    NSTextField *kind = [self labelWithText:isPreset ? @"Preset" : @"Custom" size:11 color:[MWMTheme textTertiary] weight:NSFontWeightRegular];
     [kind setTranslatesAutoresizingMaskIntoConstraints:NO];
     NSImageView *check = [NSImageView imageViewWithImage:[NSImage imageWithSystemSymbolName:@"checkmark" accessibilityDescription:@"Chosen"]];
-    [check setContentTintColor:[NSColor controlAccentColor]];
+    [check setContentTintColor:[MWMTheme accent]];
     [check setHidden:!selected];
     [check setTranslatesAutoresizingMaskIntoConstraints:NO];
     for (NSView *view in @[thumb, texts, kind, check, click]) [row addSubview:view];
@@ -667,7 +653,7 @@ static NSArray<NSString *> *InstalledApplicationNames(void) {
     [[row.widthAnchor constraintEqualToAnchor:self.slotList.widthAnchor] setActive:YES];
   }
   if (shown == 0) {
-    NSTextField *none = [self labelWithText:@"No slots match." size:12 color:[NSColor tertiaryLabelColor] weight:NSFontWeightRegular];
+    NSTextField *none = [self labelWithText:@"No slots match." size:12 color:[MWMTheme textTertiary] weight:NSFontWeightRegular];
     [self.slotList addArrangedSubview:none];
   }
 }
@@ -702,22 +688,22 @@ static NSArray<NSString *> *InstalledApplicationNames(void) {
 - (void)addKeysRow {
   NSMutableArray *views = [NSMutableArray array];
   NSString *message = nil;
-  NSColor *messageColor = [NSColor secondaryLabelColor];
+  NSColor *messageColor = [MWMTheme textSecondary];
   if (self.recording) {
     NSMutableArray *live = [NSMutableArray array];
     if (self.recordedKey != nil || [self.recordedModifiers count] > 0) {
       if (self.recordedKey != nil) [live addObject:[ConfigurationKeyViews keyCapsForModifiers:self.recordedModifiers keyName:self.recordedKey size:26]];
       else [live addObject:[ConfigurationKeyViews modifierCaps:self.recordedModifiers size:26]];
     } else {
-      [live addObject:[self labelWithText:@"Press the keys…" size:13 color:[NSColor secondaryLabelColor] weight:NSFontWeightRegular]];
+      [live addObject:[self labelWithText:@"Press the keys…" size:13 color:[MWMTheme textSecondary] weight:NSFontWeightRegular]];
     }
     [views addObjectsFromArray:live];
     message = @"Enter to use them, Esc to cancel.";
     if (self.recordedKey != nil) {
       NSString *reason = [SlateReservedShortcuts reasonForKeyName:self.recordedKey modifierNames:self.recordedModifiers];
       SlateShortcutInfo *other = [self otherShortcutOn:self.recordedKey modifiers:self.recordedModifiers];
-      if (reason != nil) { message = reason; messageColor = [NSColor systemOrangeColor]; }
-      else if (other != nil) { message = [NSString stringWithFormat:@"Already used by \"%@\". Enter uses the keys anyway.", other.title]; messageColor = [NSColor systemOrangeColor]; }
+      if (reason != nil) { message = reason; messageColor = [MWMTheme warning]; }
+      else if (other != nil) { message = [NSString stringWithFormat:@"Already used by \"%@\". Enter uses the keys anyway.", other.title]; messageColor = [MWMTheme warning]; }
     }
     NSButton *cancel = [NSButton buttonWithTitle:@"Cancel" target:self action:@selector(cancelRecordingPressed:)];
     [cancel setBezelStyle:NSBezelStyleRounded];
@@ -732,7 +718,7 @@ static NSArray<NSString *> *InstalledApplicationNames(void) {
       [keys setAlignment:NSLayoutAttributeCenterY];
       [views addObject:keys];
     } else {
-      [views addObject:[self labelWithText:@"No keys yet" size:13 color:[NSColor tertiaryLabelColor] weight:NSFontWeightRegular]];
+      [views addObject:[self labelWithText:@"No keys yet" size:13 color:[MWMTheme textTertiary] weight:NSFontWeightRegular]];
     }
     NSButton *record = [NSButton buttonWithTitle:@"Record" target:self action:@selector(recordPressed:)];
     NSButton *pick = [NSButton buttonWithTitle:@"Pick on map" target:self action:@selector(pickPressed:)];
@@ -743,8 +729,8 @@ static NSArray<NSString *> *InstalledApplicationNames(void) {
     [views addObject:pick];
     SlateShortcutInfo *other = [self otherShortcutOnDraftKeys];
     NSString *reason = self.keysChanged && self.draftKeyName != nil ? [SlateReservedShortcuts reasonForKeyName:self.draftKeyName modifierNames:self.draftModifierNames] : nil;
-    if (reason != nil) { message = reason; messageColor = [NSColor systemOrangeColor]; }
-    else if (other != nil) { message = [NSString stringWithFormat:@"Same keys as \"%@\". Only one can work.", other.title]; messageColor = [NSColor systemOrangeColor]; }
+    if (reason != nil) { message = reason; messageColor = [MWMTheme warning]; }
+    else if (other != nil) { message = [NSString stringWithFormat:@"Same keys as \"%@\". Only one can work.", other.title]; messageColor = [MWMTheme warning]; }
   }
   if (message != nil) {
     NSTextField *note = [self labelWithText:message size:12 color:messageColor weight:NSFontWeightRegular];

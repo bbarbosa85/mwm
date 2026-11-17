@@ -16,6 +16,7 @@
 //  along with this program.  If not, see http://www.gnu.org/licenses
 
 #import "ConfigurationPresetsView.h"
+#import "MWMTheme.h"
 #import "ConfigurationBlockView.h"
 #import "SlateSlots.h"
 
@@ -47,8 +48,8 @@
   [name setContentHuggingPriority:1 forOrientation:NSLayoutConstraintOrientationHorizontal];
 
   NSTextField *size = [NSTextField labelWithString:[preset summary]];
-  [size setFont:[NSFont systemFontOfSize:12]];
-  [size setTextColor:[NSColor secondaryLabelColor]];
+  [size setFont:[MWMTheme fontSmall]];
+  [size setTextColor:[MWMTheme textSecondary]];
   [size setAlignment:NSTextAlignmentRight];
 
   NSStackView *row = [NSStackView stackViewWithViews:@[picture, name, size]];
@@ -65,7 +66,7 @@
     for (NSArray *group in [[self class] groups]) {
       NSTextField *heading = [NSTextField labelWithString:group[0]];
       [heading setFont:[NSFont systemFontOfSize:11 weight:NSFontWeightSemibold]];
-      [heading setTextColor:[NSColor tertiaryLabelColor]];
+      [heading setTextColor:[MWMTheme textTertiary]];
       [blocks addObject:heading];
       [blocks addObject:[NSNull null]];  // a line under the heading
       NSArray *names = group[1];
@@ -117,8 +118,8 @@
     [scroll setDocumentView:document];
 
     NSTextField *footer = [NSTextField labelWithString:@"19 presets · click a name to copy it"];
-    [footer setFont:[NSFont systemFontOfSize:11]];
-    [footer setTextColor:[NSColor secondaryLabelColor]];
+    [footer setFont:[MWMTheme fontCaption]];
+    [footer setTextColor:[MWMTheme textSecondary]];
     [footer setTranslatesAutoresizingMaskIntoConstraints:NO];
     NSBox *footerLine = [[NSBox alloc] init];
     [footerLine setBoxType:NSBoxSeparator];

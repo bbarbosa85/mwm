@@ -15,6 +15,7 @@
 //  along with this program.  If not, see http://www.gnu.org/licenses
 
 #import "ConfigurationKeyViews.h"
+#import "MWMTheme.h"
 #import "SlateShortcut.h"
 
 // A key cap: a rounded outline whose colors follow light and dark mode.
@@ -26,8 +27,8 @@
 - (void)viewDidChangeEffectiveAppearance {
   [super viewDidChangeEffectiveAppearance];
   [self.effectiveAppearance performAsCurrentDrawingAppearance:^{
-    [[self layer] setBorderColor:[(self.tint ?: [NSColor tertiaryLabelColor]) CGColor]];
-    [[self layer] setBackgroundColor:[[(self.tint ?: [NSColor labelColor]) colorWithAlphaComponent:0.08] CGColor]];
+    [[self layer] setBorderColor:[(self.tint ?: [MWMTheme textTertiary]) CGColor]];
+    [[self layer] setBackgroundColor:[[(self.tint ?: [MWMTheme textPrimary]) colorWithAlphaComponent:0.08] CGColor]];
   }];
 }
 - (void)viewDidMoveToWindow { [super viewDidMoveToWindow]; [self viewDidChangeEffectiveAppearance]; }
@@ -42,7 +43,7 @@
 - (void)viewDidChangeEffectiveAppearance {
   [super viewDidChangeEffectiveAppearance];
   [self.effectiveAppearance performAsCurrentDrawingAppearance:^{
-    [[self layer] setBackgroundColor:[[(self.tint ?: [NSColor controlAccentColor]) colorWithAlphaComponent:0.16] CGColor]];
+    [[self layer] setBackgroundColor:[[(self.tint ?: [MWMTheme accent]) colorWithAlphaComponent:0.16] CGColor]];
   }];
 }
 - (void)viewDidMoveToWindow { [super viewDidMoveToWindow]; [self viewDidChangeEffectiveAppearance]; }
@@ -102,8 +103,8 @@
 
 + (NSView *)pillWithText:(NSString *)text tint:(NSColor *)tint {
   NSTextField *label = [NSTextField labelWithString:text];
-  [label setFont:[NSFont systemFontOfSize:11 weight:NSFontWeightMedium]];
-  [label setTextColor:tint ?: [NSColor controlAccentColor]];
+  [label setFont:[MWMTheme fontCaptionStrong]];
+  [label setTextColor:tint ?: [MWMTheme accent]];
   [label setTranslatesAutoresizingMaskIntoConstraints:NO];
   ConfigurationPillView *pill = [[ConfigurationPillView alloc] init];
   pill.tint = tint;
@@ -130,12 +131,12 @@
 
 + (NSColor *)colorForKind:(SlateShortcutKind)kind {
   switch (kind) {
-    case SlateShortcutKindMoveToSlot: return [NSColor controlAccentColor];
+    case SlateShortcutKindMoveToSlot: return [MWMTheme accent];
     case SlateShortcutKindFocusApp:
     case SlateShortcutKindFocusWindow:
-    case SlateShortcutKindResizeNudge: return [NSColor systemGreenColor];
+    case SlateShortcutKindResizeNudge: return [MWMTheme success];
     case SlateShortcutKindFeature:
-    case SlateShortcutKindOther: return [NSColor systemPurpleColor];
+    case SlateShortcutKindOther: return [MWMTheme feature];
   }
 }
 

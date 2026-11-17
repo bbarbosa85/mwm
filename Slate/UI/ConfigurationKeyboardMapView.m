@@ -15,6 +15,8 @@
 //  along with this program.  If not, see http://www.gnu.org/licenses
 
 #import "ConfigurationKeyboardMapView.h"
+#import "MWMTheme.h"
+#import "MWMComponents.h"
 #import "ConfigurationBlockView.h"
 #import "ConfigurationKeyViews.h"
 #import "SlateAction.h"
@@ -60,11 +62,11 @@ typedef NS_ENUM(NSInteger, MapKeyState) {
     case MapKeyStateTaken:
       fill = [self.tint colorWithAlphaComponent:0.20]; stroke = [self.tint colorWithAlphaComponent:0.55]; text = self.tint; break;
     case MapKeyStateConflict:
-      fill = [[NSColor systemOrangeColor] colorWithAlphaComponent:0.25]; stroke = [NSColor systemOrangeColor]; text = [NSColor systemOrangeColor]; break;
+      fill = [[MWMTheme warning] colorWithAlphaComponent:0.25]; stroke = [MWMTheme warning]; text = [MWMTheme warning]; break;
     case MapKeyStateReserved:
-      fill = [[NSColor systemYellowColor] colorWithAlphaComponent:0.12]; stroke = [[NSColor systemYellowColor] colorWithAlphaComponent:0.5]; text = [NSColor systemYellowColor]; break;
+      fill = [[MWMTheme reserved] colorWithAlphaComponent:0.12]; stroke = [[MWMTheme reserved] colorWithAlphaComponent:0.5]; text = [MWMTheme reserved]; break;
     default:
-      fill = [[NSColor labelColor] colorWithAlphaComponent:self.modifier ? 0.02 : 0.05]; stroke = [NSColor quaternaryLabelColor]; text = [NSColor tertiaryLabelColor]; break;
+      fill = [[MWMTheme textPrimary] colorWithAlphaComponent:self.modifier ? 0.02 : 0.05]; stroke = [NSColor quaternaryLabelColor]; text = [MWMTheme textTertiary]; break;
   }
   [fill setFill];
   [path fill];
@@ -74,7 +76,7 @@ typedef NS_ENUM(NSInteger, MapKeyState) {
   [path stroke];
   if (self.selected) {
     NSBezierPath *ring = [NSBezierPath bezierPathWithRoundedRect:NSInsetRect(rect, -1, -1) xRadius:radius + 1 yRadius:radius + 1];
-    [[NSColor controlAccentColor] setStroke];
+    [[MWMTheme accent] setStroke];
     [ring setLineWidth:2.2];
     [ring stroke];
   }
@@ -172,7 +174,7 @@ typedef NS_ENUM(NSInteger, MapKeyState) {
     [self.selectionStack.leadingAnchor constraintEqualToAnchor:selectionCard.leadingAnchor], [self.selectionStack.trailingAnchor constraintEqualToAnchor:selectionCard.trailingAnchor],
   ]];
 
-  NSTextField *note = [self labelWithText:@"Dashed keys are modifiers. They make the groups, so they can't hold a shortcut." size:11 color:[NSColor tertiaryLabelColor] weight:NSFontWeightRegular];
+  NSTextField *note = [self labelWithText:@"Dashed keys are modifiers. They make the groups, so they can't hold a shortcut." size:11 color:[MWMTheme textTertiary] weight:NSFontWeightRegular];
   NSView *spacer = [[NSView alloc] init];
   [spacer setContentHuggingPriority:1 forOrientation:NSLayoutConstraintOrientationVertical];
   NSStackView *main = [NSStackView stackViewWithViews:@[keyboardCard, self.legendStack, note, selectionCard, spacer]];
@@ -240,11 +242,7 @@ typedef NS_ENUM(NSInteger, MapKeyState) {
 #pragma mark - Groups
 
 - (NSTextField *)labelWithText:(NSString *)text size:(CGFloat)size color:(NSColor *)color weight:(NSFontWeight)weight {
-  NSTextField *label = [NSTextField labelWithString:text];
-  [label setFont:[NSFont systemFontOfSize:size weight:weight]];
-  [label setTextColor:color];
-  [label setLineBreakMode:NSLineBreakByTruncatingTail];
-  return label;
+  return [MWMComponents labelWithText:text font:[NSFont systemFontOfSize:size weight:weight] color:color];
 }
 
 - (void)rebuildGroups {
@@ -253,13 +251,13 @@ typedef NS_ENUM(NSInteger, MapKeyState) {
     [view removeFromSuperview];
   }
   // Heading with the Manage button at its right.
-  NSTextField *heading = [self labelWithText:@"GROUPS" size:11 color:[NSColor tertiaryLabelColor] weight:NSFontWeightSemibold];
+  NSTextField *heading = [self labelWithText:@"GROUPS" size:11 color:[MWMTheme textTertiary] weight:NSFontWeightSemibold];
   NSView *gap = [[NSView alloc] init];
   [gap setContentHuggingPriority:1 forOrientation:NSLayoutConstraintOrientationHorizontal];
   NSButton *manage = [NSButton buttonWithTitle:@"Manage" target:self action:@selector(groupsPressed:)];
   [manage setBezelStyle:NSBezelStyleRounded];
   [manage setControlSize:NSControlSizeSmall];
-  [manage setFont:[NSFont systemFontOfSize:11]];
+  [manage setFont:[MWMTheme fontCaption]];
   [manage setIdentifier:@"manage-groups"];
   NSStackView *top = [NSStackView stackViewWithViews:@[heading, gap, manage]];
   [top setAlignment:NSLayoutAttributeCenterY];
@@ -277,13 +275,13 @@ typedef NS_ENUM(NSInteger, MapKeyState) {
     click.selected = selected;
     NSString *name = group.name;
     click.onClick = ^{ weakSelf.groupName = name; };
-    NSTextField *title = [self labelWithText:group.name size:13 color:selected ? [NSColor controlAccentColor] : [NSColor labelColor] weight:NSFontWeightMedium];
-    NSTextField *count = [self labelWithText:[NSString stringWithFormat:@"%lu", (unsigned long)group.count] size:11 color:[NSColor secondaryLabelColor] weight:NSFontWeightRegular];
+    NSTextField *title = [self labelWithText:group.name size:13 color:selected ? [MWMTheme accent] : [MWMTheme textPrimary] weight:NSFontWeightMedium];
+    NSTextField *count = [self labelWithText:[NSString stringWithFormat:@"%lu", (unsigned long)group.count] size:11 color:[MWMTheme textSecondary] weight:NSFontWeightRegular];
     NSView *space = [[NSView alloc] init];
     [space setContentHuggingPriority:1 forOrientation:NSLayoutConstraintOrientationHorizontal];
     NSStackView *line = [NSStackView stackViewWithViews:@[title, space, count]];
     [line setAlignment:NSLayoutAttributeFirstBaseline];
-    NSView *caps = group.custom ? [self labelWithText:@"other combinations" size:11 color:[NSColor secondaryLabelColor] weight:NSFontWeightRegular]
+    NSView *caps = group.custom ? [self labelWithText:@"other combinations" size:11 color:[MWMTheme textSecondary] weight:NSFontWeightRegular]
                                 : [ConfigurationKeyViews modifierCaps:group.modifierNames size:20];
     NSStackView *stack = [NSStackView stackViewWithViews:@[line, caps]];
     [stack setOrientation:NSUserInterfaceLayoutOrientationVertical];
@@ -416,8 +414,8 @@ typedef NS_ENUM(NSInteger, MapKeyState) {
     [self.legendStack removeArrangedSubview:view];
     [view removeFromSuperview];
   }
-  NSArray *entries = @[@[@"Move to slot", [NSColor controlAccentColor]], @[@"Windows and apps", [NSColor systemGreenColor]], @[@"Features", [NSColor systemPurpleColor]],
-                       @[@"Conflict", [NSColor systemOrangeColor]], @[@"Reserved by macOS", [NSColor systemYellowColor]]];
+  NSArray *entries = @[@[@"Move to slot", [MWMTheme accent]], @[@"Windows and apps", [MWMTheme success]], @[@"Features", [MWMTheme feature]],
+                       @[@"Conflict", [MWMTheme warning]], @[@"Reserved by macOS", [MWMTheme reserved]]];
   for (NSArray *entry in entries) {
     NSView *dot = [[NSView alloc] init];
     [dot setWantsLayer:YES];
@@ -425,7 +423,7 @@ typedef NS_ENUM(NSInteger, MapKeyState) {
     [[dot layer] setBackgroundColor:[[(NSColor *)entry[1] colorWithAlphaComponent:0.6] CGColor]];
     [dot setTranslatesAutoresizingMaskIntoConstraints:NO];
     [NSLayoutConstraint activateConstraints:@[[dot.widthAnchor constraintEqualToConstant:9], [dot.heightAnchor constraintEqualToConstant:9]]];
-    NSTextField *label = [self labelWithText:entry[0] size:11 color:[NSColor tertiaryLabelColor] weight:NSFontWeightRegular];
+    NSTextField *label = [self labelWithText:entry[0] size:11 color:[MWMTheme textTertiary] weight:NSFontWeightRegular];
     NSStackView *item = [NSStackView stackViewWithViews:@[dot, label]];
     [item setSpacing:5];
     [item setAlignment:NSLayoutAttributeCenterY];
@@ -456,20 +454,10 @@ typedef NS_ENUM(NSInteger, MapKeyState) {
 // "To" followed by a colored icon tile, the title and detail, and a slot preview.
 - (NSArray<NSView *> *)resultViewsForInfo:(SlateShortcutInfo *)info {
   NSColor *color = [ConfigurationKeyViews colorForKind:info.kind];
-  NSImageView *icon = [NSImageView imageViewWithImage:[NSImage imageWithSystemSymbolName:[ConfigurationKeyViews symbolForKind:info.kind] accessibilityDescription:nil]];
-  [icon setContentTintColor:color];
-  [icon setSymbolConfiguration:[NSImageSymbolConfiguration configurationWithPointSize:15 weight:NSFontWeightRegular]];
-  [icon setTranslatesAutoresizingMaskIntoConstraints:NO];
-  ConfigurationBlockView *tile = [[ConfigurationBlockView alloc] init];
-  [tile setTranslatesAutoresizingMaskIntoConstraints:NO];
-  [tile addSubview:icon];
-  [NSLayoutConstraint activateConstraints:@[
-    [tile.widthAnchor constraintEqualToConstant:34], [tile.heightAnchor constraintEqualToConstant:34],
-    [icon.centerXAnchor constraintEqualToAnchor:tile.centerXAnchor], [icon.centerYAnchor constraintEqualToAnchor:tile.centerYAnchor],
-  ]];
-  NSTextField *title = [self labelWithText:info.title size:14 color:[NSColor labelColor] weight:NSFontWeightMedium];
+  NSView *tile = [MWMComponents iconTileWithSymbol:[ConfigurationKeyViews symbolForKind:info.kind] color:color size:34];
+  NSTextField *title = [self labelWithText:info.title size:14 color:[MWMTheme textPrimary] weight:NSFontWeightMedium];
   NSMutableArray *texts = [NSMutableArray arrayWithObject:title];
-  if ([info.detail length] > 0) [texts addObject:[self labelWithText:info.detail size:12 color:[NSColor secondaryLabelColor] weight:NSFontWeightRegular]];
+  if ([info.detail length] > 0) [texts addObject:[self labelWithText:info.detail size:12 color:[MWMTheme textSecondary] weight:NSFontWeightRegular]];
   NSStackView *text = [NSStackView stackViewWithViews:texts];
   [text setOrientation:NSUserInterfaceLayoutOrientationVertical];
   [text setAlignment:NSLayoutAttributeLeading];
@@ -492,7 +480,7 @@ typedef NS_ENUM(NSInteger, MapKeyState) {
 }
 
 - (NSTextField *)smallWord:(NSString *)text {
-  return [self labelWithText:text size:12 color:[NSColor tertiaryLabelColor] weight:NSFontWeightRegular];
+  return [self labelWithText:text size:12 color:[MWMTheme textTertiary] weight:NSFontWeightRegular];
 }
 
 - (NSView *)boxWithLabel:(NSString *)label views:(NSArray<NSView *> *)views height:(CGFloat)height identifier:(NSString *)identifier {
@@ -524,13 +512,13 @@ typedef NS_ENUM(NSInteger, MapKeyState) {
   if (self.pickerMode) { [self rebuildPickerSelection]; return; }
   NSString *keyName = self.selectedKeyName;
   if (keyName == nil) {
-    [self.selectionStack addArrangedSubview:[self labelWithText:@"Click a key to see what it does, or to give it a shortcut." size:13 color:[NSColor tertiaryLabelColor] weight:NSFontWeightRegular]];
+    [self.selectionStack addArrangedSubview:[self labelWithText:@"Click a key to see what it does, or to give it a shortcut." size:13 color:[MWMTheme textTertiary] weight:NSFontWeightRegular]];
     return;
   }
   SlateModifierGroup *group = [self currentGroup];
   SlateShortcutInfo *info = [self infoForKeyName:keyName];
   NSArray *modifiers = info != nil ? info.modifierNames : [self groupModifiers];
-  NSColor *amber = (info != nil && info.conflict) ? [NSColor systemOrangeColor] : nil;
+  NSColor *amber = (info != nil && info.conflict) ? [MWMTheme warning] : nil;
 
   // Press [group + keys] → To [what it does]
   NSMutableArray *keyViews = [NSMutableArray array];
@@ -547,7 +535,7 @@ typedef NS_ENUM(NSInteger, MapKeyState) {
   } else {
     reason = group.custom ? nil : [SlateReservedShortcuts reasonForKeyName:keyName modifierNames:modifiers];
     NSString *free = reason != nil ? reason : @"Nothing yet. This key is free in this group.";
-    [line addObject:[self labelWithText:free size:13 color:reason != nil ? [NSColor systemOrangeColor] : [NSColor secondaryLabelColor] weight:NSFontWeightRegular]];
+    [line addObject:[self labelWithText:free size:13 color:reason != nil ? [MWMTheme warning] : [MWMTheme textSecondary] weight:NSFontWeightRegular]];
   }
   // "Press" and "To" each get their own full-width box, with fixed heights so the page doesn't shift.
   for (NSView *box in @[[self boxWithLabel:@"Press" views:@[keys] height:58 identifier:@"press-box"], [self boxWithLabel:@"To" views:line height:68 identifier:@"to-box"]]) {
@@ -567,15 +555,7 @@ typedef NS_ENUM(NSInteger, MapKeyState) {
         if (other != info && [other.identity isEqualToString:info.identity] && other.binding.enabled) { otherTitle = other.title; break; }
       }
       NSString *chipText = [NSString stringWithFormat:@"⚠ Same keys as \"%@\". Only one can work.", otherTitle ?: @"another shortcut"];
-      ConfigurationBlockView *chip = [[ConfigurationBlockView alloc] init];
-      [chip setTranslatesAutoresizingMaskIntoConstraints:NO];
-      NSTextField *chipLabel = [self labelWithText:chipText size:12 color:[NSColor systemOrangeColor] weight:NSFontWeightMedium];
-      [chipLabel setTranslatesAutoresizingMaskIntoConstraints:NO];
-      [chip addSubview:chipLabel];
-      [NSLayoutConstraint activateConstraints:@[
-        [chipLabel.leadingAnchor constraintEqualToAnchor:chip.leadingAnchor constant:10], [chipLabel.trailingAnchor constraintEqualToAnchor:chip.trailingAnchor constant:-10],
-        [chipLabel.topAnchor constraintEqualToAnchor:chip.topAnchor constant:4], [chipLabel.bottomAnchor constraintEqualToAnchor:chip.bottomAnchor constant:-4],
-      ]];
+      MWMChipView *chip = [MWMChipView chipWithText:chipText color:[MWMTheme warning]];
       [chip setIdentifier:@"conflict-chip"];
       [buttonRow addObject:chip];
     }
@@ -623,7 +603,7 @@ typedef NS_ENUM(NSInteger, MapKeyState) {
   NSArray *modifiers = [self effectiveModifiers];
   NSMutableArray *keyViews = [NSMutableArray array];
   if (keyName == nil) {
-    [keyViews addObject:[self labelWithText:@"Click a key on the keyboard." size:13 color:[NSColor tertiaryLabelColor] weight:NSFontWeightRegular]];
+    [keyViews addObject:[self labelWithText:@"Click a key on the keyboard." size:13 color:[MWMTheme textTertiary] weight:NSFontWeightRegular]];
   } else {
     if (!group.custom) [keyViews addObject:[ConfigurationKeyViews pillWithText:group.name]];
     [keyViews addObject:[ConfigurationKeyViews keyCapsForModifiers:modifiers keyName:keyName size:26]];
@@ -653,7 +633,7 @@ typedef NS_ENUM(NSInteger, MapKeyState) {
     if (reason != nil) { warning = reason; blocked = YES; }
     else if (taken != nil) warning = [NSString stringWithFormat:@"Already used by \"%@\". Both would fire on the same keys.", taken.title];
   }
-  NSTextField *note = [self labelWithText:warning ?: @" " size:12 color:[NSColor systemOrangeColor] weight:NSFontWeightRegular];
+  NSTextField *note = [self labelWithText:warning ?: @" " size:12 color:[MWMTheme warning] weight:NSFontWeightRegular];
   [note setIdentifier:@"pick-warning"];
   [self.selectionStack addArrangedSubview:note];
 
