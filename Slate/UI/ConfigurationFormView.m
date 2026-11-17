@@ -25,6 +25,8 @@
 #import "ConfigurationDisplaysView.h"
 #import "ConfigurationSlotsView.h"
 #import "ConfigurationPresetsView.h"
+#import "ConfigurationKeyboardView.h"
+#import "SlateShortcutIndex.h"
 #import "SlateSlots.h"
 
 static NSString *const kColEnabled = @"enabled";
@@ -152,7 +154,7 @@ static NSString *DisplayValue(id value) {
   return [value description] ?: @"";
 }
 
-@interface ConfigurationFormView () <ConfigurationShortcutViewDelegate, ConfigurationActionViewDelegate, ConfigurationSettingsViewDelegate, ConfigurationDisplaysViewDelegate, ConfigurationSlotsViewDelegate>
+@interface ConfigurationFormView () <ConfigurationShortcutViewDelegate, ConfigurationActionViewDelegate, ConfigurationSettingsViewDelegate, ConfigurationDisplaysViewDelegate, ConfigurationSlotsViewDelegate, ConfigurationKeyboardViewDelegate>
 @property (strong) NSTableView *sidebar;
 @property (strong) NSView *detail;
 @property (strong) NSTextField *titleLabel;
@@ -168,6 +170,11 @@ static NSString *DisplayValue(id value) {
 @property (strong) ConfigurationSlotsView *slotsView;
 @property (strong) ConfigurationPresetsView *presetsView;
 @property (strong) NSSegmentedControl *slotsSwitcher;
+@property (strong) ConfigurationKeyboardView *keyboardView;
+@property (strong) NSSegmentedControl *keyboardSwitcher;
+@property (strong) NSButton *conflictsButton;
+@property (strong) NSLayoutConstraint *keyboardTopBelowHeader;
+@property (strong) NSLayoutConstraint *keyboardTopFull;
 @property (strong) NSLayoutConstraint *slotsTopBelowHeader;
 @property (strong) NSLayoutConstraint *slotsTopFull;
 @property (assign) BOOL sublevelActive;
@@ -280,6 +287,23 @@ static NSString *DisplayValue(id value) {
   [self.presetsView setTranslatesAutoresizingMaskIntoConstraints:NO];
   [self.presetsView setHidden:YES];
 
+  self.keyboardView = [[ConfigurationKeyboardView alloc] init];
+  [self.keyboardView setTranslatesAutoresizingMaskIntoConstraints:NO];
+  [self.keyboardView setDelegate:self];
+  [self.keyboardView setHidden:YES];
+  self.keyboardSwitcher = [NSSegmentedControl segmentedControlWithLabels:@[@"Map", @"List"] trackingMode:NSSegmentSwitchTrackingSelectOne target:self action:@selector(keyboardModeChanged:)];
+  [self.keyboardSwitcher setSelectedSegment:0];
+  [self.keyboardSwitcher setSegmentStyle:NSSegmentStyleRounded];
+  [self.keyboardSwitcher setTranslatesAutoresizingMaskIntoConstraints:NO];
+  [self.keyboardSwitcher setHidden:YES];
+  self.conflictsButton = [NSButton buttonWithTitle:@"" target:self action:@selector(conflictsPressed:)];
+  [self.conflictsButton setImage:[NSImage imageWithSystemSymbolName:@"exclamationmark.triangle.fill" accessibilityDescription:@"Conflicts"]];
+  [self.conflictsButton setImagePosition:NSImageLeft];
+  [self.conflictsButton setBordered:NO];
+  [self.conflictsButton setContentTintColor:[NSColor systemOrangeColor]];
+  [self.conflictsButton setTranslatesAutoresizingMaskIntoConstraints:NO];
+  [self.conflictsButton setHidden:YES];
+
   self.slotsSwitcher = [NSSegmentedControl segmentedControlWithLabels:@[@"Custom", @"Presets"] trackingMode:NSSegmentSwitchTrackingSelectOne target:self action:@selector(slotsModeChanged:)];
   [self.slotsSwitcher setSelectedSegment:0];
   [self.slotsSwitcher setSegmentStyle:NSSegmentStyleRounded];
@@ -301,7 +325,7 @@ static NSString *DisplayValue(id value) {
   [self.settingsView setDelegate:self];
   [self.settingsView setHidden:YES];
 
-  for (NSView *view in @[self.titleLabel, self.infoLabel, self.addButton, self.removeButton, self.filterBar, self.tableScroll, self.placeholderView, self.settingsView, self.displaysView, self.slotsView, self.presetsView, self.slotsSwitcher]) {
+  for (NSView *view in @[self.titleLabel, self.infoLabel, self.addButton, self.removeButton, self.filterBar, self.tableScroll, self.placeholderView, self.settingsView, self.displaysView, self.slotsView, self.presetsView, self.slotsSwitcher, self.keyboardView, self.keyboardSwitcher, self.conflictsButton]) {
     [self.detail addSubview:view];
   }
 
@@ -327,6 +351,9 @@ static NSString *DisplayValue(id value) {
   self.slotsTopBelowHeader = [self.slotsView.topAnchor constraintEqualToAnchor:self.infoLabel.bottomAnchor constant:6];
   self.slotsTopFull = [self.slotsView.topAnchor constraintEqualToAnchor:self.detail.topAnchor];
   self.slotsTopBelowHeader.active = YES;
+  self.keyboardTopBelowHeader = [self.keyboardView.topAnchor constraintEqualToAnchor:self.infoLabel.bottomAnchor constant:6];
+  self.keyboardTopFull = [self.keyboardView.topAnchor constraintEqualToAnchor:self.detail.topAnchor];
+  self.keyboardTopBelowHeader.active = YES;
   self.filterBarHeight = [self.filterBar.heightAnchor constraintEqualToConstant:0];
   self.filterBarHeight.active = YES;
   [NSLayoutConstraint activateConstraints:@[
@@ -357,6 +384,13 @@ static NSString *DisplayValue(id value) {
     [self.filterBar.trailingAnchor constraintEqualToAnchor:self.detail.trailingAnchor],
     [self.filterControl.leadingAnchor constraintEqualToAnchor:self.filterBar.leadingAnchor constant:20],
     [self.filterControl.centerYAnchor constraintEqualToAnchor:self.filterBar.centerYAnchor],
+    [self.keyboardSwitcher.trailingAnchor constraintEqualToAnchor:self.detail.trailingAnchor constant:-20],
+    [self.keyboardSwitcher.centerYAnchor constraintEqualToAnchor:self.titleLabel.centerYAnchor constant:4],
+    [self.conflictsButton.trailingAnchor constraintEqualToAnchor:self.keyboardSwitcher.leadingAnchor constant:-10],
+    [self.conflictsButton.centerYAnchor constraintEqualToAnchor:self.keyboardSwitcher.centerYAnchor],
+    [self.keyboardView.bottomAnchor constraintEqualToAnchor:self.detail.bottomAnchor],
+    [self.keyboardView.leadingAnchor constraintEqualToAnchor:self.detail.leadingAnchor],
+    [self.keyboardView.trailingAnchor constraintEqualToAnchor:self.detail.trailingAnchor],
     [self.slotsSwitcher.trailingAnchor constraintEqualToAnchor:self.detail.trailingAnchor constant:-20],
     [self.slotsSwitcher.centerYAnchor constraintEqualToAnchor:self.titleLabel.centerYAnchor constant:4],
     [self.presetsView.topAnchor constraintEqualToAnchor:self.infoLabel.bottomAnchor constant:6],
@@ -520,9 +554,12 @@ static NSString *DisplayValue(id value) {
   BOOL cards = IsSettingsSection(section);  // rows of switches and sliders instead of a table
   BOOL displays = section == ConfigurationFormSectionMonitors;
   BOOL slots = section == ConfigurationFormSectionPositions;
-  [self.addButton setHidden:placeholder || cards || displays || slots];
-  [self.removeButton setHidden:placeholder || cards || displays || slots];
-  [self.tableScroll setHidden:placeholder || cards || displays || slots];
+  BOOL keyboard = section == ConfigurationFormSectionKeyboard;
+  [self.addButton setHidden:placeholder || cards || displays || slots || keyboard];
+  [self.removeButton setHidden:placeholder || cards || displays || slots || keyboard];
+  [self.tableScroll setHidden:placeholder || cards || displays || slots || keyboard];
+  self.keyboardView.document = keyboard ? self.document : nil;
+  [self showKeyboardMode];
   if (!slots) [self setSublevelActive:NO];  // leaving the page closes anything open on it
   [self.displaysView setHidden:!displays];
   self.displaysView.document = displays ? self.document : nil;
@@ -533,7 +570,7 @@ static NSString *DisplayValue(id value) {
   self.settingsView.document = cards ? self.document : nil;
   [self.placeholderView setHidden:!placeholder];
   [self.placeholderTitle setStringValue:placeholder ? @"This page is coming soon" : @""];
-  BOOL showsFilter = section == ConfigurationFormSectionKeyboard;
+  BOOL showsFilter = NO;  // the old filter bar is for the pages the sidebar no longer lists
   [self.filterBar setHidden:!showsFilter];
   self.filterBarHeight.constant = showsFilter ? 34 : 0;
 
@@ -748,6 +785,39 @@ static NSString *DisplayValue(id value) {
   [self setSublevelActive:editing];
 }
 
+// The Map | List switcher and the conflicts pill at the top right of the Keyboard title.
+- (void)keyboardModeChanged:(NSSegmentedControl *)control {
+  self.keyboardView.mode = [control selectedSegment] == 1 ? ConfigurationKeyboardModeList : ConfigurationKeyboardModeMap;
+}
+
+- (void)conflictsPressed:(id)sender {
+  [self.keyboardSwitcher setSelectedSegment:1];
+  [self.keyboardView showConflicts];
+}
+
+- (void)showKeyboardMode {
+  BOOL keyboard = self.selectedSection == ConfigurationFormSectionKeyboard;
+  [self.keyboardView setHidden:!keyboard];
+  [self.keyboardSwitcher setHidden:!keyboard || self.sublevelActive];
+  NSUInteger conflicts = keyboard ? self.keyboardView.conflictCount : 0;
+  [self.conflictsButton setHidden:!keyboard || self.sublevelActive || conflicts == 0];
+  [self.conflictsButton setTitle:[NSString stringWithFormat:@"%lu conflict%@", (unsigned long)conflicts, conflicts == 1 ? @"" : @"s"]];
+  if (keyboard) [self.infoLabel setStringValue:@"Every shortcut, by the keys that trigger it."];
+}
+
+- (void)keyboardViewDidChangeDocument:(ConfigurationKeyboardView *)view {
+  [self documentChanged];
+  [self showKeyboardMode];
+}
+
+- (void)keyboardViewWantsGroups:(ConfigurationKeyboardView *)view {
+  [self setSelectedSection:ConfigurationFormSectionModifiers];
+}
+
+- (void)keyboardView:(ConfigurationKeyboardView *)view didChangeEditing:(BOOL)editing {
+  [self setSublevelActive:editing];
+}
+
 // The Custom | Presets switcher at the top right of the Slots title.
 - (void)slotsModeChanged:(NSSegmentedControl *)control {
   [self showSlotsMode];
@@ -764,7 +834,7 @@ static NSString *DisplayValue(id value) {
   [self.slotsView setHidden:!slotsPage || presets];
   [self.presetsView setHidden:!presets];
   [self.slotsSwitcher setHidden:!slotsPage || self.sublevelActive];
-  [self.infoLabel setStringValue:presets ? @"Built in. They can't be changed, so your own slots need different names." : @"Named window areas, used as ${name} in shortcuts."];
+  if (slotsPage) [self.infoLabel setStringValue:presets ? @"Built in. They can't be changed, so your own slots need different names." : @"Named window areas, used as ${name} in shortcuts."];
 }
 
 // While a slot is open its back button is the header, and the window's bottom bar goes away.
@@ -773,6 +843,9 @@ static NSString *DisplayValue(id value) {
   _sublevelActive = active;
   for (NSView *view in @[self.titleLabel, self.infoLabel]) [view setHidden:active];
   [self.slotsSwitcher setHidden:active || self.selectedSection != ConfigurationFormSectionPositions];
+  if (active) { self.keyboardTopBelowHeader.active = NO; self.keyboardTopFull.active = YES; }
+  else { self.keyboardTopFull.active = NO; self.keyboardTopBelowHeader.active = YES; }
+  [self showKeyboardMode];
   if (active) { self.slotsTopBelowHeader.active = NO; self.slotsTopFull.active = YES; }
   else { self.slotsTopFull.active = NO; self.slotsTopBelowHeader.active = YES; }
   if ([self.delegate respondsToSelector:@selector(formView:didChangeSublevel:)]) [self.delegate formView:self didChangeSublevel:active];

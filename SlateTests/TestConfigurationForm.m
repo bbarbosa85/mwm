@@ -392,8 +392,11 @@ static NSString *const kConfig =
   XCTAssertTrue([[form valueForKey:@"tableScroll"] isHidden]);
   XCTAssertFalse([[form valueForKey:@"placeholderView"] isHidden]);
   form.selectedSection = ConfigurationFormSectionKeyboard;
-  XCTAssertFalse([[form valueForKey:@"tableScroll"] isHidden]);
+  XCTAssertFalse([[form valueForKey:@"keyboardView"] isHidden], @"the Keyboard page has its own view");
   XCTAssertTrue([[form valueForKey:@"placeholderView"] isHidden]);
+  form.selectedSection = ConfigurationFormSectionModifiers;
+  XCTAssertFalse([[form valueForKey:@"tableScroll"] isHidden]);
+  XCTAssertTrue([[form valueForKey:@"keyboardView"] isHidden]);
 }
 
 - (void)testRevealSelectsTheRow {
