@@ -60,6 +60,10 @@ static NSArray<NSString *> *InstalledApplicationNames(void) {
 @property (strong) NSView *pickerPage;
 @property (strong) ConfigurationKeyboardMapView *picker;
 
+@property (copy) NSString *slotQuery;
+@property (assign) NSInteger slotFilter;   // 0 all, 1 presets, 2 custom
+@property (strong) NSStackView *slotList;
+
 @property (assign) BOOL recording;
 @property (strong, nullable) id monitor;
 @property (copy, nullable) NSString *recordedKey;
@@ -274,6 +278,8 @@ static NSArray<NSString *> *InstalledApplicationNames(void) {
 }
 
 - (void)showEditor {
+  self.slotQuery = @"";
+  self.slotFilter = 0;
   [self.kindSearch setStringValue:@""];
   [self.pickerPage setHidden:YES];
   [self.editorPage setHidden:NO];
@@ -377,6 +383,10 @@ static NSArray<NSString *> *InstalledApplicationNames(void) {
 
 - (void)controlTextDidChange:(NSNotification *)note {
   if (note.object == self.kindSearch) [self rebuildKinds];
+  else if ([[note.object identifier] isEqualToString:@"slot-search"]) {
+    self.slotQuery = [note.object stringValue];
+    [self rebuildSlotList];
+  }
 }
 
 #pragma mark - Form rows
@@ -475,18 +485,7 @@ static NSArray<NSString *> *InstalledApplicationNames(void) {
   SlateAction *m = self.draftAction;
   switch (m.kind) {
     case SlateActionKindMove: {
-      NSArray *slots = [self slotNames];
-      NSMutableArray *views = [NSMutableArray arrayWithObject:[self popupWithTitles:slots values:slots selected:m.a placeholder:@"Choose a slot" action:@selector(firstChanged:)]];
-      CGRect rect;
-      if ([self getRect:&rect forSlotNamed:m.a]) {
-        ConfigurationSlotThumbnail *preview = [[ConfigurationSlotThumbnail alloc] init];
-        preview.rect = rect;
-        preview.valid = YES;
-        [preview setTranslatesAutoresizingMaskIntoConstraints:NO];
-        [NSLayoutConstraint activateConstraints:@[[preview.widthAnchor constraintEqualToConstant:84], [preview.heightAnchor constraintEqualToConstant:50]]];
-        [views addObject:preview];
-      }
-      [self addRowWithLabel:@"Slot" content:views identifier:@"row-slot"];
+      [self addRowWithLabel:@"Slot" content:@[[self slotPicker]] identifier:@"row-slot"];
       NSMutableArray *titles = [NSMutableArray arrayWithObject:@"Current screen"], *values = [NSMutableArray arrayWithObject:@""];
       for (NSString *name in [self screenNames]) { [titles addObject:name]; [values addObject:name]; }
       [self addRowWithLabel:@"On screen" content:@[[self popupWithTitles:titles values:values selected:m.b placeholder:nil action:@selector(secondChanged:)]] identifier:@"row-screen"];
@@ -531,6 +530,157 @@ static NSArray<NSString *> *InstalledApplicationNames(void) {
       break;
   }
   [self addKeysRow];
+}
+
+#pragma mark - Slot picker
+
+// A search box and a kind filter over a list of rows: preview, name, size, and a check on the chosen one.
+- (NSView *)slotPicker {
+  NSSearchField *search = [[NSSearchField alloc] init];
+  [search setPlaceholderString:@"Search slots"];
+  [search setStringValue:self.slotQuery ?: @""];
+  [search setDelegate:self];
+  [search setIdentifier:@"slot-search"];
+  [search setTranslatesAutoresizingMaskIntoConstraints:NO];
+  NSSegmentedControl *filter = [NSSegmentedControl segmentedControlWithLabels:@[@"All", @"Presets", @"Custom"] trackingMode:NSSegmentSwitchTrackingSelectOne target:self action:@selector(slotFilterChanged:)];
+  [filter setSelectedSegment:self.slotFilter];
+  [filter setIdentifier:@"slot-filter"];
+  NSStackView *top = [NSStackView stackViewWithViews:@[search, filter]];
+  [top setSpacing:8];
+  [top setAlignment:NSLayoutAttributeCenterY];
+
+  self.slotList = [NSStackView stackViewWithViews:@[]];
+  [self.slotList setOrientation:NSUserInterfaceLayoutOrientationVertical];
+  [self.slotList setAlignment:NSLayoutAttributeLeading];
+  [self.slotList setSpacing:2];
+  [self.slotList setTranslatesAutoresizingMaskIntoConstraints:NO];
+  NSScrollView *scroll = [[NSScrollView alloc] init];
+  [scroll setHasVerticalScroller:YES];
+  [scroll setDrawsBackground:NO];
+  [scroll setBorderType:NSNoBorder];
+  [scroll setTranslatesAutoresizingMaskIntoConstraints:NO];
+  ConfigurationFlippedView *document = [[ConfigurationFlippedView alloc] init];
+  [document setTranslatesAutoresizingMaskIntoConstraints:NO];
+  [document addSubview:self.slotList];
+  [scroll setDocumentView:document];
+  [NSLayoutConstraint activateConstraints:@[
+    [self.slotList.topAnchor constraintEqualToAnchor:document.topAnchor], [self.slotList.bottomAnchor constraintEqualToAnchor:document.bottomAnchor],
+    [self.slotList.leadingAnchor constraintEqualToAnchor:document.leadingAnchor], [self.slotList.trailingAnchor constraintEqualToAnchor:document.trailingAnchor],
+    [document.leadingAnchor constraintEqualToAnchor:scroll.contentView.leadingAnchor], [document.trailingAnchor constraintEqualToAnchor:scroll.contentView.trailingAnchor],
+    [document.topAnchor constraintEqualToAnchor:scroll.contentView.topAnchor],
+    [scroll.heightAnchor constraintEqualToConstant:208],
+  ]];
+  [scroll setIdentifier:@"slot-list"];
+
+  NSStackView *picker = [NSStackView stackViewWithViews:@[top, scroll]];
+  [picker setOrientation:NSUserInterfaceLayoutOrientationVertical];
+  [picker setAlignment:NSLayoutAttributeLeading];
+  [picker setSpacing:8];
+  [picker setTranslatesAutoresizingMaskIntoConstraints:NO];
+  [NSLayoutConstraint activateConstraints:@[[picker.widthAnchor constraintEqualToConstant:420], [top.widthAnchor constraintEqualToAnchor:picker.widthAnchor], [scroll.widthAnchor constraintEqualToAnchor:picker.widthAnchor]]];
+  [self rebuildSlotList];
+  return picker;
+}
+
+// Name, area (nil when it can't be drawn) and whether it's one of the built-in presets.
+- (NSArray<NSDictionary *> *)slotChoices {
+  NSMutableArray *choices = [NSMutableArray array];
+  NSMutableSet *seen = [NSMutableSet set];
+  for (SlateConfigEntry *entry in self.document.positions) {
+    CGRect rect = CGRectZero;
+    BOOL readable = [SlateSlots getRect:&rect fromFormula:[entry.value description]];
+    SlateSlot *preset = [SlateSlots presetNamed:entry.name];
+    BOOL isPreset = preset != nil && readable && [SlateSlots rect:rect isSameAreaAs:preset.rect];
+    [choices addObject:@{@"name": entry.name, @"rect": readable ? [NSValue valueWithRect:NSRectFromCGRect(rect)] : [NSNull null], @"preset": @(isPreset)}];
+    [seen addObject:entry.name];
+  }
+  for (SlateSlot *preset in [SlateSlots presets]) {
+    if ([seen containsObject:preset.name]) continue;
+    [choices addObject:@{@"name": preset.name, @"rect": [NSValue valueWithRect:NSRectFromCGRect(preset.rect)], @"preset": @YES}];
+  }
+  return choices;
+}
+
+- (void)rebuildSlotList {
+  for (NSView *view in [[self.slotList arrangedSubviews] copy]) {
+    [self.slotList removeArrangedSubview:view];
+    [view removeFromSuperview];
+  }
+  NSString *query = [[self.slotQuery ?: @"" lowercaseString] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
+  __weak ConfigurationShortcutEditorView *weakSelf = self;
+  NSUInteger shown = 0;
+  for (NSDictionary *choice in [self slotChoices]) {
+    NSString *name = choice[@"name"];
+    BOOL isPreset = [choice[@"preset"] boolValue];
+    if (self.slotFilter == 1 && !isPreset) continue;
+    if (self.slotFilter == 2 && isPreset) continue;
+    if ([query length] > 0 && ![[name lowercaseString] containsString:query]) continue;
+    shown++;
+    BOOL selected = [name isEqualToString:self.draftAction.a];
+    BOOL hasRect = ![choice[@"rect"] isKindOfClass:[NSNull class]];
+    CGRect rect = hasRect ? NSRectToCGRect([choice[@"rect"] rectValue]) : CGRectZero;
+
+    NSView *row = [[NSView alloc] init];
+    [row setTranslatesAutoresizingMaskIntoConstraints:NO];
+    [row setIdentifier:[@"slot-" stringByAppendingString:name]];
+    ConfigurationClickView *click = [[ConfigurationClickView alloc] init];
+    click.cornerRadius = 8;
+    click.selected = selected;
+    click.onClick = ^{ [weakSelf chooseSlotNamed:name]; };
+    [click setTranslatesAutoresizingMaskIntoConstraints:NO];
+    NSView *thumb;
+    if (hasRect) {
+      ConfigurationSlotThumbnail *preview = [[ConfigurationSlotThumbnail alloc] init];
+      preview.rect = rect;
+      preview.valid = YES;
+      thumb = preview;
+    } else {
+      thumb = [[NSView alloc] init];
+    }
+    [thumb setTranslatesAutoresizingMaskIntoConstraints:NO];
+    NSTextField *title = [self labelWithText:name size:13 color:selected ? [NSColor controlAccentColor] : [NSColor labelColor] weight:NSFontWeightMedium];
+    NSString *summaryText = hasRect ? [[SlateSlot slotNamed:name rect:rect preset:isPreset] summary] : @"Set by a formula";
+    NSTextField *summary = [self labelWithText:summaryText size:11 color:[NSColor secondaryLabelColor] weight:NSFontWeightRegular];
+    NSStackView *texts = [NSStackView stackViewWithViews:@[title, summary]];
+    [texts setOrientation:NSUserInterfaceLayoutOrientationVertical];
+    [texts setAlignment:NSLayoutAttributeLeading];
+    [texts setSpacing:1];
+    [texts setTranslatesAutoresizingMaskIntoConstraints:NO];
+    NSTextField *kind = [self labelWithText:isPreset ? @"Preset" : @"Custom" size:11 color:[NSColor tertiaryLabelColor] weight:NSFontWeightRegular];
+    [kind setTranslatesAutoresizingMaskIntoConstraints:NO];
+    NSImageView *check = [NSImageView imageViewWithImage:[NSImage imageWithSystemSymbolName:@"checkmark" accessibilityDescription:@"Chosen"]];
+    [check setContentTintColor:[NSColor controlAccentColor]];
+    [check setHidden:!selected];
+    [check setTranslatesAutoresizingMaskIntoConstraints:NO];
+    for (NSView *view in @[thumb, texts, kind, check, click]) [row addSubview:view];
+    [NSLayoutConstraint activateConstraints:@[
+      [row.heightAnchor constraintEqualToConstant:44],
+      [thumb.leadingAnchor constraintEqualToAnchor:row.leadingAnchor constant:8], [thumb.centerYAnchor constraintEqualToAnchor:row.centerYAnchor],
+      [thumb.widthAnchor constraintEqualToConstant:48], [thumb.heightAnchor constraintEqualToConstant:30],
+      [texts.leadingAnchor constraintEqualToAnchor:thumb.trailingAnchor constant:12], [texts.centerYAnchor constraintEqualToAnchor:row.centerYAnchor],
+      [check.trailingAnchor constraintEqualToAnchor:row.trailingAnchor constant:-10], [check.centerYAnchor constraintEqualToAnchor:row.centerYAnchor],
+      [kind.trailingAnchor constraintEqualToAnchor:check.leadingAnchor constant:-12], [kind.centerYAnchor constraintEqualToAnchor:row.centerYAnchor],
+      [click.topAnchor constraintEqualToAnchor:row.topAnchor], [click.bottomAnchor constraintEqualToAnchor:row.bottomAnchor],
+      [click.leadingAnchor constraintEqualToAnchor:row.leadingAnchor], [click.trailingAnchor constraintEqualToAnchor:row.trailingAnchor],
+    ]];
+    [self.slotList addArrangedSubview:row];
+    [[row.widthAnchor constraintEqualToAnchor:self.slotList.widthAnchor] setActive:YES];
+  }
+  if (shown == 0) {
+    NSTextField *none = [self labelWithText:@"No slots match." size:12 color:[NSColor tertiaryLabelColor] weight:NSFontWeightRegular];
+    [self.slotList addArrangedSubview:none];
+  }
+}
+
+- (void)chooseSlotNamed:(NSString *)name {
+  if (self.draftAction.kind != SlateActionKindMove || [name isEqualToString:self.draftAction.a]) return;
+  self.draftAction.a = name;
+  dispatch_async(dispatch_get_main_queue(), ^{ [self refresh]; });
+}
+
+- (void)slotFilterChanged:(NSSegmentedControl *)control {
+  self.slotFilter = [control selectedSegment];
+  [self rebuildSlotList];
 }
 
 - (void)firstChanged:(id)control {
