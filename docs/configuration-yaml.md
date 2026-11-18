@@ -56,9 +56,13 @@ bindings:
 | `aliases` | Any other named text, used as `${name}`. |
 | `bindings` | A list. `key` and optional `mods` (a group name, or a list like `[alt, shift]`) form the hotkey; `action` is an object with a `type`, or plain text for an action with no fields. Optional: `repeat`, `enabled` (`false` skips it), `group` and `note` (shown in the window). |
 
-Action types: `move` (`slot`, `screen`), `focus-app` (`app`), `focus` (`direction`), `throw` (`screen`, `style`), `nudge` and `resize` (`x`, `y`), `push` (`direction`, `options`), `hint` (`letters`), `grid` (`arguments`), `switch`, `relaunch`, and `custom` (`text`, an operation as in the [Operations Reference](operations-reference.md)). An action the window can't write as fields keeps its text as `custom`.
+Action types: `move` (`slot`, `screen`), `focus-app` (`app`), `focus` (`direction`), `throw` (`screen`, `style`), `nudge` and `resize` (`x`, `y`), `push` (`direction`, `options`), `hint` (`letters`), `grid` (`arguments`), `switch`, `relaunch`, `save-snapshot` (`name`, `keep`) and `restore-snapshot` (`name`), and `custom` (`text`, an operation as in the [Operations Reference](operations-reference.md)). An action the window can't write as fields keeps its text as `custom`.
 
 Names of modifiers, monitors, slots and aliases share one namespace. In free text (`aliases` values, `custom` actions, `formula`) a name is written `${name}`; fields that take a name (`mods`, `slot`, `screen`) take it plain. Aliases follow the legacy `.slate` rules: they can reference other aliases, and an unknown `${name}` is an error. Actions go through the same parser as `bind` lines in `.slate` (`Binding initWithString:`), so they behave identically.
+
+### Snapshots
+
+The Snapshots page saves where every open window is (with the screens at the time), shows each one as a picture with the app icons, and restores, renames or deletes it. **Keep after restart** writes a snapshot to disk (`save-to-disk`); without it a snapshot is forgotten when MWM quits. Snapshots live in MWM's support folder, not in `~/.mwm.yml`. A shortcut can save or restore one with the `save-snapshot` and `restore-snapshot` actions.
 
 ### Supported YAML
 

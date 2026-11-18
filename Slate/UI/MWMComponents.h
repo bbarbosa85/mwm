@@ -62,6 +62,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 // A rounded, softly tinted container; add content with constraints.
 + (NSView *)card;
+// A card with a dashed outline and no fill: a place for something that isn't there yet.
++ (NSView *)dashedCard;
 // A thin line, as between the rows of a card.
 + (NSView *)separator;
 // A small, quiet heading above a group of rows.
@@ -75,6 +77,10 @@ NS_ASSUME_NONNULL_BEGIN
 // Buttons: the primary one answers Return.
 + (NSButton *)secondaryButtonWithTitle:(NSString *)title target:(nullable id)target action:(nullable SEL)action;
 + (NSButton *)secondaryButtonWithTitle:(NSString *)title symbol:(NSString *)symbolName target:(nullable id)target action:(nullable SEL)action;
+// A small button filled with the accent color, white text and an optional symbol. Unlike primaryButton it
+// is not the window's default button, so a page can have many (one per card).
++ (NSButton *)accentButtonWithTitle:(NSString *)title symbol:(nullable NSString *)symbolName target:(nullable id)target action:(nullable SEL)action;
++ (NSButton *)primaryButtonWithTitle:(NSString *)title symbol:(NSString *)symbolName target:(nullable id)target action:(nullable SEL)action;
 + (NSButton *)primaryButtonWithTitle:(NSString *)title target:(nullable id)target action:(nullable SEL)action;
 
 // A flexible space for stack views.

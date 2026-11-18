@@ -350,4 +350,26 @@ static NSString *const kConfig =
   XCTAssertEqualObjects(editor.draftAction.a, @"lefthalf");
 }
 
+
+- (void)testTheEditorOffersSnapshotActions {
+  SlateConfigDocument *doc;
+  ConfigurationShortcutEditorView *editor = [self editorWith:&doc];
+  [editor startNewWithGroup:nil keyName:nil];
+  [editor useKeyName:@"j" modifierNames:@[@"ctrl", @"alt"] groupName:nil];
+  [editor selectKind:SlateActionKindSnapshot];
+  XCTAssertNotNil(editor.problem, @"a snapshot needs a name");
+  editor.draftAction.a = @"two words";
+  XCTAssertTrue([editor.problem containsString:@"spaces"]);
+  editor.draftAction.a = @"work";
+  XCTAssertNil(editor.problem);
+  [editor save];
+  XCTAssertEqualObjects([[doc.bindings lastObject] action], @"snapshot work save-to-disk");
+  [editor startNewWithGroup:nil keyName:nil];
+  [editor useKeyName:@"k" modifierNames:@[@"ctrl", @"alt"] groupName:nil];
+  [editor selectKind:SlateActionKindRestoreSnapshot];
+  editor.draftAction.a = @"work";
+  [editor save];
+  XCTAssertEqualObjects([[doc.bindings lastObject] action], @"activate-snapshot work");
+}
+
 @end

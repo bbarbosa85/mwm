@@ -285,6 +285,7 @@ static BOOL ParsePercent(id value, CGFloat *fraction) {
     @"move": @[@"slot", @"screen"], @"focus-app": @[@"app"], @"focus": @[@"direction"], @"throw": @[@"screen", @"style"],
     @"nudge": @[@"x", @"y"], @"resize": @[@"x", @"y"], @"push": @[@"direction", @"options"], @"hint": @[@"letters"],
     @"grid": @[@"arguments"], @"switch": @[], @"relaunch": @[], @"custom": @[@"text"],
+    @"save-snapshot": @[@"name", @"keep"], @"restore-snapshot": @[@"name"],
   };
   NSArray *fieldNames = allowed[type];
   if (fieldNames == nil) {
@@ -297,12 +298,18 @@ static BOOL ParsePercent(id value, CGFloat *fraction) {
       if (error) *error = FormatError([NSString stringWithFormat:@"%@: a %@ action has no \"%@\". It has %@.", where, type, field, [fieldNames count] > 0 ? [fieldNames componentsJoinedByString:@", "] : @"no fields"], [fields lineForKey:field], @(index), nil);
       return nil;
     }
-    if (!IsText([fields objectForKey:field])) {
+    id value = [fields objectForKey:field];
+    if ([field isEqualToString:@"keep"]) {
+      if (!IsBool(value)) {
+        if (error) *error = FormatError([NSString stringWithFormat:@"%@: keep should be true or false.", where], [fields lineForKey:field], @(index), nil);
+        return nil;
+      }
+    } else if (!IsText(value)) {
       if (error) *error = FormatError([NSString stringWithFormat:@"%@: %@ should be text.", where, field], [fields lineForKey:field], @(index), nil);
       return nil;
     }
   }
-  NSString *(^field)(NSString *) = ^NSString *(NSString *name) { id v = [fields objectForKey:name]; return v != nil ? Trim(TextOf(v)) : @""; };
+  NSString *(^field)(NSString *) = ^NSString *(NSString *name) { id v = [fields objectForKey:name]; return (v != nil && !IsBool(v)) ? Trim(TextOf(v)) : @""; };
   void (^missing)(NSString *, NSString *) = ^(NSString *name, NSString *what) {
     if (error) *error = FormatError([NSString stringWithFormat:@"%@: a %@ action needs %@.", where, type, what], fields.line, @(index), nil);
   };
@@ -338,6 +345,12 @@ static BOOL ParsePercent(id value, CGFloat *fraction) {
     action = [SlateAction actionOfKind:SlateActionKindSwitch];
   } else if ([type isEqualToString:@"relaunch"]) {
     action = [SlateAction actionOfKind:SlateActionKindRelaunch];
+  } else if ([type isEqualToString:@"save-snapshot"] || [type isEqualToString:@"restore-snapshot"]) {
+    if ([field(@"name") length] == 0) { missing(@"name", @"a snapshot name"); return nil; }
+    BOOL save = [type isEqualToString:@"save-snapshot"];
+    action = [SlateAction actionOfKind:save ? SlateActionKindSnapshot : SlateActionKindRestoreSnapshot];
+    action.a = field(@"name");
+    if (save) action.b = [[fields objectForKey:@"keep"] boolValue] ? @"save-to-disk" : @"";
   } else {
     if ([field(@"text") length] == 0) { missing(@"text", @"the text of the action"); return nil; }
     action = [SlateAction actionOfKind:SlateActionKindCustom]; action.a = field(@"text");
@@ -445,6 +458,8 @@ static BOOL ParsePercent(id value, CGFloat *fraction) {
     case SlateActionKindPush: [fields addObject:@"type: push"]; add(@"direction", action.a); add(@"options", action.b); break;
     case SlateActionKindHint: [fields addObject:@"type: hint"]; add(@"letters", action.a); break;
     case SlateActionKindGrid: [fields addObject:@"type: grid"]; add(@"arguments", action.a); break;
+    case SlateActionKindSnapshot: [fields addObject:@"type: save-snapshot"]; add(@"name", action.a); [fields addObject:[action.b length] > 0 ? @"keep: true" : @"keep: false"]; break;
+    case SlateActionKindRestoreSnapshot: [fields addObject:@"type: restore-snapshot"]; add(@"name", action.a); break;
     case SlateActionKindSwitch: [fields addObject:@"type: switch"]; break;
     case SlateActionKindRelaunch: [fields addObject:@"type: relaunch"]; break;
     case SlateActionKindCustom: [fields addObject:@"type: custom"]; [fields addObject:[@"text: " stringByAppendingString:[SlateYAML quotedString:action.a ?: @""]]]; break;

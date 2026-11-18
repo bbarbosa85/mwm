@@ -15,6 +15,7 @@
 //  along with this program.  If not, see http://www.gnu.org/licenses
 
 #import "ConfigurationShortcutEditorView.h"
+#import "NSAlert+MWM.h"
 #import "MWMTheme.h"
 #import "MWMComponents.h"
 #import "ConfigurationBlockView.h"
@@ -24,12 +25,13 @@
 #import "SlateReservedShortcuts.h"
 #import "SlateShortcut.h"
 #import "SlateShortcutIndex.h"
+#import "SlateSnapshots.h"
 #import "SlateSlots.h"
 
 // What the shortcut can do, in the order the list shows them.
 static NSArray<NSNumber *> *KindsInOrder(void) {
   return @[@(SlateActionKindFocusApp), @(SlateActionKindMove), @(SlateActionKindFocusDirection), @(SlateActionKindResize), @(SlateActionKindNudge),
-           @(SlateActionKindPush), @(SlateActionKindThrow), @(SlateActionKindHint), @(SlateActionKindGrid), @(SlateActionKindSwitch),
+           @(SlateActionKindPush), @(SlateActionKindThrow), @(SlateActionKindSnapshot), @(SlateActionKindRestoreSnapshot), @(SlateActionKindHint), @(SlateActionKindGrid), @(SlateActionKindSwitch),
            @(SlateActionKindRelaunch), @(SlateActionKindCustom)];
 }
 
@@ -260,6 +262,8 @@ static NSArray<NSString *> *InstalledApplicationNames(void) {
   }
   if ((a.kind == SlateActionKindMove || a.kind == SlateActionKindFocusApp) && [a.a length] == 0) return a.kind == SlateActionKindMove ? @"Choose a slot." : @"Choose an application.";
   if (a.kind == SlateActionKindCustom && [a.a length] == 0) return @"Write the action.";
+  if ((a.kind == SlateActionKindSnapshot || a.kind == SlateActionKindRestoreSnapshot) && [a.a length] == 0) return @"Name the snapshot.";
+  if ((a.kind == SlateActionKindSnapshot || a.kind == SlateActionKindRestoreSnapshot) && [a.a rangeOfCharacterFromSet:[NSCharacterSet whitespaceCharacterSet]].location != NSNotFound) return @"A snapshot name can't have spaces.";
   return nil;
 }
 
@@ -465,12 +469,44 @@ static NSArray<NSString *> *InstalledApplicationNames(void) {
     case SlateActionKindCustom:
       [self addRowWithLabel:@"Action" content:@[[self fieldWithText:m.a placeholder:@"operation" width:320 action:@selector(firstChanged:) identifier:@"field-a"]] identifier:@"row-custom"];
       break;
+    case SlateActionKindSnapshot: {
+      [self addRowWithLabel:@"Name" content:@[[self snapshotNameCombo:m.a]] identifier:@"row-snapshot"];
+      NSButton *keep = [NSButton checkboxWithTitle:@"Keep it after MWM restarts" target:self action:@selector(keepChanged:)];
+      [keep setState:[m.b isEqualToString:@"save-to-disk"] ? NSControlStateValueOn : NSControlStateValueOff];
+      [keep setIdentifier:@"keep"];
+      [self addRowWithLabel:@"Keep" content:@[keep] identifier:@"row-keep"];
+      break;
+    }
+    case SlateActionKindRestoreSnapshot:
+      [self addRowWithLabel:@"Snapshot" content:@[[self snapshotNameCombo:m.a]] identifier:@"row-snapshot"];
+      break;
     case SlateActionKindSwitch:
     case SlateActionKindRelaunch:
       [self addRowWithLabel:@"Settings" content:@[[self labelWithText:@"This action has no settings." size:13 color:[MWMTheme textTertiary] weight:NSFontWeightRegular]] identifier:@"row-none"];
       break;
   }
   [self addKeysRow];
+}
+
+// A snapshot's name: type a new one, or pick one that's saved.
+- (NSComboBox *)snapshotNameCombo:(NSString *)value {
+  NSComboBox *combo = [[NSComboBox alloc] initWithFrame:NSZeroRect];
+  [combo setFont:[MWMTheme fontBody]];
+  for (SlateSnapshotInfo *info in [SlateSnapshots snapshots]) [combo addItemWithObjectValue:info.name];
+  [combo setStringValue:value ?: @""];
+  [combo setPlaceholderString:@"Snapshot name"];
+  [combo setTarget:self];
+  [combo setAction:@selector(firstChanged:)];
+  [combo setDelegate:self];
+  [combo setIdentifier:@"field-a"];
+  [combo setCompletes:YES];
+  [[combo.widthAnchor constraintEqualToConstant:240] setActive:YES];
+  return combo;
+}
+
+- (void)keepChanged:(NSButton *)checkbox {
+  self.draftAction.b = [checkbox state] == NSControlStateValueOn ? @"save-to-disk" : @"";
+  dispatch_async(dispatch_get_main_queue(), ^{ [self refresh]; });
 }
 
 #pragma mark - Slot picker
@@ -809,7 +845,7 @@ static NSArray<NSString *> *InstalledApplicationNames(void) {
 
 - (void)backPressed:(id)sender {
   if (self.confirmsDiscard && !self.isNew && [self hasUnsavedChanges]) {
-    NSAlert *alert = [[NSAlert alloc] init];
+    NSAlert *alert = [NSAlert mwm_alert];
     [alert setMessageText:@"Discard your changes?"];
     [alert setInformativeText:@"This shortcut has changes that haven't been saved."];
     [alert addButtonWithTitle:@"Keep Editing"];

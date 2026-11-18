@@ -110,4 +110,13 @@ static NSString *const kConfig =
   XCTAssertNil([SlateReservedShortcuts reasonForKeyName:@"c" modifierNames:altShift]);
 }
 
+
+- (void)testSnapshotShortcutsAreFeaturesWithTheirNames {
+  SlateConfigDocument *doc = [SlateConfigDocument documentFromString:@"bindings:\n  - key: s\n    mods: ctrl;cmd\n    action: snapshot work save-to-disk\n  - key: a\n    mods: ctrl;cmd\n    action: activate-snapshot work\n" error:nil];
+  SlateShortcutIndex *index = [SlateShortcutIndex indexForDocument:doc];
+  XCTAssertEqual(index.shortcuts[0].kind, SlateShortcutKindFeature);
+  XCTAssertEqualObjects(index.shortcuts[0].title, @"Save snapshot work");
+  XCTAssertEqualObjects(index.shortcuts[1].title, @"Restore snapshot work");
+}
+
 @end

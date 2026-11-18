@@ -237,6 +237,10 @@ static NSArray<NSString *> *ApplicationNames(void) {
     case SlateActionKindCustom:
       [self.stack addArrangedSubview:[self fieldWithText:m.a placeholder:@"operation" width:0 monospaced:YES action:@selector(firstChanged:)]];
       break;
+    case SlateActionKindSnapshot:
+    case SlateActionKindRestoreSnapshot:
+      [self.stack addArrangedSubview:[self fieldWithText:m.a placeholder:@"snapshot name" width:0 monospaced:YES action:@selector(firstChanged:)]];
+      break;
     case SlateActionKindSwitch:
     case SlateActionKindRelaunch:
       break;

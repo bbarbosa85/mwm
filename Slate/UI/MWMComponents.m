@@ -22,6 +22,51 @@
 @property (strong) NSTextField *label;
 @end
 
+@interface MWMAccentButton : NSButton
+@end
+
+@implementation MWMAccentButton
+- (instancetype)initWithFrame:(NSRect)frame {
+  self = [super initWithFrame:frame];
+  if (self) {
+    [self setBordered:NO];
+    [self setButtonType:NSButtonTypeMomentaryChange];
+    [self setWantsLayer:YES];
+    [self setImagePosition:NSImageLeft];
+    [self setImageHugsTitle:YES];
+    [self setContentTintColor:[NSColor whiteColor]];
+  }
+  return self;
+}
+- (NSSize)intrinsicContentSize {
+  NSSize size = [super intrinsicContentSize];
+  return NSMakeSize(size.width + 16, MAX(size.height + 4, 24));
+}
+- (void)updateColors {
+  [self.effectiveAppearance performAsCurrentDrawingAppearance:^{
+    [[self layer] setCornerRadius:MWMRadiusS];
+    [[self layer] setBackgroundColor:[[[MWMTheme accent] colorWithAlphaComponent:self.isHighlighted ? 0.75 : 1] CGColor]];
+  }];
+}
+- (void)setHighlighted:(BOOL)flag { [super setHighlighted:flag]; [self updateColors]; }
+- (void)viewDidChangeEffectiveAppearance { [super viewDidChangeEffectiveAppearance]; [self updateColors]; }
+- (void)viewDidMoveToWindow { [super viewDidMoveToWindow]; [self updateColors]; }
+@end
+
+@interface MWMDashedCardView : NSView
+@end
+
+@implementation MWMDashedCardView
+- (void)drawRect:(NSRect)dirtyRect {
+  NSBezierPath *path = [NSBezierPath bezierPathWithRoundedRect:NSInsetRect([self bounds], 1, 1) xRadius:MWMRadiusL yRadius:MWMRadiusL];
+  CGFloat dash[] = {5, 4};
+  [path setLineDash:dash count:2 phase:0];
+  [path setLineWidth:1.5];
+  [[MWMTheme stroke] setStroke];
+  [path stroke];
+}
+@end
+
 @implementation MWMChipView
 
 + (instancetype)chipWithText:(NSString *)text color:(NSColor *)color {
@@ -154,6 +199,12 @@
   return card;
 }
 
++ (NSView *)dashedCard {
+  NSView *card = [[MWMDashedCardView alloc] init];
+  [card setTranslatesAutoresizingMaskIntoConstraints:NO];
+  return card;
+}
+
 + (NSView *)separator {
   NSBox *line = [[NSBox alloc] init];
   [line setBoxType:NSBoxSeparator];
@@ -209,6 +260,26 @@
 
 + (NSButton *)secondaryButtonWithTitle:(NSString *)title symbol:(NSString *)symbolName target:(id)target action:(SEL)action {
   NSButton *button = [self secondaryButtonWithTitle:title target:target action:action];
+  [button setImage:[NSImage imageWithSystemSymbolName:symbolName accessibilityDescription:nil]];
+  [button setImagePosition:NSImageLeft];
+  return button;
+}
+
++ (NSButton *)accentButtonWithTitle:(NSString *)title symbol:(NSString *)symbolName target:(id)target action:(SEL)action {
+  MWMAccentButton *button = [[MWMAccentButton alloc] init];
+  [button setTarget:target];
+  [button setAction:action];
+  [button setAttributedTitle:[[NSAttributedString alloc] initWithString:title attributes:@{NSFontAttributeName: [MWMTheme fontSmall], NSForegroundColorAttributeName: [NSColor whiteColor]}]];
+  if (symbolName != nil) {
+    NSImage *image = [NSImage imageWithSystemSymbolName:symbolName accessibilityDescription:nil];
+    [image setTemplate:YES];
+    [button setImage:image];
+  }
+  return button;
+}
+
++ (NSButton *)primaryButtonWithTitle:(NSString *)title symbol:(NSString *)symbolName target:(id)target action:(SEL)action {
+  NSButton *button = [self primaryButtonWithTitle:title target:target action:action];
   [button setImage:[NSImage imageWithSystemSymbolName:symbolName accessibilityDescription:nil]];
   [button setImagePosition:NSImageLeft];
   return button;

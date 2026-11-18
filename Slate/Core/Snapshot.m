@@ -24,7 +24,7 @@
 
 @implementation Snapshot
 
-@synthesize apps;
+@synthesize apps, screens;
 
 - (id)init {
   self = [super init];
@@ -56,12 +56,15 @@
     [appsDict setObject:windowDicts forKey:appName];
   }
   [dict setObject:appsDict forKey:APPS];
+  if ([screens count] > 0) [dict setObject:screens forKey:@"screens"];
   return dict;
 }
 
 + (Snapshot *)snapshotFromDictionary:(NSDictionary *)dict {
   Snapshot *s = [[Snapshot alloc] init];
   NSDictionary *appsDict = [dict objectForKey:APPS];
+  id savedScreens = [dict objectForKey:@"screens"];
+  if ([savedScreens isKindOfClass:[NSArray class]]) s.screens = savedScreens;
   NSArray *appNames = [appsDict allKeys];
   for (NSString *appName in appNames) {
     NSArray *windowDicts = [appsDict objectForKey:appName];

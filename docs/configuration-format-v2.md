@@ -74,6 +74,8 @@ bindings:
 | `push` | `direction`, optional `options` | `push left bar-resize:screenSizeX/2` |
 | `hint` | optional `letters` | `hint ASDF` |
 | `grid` | optional `arguments` | `grid padding:5 0:6,2` |
+| `save-snapshot` | `name`, optional `keep` (true keeps it after restarts) | `snapshot work save-to-disk` |
+| `restore-snapshot` | `name` | `activate-snapshot work` |
 | `switch`, `relaunch` | none | `switch`, `relaunch` |
 | `custom` | `text` | the text as written |
 

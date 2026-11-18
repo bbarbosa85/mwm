@@ -19,6 +19,7 @@
 //  along with this program.  If not, see http://www.gnu.org/licenses
 
 #import "Operation.h"
+@class Snapshot;
 
 @interface SnapshotOperation : Operation {
 @private
@@ -36,6 +37,8 @@
 - (id)initWithName:(NSString *)theName options:(NSString *)options;
 
 + (id)snapshotOperation;
+// Where every open window is right now (and the connected screens), without saving it.
++ (Snapshot *)captureSnapshot;
 + (id)snapshotOperationFromString:(NSString *)snapshotOperation;
 
 @end

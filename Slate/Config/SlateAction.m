@@ -39,7 +39,8 @@ static NSArray<NSString *> *Match(NSString *pattern, NSString *text) {
 + (NSArray<NSNumber *> *)allKinds {
   return @[@(SlateActionKindMove), @(SlateActionKindFocusApp), @(SlateActionKindFocusDirection), @(SlateActionKindThrow),
            @(SlateActionKindNudge), @(SlateActionKindResize), @(SlateActionKindPush), @(SlateActionKindHint),
-           @(SlateActionKindGrid), @(SlateActionKindSwitch), @(SlateActionKindRelaunch), @(SlateActionKindCustom)];
+           @(SlateActionKindGrid), @(SlateActionKindSwitch), @(SlateActionKindRelaunch), @(SlateActionKindSnapshot), @(SlateActionKindRestoreSnapshot),
+           @(SlateActionKindCustom)];
 }
 
 + (NSString *)titleForKind:(SlateActionKind)kind {
@@ -55,6 +56,8 @@ static NSArray<NSString *> *Match(NSString *pattern, NSString *text) {
     case SlateActionKindGrid: return @"Grid";
     case SlateActionKindSwitch: return @"Switch windows";
     case SlateActionKindRelaunch: return @"Relaunch";
+    case SlateActionKindSnapshot: return @"Save snapshot";
+    case SlateActionKindRestoreSnapshot: return @"Restore snapshot";
     case SlateActionKindCustom: return @"Advanced…";
   }
 }
@@ -74,6 +77,7 @@ static NSArray<NSString *> *Match(NSString *pattern, NSString *text) {
     case SlateActionKindResize: action.a = @"+5%"; action.b = @"+0"; break;
     case SlateActionKindPush: action.a = @"left"; action.b = @"bar-resize:screenSizeX/2"; break;
     case SlateActionKindHint: action.a = @"ASDFJKLQWERUIOP"; break;
+    case SlateActionKindSnapshot: action.b = @"save-to-disk"; break;
     default: break;
   }
   return action;
@@ -101,6 +105,10 @@ static NSArray<NSString *> *Match(NSString *pattern, NSString *text) {
     action.kind = SlateActionKindHint; action.a = g[0];
   } else if ((g = Match(@"^grid\\s*(.*)$", text))) {
     action.kind = SlateActionKindGrid; action.a = g[0];
+  } else if ((g = Match(@"^snapshot\\s+(\\S+)(?:\\s+(save-to-disk))?$", text))) {
+    action.kind = SlateActionKindSnapshot; action.a = g[0]; action.b = g[1];
+  } else if ((g = Match(@"^activate-snapshot\\s+(\\S+)$", text))) {
+    action.kind = SlateActionKindRestoreSnapshot; action.a = g[0];
   } else if ([text isEqualToString:@"switch"]) {
     action.kind = SlateActionKindSwitch; action.a = @"";
   } else if ([text isEqualToString:@"relaunch"]) {
@@ -123,6 +131,8 @@ static NSArray<NSString *> *Match(NSString *pattern, NSString *text) {
     case SlateActionKindGrid: return [a length] > 0 ? [@"grid " stringByAppendingString:a] : @"grid";
     case SlateActionKindSwitch: return @"switch";
     case SlateActionKindRelaunch: return @"relaunch";
+    case SlateActionKindSnapshot: return [b length] > 0 ? [NSString stringWithFormat:@"snapshot %@ %@", a, b] : [@"snapshot " stringByAppendingString:a];
+    case SlateActionKindRestoreSnapshot: return [@"activate-snapshot " stringByAppendingString:a];
     case SlateActionKindCustom: return a;
   }
 }

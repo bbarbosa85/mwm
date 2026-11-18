@@ -16,6 +16,7 @@
 //  along with this program.  If not, see http://www.gnu.org/licenses
 
 #import "ConfigurationWindowController.h"
+#import "NSAlert+MWM.h"
 #import "MWMTheme.h"
 #import "ConfigurationFormView.h"
 #import "ConfigurationStatusBar.h"
@@ -109,6 +110,21 @@ typedef NS_ENUM(NSInteger, SaveState) {
   [self showWindow:self];
   [[self window] makeKeyAndOrderFront:self];
   [[self window] makeFirstResponder:self.formView.initialFirstResponder];
+}
+
+- (void)showConfigurationSection:(ConfigurationFormSection)section {
+  [self showConfiguration];
+  self.formView.selectedSection = section;
+}
+
+- (void)showKeyboardList {
+  [self showConfiguration];
+  [self.formView showKeyboardList:YES];
+}
+
+- (void)showNewShortcut {
+  [self showConfiguration];
+  [self.formView beginNewShortcut];
 }
 
 - (NSString *)configPath {
@@ -266,7 +282,7 @@ typedef NS_ENUM(NSInteger, SaveState) {
 - (void)resolveConflict {
   if (self.resolvingConflict) return;
   self.resolvingConflict = YES;
-  NSAlert *alert = [[NSAlert alloc] init];
+  NSAlert *alert = [NSAlert mwm_alert];
   [alert setAlertStyle:NSAlertStyleWarning];
   [alert setMessageText:[NSString stringWithFormat:@"%@ changed on disk", [self displayPath]]];
   [alert setInformativeText:@"Another app changed the file while it was open here. Keep the changes made here and replace the file, or load the version on disk."];
@@ -383,7 +399,7 @@ typedef NS_ENUM(NSInteger, SaveState) {
 #pragma mark - Apply and close
 
 - (void)showError:(NSString *)message detail:(NSString *)detail {
-  NSAlert *alert = [[NSAlert alloc] init];
+  NSAlert *alert = [NSAlert mwm_alert];
   [alert setAlertStyle:NSAlertStyleWarning];
   [alert setMessageText:message];
   [alert setInformativeText:detail ?: @""];
@@ -401,7 +417,7 @@ typedef NS_ENUM(NSInteger, SaveState) {
   [self validateAndSave];
   if (self.lastResult.errorCount > 0) {
     SlateConfigIssue *first = self.lastResult.issues[0];
-    NSAlert *alert = [[NSAlert alloc] init];
+    NSAlert *alert = [NSAlert mwm_alert];
     [alert setAlertStyle:NSAlertStyleWarning];
     [alert setMessageText:@"Fix the errors before applying"];
     [alert setInformativeText:[NSString stringWithFormat:@"%@\n\nChanges with errors aren't saved, so MWM would restart with the last valid version.",

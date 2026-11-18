@@ -36,6 +36,8 @@ typedef NS_ENUM(NSInteger, SlateActionKind) {
   SlateActionKindSwitch,
   SlateActionKindRelaunch,
   SlateActionKindCustom,         // a=the whole text
+  SlateActionKindSnapshot,       // a=snapshot name, b="save-to-disk" or ""
+  SlateActionKindRestoreSnapshot,// a=snapshot name
 };
 
 @interface SlateAction : NSObject

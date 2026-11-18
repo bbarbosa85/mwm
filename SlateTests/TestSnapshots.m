@@ -26,6 +26,13 @@
 #import "ConfigurationKeyboardMapView.h"
 #import "ConfigurationPresetsView.h"
 #import "ConfigurationSettingsView.h"
+#import "MWMAboutWindow.h"
+#import "NSAlert+MWM.h"
+#import "ConfigurationSnapshotsView.h"
+#import "SlateSnapshots.h"
+#import "Snapshot.h"
+#import "SnapshotList.h"
+#import "WindowSnapshot.h"
 #import "ConfigurationShortcutListView.h"
 #import "ConfigurationSlotsView.h"
 #import "ConfigurationShortcutEditorView.h"
@@ -208,6 +215,54 @@ static NSString *const kConfig =
     custom.document = doc;
     custom.groupName = @"shyper";
     [self checkView:custom size:NSMakeSize(1000, 640) name:@"keyboard-map-empty-group" dark:d];
+
+    NSMutableDictionary *lists = [NSMutableDictionary dictionary];
+    NSArray *desk = @[@{@"name": @"Built-in", @"width": @1512, @"height": @982, @"x": @0, @"y": @0, @"builtIn": @YES},
+                      @{@"name": @"Samsung Odyssey", @"width": @2560, @"height": @1440, @"x": @1512, @"y": @0, @"builtIn": @NO}];
+    NSArray *laptop = @[desk[0]];
+    void (^add)(NSString *, BOOL, NSArray *, NSArray *) = ^(NSString *name, BOOL keep, NSArray *screens, NSArray *windows) {
+      Snapshot *snapshot = [[Snapshot alloc] init];
+      for (NSArray *w in windows) [snapshot addWindow:[[WindowSnapshot alloc] initWithAppName:w[0] title:@"w" topLeft:NSMakePoint([w[1] doubleValue], [w[2] doubleValue]) size:NSMakeSize([w[3] doubleValue], [w[4] doubleValue])] app:w[0]];
+      snapshot.screens = screens;
+      SnapshotList *list = [[SnapshotList alloc] initWithName:name saveToDisk:keep isStack:NO];
+      [list addSnapshot:snapshot];
+      lists[name] = list;
+    };
+    add(@"work", YES, desk, @[@[@"Google Chrome", @1512, @0, @1280, @1440], @[@"Warp", @2792, @0, @1280, @720], @[@"Spotify", @2792, @720, @1280, @720], @[@"Notes", @40, @60, @900, @700]]);
+    add(@"couch", NO, laptop, @[@[@"Safari", @0, @0, @1512, @982]]);
+    add(@"focus", YES, laptop, @[@[@"Finder", @0, @0, @756, @982], @[@"Notes", @756, @0, @756, @982]]);
+    add(@"meeting", YES, desk, @[@[@"Notes", @0, @0, @1512, @982], @[@"Safari", @1512, @0, @1536, @1440], @[@"Finder", @3048, @0, @1024, @1440]]);
+    add(@"review", NO, laptop, @[@[@"Safari", @0, @0, @900, @982], @[@"Notes", @900, @0, @612, @491], @[@"Finder", @900, @491, @612, @491]]);
+    [SlateSnapshots setListsOverride:lists];
+    NSMutableDictionary *liveLists = [NSMutableDictionary dictionary];
+    liveLists[@"live"] = lists[@"work"];
+    [SlateSnapshots setCurrentWindowsOverride:[[SlateSnapshots infosForLists:liveLists connected:@[]] firstObject]];
+    ConfigurationSnapshotsView *snapshots = [[ConfigurationSnapshotsView alloc] initWithFrame:NSMakeRect(0, 0, 1000, 880)];
+    [self checkView:snapshots size:NSMakeSize(1000, 880) name:@"snapshots" dark:d];
+    [SlateSnapshots setListsOverride:[NSMutableDictionary dictionary]];
+    ConfigurationSnapshotsView *noSnapshots = [[ConfigurationSnapshotsView alloc] initWithFrame:NSMakeRect(0, 0, 1000, 420)];
+    [self checkView:noSnapshots size:NSMakeSize(1000, 420) name:@"snapshots-empty" dark:d];
+    [SlateSnapshots setCurrentWindowsOverride:nil];
+    [SlateSnapshots setListsOverride:nil];
+
+    NSView *about = [MWMAboutWindow contentView];
+    [self checkView:about size:about.frame.size name:@"about" dark:d];
+
+    NSAlert *alert = [NSAlert mwm_alert];
+    [alert setMessageText:@"Your configuration was updated"];
+    [alert setInformativeText:@"~/.mwm.yml now uses the new format: one entry per monitor and slot, and actions written out as fields. Nothing changes in how your shortcuts work. The old file is kept as ~/.mwm.yml.v1-20261118-125904."];
+    [alert addButtonWithTitle:@"OK"];
+    [alert layout];
+    NSWindow *alertWindow = [alert window];
+    [alertWindow setAppearance:[NSAppearance appearanceNamed:d ? NSAppearanceNameDarkAqua : NSAppearanceNameAqua]];
+    NSView *alertContent = [alertWindow contentView];
+    [alertContent layoutSubtreeIfNeeded];
+    NSString *screens = [[NSProcessInfo processInfo] environment][@"MWM_SCREENS_DIR"];
+    [[alertWindow effectiveAppearance] performAsCurrentDrawingAppearance:^{
+      NSBitmapImageRep *rep = [alertContent bitmapImageRepForCachingDisplayInRect:[alertContent bounds]];
+      [alertContent cacheDisplayInRect:[alertContent bounds] toBitmapImageRep:rep];
+      [[rep representationUsingType:NSBitmapImageFileTypePNG properties:@{}] writeToFile:[screens stringByAppendingPathComponent:[NSString stringWithFormat:@"alert-%@.png", d ? @"dark" : @"light"]] atomically:YES];
+    }];
 
     ConfigurationShortcutEditorView *newShortcut = [[ConfigurationShortcutEditorView alloc] initWithFrame:NSMakeRect(0, 0, 1000, 640)];
     newShortcut.document = doc;
