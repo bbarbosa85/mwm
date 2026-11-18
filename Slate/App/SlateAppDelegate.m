@@ -522,7 +522,15 @@ OSStatus OnModifiersChangedEvent(EventHandlerCallRef nextHandler, EventRef theEv
 
 #pragma mark - Launch
 
+// Alerts and the About panel show the app's icon. Set it from the bundle's own file, so they never
+// fall back to an icon macOS remembered from an older build.
+- (void)useBundleIcon {
+  NSImage *icon = [[NSBundle mainBundle] imageForResource:@"icon"];
+  if (icon != nil) [NSApp setApplicationIconImage:icon];
+}
+
 - (void)applicationWillFinishLaunching:(NSNotification *)notification {
+  [self useBundleIcon];
   [NSApp setMainMenu:[self buildMainMenu]];
   if (NSClassFromString(@"XCTestCase") != nil ||
       [[[NSProcessInfo processInfo] environment] objectForKey:@"XCTestConfigurationFilePath"] != nil) {

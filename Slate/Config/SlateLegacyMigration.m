@@ -19,6 +19,7 @@
 #import <Cocoa/Cocoa.h>
 #import <JavaScriptCore/JavaScriptCore.h>
 #import "SlateConfigDocument.h"
+#import "SlateConfigFormat.h"
 #import "StringTokenizer.h"
 #import "SlateLogger.h"
 
@@ -502,6 +503,25 @@ static id NilIfNull(id value) {
                    [reason localizedDescription],
                    moved ? [NSString stringWithFormat:@"It was renamed to %@.", [backup stringByAbbreviatingWithTildeInPath]]
                          : @"It's left in place but isn't loaded."]];
+}
+
++ (void)runFormatMigration {
+  NSString *path = [SlateConfigDocument defaultPath];
+  NSString *backup = nil;
+  NSError *error = nil;
+  if ([SlateConfigFormat migrateFileAtPath:path backupPath:&backup error:&error]) {
+    NSString *shown = [backup stringByReplacingOccurrencesOfString:NSHomeDirectory() withString:@"~"];
+    SlateLogger(@"Updated %@ to the current format; the old file is %@", path, shown);
+    NSAlert *alert = [[NSAlert alloc] init];
+    [alert setMessageText:@"Your configuration was updated"];
+    [alert setInformativeText:[NSString stringWithFormat:
+      @"~/.mwm.yml now uses the new format: one entry per monitor and slot, and actions written out as fields. "
+      @"Nothing changes in how your shortcuts work. The old file is kept as %@.", shown]];
+    [alert addButtonWithTitle:@"OK"];
+    [alert runModal];
+  } else if (error != nil) {
+    SlateLogger(@"Couldn't update %@ to the current format (it still loads as it is): %@", path, [error localizedDescription]);
+  }
 }
 
 + (void)runStartupMigration {

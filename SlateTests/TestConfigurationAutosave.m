@@ -127,7 +127,7 @@ static NSString *const kOriginal =
   XCTAssertEqualObjects([self onDisk:backup], kOriginal);
 
   [self edit:^(SlateConfigDocument *doc) { doc.bindings[0].action = @"grid"; }];
-  XCTAssertTrue([[self onDisk:self.path] containsString:@"action: \"grid\""]);
+  XCTAssertTrue([[self onDisk:self.path] containsString:@"action: {type: grid}"]);
   XCTAssertEqualObjects([self onDisk:backup], kOriginal, @".bak keeps the version from before this session");
 }
 
@@ -143,7 +143,7 @@ static NSString *const kOriginal =
   XCTAssertEqualObjects([self onDisk:self.path], kOriginal, @"back to the loaded configuration: nothing to write");
 
   [self edit:^(SlateConfigDocument *doc) { doc.bindings[0].action = @"undo"; }];
-  XCTAssertTrue([[self onDisk:self.path] containsString:@"action: \"undo\""], @"saves again once it's valid");
+  XCTAssertTrue([[self onDisk:self.path] containsString:@"action: {type: custom, text: \"undo\"}"], @"saves again once it's valid");
 }
 
 - (void)testMissingFileIsNotCreatedUntilChanged {

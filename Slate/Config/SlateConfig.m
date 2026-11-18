@@ -149,6 +149,7 @@ static SlateConfig *_instance = nil;
   // Converts ~/.slate, ~/.slate.js and ~/.slate.yml into ~/.mwm.yml. If the user postpones
   // it or it fails, ~/.slate keeps loading below; ~/.slate.js never runs.
   [SlateLegacyMigration runStartupMigration];
+  [SlateLegacyMigration runFormatMigration];
 
   NSString *ymlPath = [SlateConfigDocument defaultPath];
   BOOL hasYAML = [[NSFileManager defaultManager] fileExistsAtPath:ymlPath];

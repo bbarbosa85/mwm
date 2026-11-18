@@ -209,14 +209,14 @@ static NSString *const kSample =
   NSString *written = [doc stringRepresentation];
   XCTAssertTrue([written hasPrefix:@"# MWM configuration"], @"%@", written);
   XCTAssertTrue([written containsString:@"\nsettings:\n  defaultToCurrentScreen: true\n"], @"%@", written);
-  XCTAssertTrue([written containsString:@"\nmonitors:\n  monitor-macbook: \"1\"\n"], @"%@", written);
+  XCTAssertTrue([written containsString:@"\nmonitors:\n  monitor-macbook: {screen: \"1\"}\n"], @"%@", written);
   XCTAssertTrue([written containsString:@"\nmodifiers: {}\n"], @"%@", written);
   XCTAssertTrue([written hasSuffix:
     @"\nbindings:\n"
-    @"  - group: \"Features\"\n"
-    @"    key: \"r\"\n"
+    @"  - group: Features\n"
+    @"    key: r\n"
     @"    mods: \"${hyper}\"\n"
-    @"    action: \"relaunch\"\n"
+    @"    action: {type: relaunch}\n"
     @"    enabled: false\n"], @"%@", written);
 }
 

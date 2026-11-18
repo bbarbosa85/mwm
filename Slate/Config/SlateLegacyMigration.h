@@ -62,6 +62,10 @@ NS_ASSUME_NONNULL_BEGIN
 // when neither old file exists.
 + (void)runStartupMigration;
 
+// Startup entry point, after the one above: rewrites an older-format ~/.mwm.yml in the
+// current format (keeping the old file as a backup) and says so once.
++ (void)runFormatMigration;
+
 @end
 
 NS_ASSUME_NONNULL_END

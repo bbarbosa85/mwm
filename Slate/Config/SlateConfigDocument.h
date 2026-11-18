@@ -94,6 +94,10 @@ typedef NS_ENUM(NSInteger, SlateBindingCategory) {
 @property (strong) NSMutableArray<SlateBindingEntry *> *bindings;
 
 // ~/.mwm.yml, tilde expanded.
+// The format version of the file this was read from: 1 for the original layout, 2 for the
+// object-per-monitor/slot/action layout. The window always writes 2.
+@property (readonly) NSInteger sourceVersion;
+
 + (NSString *)defaultPath;
 
 + (nullable instancetype)documentWithContentsOfFile:(NSString *)path error:(NSError **)error;
