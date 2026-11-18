@@ -115,7 +115,7 @@
 }
 
 - (void)testSyntaxErrorHasLine {
-  SlateConfigIssue *issue = [self onlyIssue:[SlateConfigValidator validateSource:@"settings:\n  a: [1, 2]\n"]];
+  SlateConfigIssue *issue = [self onlyIssue:[SlateConfigValidator validateSource:@"settings:\n  a: [1, 2\n"]];
   XCTAssertTrue(issue.isError);
   XCTAssertEqual(issue.line, 2u);
 }

@@ -8,55 +8,65 @@ MWM no longer runs JavaScript configurations. On startup it converts `~/.slate`,
 
 ## 1. Format
 
+The file has a `version: 2` layout: one object per monitor, slot and action, plain names for references, and real lists. The full description (with the reasons and the old layout) is in [Configuration format v2](configuration-format-v2.md). Files in the original layout (no `version`) still load, and MWM rewrites them once at startup, keeping the old file as `~/.mwm.yml.v1-<timestamp>`.
+
 ```yaml
+version: 2
+
 settings:
   defaultToCurrentScreen: true
   secondsBeforeRepeat: 0.4
-  keyboardLayout: "qwerty"
+  keyboardLayout: qwerty
 
 modifiers:
-  hyper: "ctrl;alt;cmd"
+  hyper: [ctrl, alt, cmd]
 
 monitors:
-  monitor-samsung: "0"
-  monitor-samsung-size: "5120x1440"
+  monitor-samsung: {display: Samsung Odyssey 5120x1440, size: 5120x1440}
+  monitor-laptop: {display: built-in}
 
-positions:
-  lefthalf: "move screenOriginX;screenOriginY screenSizeX/2;screenSizeY"
+slots:
+  lefthalf: {x: 0%, y: 0%, width: 50%, height: 100%}
 
 aliases: {}
 
 bindings:
-  - group: "Apps"
-    key: "c"
-    mods: "alt;shift"
-    action: "focus 'Google Chrome'"
-  - group: "Layout"
-    key: "pad4"
-    mods: "${hyper}"
-    action: "${lefthalf} ${monitor-samsung}"
-  - key: "pad7"
-    mods: "${hyper}"
-    action: "${lefthalf}"
+  - group: Apps
+    key: c
+    mods: [alt, shift]
+    action: {type: focus-app, app: Google Chrome}
+  - group: Layout
+    key: pad4
+    mods: hyper
+    action: {type: move, slot: lefthalf, screen: monitor-samsung}
+  - key: pad7
+    mods: hyper
+    action: {type: move, slot: lefthalf}
     enabled: false
-    note: "thirds"
+    note: thirds
 ```
 
 | Section | Contents |
 |---|---|
+| `version` | `2`. A file without it is read as the original layout. |
 | `settings` | Global configs (see the table in [Classic Configuration](configuration-slate.md)). Values are text, numbers or `true`/`false`; a list is joined with `;`. |
-| `modifiers`, `monitors`, `positions`, `aliases` | Named values, used as `${name}` in settings and bindings. The four sections share one namespace and differ only in how the window groups them. |
-| `bindings` | A list. `key` and optional `mods` form the hotkey (`key:mods`); `action` is an operation string in the `.slate` format (see the [Operations Reference](operations-reference.md)). Optional: `repeat` (`true`/`false`, defaults to the operation's default), `enabled` (`false` skips the binding), `group` and `note` (shown in the window). |
+| `modifiers` | Named modifier groups: `hyper: [ctrl, alt, cmd]`. Used by name in `mods:`. |
+| `monitors` | One object per monitor: `display` (the screen's model, like `built-in` or `Samsung Odyssey 5120x1440`, with `#2` for identical ones), or `screen` (an older reference like `0`, `ordered:1`, `next`), and an optional `size` for slots drawn for that screen. |
+| `slots` | Named window areas: `{x, y, width, height}` in percent of the screen, or `{formula: "move ..."}` for an area that depends on the window or another screen. |
+| `aliases` | Any other named text, used as `${name}`. |
+| `bindings` | A list. `key` and optional `mods` (a group name, or a list like `[alt, shift]`) form the hotkey; `action` is an object with a `type`, or plain text for an action with no fields. Optional: `repeat`, `enabled` (`false` skips it), `group` and `note` (shown in the window). |
 
-Aliases follow the legacy `.slate` rules: they can reference other aliases, and an unknown `${name}` is an error. Bindings go through the same parser as `bind` lines in `.slate` (`Binding initWithString:`), so they behave identically.
+Action types: `move` (`slot`, `screen`), `focus-app` (`app`), `focus` (`direction`), `throw` (`screen`, `style`), `nudge` and `resize` (`x`, `y`), `push` (`direction`, `options`), `hint` (`letters`), `grid` (`arguments`), `switch`, `relaunch`, and `custom` (`text`, an operation as in the [Operations Reference](operations-reference.md)). An action the window can't write as fields keeps its text as `custom`.
+
+Names of modifiers, monitors, slots and aliases share one namespace. In free text (`aliases` values, `custom` actions, `formula`) a name is written `${name}`; fields that take a name (`mods`, `slot`, `screen`) take it plain. Aliases follow the legacy `.slate` rules: they can reference other aliases, and an unknown `${name}` is an error. Actions go through the same parser as `bind` lines in `.slate` (`Binding initWithString:`), so they behave identically.
 
 ### Supported YAML
 
-`SlateYAML` reads a strict subset: block mappings and lists, plain, `"double"` and `'single'` quoted values, numbers, `true`/`false`, `null`/`~`, `#` comments, and empty `{}` / `[]`. Anchors, aliases (`&`, `*`), tags (`!`), multi-line strings (`|`, `>`), inline collections (`[a, b]`, `{a: 1}`), tabs for indentation and duplicate keys are errors that name the line, so a file never loads differently from how it reads. Quote a value that starts with a special character or contains `: ` or ` #`.
+`SlateYAML` reads a strict subset: block mappings and lists, one-line lists and mappings (`[a, b]`, `{a: 1, b: [c]}`), plain, `"double"` and `'single'` quoted values, numbers, `true`/`false`, `null`/`~`, `#` comments, and empty `{}` / `[]`. Anchors, aliases (`&`, `*`), tags (`!`), multi-line strings (`|`, `>`), lists and mappings spread over several lines inside brackets, tabs for indentation and duplicate keys are errors that name the line, so a file never loads differently from how it reads. Quote a value that starts with a special character or contains `: ` or ` #`.
 
 ## 2. The configuration window
 
-The window is a form with a sidebar of sections: General (settings), Modifiers, Monitors, Positions, Other aliases, and bindings grouped as Apps, Layout bindings, Window actions and Features. In a bindings section, click a **Shortcut** to record a new one: press the keys (modifiers show up as you hold them), Esc cancels. A combination that matches a named modifier group is saved as `${name}` (for example `${hyper}`). Shortcuts used by more than one enabled binding are flagged. Right-click a shortcut and choose **Edit as Text…** for keys that can't be recorded.
+The window is a form with a sidebar of sections: General (settings), Modifiers, Monitors, Slots, Other aliases, and bindings grouped as Apps, Layout bindings, Window actions and Features. In a bindings section, click a **Shortcut** to record a new one: press the keys (modifiers show up as you hold them), Esc cancels. A combination that matches a named modifier group is saved as `${name}` (for example `${hyper}`). Shortcuts used by more than one enabled binding are flagged. Right-click a shortcut and choose **Edit as Text…** for keys that can't be recorded.
 
 The bottom bar shows `{saved?} {file} … {valid?} … {Apply} {Close}`.
 

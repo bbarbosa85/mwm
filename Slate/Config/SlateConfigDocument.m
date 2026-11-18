@@ -17,6 +17,7 @@
 
 #import "SlateConfigDocument.h"
 #import "SlateDisplays.h"
+#import "SlateConfigFormat.h"
 #import "SlateSlots.h"
 #import "SlateYAML.h"
 
@@ -28,8 +29,8 @@ NSString *const SlateConfigDocumentErrorEntryNameKey = @"SlateConfigDocumentErro
 static NSString *const kHeader =
   @"# MWM configuration, managed by the configuration window (Configure MWM...).\n"
   @"# The window rewrites this file when you change something there, so comments\n"
-  @"# added here aren't kept. Values like ${hyper} refer to an entry in modifiers,\n"
-  @"# monitors, positions or aliases.\n";
+  @"# added here aren't kept. In free text, ${name} refers to an entry in modifiers,\n"
+  @"# monitors, slots or aliases.\n";
 
 static NSArray<NSString *> *Sections(void) {
   return @[@"settings", @"modifiers", @"monitors", @"positions", @"aliases", @"bindings"];
@@ -147,6 +148,10 @@ static BOOL SameOptional(id a, id b) {
 @implementation SlateResolvedConfig
 @end
 
+@interface SlateConfigDocument ()
+@property (assign) NSInteger sourceVersion;
+@end
+
 @implementation SlateConfigDocument
 
 - (instancetype)init {
@@ -212,7 +217,22 @@ static BOOL SameOptional(id a, id b) {
     return DocumentError(SlateConfigDocumentErrorInvalid, @"The file should be a mapping of sections (settings:, bindings:, ...).", 1, nil, nil);
   }
   SlateYAMLMapping *config = root;
+  self.sourceVersion = 1;
+  id version = [config objectForKey:@"version"];
+  if (version != nil) {
+    if (![version isKindOfClass:[NSNumber class]] || ([version integerValue] != 1 && [version integerValue] != 2) || IsBoolean(version)) {
+      return DocumentError(SlateConfigDocumentErrorInvalid, @"version should be 1 or 2.", [config lineForKey:@"version"], nil, nil);
+    }
+    self.sourceVersion = [version integerValue];
+  }
+  if (self.sourceVersion == 2) {
+    NSError *conversionError = nil;
+    SlateYAMLMapping *tree = [SlateConfigFormat versionOneTreeFromVersionTwo:config error:&conversionError];
+    if (tree == nil) return conversionError;
+    config = tree;
+  }
   for (NSString *section in config.keys) {
+    if ([section isEqualToString:@"version"]) continue;
     if (![Sections() containsObject:section]) {
       return DocumentError(SlateConfigDocumentErrorInvalid,
                            [NSString stringWithFormat:@"Unknown section \"%@\". Sections are %@.", section, [Sections() componentsJoinedByString:@", "]],
@@ -497,23 +517,7 @@ static const NSUInteger kMaxAliasDepth = 20;
 }
 
 - (NSString *)stringRepresentation {
-  NSMutableString *out = [NSMutableString stringWithString:kHeader];
-  [self appendSection:@"settings" entries:self.settings to:out];
-  [self appendSection:@"modifiers" entries:self.modifiers to:out];
-  [self appendSection:@"monitors" entries:self.monitors to:out];
-  [self appendSection:@"positions" entries:self.positions to:out];
-  [self appendSection:@"aliases" entries:self.aliases to:out];
-  if ([self.bindings count] == 0) {
-    [out appendString:@"\nbindings: []\n"];
-    return out;
-  }
-  [out appendString:@"\nbindings:\n"];
-  for (SlateBindingEntry *binding in self.bindings) {
-    NSArray *fields = [binding yamlFields];
-    [out appendFormat:@"  - %@\n", fields[0]];
-    for (NSUInteger i = 1; i < [fields count]; i++) [out appendFormat:@"    %@\n", fields[i]];
-  }
-  return out;
+  return [SlateConfigFormat textForDocument:self header:kHeader];
 }
 
 - (BOOL)writeToFile:(NSString *)path error:(NSError **)error {
