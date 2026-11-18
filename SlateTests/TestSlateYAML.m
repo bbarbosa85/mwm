@@ -97,13 +97,40 @@
   XCTAssertEqualObjects([[self parse:@"---\na: 1\n"] keys], @[@"a"]);
 }
 
+- (void)testReadsOneLineListsAndMappings {
+  id root = [self parse:@"a: [ctrl, alt, \"x, y\"]\nb: {x: 0%, y: 50%, name: two words}\nc: {list: [1, true], inner: {k: v}}\nd: []\ne: {}\n"];
+  XCTAssertEqualObjects([root objectForKey:@"a"], (@[@"ctrl", @"alt", @"x, y"]));
+  SlateYAMLMapping *b = [root objectForKey:@"b"];
+  XCTAssertEqualObjects(b.keys, (@[@"x", @"y", @"name"]));
+  XCTAssertEqualObjects([b objectForKey:@"x"], @"0%");
+  XCTAssertEqualObjects([b objectForKey:@"name"], @"two words");
+  SlateYAMLMapping *c = [root objectForKey:@"c"];
+  XCTAssertEqualObjects([c objectForKey:@"list"], (@[@1, @YES]));
+  XCTAssertEqualObjects([[c objectForKey:@"inner"] objectForKey:@"k"], @"v");
+  XCTAssertEqualObjects([root objectForKey:@"d"], @[]);
+}
+
+- (void)testPlainTextIsKeptOnlyWhenItReadsBackTheSame {
+  for (NSString *text in @[@"ctrl", @"50%", @"5120x1440", @"two words", @"+10%", @"Samsung Odyssey 5120x1440"]) {
+    XCTAssertEqualObjects([SlateYAML text:text], text);
+  }
+  for (NSString *text in @[@"true", @"12", @"a: b", @"x, y", @"[a]", @"yes", @" lead", @"trail ", @"", @"#c"]) {
+    NSString *written = [SlateYAML text:text];
+    XCTAssertTrue([written hasPrefix:@"\""], @"%@ should be quoted", text);
+  }
+}
+
 - (void)testRejectsWhatItDoesNotSupport {
   [self assertFails:@"a:\n\tb: 1\n" line:2 mentioning:@"tabs"];
   [self assertFails:@"a: &x 1\n" line:1 mentioning:@"Anchors"];
   [self assertFails:@"a: !!str 1\n" line:1 mentioning:@"Tags"];
   [self assertFails:@"a: |\n  text\n" line:1 mentioning:@"Multi-line"];
-  [self assertFails:@"a: [1, 2]\n" line:1 mentioning:@"Inline lists"];
-  [self assertFails:@"a: {b: 1}\n" line:1 mentioning:@"Inline lists"];
+  [self assertFails:@"a: [1, 2\n" line:1 mentioning:@"closing"];
+  [self assertFails:@"a: {b: 1\n" line:1 mentioning:@"closing"];
+  [self assertFails:@"a: [\"x\" \"y\"]\n" line:1 mentioning:@"commas"];
+  [self assertFails:@"a: {b 1}\n" line:1 mentioning:@"Expected"];
+  [self assertFails:@"a: {b: 1, b: 2}\n" line:1 mentioning:@"twice"];
+  [self assertFails:@"a: [1] x\n" line:1 mentioning:@"Unexpected text"];
   [self assertFails:@"a: 1\na: 2\n" line:2 mentioning:@"appears twice"];
   [self assertFails:@"a: one\n  continued\n" line:2 mentioning:@"Multi-line values"];
   [self assertFails:@"a:\n  b: 1\n c: 2\n" line:3 mentioning:@"indentation"];

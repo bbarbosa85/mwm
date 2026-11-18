@@ -36,6 +36,8 @@ extern NSString *const SlateYAMLErrorLineKey;
 @property (assign) NSUInteger line;
 - (nullable id)objectForKey:(NSString *)key;
 - (NSUInteger)lineForKey:(NSString *)key;
+// Adds or replaces a value (keeping the key's place), as the converter from one format to another needs.
+- (void)setObject:(id)object forKey:(NSString *)key line:(NSUInteger)line;
 @end
 
 @interface SlateYAML : NSObject
@@ -49,6 +51,9 @@ extern NSString *const SlateYAMLErrorLineKey;
 
 // A mapping key: plain when that's unambiguous, quoted otherwise.
 + (NSString *)key:(NSString *)key;
+
+// Text left plain when that reads back unchanged ("ctrl", "50%", "5120x1440"), quoted otherwise.
++ (NSString *)text:(NSString *)string;
 
 // true/false, a number, or a quoted string.
 + (NSString *)scalar:(id)value;

@@ -46,6 +46,12 @@ NSString *const SlateYAMLErrorLineKey = @"SlateYAMLErrorLine";
   return self.values[key];
 }
 
+- (void)setObject:(id)object forKey:(NSString *)key line:(NSUInteger)line {
+  if (self.values[key] == nil) [self.orderedKeys addObject:key];
+  self.values[key] = object ?: [NSNull null];
+  self.lines[key] = @(line);
+}
+
 - (NSUInteger)lineForKey:(NSString *)key {
   return [self.lines[key] unsignedIntegerValue];
 }
@@ -368,8 +374,14 @@ static BOOL IsSequenceItem(NSString *content) {
   }
   if ([s isEqualToString:@"[]"]) return @[];
   if (first == '{' || first == '[') {
-    [self fail:@"Inline lists and mappings ({...} and [...]) aren't supported; put each item on its own line." line:line];
-    return nil;
+    NSUInteger position = 0;
+    id value = [self flowValueIn:s position:&position line:line];
+    if (value == nil) return nil;
+    if (position != [s length]) {
+      [self fail:[NSString stringWithFormat:@"Unexpected text after the list or mapping: \"%@\".", [s substringFromIndex:position]] line:line];
+      return nil;
+    }
+    return value;
   }
   if ([self isUnsupportedStart:first line:line]) return nil;
   if ([s rangeOfString:@": "].location != NSNotFound || [s hasSuffix:@":"]) {
@@ -377,6 +389,113 @@ static BOOL IsSequenceItem(NSString *content) {
     return nil;
   }
   return [SlateYAML resolvePlain:s];
+}
+
+#pragma mark - One-line lists and mappings
+
+static void SkipSpaces(NSString *s, NSUInteger *position) {
+  while (*position < [s length] && [s characterAtIndex:*position] == ' ') (*position)++;
+}
+
+// A value inside [...] or {...}: another list or mapping, a quoted text, or plain text up to , ] or }.
+- (id)flowValueIn:(NSString *)s position:(NSUInteger *)position line:(NSUInteger)line {
+  SkipSpaces(s, position);
+  if (*position >= [s length]) {
+    [self fail:@"A list or mapping is missing its closing bracket." line:line];
+    return nil;
+  }
+  unichar c = [s characterAtIndex:*position];
+  if (c == '[') return [self flowSequenceIn:s position:position line:line];
+  if (c == '{') return [self flowMappingIn:s position:position line:line];
+  if (c == '"' || c == '\'') {
+    NSString *rest = [s substringFromIndex:*position];
+    NSUInteger close = [self closingQuoteIn:rest];
+    if (close == NSNotFound) {
+      [self fail:@"A quoted value is missing its closing quote." line:line];
+      return nil;
+    }
+    id value = [self quotedFrom:[rest substringToIndex:close + 1] line:line];
+    *position += close + 1;
+    return value;
+  }
+  NSUInteger start = *position;
+  while (*position < [s length]) {
+    unichar d = [s characterAtIndex:*position];
+    if (d == ',' || d == ']' || d == '}') break;
+    if (d == ':' && (*position + 1 == [s length] || [s characterAtIndex:*position + 1] == ' ')) {
+      [self fail:[NSString stringWithFormat:@"\"%@\" has a \": \" in it. Quote the value.", [[s substringWithRange:NSMakeRange(start, *position - start)] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]]] line:line];
+      return nil;
+    }
+    (*position)++;
+  }
+  NSString *plain = [[s substringWithRange:NSMakeRange(start, *position - start)] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
+  if ([plain length] == 0) {
+    [self fail:@"A list or mapping has an empty value." line:line];
+    return nil;
+  }
+  if ([self isUnsupportedStart:[plain characterAtIndex:0] line:line]) return nil;
+  return [SlateYAML resolvePlain:plain];
+}
+
+- (NSArray *)flowSequenceIn:(NSString *)s position:(NSUInteger *)position line:(NSUInteger)line {
+  NSMutableArray *items = [NSMutableArray array];
+  (*position)++;  // [
+  SkipSpaces(s, position);
+  if (*position < [s length] && [s characterAtIndex:*position] == ']') { (*position)++; return items; }
+  while (YES) {
+    id item = [self flowValueIn:s position:position line:line];
+    if (item == nil) return nil;
+    [items addObject:item];
+    SkipSpaces(s, position);
+    if (*position >= [s length]) { [self fail:@"A list is missing its closing ]." line:line]; return nil; }
+    unichar c = [s characterAtIndex:(*position)++];
+    if (c == ']') return items;
+    if (c != ',') { [self fail:@"Items in a list are separated by commas." line:line]; return nil; }
+  }
+}
+
+- (SlateYAMLMapping *)flowMappingIn:(NSString *)s position:(NSUInteger *)position line:(NSUInteger)line {
+  SlateYAMLMapping *mapping = [[SlateYAMLMapping alloc] init];
+  mapping.line = line;
+  (*position)++;  // {
+  SkipSpaces(s, position);
+  if (*position < [s length] && [s characterAtIndex:*position] == '}') { (*position)++; return mapping; }
+  while (YES) {
+    SkipSpaces(s, position);
+    NSString *key = nil;
+    if (*position < [s length] && ([s characterAtIndex:*position] == '"' || [s characterAtIndex:*position] == '\'')) {
+      id quoted = [self flowValueIn:s position:position line:line];
+      key = [quoted isKindOfClass:[NSString class]] ? quoted : nil;
+    } else {
+      NSUInteger start = *position;
+      while (*position < [s length] && [s characterAtIndex:*position] != ':' && [s characterAtIndex:*position] != ',' && [s characterAtIndex:*position] != '}') (*position)++;
+      key = [[s substringWithRange:NSMakeRange(start, *position - start)] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
+    }
+    if ([key length] == 0 || self.failure != nil) {
+      if (self.failure == nil) [self fail:@"A mapping key is empty." line:line];
+      return nil;
+    }
+    SkipSpaces(s, position);
+    if (*position >= [s length] || [s characterAtIndex:*position] != ':') {
+      [self fail:[NSString stringWithFormat:@"Expected \"%@: value\" in the mapping.", key] line:line];
+      return nil;
+    }
+    (*position)++;
+    if ([mapping objectForKey:key] != nil) {
+      [self fail:[NSString stringWithFormat:@"\"%@\" appears twice in the mapping.", key] line:line];
+      return nil;
+    }
+    id value = [self flowValueIn:s position:position line:line];
+    if (value == nil) return nil;
+    [mapping.orderedKeys addObject:key];
+    mapping.values[key] = value;
+    mapping.lines[key] = @(line);
+    SkipSpaces(s, position);
+    if (*position >= [s length]) { [self fail:@"A mapping is missing its closing }." line:line]; return nil; }
+    unichar c = [s characterAtIndex:(*position)++];
+    if (c == '}') return mapping;
+    if (c != ',') { [self fail:@"Entries in a mapping are separated by commas." line:line]; return nil; }
+  }
 }
 
 + (BOOL)matches:(NSString *)pattern string:(NSString *)s {
@@ -453,6 +572,13 @@ static BOOL IsSequenceItem(NSString *content) {
                [[self resolvePlain:key] isKindOfClass:[NSString class]] &&
                ![@[@"yes", @"no", @"on", @"off", @"y", @"n"] containsObject:[key lowercaseString]];
   return plain ? key : [self quotedString:key];
+}
+
++ (NSString *)text:(NSString *)string {
+  BOOL plain = [self matches:@"^[A-Za-z0-9_./+-][A-Za-z0-9_./%+ -]*$" string:string] && ![string hasSuffix:@" "] && ![string hasPrefix:@"- "] &&
+               [[self resolvePlain:string] isKindOfClass:[NSString class]] &&
+               ![@[@"yes", @"no", @"on", @"off", @"y", @"n"] containsObject:[string lowercaseString]];
+  return plain ? string : [self quotedString:string];
 }
 
 + (NSString *)scalar:(id)value {
