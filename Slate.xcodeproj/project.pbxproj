@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		5E1A0C0B2D00000000000842 /* TestDialogs.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D00000000000841 /* TestDialogs.m */; };
+		5E1A0C0B2D00000000000835 /* MWMAboutWindow.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D00000000000834 /* MWMAboutWindow.m */; };
+		5E1A0C0B2D00000000000832 /* NSAlert+MWM.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D00000000000831 /* NSAlert+MWM.m */; };
 		5E1A0C0B2D00000000000794 /* TestAppIcon.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D00000000000793 /* TestAppIcon.m */; };
 		5E1A0C0B2D00000000000792 /* TestSlateConfigFormat.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D00000000000791 /* TestSlateConfigFormat.m */; };
 		5E1A0C0B2D00000000000782 /* SlateConfigFormat.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D00000000000781 /* SlateConfigFormat.m */; };
@@ -168,6 +171,11 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		5E1A0C0B2D00000000000841 /* TestDialogs.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TestDialogs.m; sourceTree = "<group>"; };
+		5E1A0C0B2D00000000000833 /* MWMAboutWindow.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UI/MWMAboutWindow.h; sourceTree = "<group>"; };
+		5E1A0C0B2D00000000000834 /* MWMAboutWindow.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UI/MWMAboutWindow.m; sourceTree = "<group>"; };
+		5E1A0C0B2D00000000000830 /* NSAlert+MWM.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UI/NSAlert+MWM.h"; sourceTree = "<group>"; };
+		5E1A0C0B2D00000000000831 /* NSAlert+MWM.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UI/NSAlert+MWM.m"; sourceTree = "<group>"; };
 		5E1A0C0B2D00000000000793 /* TestAppIcon.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TestAppIcon.m; sourceTree = "<group>"; };
 		5E1A0C0B2D00000000000791 /* TestSlateConfigFormat.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TestSlateConfigFormat.m; sourceTree = "<group>"; };
 		5E1A0C0B2D00000000000780 /* SlateConfigFormat.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Config/SlateConfigFormat.h; sourceTree = "<group>"; };
@@ -497,6 +505,7 @@
 				5E1A0C0B2D00000000000708 /* TestSlateShortcutIndex.m */,
 				5E1A0C0B2D00000000000770 /* TestSnapshots.m */,
 				5E1A0C0B2D00000000000793 /* TestAppIcon.m */,
+				5E1A0C0B2D00000000000841 /* TestDialogs.m */,
 				5E1A0C0B2D00000000000791 /* TestSlateConfigFormat.m */,
 				5E1A0C0B2D00000000000722 /* TestConfigurationKeyboard.m */,
 				5E1A0C0B2D00000000000213 /* TestSlateLegacyMigration.m */,
@@ -769,6 +778,10 @@
 				5E1A0C0B2D00000000000764 /* MWMComponents.m */,
 				5E1A0C0B2D00000000000766 /* MWMDesignGallery.h */,
 				5E1A0C0B2D00000000000767 /* MWMDesignGallery.m */,
+				5E1A0C0B2D00000000000830 /* NSAlert+MWM.h */,
+				5E1A0C0B2D00000000000831 /* NSAlert+MWM.m */,
+				5E1A0C0B2D00000000000833 /* MWMAboutWindow.h */,
+				5E1A0C0B2D00000000000834 /* MWMAboutWindow.m */,
 				5E1A0C0B2D00000000000718 /* ConfigurationKeyboardView.h */,
 				5E1A0C0B2D00000000000720 /* ConfigurationKeyboardView.m */,
 				5E1A0C0B2D00000000000730 /* ConfigurationKeyboardMapView.h */,
@@ -952,6 +965,8 @@
 				5E1A0C0B2D00000000000762 /* MWMTheme.m in Sources */,
 				5E1A0C0B2D00000000000765 /* MWMComponents.m in Sources */,
 				5E1A0C0B2D00000000000768 /* MWMDesignGallery.m in Sources */,
+				5E1A0C0B2D00000000000832 /* NSAlert+MWM.m in Sources */,
+				5E1A0C0B2D00000000000835 /* MWMAboutWindow.m in Sources */,
 				5E1A0C0B2D00000000000721 /* ConfigurationKeyboardView.m in Sources */,
 				5E1A0C0B2D00000000000733 /* ConfigurationKeyboardMapView.m in Sources */,
 				5E1A0C0B2D00000000000413 /* ConfigurationFormView.m in Sources */,
@@ -1037,6 +1052,7 @@
 				5E1A0C0B2D00000000000709 /* TestSlateShortcutIndex.m in Sources */,
 				5E1A0C0B2D00000000000771 /* TestSnapshots.m in Sources */,
 				5E1A0C0B2D00000000000794 /* TestAppIcon.m in Sources */,
+				5E1A0C0B2D00000000000842 /* TestDialogs.m in Sources */,
 				5E1A0C0B2D00000000000792 /* TestSlateConfigFormat.m in Sources */,
 				5E1A0C0B2D00000000000723 /* TestConfigurationKeyboard.m in Sources */,
 				5E1A0C0B2D00000000000214 /* TestSlateLegacyMigration.m in Sources */,

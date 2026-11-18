@@ -16,6 +16,7 @@
 //  along with this program.  If not, see http://www.gnu.org/licenses
 
 #import "SlateLegacyMigration.h"
+#import "NSAlert+MWM.h"
 #import <Cocoa/Cocoa.h>
 #import <JavaScriptCore/JavaScriptCore.h>
 #import "SlateConfigDocument.h"
@@ -463,7 +464,7 @@ static id NilIfNull(id value) {
 #pragma mark - Startup
 
 + (void)showMigrationResult:(NSArray<NSString *> *)backups warnings:(NSArray<NSString *> *)warnings {
-  NSAlert *alert = [[NSAlert alloc] init];
+  NSAlert *alert = [NSAlert mwm_alert];
   [alert setMessageText:@"MWM now uses ~/.mwm.yml"];
   NSMutableArray *names = [NSMutableArray array];
   for (NSString *backup in backups) [names addObject:[backup stringByAbbreviatingWithTildeInPath]];
@@ -484,7 +485,7 @@ static id NilIfNull(id value) {
 }
 
 + (void)showAlert:(NSString *)message detail:(NSString *)detail {
-  NSAlert *alert = [[NSAlert alloc] init];
+  NSAlert *alert = [NSAlert mwm_alert];
   [alert setAlertStyle:NSAlertStyleWarning];
   [alert setMessageText:message];
   [alert setInformativeText:detail];
@@ -512,7 +513,7 @@ static id NilIfNull(id value) {
   if ([SlateConfigFormat migrateFileAtPath:path backupPath:&backup error:&error]) {
     NSString *shown = [backup stringByReplacingOccurrencesOfString:NSHomeDirectory() withString:@"~"];
     SlateLogger(@"Updated %@ to the current format; the old file is %@", path, shown);
-    NSAlert *alert = [[NSAlert alloc] init];
+    NSAlert *alert = [NSAlert mwm_alert];
     [alert setMessageText:@"Your configuration was updated"];
     [alert setInformativeText:[NSString stringWithFormat:
       @"~/.mwm.yml now uses the new format: one entry per monitor and slot, and actions written out as fields. "
@@ -553,7 +554,7 @@ static id NilIfNull(id value) {
   NSString *names = [oldNames componentsJoinedByString:@", "];
 
   if ([fm fileExistsAtPath:ymlPath]) {
-    NSAlert *alert = [[NSAlert alloc] init];
+    NSAlert *alert = [NSAlert mwm_alert];
     [alert setMessageText:[NSString stringWithFormat:@"Merge %@ into ~/.mwm.yml?", names]];
     [alert setInformativeText:[NSString stringWithFormat:
       @"MWM keeps its configuration in ~/.mwm.yml. You also have %@, so MWM can merge %@ in; ~/.mwm.yml wins "

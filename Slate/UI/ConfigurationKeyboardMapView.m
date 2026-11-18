@@ -15,6 +15,7 @@
 //  along with this program.  If not, see http://www.gnu.org/licenses
 
 #import "ConfigurationKeyboardMapView.h"
+#import "NSAlert+MWM.h"
 #import "MWMTheme.h"
 #import "MWMComponents.h"
 #import "ConfigurationBlockView.h"
@@ -640,7 +641,7 @@ typedef NS_ENUM(NSInteger, MapKeyState) {
 - (void)removePressed:(id)sender {
   if (self.confirmsRemoval) {
     SlateShortcutInfo *info = [self infoForKeyName:self.selectedKeyName ?: @""];
-    NSAlert *alert = [[NSAlert alloc] init];
+    NSAlert *alert = [NSAlert mwm_alert];
     [alert setMessageText:[NSString stringWithFormat:@"Remove \"%@\"?", info.title]];
     [alert setInformativeText:@"The shortcut is taken out of your configuration."];
     [alert addButtonWithTitle:@"Cancel"];

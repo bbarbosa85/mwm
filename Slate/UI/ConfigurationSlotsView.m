@@ -16,6 +16,7 @@
 //  along with this program.  If not, see http://www.gnu.org/licenses
 
 #import "ConfigurationSlotsView.h"
+#import "NSAlert+MWM.h"
 #import "MWMTheme.h"
 #import "MWMComponents.h"
 #import "ConfigurationBlockView.h"
@@ -651,7 +652,7 @@
 // The back arrow: asks first when there's something to lose.
 - (void)backPressed:(id)sender {
   if ([self hasUnsavedChanges]) {
-    NSAlert *alert = [[NSAlert alloc] init];
+    NSAlert *alert = [NSAlert mwm_alert];
     [alert setMessageText:@"Discard your changes?"];
     [alert setInformativeText:@"This slot has changes that haven't been saved."];
     [alert addButtonWithTitle:@"Keep Editing"];
@@ -724,7 +725,7 @@
   if (entry == nil) return;
   NSUInteger uses = [self usesOfSlotNamed:entry.name];
   if (uses > 0) {
-    NSAlert *alert = [[NSAlert alloc] init];
+    NSAlert *alert = [NSAlert mwm_alert];
     [alert setMessageText:[NSString stringWithFormat:@"\"%@\" is in use", entry.name]];
     [alert setInformativeText:[NSString stringWithFormat:@"%lu shortcut%@ move%@ windows to it. Change %@ first, then remove the slot.", (unsigned long)uses, uses == 1 ? @"" : @"s", uses == 1 ? @"s" : @"", uses == 1 ? @"it" : @"them"]];
     [alert addButtonWithTitle:@"OK"];
