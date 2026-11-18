@@ -20,8 +20,11 @@
 
 #import <ServiceManagement/ServiceManagement.h>
 #import "Constants.h"
+#import "NSAlert+MWM.h"
 #import "SlateAppDelegate.h"
 #import "MWMDesignGallery.h"
+#import "MWMAboutWindow.h"
+#import "MWMStatusMenus.h"
 #import "SlateConfig.h"
 #import "JSController.h"
 #import "Binding.h"
@@ -148,7 +151,7 @@ static EventHandlerRef modifiersEvent;
 }
 
 - (IBAction)aboutWindow {
-  [NSApp orderFrontStandardAboutPanel:self];
+  [MWMAboutWindow showWindow];
   NSArray *windows = [NSApp windows];
   for (NSWindow *window in windows) {
     [window setLevel:(NSScreenSaverWindowLevel - 1)];
@@ -459,15 +462,30 @@ OSStatus OnModifiersChangedEvent(EventHandlerCallRef nextHandler, EventRef theEv
   return item;
 }
 
-// The status bar menu: everything MWM offers, in three short groups.
+// A top-level item that opens a submenu.
+- (NSMenuItem *)addSubmenu:(NSMenu *)submenu title:(NSString *)title symbol:(NSString *)symbol to:(NSMenu *)menu {
+  NSMenuItem *item = [menu addItemWithTitle:title action:nil keyEquivalent:@""];
+  [item setSubmenu:submenu];
+  if (symbol != nil) [item setImage:[NSImage imageWithSystemSymbolName:symbol accessibilityDescription:nil]];
+  return item;
+}
+
+// The status bar menu: what MWM does (Snapshots, Keyboard Shortcuts, Backup), then the configuration window and the app.
 - (NSMenu *)buildStatusMenu {
   NSMenu *menu = [[NSMenu alloc] initWithTitle:@"MWM"];
+  MWMStatusMenus *menus = [MWMStatusMenus shared];
   [self addItem:@"About MWM" action:@selector(aboutWindow) key:@"" to:menu];
+  [menu addItem:[NSMenuItem separatorItem]];
+  [self addSubmenu:[menus snapshotsMenu] title:@"Snapshots" symbol:@"camera" to:menu];
+  [self addSubmenu:[menus keyboardMenu] title:@"Keyboard Shortcuts" symbol:@"keyboard" to:menu];
+  NSMenuItem *backup = [self addItem:@"Backup…" action:@selector(openBackup) key:@"" to:menu];
+  [backup setImage:[NSImage imageWithSystemSymbolName:@"icloud" accessibilityDescription:nil]];
   [menu addItem:[NSMenuItem separatorItem]];
   [self addItem:@"Configure MWM…" action:@selector(configureSlate) key:@"," to:menu];
   NSMenuItem *gallery = [self addItem:@"Design System…" action:@selector(showDesignGallery) key:@"," to:menu];   // shown while Option is held
   [gallery setKeyEquivalentModifierMask:NSEventModifierFlagCommand | NSEventModifierFlagOption];
   [gallery setAlternate:YES];
+  [self addSubmenu:[menus pagesMenu] title:@"Open Page" symbol:nil to:menu];
   [[self addItem:@"Reload Configuration" action:@selector(relaunch) key:@"" to:menu]
     setToolTip:@"Restart MWM to load the configuration file again"];
   launchOnLoginItem = [self addItem:@"Launch MWM at Login" action:@selector(updateLaunchState) key:@"" to:menu];
@@ -475,6 +493,10 @@ OSStatus OnModifiersChangedEvent(EventHandlerCallRef nextHandler, EventRef theEv
   [menu addItem:[NSMenuItem separatorItem]];
   [menu addItemWithTitle:@"Quit MWM" action:@selector(terminate:) keyEquivalent:@"q"];
   return menu;
+}
+
+- (void)openBackup {
+  [[ConfigurationWindowController sharedController] showConfigurationSection:ConfigurationFormSectionBackup];
 }
 
 // The app menus, shown only while an MWM window is in front. They carry the
@@ -564,7 +586,7 @@ OSStatus OnModifiersChangedEvent(EventHandlerCallRef nextHandler, EventRef theEv
   BOOL isTrusted = AXIsProcessTrustedWithOptions((__bridge CFDictionaryRef)options);
   if (!isTrusted) {
     SlateLogger(@"Accessibility permission not yet granted; system authorization prompt requested.");
-    NSAlert *alert = [[NSAlert alloc] init];
+    NSAlert *alert = [NSAlert mwm_alert];
     [alert setMessageText:@"Accessibility Permission Required"];
     [alert setInformativeText:@"MWM requires Accessibility permissions to manage windows.\n\nIf MWM is already enabled in System Settings, macOS requires you to remove it (using the '-' button) and re-add it because the application binary has been updated."];
     [alert setAlertStyle:NSAlertStyleWarning];

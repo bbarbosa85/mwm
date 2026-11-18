@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		5E1A0C0B2D00000000000862 /* TestStatusMenus.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D00000000000861 /* TestStatusMenus.m */; };
+		5E1A0C0B2D00000000000852 /* MWMStatusMenus.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D00000000000851 /* MWMStatusMenus.m */; };
 		5E1A0C0B2D00000000000842 /* TestDialogs.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D00000000000841 /* TestDialogs.m */; };
 		5E1A0C0B2D00000000000835 /* MWMAboutWindow.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D00000000000834 /* MWMAboutWindow.m */; };
 		5E1A0C0B2D00000000000832 /* NSAlert+MWM.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D00000000000831 /* NSAlert+MWM.m */; };
@@ -175,6 +177,9 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		5E1A0C0B2D00000000000861 /* TestStatusMenus.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TestStatusMenus.m; sourceTree = "<group>"; };
+		5E1A0C0B2D00000000000850 /* MWMStatusMenus.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UI/MWMStatusMenus.h; sourceTree = "<group>"; };
+		5E1A0C0B2D00000000000851 /* MWMStatusMenus.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UI/MWMStatusMenus.m; sourceTree = "<group>"; };
 		5E1A0C0B2D00000000000841 /* TestDialogs.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TestDialogs.m; sourceTree = "<group>"; };
 		5E1A0C0B2D00000000000833 /* MWMAboutWindow.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UI/MWMAboutWindow.h; sourceTree = "<group>"; };
 		5E1A0C0B2D00000000000834 /* MWMAboutWindow.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UI/MWMAboutWindow.m; sourceTree = "<group>"; };
@@ -515,6 +520,7 @@
 				5E1A0C0B2D00000000000708 /* TestSlateShortcutIndex.m */,
 				5E1A0C0B2D00000000000770 /* TestSnapshots.m */,
 				5E1A0C0B2D00000000000793 /* TestAppIcon.m */,
+				5E1A0C0B2D00000000000861 /* TestStatusMenus.m */,
 				5E1A0C0B2D00000000000841 /* TestDialogs.m */,
 				5E1A0C0B2D00000000000821 /* TestConfigurationSnapshots.m */,
 				5E1A0C0B2D00000000000811 /* TestSlateSnapshots.m */,
@@ -798,6 +804,8 @@
 				5E1A0C0B2D00000000000831 /* NSAlert+MWM.m */,
 				5E1A0C0B2D00000000000833 /* MWMAboutWindow.h */,
 				5E1A0C0B2D00000000000834 /* MWMAboutWindow.m */,
+				5E1A0C0B2D00000000000850 /* MWMStatusMenus.h */,
+				5E1A0C0B2D00000000000851 /* MWMStatusMenus.m */,
 				5E1A0C0B2D00000000000718 /* ConfigurationKeyboardView.h */,
 				5E1A0C0B2D00000000000720 /* ConfigurationKeyboardView.m */,
 				5E1A0C0B2D00000000000730 /* ConfigurationKeyboardMapView.h */,
@@ -985,6 +993,7 @@
 				5E1A0C0B2D00000000000805 /* ConfigurationSnapshotsView.m in Sources */,
 				5E1A0C0B2D00000000000832 /* NSAlert+MWM.m in Sources */,
 				5E1A0C0B2D00000000000835 /* MWMAboutWindow.m in Sources */,
+				5E1A0C0B2D00000000000852 /* MWMStatusMenus.m in Sources */,
 				5E1A0C0B2D00000000000721 /* ConfigurationKeyboardView.m in Sources */,
 				5E1A0C0B2D00000000000733 /* ConfigurationKeyboardMapView.m in Sources */,
 				5E1A0C0B2D00000000000413 /* ConfigurationFormView.m in Sources */,
@@ -1070,6 +1079,7 @@
 				5E1A0C0B2D00000000000709 /* TestSlateShortcutIndex.m in Sources */,
 				5E1A0C0B2D00000000000771 /* TestSnapshots.m in Sources */,
 				5E1A0C0B2D00000000000794 /* TestAppIcon.m in Sources */,
+				5E1A0C0B2D00000000000862 /* TestStatusMenus.m in Sources */,
 				5E1A0C0B2D00000000000842 /* TestDialogs.m in Sources */,
 				5E1A0C0B2D00000000000822 /* TestConfigurationSnapshots.m in Sources */,
 				5E1A0C0B2D00000000000812 /* TestSlateSnapshots.m in Sources */,
