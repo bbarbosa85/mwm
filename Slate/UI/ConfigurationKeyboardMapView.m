@@ -252,8 +252,7 @@ typedef NS_ENUM(NSInteger, MapKeyState) {
   }
   // Heading with the Manage button at its right.
   NSTextField *heading = [self labelWithText:@"GROUPS" size:11 color:[MWMTheme textTertiary] weight:NSFontWeightSemibold];
-  NSView *gap = [[NSView alloc] init];
-  [gap setContentHuggingPriority:1 forOrientation:NSLayoutConstraintOrientationHorizontal];
+  NSView *gap = [MWMComponents spacer];
   NSButton *manage = [NSButton buttonWithTitle:@"Manage" target:self action:@selector(groupsPressed:)];
   [manage setBezelStyle:NSBezelStyleRounded];
   [manage setControlSize:NSControlSizeSmall];
@@ -268,37 +267,11 @@ typedef NS_ENUM(NSInteger, MapKeyState) {
   __weak ConfigurationKeyboardMapView *weakSelf = self;
   for (SlateModifierGroup *group in self.index.groups) {
     BOOL selected = [group.name isEqualToString:self.groupName ?: @""];
-    NSView *row = [[NSView alloc] init];
-    [row setTranslatesAutoresizingMaskIntoConstraints:NO];
-    ConfigurationClickView *click = [[ConfigurationClickView alloc] init];
-    click.cornerRadius = 10;
-    click.selected = selected;
     NSString *name = group.name;
-    click.onClick = ^{ weakSelf.groupName = name; };
-    NSTextField *title = [self labelWithText:group.name size:13 color:selected ? [MWMTheme accent] : [MWMTheme textPrimary] weight:NSFontWeightMedium];
-    NSTextField *count = [self labelWithText:[NSString stringWithFormat:@"%lu", (unsigned long)group.count] size:11 color:[MWMTheme textSecondary] weight:NSFontWeightRegular];
-    NSView *space = [[NSView alloc] init];
-    [space setContentHuggingPriority:1 forOrientation:NSLayoutConstraintOrientationHorizontal];
-    NSStackView *line = [NSStackView stackViewWithViews:@[title, space, count]];
-    [line setAlignment:NSLayoutAttributeFirstBaseline];
-    NSView *caps = group.custom ? [self labelWithText:@"other combinations" size:11 color:[MWMTheme textSecondary] weight:NSFontWeightRegular]
-                                : [ConfigurationKeyViews modifierCaps:group.modifierNames size:20];
-    NSStackView *stack = [NSStackView stackViewWithViews:@[line, caps]];
-    [stack setOrientation:NSUserInterfaceLayoutOrientationVertical];
-    [stack setAlignment:NSLayoutAttributeLeading];
-    [stack setSpacing:6];
-    [stack setEdgeInsets:NSEdgeInsetsMake(10, 12, 10, 12)];
-    [stack setTranslatesAutoresizingMaskIntoConstraints:NO];
-    [[line.widthAnchor constraintEqualToAnchor:stack.widthAnchor constant:-24] setActive:YES];
-    [row addSubview:stack];
-    [row addSubview:click positioned:NSWindowAbove relativeTo:nil];
-    for (NSView *view in @[stack, click]) {
-      [view setTranslatesAutoresizingMaskIntoConstraints:NO];
-      [NSLayoutConstraint activateConstraints:@[
-        [view.topAnchor constraintEqualToAnchor:row.topAnchor], [view.bottomAnchor constraintEqualToAnchor:row.bottomAnchor],
-        [view.leadingAnchor constraintEqualToAnchor:row.leadingAnchor], [view.trailingAnchor constraintEqualToAnchor:row.trailingAnchor],
-      ]];
-    }
+    NSView *detail = group.custom ? [self labelWithText:@"other combinations" size:11 color:[MWMTheme textSecondary] weight:NSFontWeightRegular]
+                                  : [ConfigurationKeyViews modifierCaps:group.modifierNames size:20];
+    NSView *row = [MWMComponents countRowWithTitle:group.name count:group.count detail:detail detailSpacing:6 insets:NSEdgeInsetsMake(10, 12, 10, 12)
+                                         boldTitle:YES selected:selected onClick:^{ weakSelf.groupName = name; }];
     [row setIdentifier:[@"group-" stringByAppendingString:group.name]];
     [self.groupsStack addArrangedSubview:row];
     [[row.widthAnchor constraintEqualToConstant:kGroupsWidth] setActive:YES];
@@ -466,8 +439,7 @@ typedef NS_ENUM(NSInteger, MapKeyState) {
   SlateAction *action = [SlateAction parse:info.binding.action];
   CGRect rect;
   if (info.kind == SlateShortcutKindMoveToSlot && [self getRect:&rect forSlotNamed:action.a]) {
-    NSView *gap = [[NSView alloc] init];
-    [gap setContentHuggingPriority:1 forOrientation:NSLayoutConstraintOrientationHorizontal];
+    NSView *gap = [MWMComponents spacer];
     ConfigurationSlotThumbnail *preview = [[ConfigurationSlotThumbnail alloc] init];
     preview.rect = rect;
     preview.valid = YES;
@@ -545,8 +517,7 @@ typedef NS_ENUM(NSInteger, MapKeyState) {
 
   // Buttons on their own row, right-aligned; a conflict chip sits to their left.
   NSMutableArray *buttonRow = [NSMutableArray array];
-  NSView *spacer = [[NSView alloc] init];
-  [spacer setContentHuggingPriority:1 forOrientation:NSLayoutConstraintOrientationHorizontal];
+  NSView *spacer = [MWMComponents spacer];
   [buttonRow addObject:spacer];
   if (info != nil) {
     if (info.conflict) {
@@ -559,16 +530,12 @@ typedef NS_ENUM(NSInteger, MapKeyState) {
       [chip setIdentifier:@"conflict-chip"];
       [buttonRow addObject:chip];
     }
-    NSButton *remove = [NSButton buttonWithTitle:@"Remove" target:self action:@selector(removePressed:)];
-    NSButton *edit = [NSButton buttonWithTitle:@"Edit" target:self action:@selector(editPressed:)];
-    [edit setKeyEquivalent:@"\r"];
-    for (NSButton *button in @[remove, edit]) [button setBezelStyle:NSBezelStyleRounded];
+    NSButton *remove = [MWMComponents secondaryButtonWithTitle:@"Remove" target:self action:@selector(removePressed:)];
+    NSButton *edit = [MWMComponents primaryButtonWithTitle:@"Edit" target:self action:@selector(editPressed:)];
     [buttonRow addObject:remove];
     [buttonRow addObject:edit];
   } else if (reason == nil && !group.custom) {
-    NSButton *add = [NSButton buttonWithTitle:@"Add Shortcut" target:self action:@selector(addPressed:)];
-    [add setBezelStyle:NSBezelStyleRounded];
-    [add setKeyEquivalent:@"\r"];
+    NSButton *add = [MWMComponents primaryButtonWithTitle:@"Add Shortcut" target:self action:@selector(addPressed:)];
     [buttonRow addObject:add];
   }
   if ([buttonRow count] > 1) {
@@ -637,14 +604,11 @@ typedef NS_ENUM(NSInteger, MapKeyState) {
   [note setIdentifier:@"pick-warning"];
   [self.selectionStack addArrangedSubview:note];
 
-  NSView *spacer = [[NSView alloc] init];
-  [spacer setContentHuggingPriority:1 forOrientation:NSLayoutConstraintOrientationHorizontal];
-  NSButton *cancel = [NSButton buttonWithTitle:@"Cancel" target:self action:@selector(cancelPickPressed:)];
-  NSButton *use = [NSButton buttonWithTitle:@"Use these keys" target:self action:@selector(usePickPressed:)];
-  [use setKeyEquivalent:@"\r"];
+  NSView *spacer = [MWMComponents spacer];
+  NSButton *cancel = [MWMComponents secondaryButtonWithTitle:@"Cancel" target:self action:@selector(cancelPickPressed:)];
+  NSButton *use = [MWMComponents primaryButtonWithTitle:@"Use these keys" target:self action:@selector(usePickPressed:)];
   [use setEnabled:!blocked];
   [use setIdentifier:@"pick-use"];
-  for (NSButton *button in @[cancel, use]) [button setBezelStyle:NSBezelStyleRounded];
   NSStackView *buttons = [NSStackView stackViewWithViews:@[spacer, cancel, use]];
   [buttons setSpacing:8];
   [self.selectionStack addArrangedSubview:buttons];

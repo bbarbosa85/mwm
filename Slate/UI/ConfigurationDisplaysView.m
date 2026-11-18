@@ -17,6 +17,7 @@
 
 #import "ConfigurationDisplaysView.h"
 #import "MWMTheme.h"
+#import "MWMComponents.h"
 #import "ConfigurationBlockView.h"
 #import "SlateConfigDocument.h"
 #import "SlateDisplays.h"
@@ -95,32 +96,9 @@ static const CGFloat kStatusWidth = 170;
     [_stack setSpacing:10];
     [_stack setEdgeInsets:NSEdgeInsetsMake(8, 20, 20, 20)];
     [_stack setTranslatesAutoresizingMaskIntoConstraints:NO];
-    NSView *document = [[ConfigurationFlippedView alloc] init];
-    [document setTranslatesAutoresizingMaskIntoConstraints:NO];
-    [document addSubview:_stack];
-    NSScrollView *scroll = [[NSScrollView alloc] init];
-    [scroll setTranslatesAutoresizingMaskIntoConstraints:NO];
-    [scroll setHasVerticalScroller:YES];
-    [scroll setAutohidesScrollers:YES];
-    [scroll setDrawsBackground:NO];
-    NSClipView *clip = [[NSClipView alloc] init];
-    [clip setDrawsBackground:NO];
-    [scroll setContentView:clip];
-    [scroll setDocumentView:document];
+    NSScrollView *scroll = [MWMComponents scrollViewWithContent:_stack];
     [self addSubview:scroll];
-    [NSLayoutConstraint activateConstraints:@[
-      [scroll.topAnchor constraintEqualToAnchor:self.topAnchor],
-      [scroll.bottomAnchor constraintEqualToAnchor:self.bottomAnchor],
-      [scroll.leadingAnchor constraintEqualToAnchor:self.leadingAnchor],
-      [scroll.trailingAnchor constraintEqualToAnchor:self.trailingAnchor],
-      [document.topAnchor constraintEqualToAnchor:clip.topAnchor],
-      [document.leadingAnchor constraintEqualToAnchor:clip.leadingAnchor],
-      [document.trailingAnchor constraintEqualToAnchor:clip.trailingAnchor],
-      [_stack.topAnchor constraintEqualToAnchor:document.topAnchor],
-      [_stack.bottomAnchor constraintEqualToAnchor:document.bottomAnchor],
-      [_stack.leadingAnchor constraintEqualToAnchor:document.leadingAnchor],
-      [_stack.trailingAnchor constraintEqualToAnchor:document.trailingAnchor],
-    ]];
+    [MWMComponents pinView:scroll toEdgesOf:self insets:NSEdgeInsetsMake(0, 0, 0, 0)];
   }
   return self;
 }
@@ -181,11 +159,7 @@ static const CGFloat kStatusWidth = 170;
 #pragma mark - Building
 
 - (NSTextField *)labelWithText:(NSString *)text size:(CGFloat)size color:(NSColor *)color weight:(NSFontWeight)weight {
-  NSTextField *label = [NSTextField labelWithString:text];
-  [label setFont:[NSFont systemFontOfSize:size weight:weight]];
-  [label setTextColor:color];
-  [label setLineBreakMode:NSLineBreakByTruncatingTail];
-  return label;
+  return [MWMComponents labelWithText:text size:size color:color weight:weight];
 }
 
 - (NSView *)statusText:(NSString *)text {
@@ -222,8 +196,7 @@ static const CGFloat kStatusWidth = 170;
 - (NSView *)rowWithName:(NSView *)name details:(NSArray<NSString *> *)details status:(NSView *)status actions:(NSArray<NSView *> *)actions dimmed:(BOOL)dimmed {
   ConfigurationBlockView *block = [[ConfigurationBlockView alloc] init];
   [block setTranslatesAutoresizingMaskIntoConstraints:NO];
-  NSView *spacer = [[NSView alloc] init];
-  [spacer setContentHuggingPriority:1 forOrientation:NSLayoutConstraintOrientationHorizontal];
+  NSView *spacer = [MWMComponents spacer];
   NSMutableArray *views = [NSMutableArray arrayWithObjects:name,
       [self columnText:details[0] width:kScreenWidth color:[MWMTheme textSecondary]],
       [self columnText:details[1] width:kSizeWidth color:[MWMTheme textSecondary]],
@@ -300,8 +273,7 @@ static const CGFloat kStatusWidth = 170;
   NSTextField *status = [self labelWithText:count size:13 color:[MWMTheme textPrimary] weight:NSFontWeightMedium];
   NSButton *detect = [NSButton buttonWithTitle:@"Detect Again" target:self action:@selector(detectPressed:)];
   [detect setToolTip:@"Look at the connected screens again and add any that aren't named yet"];
-  NSView *spacer = [[NSView alloc] init];
-  [spacer setContentHuggingPriority:1 forOrientation:NSLayoutConstraintOrientationHorizontal];
+  NSView *spacer = [MWMComponents spacer];
   NSStackView *header = [NSStackView stackViewWithViews:@[status, spacer, detect]];
   [header setAlignment:NSLayoutAttributeCenterY];
   [self addFullWidth:header];

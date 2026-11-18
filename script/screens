@@ -1,0 +1,82 @@
+#!/bin/bash
+# Draws the configuration screens, light and dark, to PNG files and opens them in one page,
+# so a UI change can be looked at without relaunching the app.
+#
+#   script/screens            draws every screen
+#   script/screens keyboard   draws only the screens whose name contains "keyboard"
+#                             (the others from earlier runs stay on the page)
+#   script/screens --open     also opens the page again (otherwise it is opened only the
+#                             first time; keep the tab and tick Auto-refresh)
+#
+# The images and the page are in /tmp/mwm-screens (override with MWM_SCREENS_DIR).
+# On the page: Light / Dark / Both, a list of screens, and Auto-refresh to pick up the
+# next run without reloading by hand.
+set -euo pipefail
+cd "$(dirname "$0")/.."
+OUT="${MWM_SCREENS_DIR:-/tmp/mwm-screens}"
+FILTER=""
+FORCE_OPEN=0
+for arg in "$@"; do
+  if [ "$arg" = "--open" ]; then FORCE_OPEN=1; else FILTER="$arg"; fi
+done
+NEW_PAGE=0
+[ -f "$OUT/index.html" ] || NEW_PAGE=1
+mkdir -p "$OUT"
+[ -z "$FILTER" ] && rm -f "$OUT"/*.png
+
+# xcodebuild hands variables with this prefix to the tests (without it).
+TEST_RUNNER_MWM_SCREENS_DIR="$OUT" TEST_RUNNER_MWM_SCREENS_FILTER="$FILTER" \
+  xcodebuild test -project Slate.xcodeproj -scheme Slate -destination 'platform=macOS' \
+  -only-testing:SlateTests/TestSnapshots > "$OUT/build.log" 2>&1 || {
+  tail -30 "$OUT/build.log"; echo "The build or the drawing failed (full log: $OUT/build.log)"; exit 1; }
+
+STAMP=$(date +%s)
+SCREENS=$(ls "$OUT" | grep -- '-light\.png$' | sed 's/-light\.png$//' | sort)
+{
+cat <<'HEAD'
+<!doctype html><meta charset="utf-8"><title>MWM screens</title>
+<style>
+  :root{color-scheme:light dark;--bg:#f4f4f6;--fg:#222;--muted:#777;--line:#d0d0d4;--accent:#0a64f0}
+  @media (prefers-color-scheme:dark){:root{--bg:#18181a;--fg:#eee;--muted:#999;--line:#3a3a3e}}
+  body{font:14px -apple-system,sans-serif;margin:0;background:var(--bg);color:var(--fg)}
+  header{position:sticky;top:0;z-index:2;display:flex;gap:16px;align-items:center;padding:10px 20px;background:var(--bg);border-bottom:1px solid var(--line)}
+  header .seg button{font:inherit;padding:4px 12px;border:1px solid var(--line);background:transparent;color:var(--fg);cursor:pointer}
+  header .seg button:first-child{border-radius:6px 0 0 6px}header .seg button:last-child{border-radius:0 6px 6px 0}
+  header .seg button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+  header .time{color:var(--muted);margin-left:auto}
+  nav{position:fixed;top:52px;left:0;bottom:0;width:190px;padding:12px 8px 12px 20px;overflow:auto;font-size:13px}
+  nav a{display:block;padding:3px 0;color:var(--muted);text-decoration:none}nav a:hover{color:var(--fg)}
+  main{margin-left:210px;padding:0 20px 60px}
+  section{padding-top:20px}h2{margin:0 0 8px;font-size:15px}
+  .row{display:flex;gap:16px;align-items:flex-start}
+  figure{margin:0;flex:1;min-width:0}figcaption{font-size:12px;color:var(--muted);margin-bottom:4px}
+  img{width:100%;border:1px solid var(--line);border-radius:8px;display:block}
+  body.light .dark,body.dark .light{display:none}
+</style>
+HEAD
+echo "<header><div class=seg><button data-m=light>Light</button><button data-m=dark>Dark</button><button data-m=both>Both</button></div>"
+echo "<label><input type=checkbox id=auto> Auto-refresh</label><span class=time>drawn $(date '+%H:%M:%S')</span></header>"
+echo "<nav>"
+for s in $SCREENS; do echo "<a href=\"#$s\">$s</a>"; done
+echo "</nav><main>"
+for s in $SCREENS; do
+  echo "<section id=\"$s\"><h2>$s</h2><div class=row>"
+  echo "<figure class=light><figcaption>light</figcaption><img src=\"$s-light.png?t=$STAMP\"></figure>"
+  echo "<figure class=dark><figcaption>dark</figcaption><img src=\"$s-dark.png?t=$STAMP\"></figure></div></section>"
+done
+cat <<'TAIL'
+</main>
+<script>
+  const get=(k,d)=>{try{return localStorage.getItem(k)||d}catch(e){return d}}, set=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
+  const apply=m=>{document.body.className=m;document.querySelectorAll('.seg button').forEach(b=>b.classList.toggle('on',b.dataset.m===m));set('mode',m)};
+  document.querySelectorAll('.seg button').forEach(b=>b.onclick=()=>apply(b.dataset.m));
+  apply(get('mode','both'));
+  const auto=document.getElementById('auto');auto.checked=get('auto','')==='1';
+  auto.onchange=()=>set('auto',auto.checked?'1':'0');
+  setInterval(()=>{if(auto.checked)location.reload()},3000);
+</script>
+TAIL
+} > "$OUT/index.html"
+
+echo "Drew into $OUT ($(ls "$OUT"/*.png | wc -l | tr -d ' ') images)"
+if [ "$NEW_PAGE" = 1 ] || [ "$FORCE_OPEN" = 1 ]; then open "$OUT/index.html"; fi

@@ -16,6 +16,7 @@
 
 #import "ConfigurationShortcutListView.h"
 #import "MWMTheme.h"
+#import "MWMComponents.h"
 #import "ConfigurationBlockView.h"
 #import "ConfigurationKeyViews.h"
 #import "SlateConfigDocument.h"
@@ -46,26 +47,7 @@ static const CGFloat kKeysColumnWidth = 210;
 #pragma mark - Interface
 
 - (NSScrollView *)scrollViewWithStack:(NSStackView *)stack {
-  NSView *document = [[ConfigurationFlippedView alloc] init];
-  [document setTranslatesAutoresizingMaskIntoConstraints:NO];
-  [stack setTranslatesAutoresizingMaskIntoConstraints:NO];
-  [document addSubview:stack];
-  NSScrollView *scroll = [[NSScrollView alloc] init];
-  [scroll setTranslatesAutoresizingMaskIntoConstraints:NO];
-  [scroll setHasVerticalScroller:YES];
-  [scroll setAutohidesScrollers:YES];
-  [scroll setDrawsBackground:NO];
-  NSClipView *clip = [[NSClipView alloc] init];
-  [clip setDrawsBackground:NO];
-  [scroll setContentView:clip];
-  [scroll setDocumentView:document];
-  [NSLayoutConstraint activateConstraints:@[
-    [stack.topAnchor constraintEqualToAnchor:document.topAnchor], [stack.bottomAnchor constraintEqualToAnchor:document.bottomAnchor],
-    [stack.leadingAnchor constraintEqualToAnchor:document.leadingAnchor], [stack.trailingAnchor constraintEqualToAnchor:document.trailingAnchor],
-    [document.topAnchor constraintEqualToAnchor:clip.topAnchor], [document.leadingAnchor constraintEqualToAnchor:clip.leadingAnchor],
-    [document.trailingAnchor constraintEqualToAnchor:clip.trailingAnchor],
-  ]];
-  return scroll;
+  return [MWMComponents scrollViewWithContent:stack];
 }
 
 - (void)buildInterface {
@@ -92,12 +74,8 @@ static const CGFloat kKeysColumnWidth = 210;
   self.countLabel = [NSTextField labelWithString:@""];
   [self.countLabel setFont:[MWMTheme fontSmall]];
   [self.countLabel setTextColor:[MWMTheme textSecondary]];
-  NSButton *add = [NSButton buttonWithTitle:@"New Shortcut" target:self action:@selector(newPressed:)];
-  [add setImage:[NSImage imageWithSystemSymbolName:@"plus" accessibilityDescription:nil]];
-  [add setImagePosition:NSImageLeft];
-  [add setBezelStyle:NSBezelStyleRounded];
-  NSView *spacer = [[NSView alloc] init];
-  [spacer setContentHuggingPriority:1 forOrientation:NSLayoutConstraintOrientationHorizontal];
+  NSButton *add = [MWMComponents secondaryButtonWithTitle:@"New Shortcut" symbol:@"plus" target:self action:@selector(newPressed:)];
+  NSView *spacer = [MWMComponents spacer];
   NSStackView *top = [NSStackView stackViewWithViews:@[self.countLabel, spacer, add]];
   [top setAlignment:NSLayoutAttributeCenterY];
 
@@ -116,9 +94,7 @@ static const CGFloat kKeysColumnWidth = 210;
   for (NSView *view in @[top, rowsScroll]) [[view.widthAnchor constraintEqualToAnchor:right.widthAnchor constant:-36] setActive:YES];
   [[self.rowsStack.widthAnchor constraintEqualToAnchor:rowsScroll.widthAnchor] setActive:YES];
 
-  NSBox *line = [[NSBox alloc] init];
-  [line setBoxType:NSBoxSeparator];
-  [line setTranslatesAutoresizingMaskIntoConstraints:NO];
+  NSView *line = [MWMComponents separator];
   [self addSubview:left];
   [self addSubview:line];
   [self addSubview:right];
@@ -167,11 +143,7 @@ static const CGFloat kKeysColumnWidth = 210;
 #pragma mark - Building
 
 - (NSTextField *)labelWithText:(NSString *)text size:(CGFloat)size color:(NSColor *)color weight:(NSFontWeight)weight {
-  NSTextField *label = [NSTextField labelWithString:text];
-  [label setFont:[NSFont systemFontOfSize:size weight:weight]];
-  [label setTextColor:color];
-  [label setLineBreakMode:NSLineBreakByTruncatingTail];
-  return label;
+  return [MWMComponents labelWithText:text size:size color:color weight:weight];
 }
 
 - (NSTextField *)heading:(NSString *)text {
@@ -180,32 +152,9 @@ static const CGFloat kKeysColumnWidth = 210;
 }
 
 // A filter row: a name and a count, optionally with modifier caps under it.
-- (ConfigurationClickView *)filterRowTitle:(NSString *)title count:(NSUInteger)count caps:(nullable NSArray<NSString *> *)caps selected:(BOOL)selected action:(void (^)(void))action {
-  ConfigurationClickView *row = [[ConfigurationClickView alloc] init];
-  [row setTranslatesAutoresizingMaskIntoConstraints:NO];
-  row.selected = selected;
-  row.onClick = action;
-  NSTextField *name = [self labelWithText:title size:13 color:selected ? [MWMTheme accent] : [MWMTheme textPrimary] weight:selected ? NSFontWeightMedium : NSFontWeightRegular];
-  NSTextField *number = [self labelWithText:[NSString stringWithFormat:@"%lu", (unsigned long)count] size:11 color:[MWMTheme textSecondary] weight:NSFontWeightRegular];
-  NSView *gap = [[NSView alloc] init];
-  [gap setContentHuggingPriority:1 forOrientation:NSLayoutConstraintOrientationHorizontal];
-  NSStackView *top = [NSStackView stackViewWithViews:@[name, gap, number]];
-  [top setAlignment:NSLayoutAttributeFirstBaseline];
-  NSMutableArray *views = [NSMutableArray arrayWithObject:top];
-  if ([caps count] > 0) [views addObject:[ConfigurationKeyViews modifierCaps:caps size:18]];
-  NSStackView *stack = [NSStackView stackViewWithViews:views];
-  [stack setOrientation:NSUserInterfaceLayoutOrientationVertical];
-  [stack setAlignment:NSLayoutAttributeLeading];
-  [stack setSpacing:4];
-  [stack setEdgeInsets:NSEdgeInsetsMake(6, 8, 6, 8)];
-  [stack setTranslatesAutoresizingMaskIntoConstraints:NO];
-  [[top.widthAnchor constraintEqualToAnchor:stack.widthAnchor constant:-16] setActive:YES];
-  [row addSubview:stack];
-  [NSLayoutConstraint activateConstraints:@[
-    [stack.topAnchor constraintEqualToAnchor:row.topAnchor], [stack.bottomAnchor constraintEqualToAnchor:row.bottomAnchor],
-    [stack.leadingAnchor constraintEqualToAnchor:row.leadingAnchor], [stack.trailingAnchor constraintEqualToAnchor:row.trailingAnchor],
-  ]];
-  return row;
+- (NSView *)filterRowTitle:(NSString *)title count:(NSUInteger)count caps:(nullable NSArray<NSString *> *)caps selected:(BOOL)selected action:(void (^)(void))action {
+  NSView *detail = [caps count] > 0 ? [ConfigurationKeyViews modifierCaps:caps size:18] : nil;
+  return [MWMComponents countRowWithTitle:title count:count detail:detail detailSpacing:4 insets:NSEdgeInsetsMake(6, 8, 6, 8) boldTitle:NO selected:selected onClick:action];
 }
 
 - (void)addFilterRow:(NSView *)row {

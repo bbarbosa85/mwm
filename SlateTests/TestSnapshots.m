@@ -22,7 +22,12 @@
 
 #import <XCTest/XCTest.h>
 #import <objc/runtime.h>
+#import "ConfigurationDisplaysView.h"
 #import "ConfigurationKeyboardMapView.h"
+#import "ConfigurationPresetsView.h"
+#import "ConfigurationSettingsView.h"
+#import "ConfigurationShortcutListView.h"
+#import "ConfigurationSlotsView.h"
 #import "ConfigurationShortcutEditorView.h"
 #import "MWMDesignGallery.h"
 #import "SlateConfigDocument.h"
@@ -90,8 +95,18 @@ static NSString *const kConfig =
 
 - (void)checkView:(NSView *)view size:(NSSize)size name:(NSString *)name dark:(BOOL)dark {
   NSString *full = [NSString stringWithFormat:@"%@-%@", name, dark ? @"dark" : @"light"];
+  // script/screens with a word draws only the screens whose name has it.
+  NSString *only = [[NSProcessInfo processInfo] environment][@"MWM_SCREENS_FILTER"];
+  if ([only length] > 0 && [name rangeOfString:only].location == NSNotFound) return;
   NSBitmapImageRep *actual = [self renderView:view size:size dark:dark];
   NSData *png = [actual representationUsingType:NSBitmapImageFileTypePNG properties:@{}];
+  // script/screens asks for every screen as an image to look at, not to compare.
+  NSString *screens = [[NSProcessInfo processInfo] environment][@"MWM_SCREENS_DIR"];
+  if ([screens length] > 0) {
+    [[NSFileManager defaultManager] createDirectoryAtPath:screens withIntermediateDirectories:YES attributes:nil error:nil];
+    [png writeToFile:[screens stringByAppendingPathComponent:[full stringByAppendingString:@".png"]] atomically:YES];
+    return;
+  }
   NSString *path = [[self snapshotDirectory] stringByAppendingPathComponent:[full stringByAppendingString:@".png"]];
   BOOL record = [[[NSProcessInfo processInfo] environment][@"MWM_RECORD_SNAPSHOTS"] length] > 0;
   NSData *saved = [NSData dataWithContentsOfFile:path];
@@ -135,6 +150,75 @@ static NSString *const kConfig =
     editor.document = doc;
     [editor editBindingAtIndex:0];
     [self checkView:editor size:NSMakeSize(1000, 640) name:@"shortcut-editor" dark:[dark boolValue]];
+  }
+}
+
+
+- (void)testTheShortcutListLooksTheSame {
+  for (NSNumber *dark in @[@NO, @YES]) {
+    SlateConfigDocument *doc = [SlateConfigDocument documentFromString:kConfig error:nil];
+    ConfigurationShortcutListView *list = [[ConfigurationShortcutListView alloc] initWithFrame:NSMakeRect(0, 0, 1000, 520)];
+    list.document = doc;
+    [self checkView:list size:NSMakeSize(1000, 520) name:@"shortcut-list" dark:[dark boolValue]];
+  }
+}
+
+- (void)testTheSlotsEditorLooksTheSame {
+  for (NSNumber *dark in @[@NO, @YES]) {
+    SlateConfigDocument *doc = [SlateConfigDocument documentFromString:kConfig error:nil];
+    ConfigurationSlotsView *slots = [[ConfigurationSlotsView alloc] initWithFrame:NSMakeRect(0, 0, 1000, 640)];
+    slots.document = doc;
+    [slots selectSlotNamed:@"half"];
+    [self checkView:slots size:NSMakeSize(1000, 640) name:@"slots-editor" dark:[dark boolValue]];
+  }
+}
+
+- (void)testTheSettingsPagesLookTheSame {
+  for (NSNumber *dark in @[@NO, @YES]) {
+    SlateConfigDocument *doc = [SlateConfigDocument documentFromString:kConfig error:nil];
+    ConfigurationSettingsView *settings = [[ConfigurationSettingsView alloc] initWithFrame:NSMakeRect(0, 0, 1000, 640)];
+    settings.page = ConfigurationSettingsPageGeneral;
+    settings.document = doc;
+    [self checkView:settings size:NSMakeSize(1000, 640) name:@"settings-general" dark:[dark boolValue]];
+  }
+}
+
+
+// More screens, drawn only for script/screens: they show this Mac's own displays or other states,
+// so they are for looking at, not for comparing.
+- (void)testMoreScreensForTheScreensScript {
+  if ([[[NSProcessInfo processInfo] environment][@"MWM_SCREENS_DIR"] length] == 0) return;
+  for (NSNumber *dark in @[@NO, @YES]) {
+    BOOL d = [dark boolValue];
+    SlateConfigDocument *doc = [SlateConfigDocument documentFromString:kConfig error:nil];
+
+    ConfigurationDisplaysView *displays = [[ConfigurationDisplaysView alloc] initWithFrame:NSMakeRect(0, 0, 1000, 640)];
+    displays.document = doc;
+    [self checkView:displays size:NSMakeSize(1000, 640) name:@"displays" dark:d];
+
+    ConfigurationPresetsView *presets = [[ConfigurationPresetsView alloc] initWithFrame:NSMakeRect(0, 0, 1000, 640)];
+    [self checkView:presets size:NSMakeSize(1000, 640) name:@"slot-presets" dark:d];
+
+    ConfigurationSettingsView *advanced = [[ConfigurationSettingsView alloc] initWithFrame:NSMakeRect(0, 0, 1000, 640)];
+    advanced.page = ConfigurationSettingsPageAdvanced;
+    advanced.document = doc;
+    [self checkView:advanced size:NSMakeSize(1000, 640) name:@"settings-advanced" dark:d];
+
+    ConfigurationKeyboardMapView *custom = [[ConfigurationKeyboardMapView alloc] initWithFrame:NSMakeRect(0, 0, 1000, 640)];
+    custom.document = doc;
+    custom.groupName = @"shyper";
+    [self checkView:custom size:NSMakeSize(1000, 640) name:@"keyboard-map-empty-group" dark:d];
+
+    ConfigurationShortcutEditorView *newShortcut = [[ConfigurationShortcutEditorView alloc] initWithFrame:NSMakeRect(0, 0, 1000, 640)];
+    newShortcut.document = doc;
+    [newShortcut startNewWithGroup:@"hyper" keyName:@"j"];
+    [self checkView:newShortcut size:NSMakeSize(1000, 640) name:@"shortcut-editor-new" dark:d];
+
+    ConfigurationShortcutEditorView *picking = [[ConfigurationShortcutEditorView alloc] initWithFrame:NSMakeRect(0, 0, 1000, 640)];
+    picking.document = doc;
+    [picking editBindingAtIndex:0];
+    [picking performSelector:NSSelectorFromString(@"pickPressed:") withObject:nil];
+    [self checkView:picking size:NSMakeSize(1000, 640) name:@"shortcut-editor-pick-keys" dark:d];
   }
 }
 

@@ -55,9 +55,7 @@ static NSArray<NSString *> *InstalledApplicationNames(void) {
 @property (strong) NSSearchField *kindSearch;
 @property (strong) NSStackView *kindStack;
 @property (strong) NSStackView *formStack;
-@property (strong) MWMChipView *changesChip;
-@property (strong) NSButton *saveButton;
-@property (strong) NSButton *cancelButton;
+@property (strong) MWMSaveBar *saveBar;
 @property (strong) NSView *pickerPage;
 @property (strong) ConfigurationKeyboardMapView *picker;
 
@@ -94,19 +92,8 @@ static NSArray<NSString *> *InstalledApplicationNames(void) {
 }
 
 - (void)buildInterface {
-  NSButton *back = [NSButton buttonWithTitle:@"Keyboard" target:self action:@selector(backPressed:)];
-  [back setImage:[NSImage imageWithSystemSymbolName:@"chevron.left" accessibilityDescription:@"Back"]];
-  [back setImagePosition:NSImageLeft];
-  [back setBordered:NO];
-  [back setContentTintColor:[MWMTheme accent]];
-  [back setFont:[MWMTheme fontHeading]];
-  self.titleLabel = [self labelWithText:@"New Shortcut" size:17 color:[MWMTheme textPrimary] weight:NSFontWeightMedium];
-  NSView *headerSpacer = [[NSView alloc] init];
-  [headerSpacer setContentHuggingPriority:1 forOrientation:NSLayoutConstraintOrientationHorizontal];
-  NSStackView *header = [NSStackView stackViewWithViews:@[back, self.titleLabel, headerSpacer]];
-  [header setSpacing:14];
-  [header setAlignment:NSLayoutAttributeCenterY];
-  [header setEdgeInsets:NSEdgeInsetsMake(14, 20, 4, 20)];
+  MWMSublevelHeader *header = [MWMSublevelHeader headerWithBackTitle:@"Keyboard" title:@"New Shortcut" target:self action:@selector(backPressed:)];
+  self.titleLabel = header.titleLabel;
 
   // Left: what the shortcut does.
   self.kindSearch = [[NSSearchField alloc] init];
@@ -148,48 +135,35 @@ static NSArray<NSString *> *InstalledApplicationNames(void) {
     [card.topAnchor constraintEqualToAnchor:cardHolder.topAnchor], [card.leadingAnchor constraintEqualToAnchor:cardHolder.leadingAnchor], [card.trailingAnchor constraintEqualToAnchor:cardHolder.trailingAnchor],
   ]];
 
-  // Save bar under a line.
-  NSBox *saveLine = [[NSBox alloc] init];
-  [saveLine setBoxType:NSBoxSeparator];
-  self.changesChip = [MWMChipView chipWithText:@"No changes" color:nil];
-  self.cancelButton = [NSButton buttonWithTitle:@"Cancel" target:self action:@selector(cancelPressed:)];
-  self.saveButton = [NSButton buttonWithTitle:@"Save" target:self action:@selector(savePressed:)];
-  [self.saveButton setKeyEquivalent:@"\r"];
-  for (NSButton *button in @[self.cancelButton, self.saveButton]) [button setBezelStyle:NSBezelStyleRounded];
-  NSView *barSpacer = [[NSView alloc] init];
-  [barSpacer setContentHuggingPriority:1 forOrientation:NSLayoutConstraintOrientationHorizontal];
-  NSStackView *saveBar = [NSStackView stackViewWithViews:@[self.changesChip, barSpacer, self.cancelButton, self.saveButton]];
-  [saveBar setSpacing:8];
-  [saveBar setAlignment:NSLayoutAttributeCenterY];
-  [saveBar setEdgeInsets:NSEdgeInsetsMake(10, 20, 12, 20)];
+  MWMSaveBar *saveBar = [MWMSaveBar barWithTarget:self cancel:@selector(cancelPressed:) save:@selector(savePressed:)];
+  self.saveBar = saveBar;
 
   self.editorPage = [[NSView alloc] init];
   [self.editorPage setTranslatesAutoresizingMaskIntoConstraints:NO];
-  for (NSView *view in @[header, left, cardHolder, saveLine, saveBar]) {
+  for (NSView *view in @[header, left, cardHolder, saveBar]) {
     [view setTranslatesAutoresizingMaskIntoConstraints:NO];
     [self.editorPage addSubview:view];
   }
-  for (NSView *view in @[header, saveLine, saveBar]) {
+  for (NSView *view in @[header, saveBar]) {
     [[view.leadingAnchor constraintEqualToAnchor:self.editorPage.leadingAnchor] setActive:YES];
     [[view.trailingAnchor constraintEqualToAnchor:self.editorPage.trailingAnchor] setActive:YES];
   }
   [NSLayoutConstraint activateConstraints:@[
-    [header.topAnchor constraintEqualToAnchor:self.editorPage.topAnchor], [header.heightAnchor constraintEqualToConstant:48],
-    [left.topAnchor constraintEqualToAnchor:header.bottomAnchor constant:8], [left.leadingAnchor constraintEqualToAnchor:self.editorPage.leadingAnchor constant:20],
-    [left.widthAnchor constraintEqualToConstant:210], [left.bottomAnchor constraintEqualToAnchor:saveLine.topAnchor constant:-16],
-    [cardHolder.topAnchor constraintEqualToAnchor:header.bottomAnchor constant:8], [cardHolder.leadingAnchor constraintEqualToAnchor:left.trailingAnchor constant:20],
-    [cardHolder.trailingAnchor constraintEqualToAnchor:self.editorPage.trailingAnchor constant:-20], [cardHolder.bottomAnchor constraintEqualToAnchor:saveLine.topAnchor constant:-16],
-    [saveLine.bottomAnchor constraintEqualToAnchor:saveBar.topAnchor],
-    [saveBar.bottomAnchor constraintEqualToAnchor:self.editorPage.bottomAnchor], [saveBar.heightAnchor constraintEqualToConstant:48],
+    [header.topAnchor constraintEqualToAnchor:self.editorPage.topAnchor],
+    [left.topAnchor constraintEqualToAnchor:header.bottomAnchor constant:MWMSpacingS], [left.leadingAnchor constraintEqualToAnchor:self.editorPage.leadingAnchor constant:MWMSpacingXL],
+    [left.widthAnchor constraintEqualToConstant:210], [left.bottomAnchor constraintEqualToAnchor:saveBar.topAnchor constant:-MWMSpacingL],
+    [cardHolder.topAnchor constraintEqualToAnchor:header.bottomAnchor constant:MWMSpacingS], [cardHolder.leadingAnchor constraintEqualToAnchor:left.trailingAnchor constant:MWMSpacingXL],
+    [cardHolder.trailingAnchor constraintEqualToAnchor:self.editorPage.trailingAnchor constant:-MWMSpacingXL], [cardHolder.bottomAnchor constraintEqualToAnchor:saveBar.topAnchor constant:-MWMSpacingL],
+    [saveBar.bottomAnchor constraintEqualToAnchor:self.editorPage.bottomAnchor],
   ]];
 
   // Picking on the map takes the page over.
   self.picker = [[ConfigurationKeyboardMapView alloc] init];
   [self.picker setDelegate:self];
   self.picker.pickerMode = YES;
-  NSTextField *pickTitle = [self labelWithText:@"Pick the keys" size:17 color:[MWMTheme textPrimary] weight:NSFontWeightMedium];
+  NSTextField *pickTitle = [MWMComponents titleLabel:@"Pick the keys"];
   NSStackView *pickHeader = [NSStackView stackViewWithViews:@[pickTitle]];
-  [pickHeader setEdgeInsets:NSEdgeInsetsMake(14, 20, 4, 20)];
+  [pickHeader setEdgeInsets:NSEdgeInsetsMake(14, MWMSpacingXL, 4, MWMSpacingXL)];
   self.pickerPage = [[NSView alloc] init];
   [self.pickerPage setTranslatesAutoresizingMaskIntoConstraints:NO];
   for (NSView *view in @[pickHeader, self.picker]) {
@@ -327,9 +301,7 @@ static NSArray<NSString *> *InstalledApplicationNames(void) {
   [self rebuildKinds];
   [self rebuildForm];
   BOOL dirty = [self hasUnsavedChanges];
-  [self.saveButton setEnabled:dirty && [self problem] == nil && !self.recording];
-  self.changesChip.text = dirty ? @"● Unsaved changes" : @"No changes";
-  self.changesChip.color = dirty ? [MWMTheme warning] : nil;
+  [self.saveBar setDirty:dirty canSave:[self problem] == nil && !self.recording];
 }
 
 - (void)rebuildKinds {
@@ -344,23 +316,8 @@ static NSArray<NSString *> *InstalledApplicationNames(void) {
     NSString *title = [SlateAction titleForKind:kind];
     if ([query length] > 0 && ![[title lowercaseString] containsString:query]) continue;
     BOOL selected = kind == self.draftAction.kind;
-    NSView *row = [[NSView alloc] init];
-    [row setTranslatesAutoresizingMaskIntoConstraints:NO];
-    ConfigurationClickView *click = [[ConfigurationClickView alloc] init];
-    click.cornerRadius = 8;
-    click.selected = selected;
-    click.onClick = ^{ [weakSelf selectKind:kind]; };
     NSTextField *label = [self labelWithText:title size:13 color:selected ? [MWMTheme accent] : [MWMTheme textPrimary] weight:selected ? NSFontWeightMedium : NSFontWeightRegular];
-    [label setTranslatesAutoresizingMaskIntoConstraints:NO];
-    [row addSubview:label];
-    [row addSubview:click];
-    [click setTranslatesAutoresizingMaskIntoConstraints:NO];
-    [NSLayoutConstraint activateConstraints:@[
-      [row.heightAnchor constraintEqualToConstant:32],
-      [label.leadingAnchor constraintEqualToAnchor:row.leadingAnchor constant:12], [label.trailingAnchor constraintEqualToAnchor:row.trailingAnchor constant:-8], [label.centerYAnchor constraintEqualToAnchor:row.centerYAnchor],
-      [click.topAnchor constraintEqualToAnchor:row.topAnchor], [click.bottomAnchor constraintEqualToAnchor:row.bottomAnchor],
-      [click.leadingAnchor constraintEqualToAnchor:row.leadingAnchor], [click.trailingAnchor constraintEqualToAnchor:row.trailingAnchor],
-    ]];
+    NSView *row = [MWMComponents selectableRowWithContent:label insets:NSEdgeInsetsMake(8, 12, 8, 8) selected:selected onClick:^{ [weakSelf selectKind:kind]; }];
     [row setIdentifier:[NSString stringWithFormat:@"kind-%ld", (long)kind]];
     [self.kindStack addArrangedSubview:row];
     [[row.widthAnchor constraintEqualToAnchor:self.kindStack.widthAnchor] setActive:YES];
@@ -379,9 +336,7 @@ static NSArray<NSString *> *InstalledApplicationNames(void) {
 
 - (void)addRowWithLabel:(NSString *)label content:(NSArray<NSView *> *)views identifier:(NSString *)identifier {
   if ([[self.formStack arrangedSubviews] count] > 0) {
-    NSBox *line = [[NSBox alloc] init];
-    [line setBoxType:NSBoxSeparator];
-    [line setTranslatesAutoresizingMaskIntoConstraints:NO];
+    NSView *line = [MWMComponents separator];
     [self.formStack addArrangedSubview:line];
     [[line.widthAnchor constraintEqualToAnchor:self.formStack.widthAnchor] setActive:YES];
   }
@@ -540,22 +495,9 @@ static NSArray<NSString *> *InstalledApplicationNames(void) {
   [self.slotList setAlignment:NSLayoutAttributeLeading];
   [self.slotList setSpacing:2];
   [self.slotList setTranslatesAutoresizingMaskIntoConstraints:NO];
-  NSScrollView *scroll = [[NSScrollView alloc] init];
-  [scroll setHasVerticalScroller:YES];
-  [scroll setDrawsBackground:NO];
+  NSScrollView *scroll = [MWMComponents scrollViewWithContent:self.slotList];
   [scroll setBorderType:NSNoBorder];
-  [scroll setTranslatesAutoresizingMaskIntoConstraints:NO];
-  ConfigurationFlippedView *document = [[ConfigurationFlippedView alloc] init];
-  [document setTranslatesAutoresizingMaskIntoConstraints:NO];
-  [document addSubview:self.slotList];
-  [scroll setDocumentView:document];
-  [NSLayoutConstraint activateConstraints:@[
-    [self.slotList.topAnchor constraintEqualToAnchor:document.topAnchor], [self.slotList.bottomAnchor constraintEqualToAnchor:document.bottomAnchor],
-    [self.slotList.leadingAnchor constraintEqualToAnchor:document.leadingAnchor], [self.slotList.trailingAnchor constraintEqualToAnchor:document.trailingAnchor],
-    [document.leadingAnchor constraintEqualToAnchor:scroll.contentView.leadingAnchor], [document.trailingAnchor constraintEqualToAnchor:scroll.contentView.trailingAnchor],
-    [document.topAnchor constraintEqualToAnchor:scroll.contentView.topAnchor],
-    [scroll.heightAnchor constraintEqualToConstant:208],
-  ]];
+  [scroll.heightAnchor constraintEqualToConstant:208].active = YES;
   [scroll setIdentifier:@"slot-list"];
 
   NSStackView *picker = [NSStackView stackViewWithViews:@[top, scroll]];
@@ -606,14 +548,6 @@ static NSArray<NSString *> *InstalledApplicationNames(void) {
     BOOL hasRect = ![choice[@"rect"] isKindOfClass:[NSNull class]];
     CGRect rect = hasRect ? NSRectToCGRect([choice[@"rect"] rectValue]) : CGRectZero;
 
-    NSView *row = [[NSView alloc] init];
-    [row setTranslatesAutoresizingMaskIntoConstraints:NO];
-    [row setIdentifier:[@"slot-" stringByAppendingString:name]];
-    ConfigurationClickView *click = [[ConfigurationClickView alloc] init];
-    click.cornerRadius = 8;
-    click.selected = selected;
-    click.onClick = ^{ [weakSelf chooseSlotNamed:name]; };
-    [click setTranslatesAutoresizingMaskIntoConstraints:NO];
     NSView *thumb;
     if (hasRect) {
       ConfigurationSlotThumbnail *preview = [[ConfigurationSlotThumbnail alloc] init];
@@ -631,24 +565,16 @@ static NSArray<NSString *> *InstalledApplicationNames(void) {
     [texts setOrientation:NSUserInterfaceLayoutOrientationVertical];
     [texts setAlignment:NSLayoutAttributeLeading];
     [texts setSpacing:1];
-    [texts setTranslatesAutoresizingMaskIntoConstraints:NO];
-    NSTextField *kind = [self labelWithText:isPreset ? @"Preset" : @"Custom" size:11 color:[MWMTheme textTertiary] weight:NSFontWeightRegular];
-    [kind setTranslatesAutoresizingMaskIntoConstraints:NO];
+    NSTextField *kind = [MWMComponents captionLabel:isPreset ? @"Preset" : @"Custom"];
     NSImageView *check = [NSImageView imageViewWithImage:[NSImage imageWithSystemSymbolName:@"checkmark" accessibilityDescription:@"Chosen"]];
     [check setContentTintColor:[MWMTheme accent]];
-    [check setHidden:!selected];
-    [check setTranslatesAutoresizingMaskIntoConstraints:NO];
-    for (NSView *view in @[thumb, texts, kind, check, click]) [row addSubview:view];
-    [NSLayoutConstraint activateConstraints:@[
-      [row.heightAnchor constraintEqualToConstant:44],
-      [thumb.leadingAnchor constraintEqualToAnchor:row.leadingAnchor constant:8], [thumb.centerYAnchor constraintEqualToAnchor:row.centerYAnchor],
-      [thumb.widthAnchor constraintEqualToConstant:48], [thumb.heightAnchor constraintEqualToConstant:30],
-      [texts.leadingAnchor constraintEqualToAnchor:thumb.trailingAnchor constant:12], [texts.centerYAnchor constraintEqualToAnchor:row.centerYAnchor],
-      [check.trailingAnchor constraintEqualToAnchor:row.trailingAnchor constant:-10], [check.centerYAnchor constraintEqualToAnchor:row.centerYAnchor],
-      [kind.trailingAnchor constraintEqualToAnchor:check.leadingAnchor constant:-12], [kind.centerYAnchor constraintEqualToAnchor:row.centerYAnchor],
-      [click.topAnchor constraintEqualToAnchor:row.topAnchor], [click.bottomAnchor constraintEqualToAnchor:row.bottomAnchor],
-      [click.leadingAnchor constraintEqualToAnchor:row.leadingAnchor], [click.trailingAnchor constraintEqualToAnchor:row.trailingAnchor],
-    ]];
+    [check setAlphaValue:selected ? 1 : 0];   // keeps its space, so the labels don't move
+    NSStackView *content = [NSStackView stackViewWithViews:@[thumb, texts, [MWMComponents spacer], kind, check]];
+    [content setSpacing:MWMSpacingM];
+    [content setAlignment:NSLayoutAttributeCenterY];
+    [NSLayoutConstraint activateConstraints:@[[thumb.widthAnchor constraintEqualToConstant:48], [thumb.heightAnchor constraintEqualToConstant:30]]];
+    NSView *row = [MWMComponents selectableRowWithContent:content insets:NSEdgeInsetsMake(7, 8, 7, 10) selected:selected onClick:^{ [weakSelf chooseSlotNamed:name]; }];
+    [row setIdentifier:[@"slot-" stringByAppendingString:name]];
     [self.slotList addArrangedSubview:row];
     [[row.widthAnchor constraintEqualToAnchor:self.slotList.widthAnchor] setActive:YES];
   }
@@ -705,8 +631,7 @@ static NSArray<NSString *> *InstalledApplicationNames(void) {
       if (reason != nil) { message = reason; messageColor = [MWMTheme warning]; }
       else if (other != nil) { message = [NSString stringWithFormat:@"Already used by \"%@\". Enter uses the keys anyway.", other.title]; messageColor = [MWMTheme warning]; }
     }
-    NSButton *cancel = [NSButton buttonWithTitle:@"Cancel" target:self action:@selector(cancelRecordingPressed:)];
-    [cancel setBezelStyle:NSBezelStyleRounded];
+    NSButton *cancel = [MWMComponents secondaryButtonWithTitle:@"Cancel" target:self action:@selector(cancelRecordingPressed:)];
     [views addObject:cancel];
   } else {
     if (self.draftKeyName != nil) {
@@ -720,11 +645,10 @@ static NSArray<NSString *> *InstalledApplicationNames(void) {
     } else {
       [views addObject:[self labelWithText:@"No keys yet" size:13 color:[MWMTheme textTertiary] weight:NSFontWeightRegular]];
     }
-    NSButton *record = [NSButton buttonWithTitle:@"Record" target:self action:@selector(recordPressed:)];
-    NSButton *pick = [NSButton buttonWithTitle:@"Pick on map" target:self action:@selector(pickPressed:)];
+    NSButton *record = [MWMComponents secondaryButtonWithTitle:@"Record" target:self action:@selector(recordPressed:)];
+    NSButton *pick = [MWMComponents secondaryButtonWithTitle:@"Pick on map" target:self action:@selector(pickPressed:)];
     [record setIdentifier:@"record"];
     [pick setIdentifier:@"pick"];
-    for (NSButton *button in @[record, pick]) [button setBezelStyle:NSBezelStyleRounded];
     [views addObject:record];
     [views addObject:pick];
     SlateShortcutInfo *other = [self otherShortcutOnDraftKeys];
