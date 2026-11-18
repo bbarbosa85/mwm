@@ -223,4 +223,25 @@ static NSString *const kVersionOne =
   XCTAssertTrue([now containsString:@"action: {type: move, slot: nothing}"], @"%@", now);
 }
 
+
+- (void)testSnapshotActionsAreObjectsInVersionTwo {
+  NSString *source =
+    @"bindings:\n"
+    @"  - key: s\n    mods: ctrl;cmd\n    action: snapshot work save-to-disk\n"
+    @"  - key: d\n    mods: ctrl;cmd\n    action: snapshot temp\n"
+    @"  - key: a\n    mods: ctrl;cmd\n    action: activate-snapshot work\n"
+    @"  - key: f\n    mods: ctrl;cmd\n    action: activate-snapshot work delete\n";
+  SlateConfigDocument *old = [self documentFrom:source];
+  NSString *written = [old stringRepresentation];
+  XCTAssertTrue([written containsString:@"action: {type: save-snapshot, name: work, keep: true}"], @"%@", written);
+  XCTAssertTrue([written containsString:@"action: {type: save-snapshot, name: temp, keep: false}"], @"%@", written);
+  XCTAssertTrue([written containsString:@"action: {type: restore-snapshot, name: work}"], @"%@", written);
+  XCTAssertTrue([written containsString:@"action: {type: custom, text: \"activate-snapshot work delete\"}"], @"%@", written);
+  SlateConfigDocument *back = [self documentFrom:written];
+  XCTAssertEqualObjects(back.bindings, old.bindings);
+  [self assertV2:@"bindings:\n  - key: a\n    action: {type: save-snapshot}\n" failsWith:@"needs a snapshot name" line:0];
+  [self assertV2:@"bindings:\n  - key: a\n    action: {type: save-snapshot, name: w, keep: yes please}\n" failsWith:@"keep should be true or false" line:3];
+  [self assertV2:@"bindings:\n  - key: a\n    action: {type: restore-snapshot, name: w, keep: true}\n" failsWith:@"no \"keep\"" line:3];
+}
+
 @end

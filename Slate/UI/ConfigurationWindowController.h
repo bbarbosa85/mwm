@@ -21,6 +21,8 @@
 
 #import <Cocoa/Cocoa.h>
 
+#import "ConfigurationFormView.h"
+
 @class ConfigurationFormView;
 
 NS_ASSUME_NONNULL_BEGIN
@@ -31,6 +33,12 @@ NS_ASSUME_NONNULL_BEGIN
 
 // Brings the window to the front, loading ~/.mwm.yml if it wasn't open.
 - (void)showConfiguration;
+
+// The same, on a page of the sidebar (the menu bar opens these).
+- (void)showConfigurationSection:(ConfigurationFormSection)section;
+// The Keyboard page as a list, or with the editor open for a new shortcut.
+- (void)showKeyboardList;
+- (void)showNewShortcut;
 
 // The form, for tests.
 @property (readonly) ConfigurationFormView *formView;

@@ -92,4 +92,21 @@
   XCTAssertEqualObjects(self.changedAction, @"focus left");
 }
 
+
+- (void)testSnapshotActionsReadAndWriteTheEngineText {
+  SlateAction *save = [SlateAction parse:@"snapshot work save-to-disk"];
+  XCTAssertEqual(save.kind, SlateActionKindSnapshot);
+  XCTAssertEqualObjects(save.a, @"work");
+  XCTAssertEqualObjects(save.b, @"save-to-disk");
+  XCTAssertEqualObjects([save string], @"snapshot work save-to-disk");
+  XCTAssertEqualObjects([[SlateAction parse:@"snapshot work"] string], @"snapshot work");
+  SlateAction *restore = [SlateAction parse:@"activate-snapshot work"];
+  XCTAssertEqual(restore.kind, SlateActionKindRestoreSnapshot);
+  XCTAssertEqualObjects([restore string], @"activate-snapshot work");
+  // Options this window doesn't offer stay as written text.
+  XCTAssertEqual([SlateAction parse:@"snapshot work save-to-disk;stack"].kind, SlateActionKindCustom);
+  XCTAssertEqual([SlateAction parse:@"activate-snapshot work delete"].kind, SlateActionKindCustom);
+  XCTAssertEqualObjects([[SlateAction actionOfKind:SlateActionKindSnapshot] string], @"snapshot  save-to-disk");
+}
+
 @end

@@ -155,7 +155,7 @@ static NSStackView *HorizontalStack(NSArray<NSView *> *views, CGFloat spacing) {
   NSStackView *chips = HorizontalStack(@[[MWMChipView chipWithText:@"No changes" color:nil], [MWMChipView chipWithText:@"● Unsaved changes" color:[MWMTheme warning]],
                                          [MWMChipView chipWithText:@"⚠ Same keys as \"Focus Finder\". Only one can work." color:[MWMTheme warning]]], MWMSpacingM);
   // Buttons.
-  NSStackView *buttons = HorizontalStack(@[[MWMComponents secondaryButtonWithTitle:@"Cancel" target:nil action:nil], [MWMComponents primaryButtonWithTitle:@"Save" target:nil action:nil]], MWMSpacingS);
+  NSStackView *buttons = HorizontalStack(@[[MWMComponents secondaryButtonWithTitle:@"Cancel" target:nil action:nil], [MWMComponents primaryButtonWithTitle:@"Save" target:nil action:nil], [MWMComponents accentButtonWithTitle:@"Restore" symbol:@"play.fill" target:nil action:nil]], MWMSpacingS);
   // Icon tiles by what a shortcut does.
   NSArray *kinds = @[@(SlateShortcutKindMoveToSlot), @(SlateShortcutKindFocusApp), @(SlateShortcutKindFeature), @(SlateShortcutKindResizeNudge)];
   NSMutableArray *tiles = [NSMutableArray array];

@@ -26,6 +26,7 @@
 #import "StringTokenizer.h"
 #import "SlateLogger.h"
 #import "RunningApplications.h"
+#import "SlateDisplays.h"
 
 @implementation SnapshotOperation
 
@@ -69,9 +70,15 @@
   return success;
 }
 
-- (BOOL)doOperationWithAccessibilityWrapper:(AccessibilityWrapper *)iamnil screenWrapper:(ScreenWrapper *)iamalsonil {
-  [self evalOptionsWithAccessibilityWrapper:iamnil screenWrapper:iamalsonil];
+// Where every open window is right now, with the screens connected, without keeping it anywhere.
++ (Snapshot *)captureSnapshot {
   Snapshot *snapshot = [[Snapshot alloc] init];
+  NSMutableArray *screenDicts = [NSMutableArray array];
+  for (SlateDisplay *display in [SlateDisplays connected]) {
+    [screenDicts addObject:@{@"name": display.name ?: @"", @"width": @(display.width), @"height": @(display.height),
+                             @"x": @(display.originX), @"y": @(display.originY), @"builtIn": @(display.builtIn)}];
+  }
+  snapshot.screens = screenDicts;
   for (NSRunningApplication *app in [RunningApplications getInstance]) {
     NSString *appName = [app localizedName];
     pid_t appPID = [app processIdentifier];
@@ -90,6 +97,12 @@
       [snapshot addWindow:[[WindowSnapshot alloc] initWithAppName:appName title:title topLeft:tl size:size] app:appName];
     }
   }
+  return snapshot;
+}
+
+- (BOOL)doOperationWithAccessibilityWrapper:(AccessibilityWrapper *)iamnil screenWrapper:(ScreenWrapper *)iamalsonil {
+  [self evalOptionsWithAccessibilityWrapper:iamnil screenWrapper:iamalsonil];
+  Snapshot *snapshot = [SnapshotOperation captureSnapshot];
   [[SlateConfig getInstance] addSnapshot:snapshot name:name saveToDisk:saveToDisk isStack:isStack stackSize:stackSize];
   return YES;
 }

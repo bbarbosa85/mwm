@@ -85,7 +85,9 @@ static SlateShortcutKind KindOfAction(SlateAction *action) {
     case SlateActionKindHint:
     case SlateActionKindGrid:
     case SlateActionKindSwitch:
-    case SlateActionKindRelaunch: return SlateShortcutKindFeature;
+    case SlateActionKindRelaunch:
+    case SlateActionKindSnapshot:
+    case SlateActionKindRestoreSnapshot: return SlateShortcutKindFeature;
     case SlateActionKindCustom: return SlateShortcutKindOther;
   }
 }
@@ -107,6 +109,8 @@ static void TitleOfAction(SlateAction *action, NSString **title, NSString **deta
     case SlateActionKindGrid: *title = @"Grid"; break;
     case SlateActionKindSwitch: *title = @"Switch windows"; break;
     case SlateActionKindRelaunch: *title = @"Relaunch MWM"; break;
+    case SlateActionKindSnapshot: *title = [@"Save snapshot " stringByAppendingString:action.a]; break;
+    case SlateActionKindRestoreSnapshot: *title = [@"Restore snapshot " stringByAppendingString:action.a]; break;
     case SlateActionKindCustom: *title = [action.a length] > 0 ? action.a : @"(empty)"; break;
   }
 }

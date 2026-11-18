@@ -16,6 +16,7 @@
 //  along with this program.  If not, see http://www.gnu.org/licenses
 
 #import "ConfigurationFormView.h"
+#import "NSAlert+MWM.h"
 #import "MWMTheme.h"
 #import "MWMComponents.h"
 #import "SlateConfigDocument.h"
@@ -28,6 +29,8 @@
 #import "ConfigurationSlotsView.h"
 #import "ConfigurationPresetsView.h"
 #import "ConfigurationKeyboardView.h"
+#import "ConfigurationSnapshotsView.h"
+#import "SlateSnapshots.h"
 #import "SlateShortcutIndex.h"
 #import "SlateSlots.h"
 
@@ -135,7 +138,7 @@ static BOOL IsSettingsSection(ConfigurationFormSection section) {
 }
 
 static BOOL IsPlaceholderSection(ConfigurationFormSection section) {
-  return section == ConfigurationFormSectionSnapshots || section == ConfigurationFormSectionBackup;
+  return section == ConfigurationFormSectionBackup;
 }
 
 static BOOL IsBoolean(id value) {
@@ -156,7 +159,7 @@ static NSString *DisplayValue(id value) {
   return [value description] ?: @"";
 }
 
-@interface ConfigurationFormView () <ConfigurationShortcutViewDelegate, ConfigurationActionViewDelegate, ConfigurationSettingsViewDelegate, ConfigurationDisplaysViewDelegate, ConfigurationSlotsViewDelegate, ConfigurationKeyboardViewDelegate>
+@interface ConfigurationFormView () <ConfigurationShortcutViewDelegate, ConfigurationActionViewDelegate, ConfigurationSettingsViewDelegate, ConfigurationDisplaysViewDelegate, ConfigurationSlotsViewDelegate, ConfigurationKeyboardViewDelegate, ConfigurationSnapshotsViewDelegate>
 @property (strong) NSTableView *sidebar;
 @property (strong) NSView *detail;
 @property (strong) NSTextField *titleLabel;
@@ -169,6 +172,7 @@ static NSString *DisplayValue(id value) {
 @property (strong) NSLayoutConstraint *filterBarHeight;
 @property (strong) ConfigurationSettingsView *settingsView;
 @property (strong) ConfigurationDisplaysView *displaysView;
+@property (strong) ConfigurationSnapshotsView *snapshotsView;
 @property (strong) ConfigurationSlotsView *slotsView;
 @property (strong) ConfigurationPresetsView *presetsView;
 @property (strong) NSSegmentedControl *slotsSwitcher;
@@ -320,12 +324,17 @@ static NSString *DisplayValue(id value) {
   [self.displaysView setDelegate:self];
   [self.displaysView setHidden:YES];
 
+  self.snapshotsView = [[ConfigurationSnapshotsView alloc] init];
+  [self.snapshotsView setTranslatesAutoresizingMaskIntoConstraints:NO];
+  [self.snapshotsView setDelegate:self];
+  [self.snapshotsView setHidden:YES];
+
   self.settingsView = [[ConfigurationSettingsView alloc] init];
   [self.settingsView setTranslatesAutoresizingMaskIntoConstraints:NO];
   [self.settingsView setDelegate:self];
   [self.settingsView setHidden:YES];
 
-  for (NSView *view in @[self.titleLabel, self.infoLabel, self.addButton, self.removeButton, self.filterBar, self.tableScroll, self.placeholderView, self.settingsView, self.displaysView, self.slotsView, self.presetsView, self.slotsSwitcher, self.keyboardView, self.keyboardSwitcher, self.conflictsButton]) {
+  for (NSView *view in @[self.titleLabel, self.infoLabel, self.addButton, self.removeButton, self.filterBar, self.tableScroll, self.placeholderView, self.settingsView, self.displaysView, self.snapshotsView, self.slotsView, self.presetsView, self.slotsSwitcher, self.keyboardView, self.keyboardSwitcher, self.conflictsButton]) {
     [self.detail addSubview:view];
   }
 
@@ -404,6 +413,10 @@ static NSString *DisplayValue(id value) {
     [self.displaysView.bottomAnchor constraintEqualToAnchor:self.detail.bottomAnchor],
     [self.displaysView.leadingAnchor constraintEqualToAnchor:self.detail.leadingAnchor],
     [self.displaysView.trailingAnchor constraintEqualToAnchor:self.detail.trailingAnchor],
+    [self.snapshotsView.topAnchor constraintEqualToAnchor:self.infoLabel.bottomAnchor constant:6],
+    [self.snapshotsView.bottomAnchor constraintEqualToAnchor:self.detail.bottomAnchor],
+    [self.snapshotsView.leadingAnchor constraintEqualToAnchor:self.detail.leadingAnchor],
+    [self.snapshotsView.trailingAnchor constraintEqualToAnchor:self.detail.trailingAnchor],
     [self.settingsView.topAnchor constraintEqualToAnchor:self.infoLabel.bottomAnchor constant:6],
     [self.settingsView.bottomAnchor constraintEqualToAnchor:self.detail.bottomAnchor],
     [self.settingsView.leadingAnchor constraintEqualToAnchor:self.detail.leadingAnchor],
@@ -531,6 +544,7 @@ static NSString *DisplayValue(id value) {
 }
 
 - (NSUInteger)countForSection:(ConfigurationFormSection)section {
+  if (section == ConfigurationFormSectionSnapshots) return [[SlateSnapshots snapshots] count];
   if (self.document == nil || IsPlaceholderSection(section)) return 0;
   if (section == ConfigurationFormSectionKeyboard) return [self.document.bindings count];
   if ([self isBindingSection:section]) return [[self bindingsForSection:section] count];
@@ -555,9 +569,12 @@ static NSString *DisplayValue(id value) {
   BOOL displays = section == ConfigurationFormSectionMonitors;
   BOOL slots = section == ConfigurationFormSectionPositions;
   BOOL keyboard = section == ConfigurationFormSectionKeyboard;
-  [self.addButton setHidden:placeholder || cards || displays || slots || keyboard];
-  [self.removeButton setHidden:placeholder || cards || displays || slots || keyboard];
-  [self.tableScroll setHidden:placeholder || cards || displays || slots || keyboard];
+  BOOL snapshots = section == ConfigurationFormSectionSnapshots;
+  [self.addButton setHidden:placeholder || cards || displays || slots || keyboard || snapshots];
+  [self.removeButton setHidden:placeholder || cards || displays || slots || keyboard || snapshots];
+  [self.tableScroll setHidden:placeholder || cards || displays || slots || keyboard || snapshots];
+  [self.snapshotsView setHidden:!snapshots];
+  if (snapshots) [self.snapshotsView reload];
   self.keyboardView.document = keyboard ? self.document : nil;
   [self showKeyboardMode];
   if (!slots) [self setSublevelActive:NO];  // leaving the page closes anything open on it
@@ -773,6 +790,11 @@ static NSString *DisplayValue(id value) {
   if ([self.delegate respondsToSelector:@selector(formView:setLaunchesAtLogin:)]) [self.delegate formView:self setLaunchesAtLogin:launches];
 }
 
+// Snapshots live outside the configuration file; only the sidebar count follows them.
+- (void)snapshotsViewDidChange:(ConfigurationSnapshotsView *)view {
+  [self reloadSidebarKeepingSelection];
+}
+
 - (void)displaysViewDidChangeDocument:(ConfigurationDisplaysView *)view {
   [self documentChanged];
 }
@@ -788,6 +810,17 @@ static NSString *DisplayValue(id value) {
 // The Map | List switcher and the conflicts pill at the top right of the Keyboard title.
 - (void)keyboardModeChanged:(NSSegmentedControl *)control {
   self.keyboardView.mode = [control selectedSegment] == 1 ? ConfigurationKeyboardModeList : ConfigurationKeyboardModeMap;
+}
+
+- (void)showKeyboardList:(BOOL)list {
+  self.selectedSection = ConfigurationFormSectionKeyboard;
+  [self.keyboardSwitcher setSelectedSegment:list ? 1 : 0];
+  [self keyboardModeChanged:self.keyboardSwitcher];
+}
+
+- (void)beginNewShortcut {
+  self.selectedSection = ConfigurationFormSectionKeyboard;
+  [self.keyboardView startNewShortcut];
 }
 
 - (void)conflictsPressed:(id)sender {
@@ -983,7 +1016,7 @@ static NSString *DisplayValue(id value) {
   [fields setFrameSize:NSMakeSize(300, 100)];
   [keyField setFrameSize:NSMakeSize(300, 22)];
   [modifiersField setFrameSize:NSMakeSize(300, 22)];
-  NSAlert *alert = [[NSAlert alloc] init];
+  NSAlert *alert = [NSAlert mwm_alert];
   [alert setMessageText:@"Edit shortcut as text"];
   [alert addButtonWithTitle:@"Save"];
   [alert addButtonWithTitle:@"Cancel"];

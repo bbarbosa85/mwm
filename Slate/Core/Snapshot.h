@@ -28,6 +28,9 @@
 }
 
 @property  NSMutableDictionary *apps;
+// The screens connected when it was taken (name, width, height, x, y, builtIn), so the window can draw
+// it as it was. Empty for snapshots taken before this was kept.
+@property (copy) NSArray<NSDictionary *> *screens;
 
 - (void)addWindow:(WindowSnapshot *)windowSnapshot app:(NSString *)appName;
 - (NSDictionary *)toDictionary;

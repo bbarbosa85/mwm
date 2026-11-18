@@ -84,6 +84,10 @@ typedef NS_ENUM(NSInteger, ConfigurationFormSection) {
 - (void)revealBindingAtIndex:(NSUInteger)index;
 - (void)revealEntryNamed:(NSString *)name;
 
+// Keyboard page: show the map or the list, and open the editor for a new shortcut (as the menu bar asks).
+- (void)showKeyboardList:(BOOL)list;
+- (void)beginNewShortcut;
+
 // The sidebar, to focus when the form is shown.
 @property (readonly) NSView *initialFirstResponder;
 

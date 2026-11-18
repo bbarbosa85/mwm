@@ -19,6 +19,7 @@
 //  along with this program.  If not, see http://www.gnu.org/licenses
 
 #import "Binding.h"
+#import "NSAlert+MWM.h"
 #import "Constants.h"
 #import "Layout.h"
 #import "LayoutOperation.h"
@@ -128,7 +129,7 @@ static SlateConfig *_instance = nil;
 }
 
 + (NSAlert *)warningAlertWithKeyEquivalents:(NSArray *)titles {
-  NSAlert *alert = [[NSAlert alloc] init];
+  NSAlert *alert = [NSAlert mwm_alert];
   [alert setAlertStyle:NSAlertStyleWarning];
   for (NSString *title in titles) {
     [[alert addButtonWithTitle:title] setKeyEquivalent:[[title substringToIndex: 1] lowercaseString]];
@@ -598,6 +599,7 @@ static NSDictionary<NSString *, NSString *> *RoleReferencesForDocument(SlateConf
   [snapshots setObject:list forKey:name];
 
   [self saveSnapshots];
+  [self announceSnapshotsChanged:name];
 }
 
 - (void)deleteSnapshot:(NSString *)name pop:(BOOL)pop {
@@ -611,6 +613,13 @@ static NSDictionary<NSString *, NSString *> *RoleReferencesForDocument(SlateConf
   }
 
   [self saveSnapshots];
+  [self announceSnapshotsChanged:name];
+}
+
+// A page showing snapshots refreshes itself. The engine's own undo history isn't one of them.
+- (void)announceSnapshotsChanged:(NSString *)name {
+  if ([name hasPrefix:@"_internal_"]) return;
+  dispatch_async(dispatch_get_main_queue(), ^{ [[NSNotificationCenter defaultCenter] postNotificationName:@"SlateSnapshotsDidChangeNotification" object:nil]; });
 }
 
 - (Snapshot *)popSnapshot:(NSString *)name remove:(BOOL)remove {
