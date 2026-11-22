@@ -87,7 +87,7 @@
       <p class="intro">MWM already has <a href="#defaults">some shortcuts</a> to try. To add your own:</p>
       <div class="split2">
         <div>
-          <ol class="s"><li><div>Menu bar icon → <b>Configure MWM…</b> → <b>Keyboard</b>.</div></li><li><div>Click a free key and choose <b>Add Shortcut</b>. Pick what it does.</div></li><li><div><b>Record</b> the keys, press <b>Save</b>, then <b>Apply</b>.</div></li></ol>
+          <ol class="s"><li><div>Menu bar icon → <b>Configure MWM…</b> → <b>Keyboard</b>.</div></li><li><div>Click a free key and choose <b>Add Shortcut</b>. Pick what it does.</div></li><li><div><b>Record</b> the keys, press <b>Save</b>, then <b>Apply and Restart</b>.</div></li></ol>
           <div class="tip">Or start from an <a href="examples.html">example</a>.</div>
         </div>
         <div class="window"><div class="bar"><i></i><i></i><i></i><span>Editing shortcut</span></div><picture><source srcset="assets/shortcut-editor-dark.png" media="(prefers-color-scheme: dark)"><img src="assets/shortcut-editor-light.png" alt="The shortcut editor: choose what it does and record the keys"></picture></div>
@@ -217,7 +217,7 @@ bindings:
 
     <section class="doc" id="window" data-title="The configuration window tour keyboard modifiers displays slots snapshots general advanced apply">
       <h2>The configuration window</h2>
-      <p class="intro">Open it with <b>Configure MWM…</b> or <kbd>⌘</kbd><kbd>,</kbd>. Changes save as you go. Press <b>Apply</b> to start using them.</p>
+      <p class="intro">Open it with <b>Configure MWM…</b> or <kbd>⌘</kbd><kbd>,</kbd>. Changes save as you go. Press <b>Apply and Restart</b> to start using them.</p>
       <div class="window"><div class="bar"><i></i><i></i><i></i><span>MWM configuration</span></div><picture><source srcset="assets/keyboard-map-dark.png" media="(prefers-color-scheme: dark)"><img src="assets/keyboard-map-light.png" alt="The keyboard map: every shortcut on a Mac keyboard, colored by what it does" loading="lazy"></picture></div>
       <div class="cards2">
         <div class="mini"><h3>Keyboard</h3><p>All shortcuts, as a <b>Map</b> or a searchable <b>List</b>. Conflicts are flagged.</p></div>
@@ -274,7 +274,7 @@ bindings:
         <div class="mini"><h3><code>bindings</code></h3><p>The shortcuts.</p></div>
       </div>
       <ul>
-        <li><b>The app and the file always agree.</b> After editing the file, press <b>Apply</b> or choose <b>Reload Configuration</b>.</li>
+        <li><b>The app and the file always agree.</b> After editing the file, press <b>Apply and Restart</b> or choose <b>Reload Configuration</b>.</li>
         <li><b>Saving in the app rewrites the file,</b> so <code>#</code> comments are lost. Use a shortcut's <b>note</b> instead.</li>
         <li><b>Names are shared</b> by groups, screens, slots and aliases, so each name is used once. In free text, write a name as <code>${name}</code>.</li>
         <li>Each shortcut can also have <code>group</code>, <code>note</code>, <code>enabled: false</code> and <code>repeat</code>.</li>
@@ -429,7 +429,7 @@ slots:
         <p>Check <b>System Settings → Privacy &amp; Security → Accessibility</b>. If MWM is on, remove it with <b>−</b>, add it again, then choose <b>Reload Configuration</b>.</p></details>
       <details><summary>A shortcut does nothing</summary>
         <ul>
-          <li>Press <b>Apply</b> after changing shortcuts.</li>
+          <li>Press <b>Apply and Restart</b> after changing shortcuts.</li>
           <li>Look for a conflict (orange on the map, or the list's <b>Conflicts</b> filter).</li>
           <li>For <b>Focus app</b>, the app must be running, with its exact name (<code>Google Chrome</code>).</li>
         </ul></details>
