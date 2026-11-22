@@ -1,0 +1,318 @@
+# Example: the author's daily setup. A MacBook with a 5120x1440 ultrawide, hyper = ctrl + alt + cmd.
+# Halves, thirds and quarters on the number row and keypad, app shortcuts on alt + shift,
+# window hints on cmd + shift + H. Change the app names and screens to your own, then save this
+# file as ~/.mwm.yml (or open it in Configure MWM).
+#
+# MWM configuration, managed by the configuration window (Configure MWM...).
+# The window rewrites this file when you change something there, so comments
+# added here aren't kept. In free text, ${name} refers to an entry in modifiers,
+# monitors, slots or aliases.
+
+version: 2
+
+settings:
+  defaultToCurrentScreen: true
+  secondsBeforeRepeat: 0.4
+  secondsBetweenRepeat: 0.1
+  keyboardLayout: qwerty
+  nudgePercentOf: screenSize
+  resizePercentOf: screenSize
+  windowHintsShowIcons: true
+  windowHintsSpread: true
+  windowHintsIgnoreHiddenWindows: false
+
+modifiers:
+  hyper: [ctrl, alt, cmd]
+  shyper: [shift, ctrl, alt, cmd]
+
+monitors:
+  monitor-macbook: {screen: "1"}
+  monitor-samsung: {screen: "0", size: 5120x1440}
+  monitor-built-in: {display: built-in}
+
+slots:
+  full: {x: 0%, y: 0%, width: 100%, height: 100%}
+  righthalf: {x: 50%, y: 0%, width: 50%, height: 100%}
+  lefthalf: {x: 0%, y: 0%, width: 50%, height: 100%}
+  middle: {x: 25%, y: 0%, width: 50%, height: 100%}
+  third1: {x: 0%, y: 0%, width: 33.333333%, height: 100%}
+  third2: {formula: "move screenOriginX+(screenSizeX/3);screenOriginY screenSizeX/3;screenSizeY"}
+  third3: {x: 66.666667%, y: 0%, width: 33.333333%, height: 100%}
+  quarter1: {x: 0%, y: 0%, width: 25%, height: 100%}
+  quarter2: {x: 25%, y: 0%, width: 25%, height: 100%}
+  quarter3: {x: 50%, y: 0%, width: 25%, height: 100%}
+  quarter4: {x: 75%, y: 0%, width: 25%, height: 100%}
+  leftquarter: {x: 0%, y: 0%, width: 25%, height: 100%}
+  middlequarter: {x: 25%, y: 0%, width: 50%, height: 100%}
+  rightquarter: {x: 75%, y: 0%, width: 25%, height: 100%}
+  rightfourfifths: {formula: "move (screenOriginX+screenSizeX/5)+14;screenOriginY (4*screenSizeX/5)-14;screenSizeY"}
+  macbook-full: {formula: "move screenOriginX;screenOriginY screenSizeX;screenSizeY ${monitor-macbook-size}"}
+  samsung-full: {formula: "move screenOriginX;screenOriginY screenSizeX;screenSizeY ${monitor-samsung-size}"}
+
+aliases: {}
+
+bindings:
+  - group: Application aliases and bindings
+    key: x
+    mods: [alt, shift]
+    action: {type: focus-app, app: Antigravity}
+  - group: Application aliases and bindings
+    key: c
+    mods: [alt, shift]
+    action: {type: focus-app, app: Google Chrome}
+  - group: Application aliases and bindings
+    key: z
+    mods: [alt, shift]
+    action: {type: focus-app, app: Zen}
+  - group: Application aliases and bindings
+    key: f
+    mods: [alt, shift]
+    action: {type: focus-app, app: Finder}
+  - group: Application aliases and bindings
+    key: "y"
+    mods: [alt, shift]
+    action: {type: focus-app, app: Spotify}
+  - group: Application aliases and bindings
+    key: p
+    mods: [alt, shift]
+    action: {type: focus-app, app: Postman}
+  - group: Application aliases and bindings
+    key: w
+    mods: [alt, shift]
+    action: {type: focus-app, app: Warp}
+  - group: Slate features
+    key: h
+    mods: [cmd, shift]
+    action: {type: hint, letters: ASDFHJKLQWERTYUIOPCVBNG}
+    note: Show quick key overlays for each window
+  - group: Slate features
+    key: g
+    mods: [cmd]
+    action: {type: grid, arguments: "padding:5 0:6,2 1:8,3"}
+    enabled: false
+    note: Show a positioning grid for each monitor
+  - group: Slate features
+    key: tab
+    mods: [cmd]
+    action: {type: switch}
+    enabled: false
+    note: Better application switcher
+  - group: Slate features
+    key: r
+    mods: hyper
+    action: {type: relaunch}
+    note: Reload Slate configuration file
+  - group: General position aliases and bindings
+    key: pad5
+    mods: hyper
+    action: {type: move, slot: full}
+    note: "Keypad 5 = fullscreen"
+  - group: General position aliases and bindings
+    key: "5"
+    mods: hyper
+    action: {type: move, slot: full}
+    note: "Keypad 5 = fullscreen"
+  - group: General position aliases and bindings
+    key: pad1
+    mods: hyper
+    action: {type: move, slot: lefthalf, screen: monitor-macbook}
+    note: "Keypad row 1 3 = halves"
+  - group: General position aliases and bindings
+    key: "1"
+    mods: hyper
+    action: {type: move, slot: lefthalf, screen: monitor-macbook}
+    note: "Keypad row 1 3 = halves"
+  - group: General position aliases and bindings
+    key: pad3
+    mods: hyper
+    action: {type: move, slot: righthalf, screen: monitor-macbook}
+  - group: General position aliases and bindings
+    key: "3"
+    mods: hyper
+    action: {type: move, slot: righthalf, screen: monitor-macbook}
+  - group: General position aliases and bindings
+    key: pad7
+    mods: hyper
+    action: {type: move, slot: third1}
+    enabled: false
+    note: "Keypad 7 9 = thirds"
+  - group: General position aliases and bindings
+    key: "7"
+    mods: hyper
+    action: {type: move, slot: third1}
+    enabled: false
+    note: "Keypad 7 9 = thirds"
+  - group: General position aliases and bindings
+    key: pad9
+    mods: hyper
+    action: {type: move, slot: third3}
+    enabled: false
+  - group: General position aliases and bindings
+    key: "9"
+    mods: hyper
+    action: {type: move, slot: third3}
+    enabled: false
+  - group: Bindings
+    key: pad6
+    mods: [cmd, ctrl]
+    action: {type: focus, direction: right}
+    enabled: false
+    note: Focus
+  - group: Bindings
+    key: pad4
+    mods: [cmd, ctrl]
+    action: {type: focus, direction: left}
+    enabled: false
+    note: Focus
+  - group: Bindings
+    key: pad8
+    mods: [cmd, ctrl]
+    action: {type: focus, direction: behind}
+    enabled: false
+    note: Focus
+  - group: Bindings
+    key: pad2
+    mods: [cmd, ctrl]
+    action: {type: focus, direction: behind}
+    enabled: false
+    note: Focus
+  - group: Bindings
+    key: pad8
+    mods: hyper
+    action: {type: move, slot: third2, screen: monitor-samsung}
+    note: Throw
+  - group: Bindings
+    key: "8"
+    mods: hyper
+    action: {type: move, slot: third2, screen: monitor-samsung}
+    note: Throw
+  - group: Bindings
+    key: pad8
+    mods: shyper
+    action: {type: move, slot: middlequarter, screen: monitor-samsung}
+    note: Throw
+  - group: Bindings
+    key: "8"
+    mods: shyper
+    action: {type: move, slot: middlequarter, screen: monitor-samsung}
+    note: Throw
+  - group: Bindings
+    key: pad7
+    mods: hyper
+    action: {type: move, slot: third1, screen: monitor-samsung}
+  - group: Bindings
+    key: "7"
+    mods: hyper
+    action: {type: move, slot: third1, screen: monitor-samsung}
+  - group: Bindings
+    key: pad7
+    mods: shyper
+    action: {type: move, slot: leftquarter, screen: monitor-samsung}
+  - group: Bindings
+    key: "7"
+    mods: shyper
+    action: {type: move, slot: leftquarter, screen: monitor-samsung}
+  - group: Bindings
+    key: pad9
+    mods: hyper
+    action: {type: move, slot: third3, screen: monitor-samsung}
+  - group: Bindings
+    key: "9"
+    mods: hyper
+    action: {type: move, slot: third3, screen: monitor-samsung}
+  - group: Bindings
+    key: pad9
+    mods: shyper
+    action: {type: move, slot: rightquarter, screen: monitor-samsung}
+  - group: Bindings
+    key: "9"
+    mods: shyper
+    action: {type: move, slot: rightquarter, screen: monitor-samsung}
+  - group: Bindings
+    key: pad4
+    mods: hyper
+    action: {type: move, slot: lefthalf, screen: monitor-samsung}
+  - group: Bindings
+    key: "4"
+    mods: hyper
+    action: {type: move, slot: lefthalf, screen: monitor-samsung}
+  - group: Bindings
+    key: pad6
+    mods: hyper
+    action: {type: move, slot: righthalf, screen: monitor-samsung}
+  - group: Bindings
+    key: "6"
+    mods: hyper
+    action: {type: move, slot: righthalf, screen: monitor-samsung}
+  - group: Bindings
+    key: pad2
+    mods: hyper
+    action: {type: throw, screen: monitor-macbook, style: resize full}
+  - group: Bindings
+    key: "2"
+    mods: hyper
+    action: {type: throw, screen: monitor-macbook, style: resize full}
+  - group: Bindings
+    key: right
+    mods: [ctrl, cmd]
+    action: {type: resize, x: +5%, y: "+0"}
+    note: Resize
+  - group: Bindings
+    key: left
+    mods: [ctrl, cmd]
+    action: {type: resize, x: -5%, y: "+0"}
+    note: Resize
+  - group: Bindings
+    key: up
+    mods: [ctrl, cmd]
+    action: {type: custom, text: "resize +0   -5%"}
+    note: Resize
+  - group: Bindings
+    key: down
+    mods: [ctrl, cmd]
+    action: {type: custom, text: "resize +0   +5%"}
+    note: Resize
+  - group: Bindings
+    key: right
+    mods: hyper
+    action: {type: nudge, x: +10%, y: "+0"}
+    note: Nudge
+  - group: Bindings
+    key: left
+    mods: hyper
+    action: {type: nudge, x: -10%, y: "+0"}
+    note: Nudge
+  - group: Bindings
+    key: up
+    mods: hyper
+    action: {type: custom, text: "nudge +0   -10%"}
+    note: Nudge
+  - group: Bindings
+    key: down
+    mods: hyper
+    action: {type: custom, text: "nudge +0   +10%"}
+    note: Nudge
+  - group: Bindings
+    key: right
+    mods: [ctrl, cmd]
+    action: {type: push, direction: right, options: "bar-resize:screenSizeX/3"}
+    enabled: false
+    note: Push
+  - group: Bindings
+    key: left
+    mods: [ctrl, cmd]
+    action: {type: custom, text: "push left  bar-resize:screenSizeX/3"}
+    enabled: false
+    note: Push
+  - group: Bindings
+    key: up
+    mods: [ctrl, cmd]
+    action: {type: custom, text: "push up    bar-resize:screenSizeY/2"}
+    enabled: false
+    note: Push
+  - group: Bindings
+    key: down
+    mods: [ctrl, cmd]
+    action: {type: custom, text: "push down  bar-resize:screenSizeY/2"}
+    enabled: false
+    note: Push

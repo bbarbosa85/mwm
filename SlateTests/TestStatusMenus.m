@@ -1,7 +1,7 @@
 //
 //  TestStatusMenus.m
 //
-//  The menu bar menu: Snapshots, Keyboard Shortcuts, Backup and the pages of the window.
+//  The menu bar menu: Snapshots, Keyboard Shortcuts and the pages of the window.
 //
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -84,8 +84,7 @@
 
 - (void)testThePagesMenuHasEveryPageOfTheWindow {
   NSMenu *menu = [[MWMStatusMenus shared] pagesMenu];
-  XCTAssertEqualObjects([self titles:menu], (@[@"Keyboard", @"Modifiers", @"-", @"Displays", @"Slots", @"Snapshots", @"-", @"General", @"Advanced", @"Other Aliases", @"Backup"]));
-  XCTAssertNotNil([[menu itemWithTitle:@"Backup"] representedObject]);
+  XCTAssertEqualObjects([self titles:menu], (@[@"Keyboard", @"Modifiers", @"-", @"Displays", @"Slots", @"Snapshots", @"-", @"General", @"Advanced", @"Other Aliases"]));
   XCTAssertEqualObjects([self titles:[[MWMStatusMenus shared] keyboardMenu]], (@[@"Keyboard Map", @"List of Shortcuts", @"-", @"New Shortcut…", @"Modifier Groups"]));
 }
 
@@ -95,10 +94,15 @@
   XCTAssertTrue([delegate respondsToSelector:build]);
   NSMenu *menu = [delegate performSelector:build];
   NSArray *titles = [self titles:menu];
-  NSUInteger snapshots = [titles indexOfObject:@"Snapshots"], keyboard = [titles indexOfObject:@"Keyboard Shortcuts"], backup = [titles indexOfObject:@"Backup…"], configure = [titles indexOfObject:@"Configure MWM…"];
-  XCTAssertTrue(snapshots < keyboard && keyboard < backup && backup < configure, @"%@", titles);
+  NSUInteger snapshots = [titles indexOfObject:@"Snapshots"], keyboard = [titles indexOfObject:@"Keyboard Shortcuts"], configure = [titles indexOfObject:@"Configure MWM…"];
+  NSUInteger reload = [titles indexOfObject:@"Reload Configuration"], login = [titles indexOfObject:@"Launch MWM at Login"], about = [titles indexOfObject:@"About MWM"];
+  XCTAssertEqual(snapshots, 0u, @"%@", titles);
+  XCTAssertTrue(snapshots < keyboard && keyboard < configure && configure < reload && reload < login && login < about, @"%@", titles);
   XCTAssertNotNil([[menu itemWithTitle:@"Snapshots"] submenu]);
-  XCTAssertNotNil([[menu itemWithTitle:@"Open Page"] submenu]);
+  XCTAssertNotNil([[menu itemWithTitle:@"Keyboard Shortcuts"] submenu]);
+  XCTAssertEqual([titles indexOfObject:@"Backup…"], (NSUInteger)NSNotFound);
+  XCTAssertEqual([titles indexOfObject:@"Open Page"], (NSUInteger)NSNotFound);
+  XCTAssertEqualObjects([titles objectAtIndex:[titles count] - 2], @"About MWM");
   XCTAssertEqualObjects([titles lastObject], @"Quit MWM");
 }
 

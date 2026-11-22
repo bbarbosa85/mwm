@@ -37,11 +37,10 @@ typedef NS_ENUM(NSInteger, ConfigurationFormSection) {
   ConfigurationFormSectionWindowActions,
   ConfigurationFormSectionFeatures,
   // Pages of the grouped navigation: every shortcut with a kind filter, the
-  // settings that aren't everyday ones, and pages still to be built.
+  // settings that aren't everyday ones.
   ConfigurationFormSectionKeyboard,
   ConfigurationFormSectionAdvanced,
   ConfigurationFormSectionSnapshots,
-  ConfigurationFormSectionBackup,
   ConfigurationFormSectionCount,
 };
 

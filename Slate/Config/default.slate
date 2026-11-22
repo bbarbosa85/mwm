@@ -46,3 +46,11 @@ bind down:cmd;alt focus behind
 
 # Window Hints
 bind esc:cmd hint
+
+# Applications: jump to a running app. Change the names to your own apps.
+bind f:alt;shift focus 'Finder'
+bind s:alt;shift focus 'Safari'
+bind t:alt;shift focus 'Terminal'
+bind n:alt;shift focus 'Notes'
+bind m:alt;shift focus 'Mail'
+bind c:alt;shift focus 'Calendar'

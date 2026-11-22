@@ -1,0 +1,72 @@
+# Example: a laptop and an external display. Name each screen, then send windows to it by name.
+# hyper + 1 / 2 puts a window full screen on the laptop / the external display,
+# hyper + arrows split the external display, hyper + tab throws a window to the other screen.
+# Change "Studio Display" to your display's model (Configure MWM > Displays shows it).
+# A screen that isn't connected falls back to the screen you're on.
+
+version: 2
+
+settings:
+  defaultToCurrentScreen: true
+
+modifiers:
+  hyper: [ctrl, alt, cmd]
+
+monitors:
+  laptop: {display: built-in}
+  desk: {display: "Studio Display"}
+
+slots: {}
+
+aliases: {}
+
+bindings:
+  - group: Screens
+    key: "1"
+    mods: hyper
+    action: {type: move, slot: full, screen: laptop}
+    note: Full screen on the laptop
+  - group: Screens
+    key: "2"
+    mods: hyper
+    action: {type: move, slot: full, screen: desk}
+    note: Full screen on the external display
+  - group: Screens
+    key: tab
+    mods: hyper
+    action: {type: throw, screen: next, style: resize}
+    note: Throw to the next screen, keeping the shape
+  - group: Desk
+    key: left
+    mods: hyper
+    action: {type: move, slot: lefthalf, screen: desk}
+  - group: Desk
+    key: right
+    mods: hyper
+    action: {type: move, slot: righthalf, screen: desk}
+  - group: Desk
+    key: up
+    mods: hyper
+    action: {type: move, slot: tophalf, screen: desk}
+  - group: Desk
+    key: down
+    mods: hyper
+    action: {type: move, slot: bottomhalf, screen: desk}
+  - group: Laptop
+    key: left
+    mods: [shift, ctrl, alt, cmd]
+    action: {type: move, slot: lefthalf, screen: laptop}
+  - group: Laptop
+    key: right
+    mods: [shift, ctrl, alt, cmd]
+    action: {type: move, slot: righthalf, screen: laptop}
+  - group: Snapshots
+    key: d
+    mods: hyper
+    action: {type: save-snapshot, name: desk-setup, keep: true}
+    note: Remember this arrangement
+  - group: Snapshots
+    key: r
+    mods: hyper
+    action: {type: restore-snapshot, name: desk-setup}
+    note: Put it back after plugging in

@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MWM: keyboard-driven window management for macOS</title>
+<meta name="description" content="MWM is a free, open-source window manager for macOS. Snap windows to slots, move them between displays and save whole desktops as snapshots, all from the keyboard.">
+<link rel="icon" href="assets/icon.png">
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <a class="brand" href="index.html"><img src="assets/icon.png" alt="">MWM</a>
+    <div class="links">
+      <a href="index.html#top">Overview</a>
+      <a href="docs.html">Docs</a>
+      <a href="examples.html">Examples</a>
+      <a class="btn primary small cta" href="index.html#download">Download</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero" id="top">
+  <div class="wrap">
+    <img class="icon" src="assets/icon.png" alt="MWM app icon">
+    <h1>Every window, <span>exactly where you want it.</span></h1>
+    <p class="lead">MWM is a free window manager for macOS. Snap windows to slots, send them across displays and save whole desktops as snapshots, all from the keyboard.</p>
+    <div class="actions">
+      <a class="btn primary" href="https://github.com/bbarbosa85/mwm/releases/latest/download/MWM.dmg">Download for macOS</a>
+      <a class="btn" href="#how">How it works</a>
+    </div>
+    <div class="meta">Version 1.0 · macOS 12 or later · Apple silicon and Intel · free and open source</div>
+    <div class="shot">
+      <div class="window">
+        <div class="bar"><i></i><i></i><i></i><span>MWM configuration</span></div>
+        <picture>
+          <source srcset="assets/keyboard-map-dark.png" media="(prefers-color-scheme: dark)">
+          <img src="assets/keyboard-map-light.png" alt="The keyboard map: every shortcut shown on a Mac keyboard, colored by what it does" width="2000" height="1280">
+        </picture>
+      </div>
+    </div>
+  </div>
+</header>
+
+<section id="features">
+  <div class="wrap">
+    <div class="center">
+      <h2>Built for people who live on the keyboard</h2>
+      <p class="sub">Set it up once in a friendly window. After that, MWM stays in your menu bar and out of your way.</p>
+    </div>
+    <div class="grid">
+      <div class="card"><div class="ico">⌨️</div><h3>A keyboard map</h3><p>See every shortcut on a Mac keyboard. Keys are colored by what they do, and conflicts and keys macOS keeps are flagged.</p></div>
+      <div class="card"><div class="ico">▦</div><h3>Slots</h3><p>Name any area of the screen (halves, thirds, quarters or your own) and move a window there with one key.</p></div>
+      <div class="card"><div class="ico">🖥️</div><h3>Many displays</h3><p>Give each screen a name that sticks, and send windows to the right one even after you unplug and reconnect.</p></div>
+      <div class="card"><div class="ico">📸</div><h3>Snapshots</h3><p>Save where every window is, then bring the whole desktop back with a click or a shortcut.</p></div>
+      <div class="card"><div class="ico">🧭</div><h3>Menu bar control</h3><p>Save and restore snapshots, open any page and reach your shortcuts without opening a window.</p></div>
+      <div class="card"><div class="ico">🔒</div><h3>Yours to keep</h3><p>One readable file, <code>~/.mwm.yml</code>. No accounts, no network, nothing runs from it. Open source under GPLv3.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="alt">
+  <div class="wrap">
+    <div class="split">
+      <div class="text">
+        <h3>Shortcuts you can see</h3>
+        <p>Pick a modifier group such as <kbd>⌃</kbd><kbd>⌥</kbd><kbd>⌘</kbd>, click a key, and say what it does: move a window to a slot, focus an app, throw it to the next screen, show window hints.</p>
+        <ul>
+          <li><b>Record</b> a shortcut by pressing it, or <b>pick it on the map</b>.</li>
+          <li>Keys macOS already uses are blocked before they cause trouble.</li>
+          <li>Two shortcuts on the same keys? MWM tells you which ones.</li>
+        </ul>
+      </div>
+      <div class="window"><div class="bar"><i></i><i></i><i></i><span>Editing shortcut</span></div>
+        <picture><source srcset="assets/shortcut-editor-dark.png" media="(prefers-color-scheme: dark)"><img src="assets/shortcut-editor-light.png" alt="The shortcut editor: pick an action, a slot and the keys" loading="lazy"></picture></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="split flip">
+      <div class="text">
+        <h3>Slots, drawn not typed</h3>
+        <p>Drag the edges of a slot on a picture of your screen, or type exact percentages. Nineteen presets come built in; add as many of your own as you like.</p>
+        <ul>
+          <li>Snaps to the grid, so thirds really are thirds.</li>
+          <li>Shows a preview on each of your connected screens.</li>
+        </ul>
+      </div>
+      <div class="window"><div class="bar"><i></i><i></i><i></i><span>Editing slot</span></div>
+        <picture><source srcset="assets/slots-editor-dark.png" media="(prefers-color-scheme: dark)"><img src="assets/slots-editor-light.png" alt="Drawing a slot on a picture of the screen" loading="lazy"></picture></div>
+    </div>
+  </div>
+</section>
+
+<section class="alt">
+  <div class="wrap">
+    <div class="split">
+      <div class="text">
+        <h3>Save the whole desktop</h3>
+        <p>A snapshot remembers every window and the screens it was on. Make one for work, one for a call, one for the couch, and restore it in a click, from the menu bar, or with a shortcut.</p>
+        <ul>
+          <li>Each card shows a live picture of the windows with each app's icon.</li>
+          <li>Pin a snapshot to keep it after MWM restarts.</li>
+          <li>Update a snapshot with the windows you have now, in place.</li>
+        </ul>
+      </div>
+      <div class="window"><div class="bar"><i></i><i></i><i></i><span>Snapshots</span></div>
+        <picture><source srcset="assets/snapshots-dark.png" media="(prefers-color-scheme: dark)"><img src="assets/snapshots-light.png" alt="Snapshot cards with a picture of the windows on the screens" loading="lazy" style="aspect-ratio: 2000 / 1440; object-fit: cover; object-position: top"></picture></div>
+    </div>
+  </div>
+</section>
+
+<section class="download" id="download">
+  <div class="wrap">
+    <div class="dl-box">
+      <img src="assets/icon.png" alt="" width="72" height="72">
+      <h2 style="margin-top:10px">Download MWM 1.0</h2>
+      <p class="sub" style="margin-bottom:0">Free. Open the disk image and drag MWM to Applications.</p>
+      <div class="actions">
+        <a class="btn primary" href="https://github.com/bbarbosa85/mwm/releases/latest/download/MWM.dmg">Download .dmg</a>
+        <a class="btn" href="https://github.com/bbarbosa85/mwm/releases/latest/download/MWM.zip">Download .zip</a>
+      </div>
+      <div class="req">
+        <span><b>macOS</b> 12 Monterey or later</span>
+        <span><b>Chip</b> Apple silicon or Intel</span>
+        <span><b>Size</b> about 3 MB</span>
+      </div>
+      <p class="dim" style="font-size:14px;color:var(--muted);margin:18px 0 0">All versions and checksums are on the <a href="https://github.com/bbarbosa85/mwm/releases">releases page</a>. Source code on <a href="https://github.com/bbarbosa85/mwm">GitHub</a>.</p>
+    </div>
+  </div>
+</section>
+
+<section id="how">
+  <div class="wrap">
+    <h2>Up and running in minutes</h2>
+    <p class="sub">The short version. The <a href="docs.html#quick-start">quick start</a> has every step.</p>
+    <ol class="steps">
+      <li><div>
+        <h3>Install and open</h3>
+        <p>Open <code>MWM.dmg</code>, drag <b>MWM</b> to <b>Applications</b> and open it. It lives in the menu bar. macOS may warn that it isn't notarized; <a href="docs.html#quick-start">here's how to open it</a>.</p>
+      </div></li>
+      <li><div>
+        <h3>Allow Accessibility</h3>
+        <p>macOS needs your permission to move other apps' windows. MWM asks on first launch. <a href="docs.html#troubleshooting">Windows not moving?</a></p>
+      </div></li>
+      <li><div>
+        <h3>Add a shortcut</h3>
+        <p>Choose <b>Configure MWM…</b> from the menu bar, pick a key on the keyboard map and say what it does. Or start from an <a href="examples.html">example configuration</a>.</p>
+      </div></li>
+    </ol>
+    <p style="text-align:center;margin-top:26px"><a class="btn primary" href="docs.html">Read the documentation</a> <a class="btn" href="examples.html">Browse examples</a></p>
+  </div>
+</section>
+
+<section class="alt" id="shortcuts">
+  <div class="wrap">
+    <h2>Shortcuts out of the box</h2>
+    <p class="sub">Until you add your own, MWM comes with a set of defaults. A few of them:</p>
+    <table>
+      <thead><tr><th>Keys</th><th>What it does</th></tr></thead>
+      <tbody>
+        <tr><td><kbd>⌥</kbd> + arrows</td><td>Resize the focused window by 10%</td></tr>
+        <tr><td><kbd>⌘</kbd> + arrows</td><td>Focus the window in that direction</td></tr>
+        <tr><td><kbd>⌘</kbd> + <kbd>esc</kbd></td><td>Show window hints: press a letter to jump to that window</td></tr>
+        <tr><td><kbd>⌥</kbd><kbd>⇧</kbd> + <kbd>F</kbd> <kbd>S</kbd> <kbd>T</kbd> <kbd>N</kbd> <kbd>M</kbd> <kbd>C</kbd></td><td>Jump to Finder, Safari, Terminal, Notes, Mail or Calendar</td></tr>
+      </tbody>
+    </table>
+    <p style="color:var(--muted);margin:14px 0 0;font-size:15px">See <a href="docs.html#defaults">all the defaults</a>. Your own shortcuts live in <code>~/.mwm.yml</code>, described in the <a href="docs.html#config-file">documentation</a>.</p>
+  </div>
+</section>
+
+<section id="faq">
+  <div class="wrap">
+    <h2>Questions</h2>
+    <p class="sub">The things people ask first. More in the <a href="docs.html#troubleshooting">documentation</a>.</p>
+    <details><summary>Windows don't move. What's wrong?</summary><p>Almost always Accessibility. See <a href="docs.html#troubleshooting">troubleshooting</a>.</p></details>
+    <details><summary>Why does macOS warn me when I open it?</summary><p>MWM is signed but not yet notarized by Apple, which needs a paid developer membership. The <a href="docs.html#quick-start">quick start</a> shows how to open it once; macOS remembers your choice.</p></details>
+    <details><summary>Where are my settings stored?</summary><p>In one plain-text file, <code>~/.mwm.yml</code>, which never leaves your Mac. See <a href="docs.html#config-file">the configuration file</a>.</p></details>
+    <details><summary>I used Slate before. Will my settings come along?</summary><p>Yes, with one exception: JavaScript configurations can't be converted. See <a href="docs.html#migration">moving from Slate</a>.</p></details>
+    <details><summary>How do I start it at login, or remove it?</summary><p>Turn on <b>Launch MWM at Login</b> in the menu bar menu. To remove it, quit MWM, drag it from Applications to the Trash and delete <code>~/.mwm.yml</code> if you want your settings gone too.</p></details>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <span>MWM is free software under the GPLv3. A fork of <a href="https://github.com/jigish/slate">Slate</a> by Jigish Patel and contributors.</span>
+    <span class="links"><a href="docs.html">Docs</a><a href="examples.html">Examples</a><a href="https://github.com/bbarbosa85/mwm">GitHub</a><a href="https://github.com/bbarbosa85/mwm/releases">Releases</a><a href="https://github.com/bbarbosa85/mwm/graphs/contributors">Contributors</a></span>
+  </div>
+</footer>
+
+</body>
+</html>

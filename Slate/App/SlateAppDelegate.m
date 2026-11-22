@@ -462,6 +462,11 @@ OSStatus OnModifiersChangedEvent(EventHandlerCallRef nextHandler, EventRef theEv
   return item;
 }
 
+// Every item in the status menu has a symbol, so their text lines up.
+- (void)setSymbol:(NSString *)symbol on:(NSMenuItem *)item {
+  [item setImage:[NSImage imageWithSystemSymbolName:symbol accessibilityDescription:nil]];
+}
+
 // A top-level item that opens a submenu.
 - (NSMenuItem *)addSubmenu:(NSMenu *)submenu title:(NSString *)title symbol:(NSString *)symbol to:(NSMenu *)menu {
   NSMenuItem *item = [menu addItemWithTitle:title action:nil keyEquivalent:@""];
@@ -470,33 +475,28 @@ OSStatus OnModifiersChangedEvent(EventHandlerCallRef nextHandler, EventRef theEv
   return item;
 }
 
-// The status bar menu: what MWM does (Snapshots, Keyboard Shortcuts, Backup), then the configuration window and the app.
+// The status bar menu, most used first: what MWM does (Snapshots, Keyboard Shortcuts), the configuration
+// window and housekeeping, then About and Quit.
 - (NSMenu *)buildStatusMenu {
   NSMenu *menu = [[NSMenu alloc] initWithTitle:@"MWM"];
   MWMStatusMenus *menus = [MWMStatusMenus shared];
-  [self addItem:@"About MWM" action:@selector(aboutWindow) key:@"" to:menu];
-  [menu addItem:[NSMenuItem separatorItem]];
   [self addSubmenu:[menus snapshotsMenu] title:@"Snapshots" symbol:@"camera" to:menu];
   [self addSubmenu:[menus keyboardMenu] title:@"Keyboard Shortcuts" symbol:@"keyboard" to:menu];
-  NSMenuItem *backup = [self addItem:@"Backup…" action:@selector(openBackup) key:@"" to:menu];
-  [backup setImage:[NSImage imageWithSystemSymbolName:@"icloud" accessibilityDescription:nil]];
   [menu addItem:[NSMenuItem separatorItem]];
-  [self addItem:@"Configure MWM…" action:@selector(configureSlate) key:@"," to:menu];
+  [self setSymbol:@"gearshape" on:[self addItem:@"Configure MWM…" action:@selector(configureSlate) key:@"," to:menu]];
   NSMenuItem *gallery = [self addItem:@"Design System…" action:@selector(showDesignGallery) key:@"," to:menu];   // shown while Option is held
   [gallery setKeyEquivalentModifierMask:NSEventModifierFlagCommand | NSEventModifierFlagOption];
   [gallery setAlternate:YES];
-  [self addSubmenu:[menus pagesMenu] title:@"Open Page" symbol:nil to:menu];
-  [[self addItem:@"Reload Configuration" action:@selector(relaunch) key:@"" to:menu]
-    setToolTip:@"Restart MWM to load the configuration file again"];
+  NSMenuItem *reload = [self addItem:@"Reload Configuration" action:@selector(relaunch) key:@"" to:menu];
+  [reload setToolTip:@"Restart MWM to load the configuration file again"];
+  [self setSymbol:@"arrow.clockwise" on:reload];
   launchOnLoginItem = [self addItem:@"Launch MWM at Login" action:@selector(updateLaunchState) key:@"" to:menu];
+  [self setSymbol:@"power" on:launchOnLoginItem];
   [self setLaunchOnLoginItemStatus];
   [menu addItem:[NSMenuItem separatorItem]];
+  [self setSymbol:@"info.circle" on:[self addItem:@"About MWM" action:@selector(aboutWindow) key:@"" to:menu]];
   [menu addItemWithTitle:@"Quit MWM" action:@selector(terminate:) keyEquivalent:@"q"];
   return menu;
-}
-
-- (void)openBackup {
-  [[ConfigurationWindowController sharedController] showConfigurationSection:ConfigurationFormSectionBackup];
 }
 
 // The app menus, shown only while an MWM window is in front. They carry the

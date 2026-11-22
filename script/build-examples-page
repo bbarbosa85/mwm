@@ -1,0 +1,132 @@
+#!/usr/bin/env python3
+"""Builds docs/examples.html and docs/examples/mwm-examples.zip from docs/examples/*.mwm.yml.
+
+Run after adding or changing an example:  script/build-examples-page
+"""
+import html, os, zipfile
+
+root = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "docs")
+ex = os.path.join(root, "examples")
+
+# file -> (title, who it is for, what you get)
+meta = [
+    ("starter.mwm.yml", "Starter", "Anyone new to MWM", "Halves, thirds and full screen on hyper, jump to Finder, Safari and Terminal, window hints, and a work snapshot."),
+    ("ultrawide.mwm.yml", "Ultrawide", "One very wide monitor", "Thirds, two-thirds, a centered column and quarters, so a 21:9 or 32:9 screen is never one giant window."),
+    ("two-displays.mwm.yml", "Laptop + external display", "Two screens", "Names both screens, halves per screen, throw to the next screen, and a desk-setup snapshot."),
+    ("apps-and-snapshots.mwm.yml", "Apps and snapshots", "Jumping between apps and layouts", "Ten app shortcuts on alt + shift and three snapshots (work, meeting, focus) to save and restore."),
+    ("daily-driver.mwm.yml", "The author's daily setup", "A real, lived-in file", "A MacBook with a 5120x1440 ultrawide: slots on the number row and keypad, app shortcuts, hints and snapshots."),
+]
+
+with zipfile.ZipFile(os.path.join(ex, "mwm-examples.zip"), "w", zipfile.ZIP_DEFLATED) as z:
+    for name, *_ in meta:
+        z.write(os.path.join(ex, name), name)
+
+cards = []
+for name, title, who, what in meta:
+    text = open(os.path.join(ex, name), encoding="utf-8").read()
+    lines = text.count("\n")
+    bindings = text.count("\n  - ")
+    cards.append(f"""
+    <article class="ex" id="{name.split('.')[0]}" data-text="{html.escape((title + ' ' + who + ' ' + what).lower())}">
+      <div class="head">
+        <div>
+          <h2>{html.escape(title)}</h2>
+          <p class="who">{html.escape(who)} · {bindings} shortcuts · {lines} lines</p>
+          <p>{html.escape(what)}</p>
+        </div>
+        <div class="acts">
+          <a class="btn primary small" href="examples/{name}" download>Download</a>
+          <button class="btn small" type="button" data-copy="{name}">Copy</button>
+          <button class="btn small" type="button" data-toggle="{name}">Preview</button>
+        </div>
+      </div>
+      <pre id="pre-{name}" hidden><code>{html.escape(text)}</code></pre>
+    </article>""")
+
+page = f"""<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MWM examples</title>
+<meta name="description" content="Ready-made MWM configurations you can download: starter, ultrawide, two displays, apps and snapshots.">
+<link rel="icon" href="assets/icon.png">
+<link rel="stylesheet" href="assets/site.css">
+<style>
+  .page {{ max-width: 920px; margin: 0 auto; padding: 40px 24px 90px; }}
+  h1 {{ font-size: clamp(30px, 4vw, 42px); letter-spacing: -.02em; margin: 0 0 8px; line-height: 1.1; }}
+  .lead {{ color: var(--muted); font-size: 18px; margin: 0 0 22px; }}
+  .tools {{ display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 22px; }}
+  .tools input {{ flex: 1; min-width: 220px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 11px 14px; color: var(--fg); font: inherit; outline: 0; }}
+  .tools input:focus {{ border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 20%, transparent); }}
+  .ex {{ background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 22px; margin-bottom: 16px; }}
+  .ex .head {{ display: flex; gap: 20px; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; }}
+  .ex h2 {{ margin: 0 0 2px; font-size: 21px; }}
+  .ex .who {{ margin: 0 0 8px; color: var(--accent); font-size: 14px; font-weight: 600; }}
+  .ex p {{ margin: 0; color: var(--muted); }}
+  .ex .acts {{ display: flex; gap: 8px; flex-wrap: wrap; }}
+  .ex pre {{ margin: 18px 0 0; max-height: 460px; overflow: auto; }}
+  .how {{ background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 18px 22px; margin-bottom: 22px; }}
+  .how ol {{ margin: 8px 0 0; padding-left: 22px; }} .how li {{ margin: 4px 0; }}
+  #none {{ display: none; color: var(--muted); text-align: center; padding: 30px 0; }}
+</style>
+</head>
+<body>
+<nav>
+  <div class="wrap">
+    <a class="brand" href="index.html"><img src="assets/icon.png" alt="">MWM</a>
+    <div class="links">
+      <a href="index.html#top">Overview</a>
+      <a href="docs.html">Docs</a>
+      <a href="examples.html" style="color:var(--fg)">Examples</a>
+      <a class="btn primary small cta" href="index.html#download">Download</a>
+    </div>
+  </div>
+</nav>
+
+<div class="page">
+  <h1>Examples</h1>
+  <p class="lead">Ready-made configurations. Download one, change the app and screen names to yours, and you're set.</p>
+
+  <div class="how">
+    <b>To use one</b>
+    <ol>
+      <li>Download it, then save it as <code>~/.mwm.yml</code> (in Finder: <b>Go → Go to Folder…</b>, type <code>~</code>; files starting with a dot are hidden, <kbd>⌘</kbd><kbd>⇧</kbd><kbd>.</kbd> shows them). If you already have one, keep a copy first.</li>
+      <li>Open the MWM menu and choose <b>Configure MWM…</b>, then press <b>Apply</b>.</li>
+      <li>Edit it in the window, or by hand. The <a href="docs.html#config-file">documentation</a> explains every field.</li>
+    </ol>
+    <p style="margin:12px 0 0"><a class="btn small" href="examples/mwm-examples.zip" download>Download all ({len(meta)}) as a zip</a></p>
+  </div>
+
+  <div class="tools"><input id="q" type="search" placeholder="Filter examples: ultrawide, apps, two screens …" aria-label="Filter examples"></div>
+  {''.join(cards)}
+  <div id="none">No example matches that.</div>
+</div>
+
+<script>
+(function () {{
+  var cards = Array.prototype.slice.call(document.querySelectorAll('.ex'));
+  document.getElementById('q').addEventListener('input', function (e) {{
+    var terms = e.target.value.toLowerCase().split(/\\s+/).filter(Boolean), shown = 0;
+    cards.forEach(function (c) {{ var ok = terms.every(function (t) {{ return c.dataset.text.indexOf(t) !== -1; }}); c.hidden = !ok; if (ok) shown++; }});
+    document.getElementById('none').style.display = shown ? 'none' : 'block';
+  }});
+  document.addEventListener('click', function (e) {{
+    var t = e.target;
+    if (t.dataset.toggle) {{
+      var pre = document.getElementById('pre-' + t.dataset.toggle); pre.hidden = !pre.hidden; t.textContent = pre.hidden ? 'Preview' : 'Hide';
+    }}
+    if (t.dataset.copy) {{
+      var text = document.getElementById('pre-' + t.dataset.copy).textContent;
+      if (navigator.clipboard) navigator.clipboard.writeText(text);
+      t.textContent = 'Copied'; setTimeout(function () {{ t.textContent = 'Copy'; }}, 1200);
+    }}
+  }});
+  if (location.hash) {{ var el = document.querySelector(location.hash); if (el) el.querySelector('[data-toggle]').click(); }}
+}})();
+</script>
+</body>
+</html>
+"""
+open(os.path.join(root, "examples.html"), "w", encoding="utf-8").write(page)
+print("wrote docs/examples.html and docs/examples/mwm-examples.zip")

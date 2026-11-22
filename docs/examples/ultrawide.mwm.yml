@@ -1,0 +1,86 @@
+# Example: one ultrawide monitor (5120x1440). Thirds, two thirds, a centered column and quarters,
+# on hyper + the number row. hyper = ctrl + alt + cmd.
+# Percentages are of the screen, so this works on any wide monitor.
+
+version: 2
+
+settings:
+  defaultToCurrentScreen: true
+
+modifiers:
+  hyper: [ctrl, alt, cmd]
+  shyper: [shift, ctrl, alt, cmd]
+
+monitors:
+  ultrawide: {display: "Odyssey G9", size: 5120x1440}
+
+slots:
+  left-two-thirds: {x: 0%, y: 0%, width: 66.666667%, height: 100%}
+  right-two-thirds: {x: 33.333333%, y: 0%, width: 66.666667%, height: 100%}
+  center-column: {x: 16.666667%, y: 0%, width: 66.666667%, height: 100%}
+  narrow-center: {x: 30%, y: 0%, width: 40%, height: 100%}
+
+aliases: {}
+
+bindings:
+  - group: Thirds
+    key: "1"
+    mods: hyper
+    action: {type: move, slot: third1}
+    note: Left third
+  - group: Thirds
+    key: "2"
+    mods: hyper
+    action: {type: move, slot: third2}
+    note: Middle third
+  - group: Thirds
+    key: "3"
+    mods: hyper
+    action: {type: move, slot: third3}
+    note: Right third
+  - group: Wider
+    key: "4"
+    mods: hyper
+    action: {type: move, slot: left-two-thirds}
+    note: Left two thirds
+  - group: Wider
+    key: "5"
+    mods: hyper
+    action: {type: move, slot: center-column}
+    note: Centered, two thirds wide
+  - group: Wider
+    key: "6"
+    mods: hyper
+    action: {type: move, slot: right-two-thirds}
+    note: Right two thirds
+  - group: Wider
+    key: "0"
+    mods: hyper
+    action: {type: move, slot: full}
+    note: Full screen
+  - group: Wider
+    key: "9"
+    mods: hyper
+    action: {type: move, slot: narrow-center}
+    note: A narrow column for reading
+  - group: Quarters
+    key: "1"
+    mods: shyper
+    action: {type: move, slot: quarter1}
+  - group: Quarters
+    key: "2"
+    mods: shyper
+    action: {type: move, slot: quarter2}
+  - group: Quarters
+    key: "3"
+    mods: shyper
+    action: {type: move, slot: quarter3}
+  - group: Quarters
+    key: "4"
+    mods: shyper
+    action: {type: move, slot: quarter4}
+  - group: Tools
+    key: h
+    mods: [cmd, shift]
+    action: {type: hint}
+    note: Press a letter to jump to that window

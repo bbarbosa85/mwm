@@ -12,12 +12,19 @@ STAGING_DIR="/tmp/mwm_dmg_staging_$$"
 
 echo "==> Building MWM (${CONFIGURATION})..."
 cd "${ROOT_DIR}"
+# A universal app (Apple silicon and Intel), installed into its own folder so it never replaces the
+# development build that the tests and "script/screens" use (tmp/Slate.dst).
+RELEASE_DST="/tmp/MWMRelease.dst"
+rm -rf "${RELEASE_DST}"
 xcodebuild -scheme Slate \
            -configuration "${CONFIGURATION}" \
+           -destination 'generic/platform=macOS' \
            -derivedDataPath /tmp/MWMDerivedData \
+           DSTROOT="${RELEASE_DST}" \
+           ONLY_ACTIVE_ARCH=NO \
            build
 
-APP_PATH="${ROOT_DIR}/tmp/Slate.dst/Applications/MWM.app"
+APP_PATH="${RELEASE_DST}/Applications/MWM.app"
 if [ ! -d "${APP_PATH}" ]; then
   APP_PATH="/tmp/MWMDerivedData/Build/Products/${CONFIGURATION}/MWM.app"
 fi
@@ -56,8 +63,15 @@ hdiutil create -volname "MWM" \
                -format UDZO \
                "${DMG_PATH}"
 
+# The same signed app as a zip, and checksums for both.
+ZIP_PATH="${OUTPUT_DIR}/MWM.zip"
+rm -f "${ZIP_PATH}"
+ditto -c -k --sequesterRsrc --keepParent "${STAGING_DIR}/MWM.app" "${ZIP_PATH}"
+(cd "${OUTPUT_DIR}" && shasum -a 256 MWM.dmg MWM.zip > SHA256SUMS.txt)
+
 rm -rf "${STAGING_DIR}"
 
-echo "==> Successfully created DMG:"
-ls -lh "${DMG_PATH}"
+echo "==> Successfully created the release:"
+ls -lh "${DMG_PATH}" "${ZIP_PATH}"
+cat "${OUTPUT_DIR}/SHA256SUMS.txt"
 

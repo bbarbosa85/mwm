@@ -1,0 +1,77 @@
+# Example: a small starter. Halves and full screen on hyper + arrows, thirds on hyper + 1 2 3,
+# a few app shortcuts, window hints, and one snapshot you can save and restore.
+# hyper = ctrl + alt + cmd. Save this file as ~/.mwm.yml, or open it in Configure MWM.
+
+version: 2
+
+settings:
+  defaultToCurrentScreen: true
+
+modifiers:
+  hyper: [ctrl, alt, cmd]
+
+monitors: {}
+
+# Only your own slots go here. The built-in presets (lefthalf, righthalf, third1, quarter1 ...) are always there.
+slots: {}
+
+aliases: {}
+
+bindings:
+  - group: Windows
+    key: left
+    mods: hyper
+    action: {type: move, slot: lefthalf}
+    note: Left half
+  - group: Windows
+    key: right
+    mods: hyper
+    action: {type: move, slot: righthalf}
+    note: Right half
+  - group: Windows
+    key: up
+    mods: hyper
+    action: {type: move, slot: full}
+    note: Full screen
+  - group: Windows
+    key: "1"
+    mods: hyper
+    action: {type: move, slot: third1}
+    note: Left third
+  - group: Windows
+    key: "2"
+    mods: hyper
+    action: {type: move, slot: third2}
+    note: Middle third
+  - group: Windows
+    key: "3"
+    mods: hyper
+    action: {type: move, slot: third3}
+    note: Right third
+  - group: Apps
+    key: f
+    mods: [alt, shift]
+    action: {type: focus-app, app: Finder}
+  - group: Apps
+    key: s
+    mods: [alt, shift]
+    action: {type: focus-app, app: Safari}
+  - group: Apps
+    key: t
+    mods: [alt, shift]
+    action: {type: focus-app, app: Terminal}
+  - group: Tools
+    key: h
+    mods: [cmd, shift]
+    action: {type: hint}
+    note: Press a letter to jump to that window
+  - group: Snapshots
+    key: s
+    mods: hyper
+    action: {type: save-snapshot, name: work, keep: true}
+    note: Remember where every window is
+  - group: Snapshots
+    key: w
+    mods: hyper
+    action: {type: restore-snapshot, name: work}
+    note: Put the windows back

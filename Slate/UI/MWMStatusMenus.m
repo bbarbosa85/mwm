@@ -161,7 +161,7 @@
   NSMenu *menu = [[NSMenu alloc] initWithTitle:@"Open Page"];
   NSArray *groups = @[@[@[@"Keyboard", @(ConfigurationFormSectionKeyboard)], @[@"Modifiers", @(ConfigurationFormSectionModifiers)]],
                       @[@[@"Displays", @(ConfigurationFormSectionMonitors)], @[@"Slots", @(ConfigurationFormSectionPositions)], @[@"Snapshots", @(ConfigurationFormSectionSnapshots)]],
-                      @[@[@"General", @(ConfigurationFormSectionGeneral)], @[@"Advanced", @(ConfigurationFormSectionAdvanced)], @[@"Other Aliases", @(ConfigurationFormSectionAliases)], @[@"Backup", @(ConfigurationFormSectionBackup)]]];
+                      @[@[@"General", @(ConfigurationFormSectionGeneral)], @[@"Advanced", @(ConfigurationFormSectionAdvanced)], @[@"Other Aliases", @(ConfigurationFormSectionAliases)]]];
   for (NSUInteger i = 0; i < [groups count]; i++) {
     if (i > 0) [menu addItem:[NSMenuItem separatorItem]];
     for (NSArray *page in groups[i]) {

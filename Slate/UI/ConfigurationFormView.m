@@ -60,8 +60,6 @@ static SectionInfo InfoFor(ConfigurationFormSection section) {
       return (SectionInfo){@"Advanced", @"slider.horizontal.3", @"Key repeat, how percentages are measured, and other settings."};
     case ConfigurationFormSectionSnapshots:
       return (SectionInfo){@"Snapshots", @"camera", @"Saved window arrangements."};
-    case ConfigurationFormSectionBackup:
-      return (SectionInfo){@"Backup", @"icloud", @"Back up your configuration to GitHub."};
     case ConfigurationFormSectionGeneral:
       return (SectionInfo){@"General", @"gearshape", @"Everyday settings. Anything not listed uses MWM's default."};
     case ConfigurationFormSectionModifiers:
@@ -102,7 +100,6 @@ static NSArray<NSDictionary *> *NavRows(void) {
       @{@"section": @(ConfigurationFormSectionGeneral)},
       @{@"section": @(ConfigurationFormSectionAdvanced)},
       @{@"section": @(ConfigurationFormSectionAliases)},
-      @{@"section": @(ConfigurationFormSectionBackup)},
     ];
   });
   return rows;
@@ -135,10 +132,6 @@ static BOOL IsEverydaySetting(NSString *name) {
 
 static BOOL IsSettingsSection(ConfigurationFormSection section) {
   return section == ConfigurationFormSectionGeneral || section == ConfigurationFormSectionAdvanced;
-}
-
-static BOOL IsPlaceholderSection(ConfigurationFormSection section) {
-  return section == ConfigurationFormSectionBackup;
 }
 
 static BOOL IsBoolean(id value) {
@@ -184,8 +177,6 @@ static NSString *DisplayValue(id value) {
 @property (strong) NSLayoutConstraint *slotsTopBelowHeader;
 @property (strong) NSLayoutConstraint *slotsTopFull;
 @property (assign) BOOL sublevelActive;
-@property (strong) NSView *placeholderView;
-@property (strong) NSTextField *placeholderTitle;
 @property (strong) NSTableView *table;
 @property (strong) NSView *unavailableView;
 @property (strong) NSTextField *unavailableLabel;
@@ -278,14 +269,6 @@ static NSString *DisplayValue(id value) {
   [self.filterBar setHidden:YES];
 
   // Pages that aren't built yet
-  self.placeholderTitle = [NSTextField labelWithString:@""];
-  [self.placeholderTitle setFont:[MWMTheme fontHeading]];
-  [self.placeholderTitle setTextColor:[MWMTheme textSecondary]];
-  [self.placeholderTitle setTranslatesAutoresizingMaskIntoConstraints:NO];
-  self.placeholderView = [[NSView alloc] init];
-  [self.placeholderView setTranslatesAutoresizingMaskIntoConstraints:NO];
-  [self.placeholderView addSubview:self.placeholderTitle];
-  [self.placeholderView setHidden:YES];
 
   self.presetsView = [[ConfigurationPresetsView alloc] init];
   [self.presetsView setTranslatesAutoresizingMaskIntoConstraints:NO];
@@ -334,7 +317,7 @@ static NSString *DisplayValue(id value) {
   [self.settingsView setDelegate:self];
   [self.settingsView setHidden:YES];
 
-  for (NSView *view in @[self.titleLabel, self.infoLabel, self.addButton, self.removeButton, self.filterBar, self.tableScroll, self.placeholderView, self.settingsView, self.displaysView, self.snapshotsView, self.slotsView, self.presetsView, self.slotsSwitcher, self.keyboardView, self.keyboardSwitcher, self.conflictsButton]) {
+  for (NSView *view in @[self.titleLabel, self.infoLabel, self.addButton, self.removeButton, self.filterBar, self.tableScroll, self.settingsView, self.displaysView, self.snapshotsView, self.slotsView, self.presetsView, self.slotsSwitcher, self.keyboardView, self.keyboardSwitcher, self.conflictsButton]) {
     [self.detail addSubview:view];
   }
 
@@ -421,12 +404,6 @@ static NSString *DisplayValue(id value) {
     [self.settingsView.bottomAnchor constraintEqualToAnchor:self.detail.bottomAnchor],
     [self.settingsView.leadingAnchor constraintEqualToAnchor:self.detail.leadingAnchor],
     [self.settingsView.trailingAnchor constraintEqualToAnchor:self.detail.trailingAnchor],
-    [self.placeholderView.topAnchor constraintEqualToAnchor:self.infoLabel.bottomAnchor],
-    [self.placeholderView.bottomAnchor constraintEqualToAnchor:self.detail.bottomAnchor],
-    [self.placeholderView.leadingAnchor constraintEqualToAnchor:self.detail.leadingAnchor],
-    [self.placeholderView.trailingAnchor constraintEqualToAnchor:self.detail.trailingAnchor],
-    [self.placeholderTitle.centerXAnchor constraintEqualToAnchor:self.placeholderView.centerXAnchor],
-    [self.placeholderTitle.centerYAnchor constraintEqualToAnchor:self.placeholderView.centerYAnchor constant:-30],
     [self.tableScroll.topAnchor constraintEqualToAnchor:self.filterBar.bottomAnchor constant:4],
     [self.tableScroll.leadingAnchor constraintEqualToAnchor:self.detail.leadingAnchor],
     [self.tableScroll.trailingAnchor constraintEqualToAnchor:self.detail.trailingAnchor],
@@ -545,7 +522,7 @@ static NSString *DisplayValue(id value) {
 
 - (NSUInteger)countForSection:(ConfigurationFormSection)section {
   if (section == ConfigurationFormSectionSnapshots) return [[SlateSnapshots snapshots] count];
-  if (self.document == nil || IsPlaceholderSection(section)) return 0;
+  if (self.document == nil) return 0;
   if (section == ConfigurationFormSectionKeyboard) return [self.document.bindings count];
   if ([self isBindingSection:section]) return [[self bindingsForSection:section] count];
   return [[self visibleEntriesForSection:section] count];
@@ -564,15 +541,14 @@ static NSString *DisplayValue(id value) {
   SectionInfo info = InfoFor(section);
   [self.titleLabel setStringValue:info.title];
   [self.infoLabel setStringValue:info.info];
-  BOOL placeholder = IsPlaceholderSection(section);
   BOOL cards = IsSettingsSection(section);  // rows of switches and sliders instead of a table
   BOOL displays = section == ConfigurationFormSectionMonitors;
   BOOL slots = section == ConfigurationFormSectionPositions;
   BOOL keyboard = section == ConfigurationFormSectionKeyboard;
   BOOL snapshots = section == ConfigurationFormSectionSnapshots;
-  [self.addButton setHidden:placeholder || cards || displays || slots || keyboard || snapshots];
-  [self.removeButton setHidden:placeholder || cards || displays || slots || keyboard || snapshots];
-  [self.tableScroll setHidden:placeholder || cards || displays || slots || keyboard || snapshots];
+  [self.addButton setHidden:cards || displays || slots || keyboard || snapshots];
+  [self.removeButton setHidden:cards || displays || slots || keyboard || snapshots];
+  [self.tableScroll setHidden:cards || displays || slots || keyboard || snapshots];
   [self.snapshotsView setHidden:!snapshots];
   if (snapshots) [self.snapshotsView reload];
   self.keyboardView.document = keyboard ? self.document : nil;
@@ -585,8 +561,6 @@ static NSString *DisplayValue(id value) {
   [self.settingsView setHidden:!cards];
   if (cards) self.settingsView.page = section == ConfigurationFormSectionAdvanced ? ConfigurationSettingsPageAdvanced : ConfigurationSettingsPageGeneral;
   self.settingsView.document = cards ? self.document : nil;
-  [self.placeholderView setHidden:!placeholder];
-  [self.placeholderTitle setStringValue:placeholder ? @"This page is coming soon" : @""];
   BOOL showsFilter = NO;  // the old filter bar is for the pages the sidebar no longer lists
   [self.filterBar setHidden:!showsFilter];
   self.filterBarHeight.constant = showsFilter ? 34 : 0;
