@@ -192,6 +192,24 @@ static NSString *const kConfig =
   }
 }
 
+- (void)testTheFormulaSlotEditorsLookTheSame {
+  NSString *config = @"positions:\n  rightfourfifths: move (screenOriginX+screenSizeX/5)+14;screenOriginY (4*screenSizeX/5)-14;screenSizeY\n  floating: move windowTopLeftX;windowTopLeftY screenSizeX/3;screenSizeY/2\n";
+  for (NSNumber *dark in @[@NO, @YES]) {
+    MWMConfigDocument *doc = [MWMConfigDocument documentFromString:config error:nil];
+    ConfigurationSlotsView *margins = [[ConfigurationSlotsView alloc] initWithFrame:NSMakeRect(0, 0, 1000, 640)];
+    margins.document = doc;
+    [margins selectSlotNamed:@"rightfourfifths"];
+    [self checkView:margins size:NSMakeSize(1000, 640) name:@"slots-editor-margins" dark:[dark boolValue]];
+    ConfigurationSlotsView *custom = [[ConfigurationSlotsView alloc] initWithFrame:NSMakeRect(0, 0, 1000, 640)];
+    custom.document = doc;
+    [custom selectSlotNamed:@"floating"];
+    [self checkView:custom size:NSMakeSize(1000, 640) name:@"slots-editor-custom" dark:[dark boolValue]];
+    ConfigurationSlotsView *gallery = [[ConfigurationSlotsView alloc] initWithFrame:NSMakeRect(0, 0, 1000, 640)];
+    gallery.document = doc;
+    [self checkView:gallery size:NSMakeSize(1000, 640) name:@"slots-gallery-formulas" dark:[dark boolValue]];
+  }
+}
+
 - (void)testTheSlotsEditorLooksTheSame {
   for (NSNumber *dark in @[@NO, @YES]) {
     MWMConfigDocument *doc = [MWMConfigDocument documentFromString:kConfig error:nil];

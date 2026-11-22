@@ -17,6 +17,8 @@
 
 #import "MWMSlots.h"
 #import "MWMAction.h"
+#import "MWMSlotShape.h"
+#import "MWMFormula.h"
 
 static const CGFloat kEpsilon = 0.0005;  // a twentieth of a percent
 
@@ -116,6 +118,14 @@ static NSString *Position(NSString *origin, NSString *size, CGFloat fraction) {
           Scaled(@"screenSizeX", r.size.width), Scaled(@"screenSizeY", r.size.height)];
 }
 
++ (NSString *)scaledVariable:(NSString *)variable fraction:(CGFloat)fraction {
+  return Scaled(variable, fraction);
+}
+
++ (NSString *)positionWithOrigin:(NSString *)origin size:(NSString *)size fraction:(CGFloat)fraction {
+  return Position(origin, size, fraction);
+}
+
 + (BOOL)getRect:(CGRect *)rect fromFormula:(NSString *)formula {
   // "move x;y w;h" and nothing after it: a formula that names a screen isn't a slot.
   NSArray *tokens = [[formula stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]] componentsSeparatedByCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
@@ -125,6 +135,16 @@ static NSString *Position(NSString *origin, NSString *size, CGFloat fraction) {
   return [MWMAction previewForPositionText:formula rect:rect];
 }
 
++ (BOOL)getPreviewRect:(CGRect *)rect fromFormula:(NSString *)formula {
+  CGSize screen = CGSizeMake(1600, 1000);
+  MWMSlotShape *shape = [MWMSlotShape shapeFromFormula:formula];
+  if (shape != nil) { if (rect) *rect = [shape fractionRectForScreenSize:screen]; return YES; }
+  CGRect points = CGRectZero;
+  if (![MWMFormula getRect:&points fromMoveText:formula screenSize:screen window:[MWMFormula sampleWindowForScreenSize:screen] error:nil]) return NO;
+  if (rect) *rect = CGRectMake(points.origin.x / screen.width, points.origin.y / screen.height, points.size.width / screen.width, points.size.height / screen.height);
+  return YES;
+}
+
 + (BOOL)rect:(CGRect)a isSameAreaAs:(CGRect)b {
   return fabs(a.origin.x - b.origin.x) < kEpsilon && fabs(a.origin.y - b.origin.y) < kEpsilon &&
          fabs(a.size.width - b.size.width) < kEpsilon && fabs(a.size.height - b.size.height) < kEpsilon;
@@ -132,11 +152,17 @@ static NSString *Position(NSString *origin, NSString *size, CGFloat fraction) {
 
 #pragma mark - Rules
 
-+ (NSString *)problemWithName:(NSString *)name rect:(CGRect)rect otherSlots:(NSArray<MWMSlot *> *)others takenNames:(NSSet<NSString *> *)taken {
++ (NSString *)problemWithName:(NSString *)name takenNames:(NSSet<NSString *> *)taken {
   NSString *trimmed = [name stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
   if ([trimmed length] == 0) return @"Give the slot a name.";
   if ([self presetNamed:trimmed] != nil) return [NSString stringWithFormat:@"\"%@\" is a built-in preset name.", trimmed];
   if ([taken containsObject:trimmed]) return [NSString stringWithFormat:@"The name \"%@\" is already used.", trimmed];
+  return nil;
+}
+
++ (NSString *)problemWithName:(NSString *)name rect:(CGRect)rect otherSlots:(NSArray<MWMSlot *> *)others takenNames:(NSSet<NSString *> *)taken {
+  NSString *nameProblem = [self problemWithName:name takenNames:taken];
+  if (nameProblem != nil) return nameProblem;
   if (rect.size.width < kEpsilon || rect.size.height < kEpsilon) return @"The slot needs some width and height.";
   if (rect.origin.x < -kEpsilon || rect.origin.y < -kEpsilon || CGRectGetMaxX(rect) > 1 + kEpsilon || CGRectGetMaxY(rect) > 1 + kEpsilon) {
     return @"The slot has to stay inside the screen.";

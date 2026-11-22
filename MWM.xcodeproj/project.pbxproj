@@ -7,6 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		5E1A0C0B2D00000000000941 /* TestMWMFormula.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D00000000000940 /* TestMWMFormula.m */; };
+		5E1A0C0B2D00000000000944 /* TestMWMSlotShape.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D00000000000943 /* TestMWMSlotShape.m */; };
+		5E1A0C0B2D00000000000932 /* MWMFormula.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D00000000000931 /* MWMFormula.m */; };
+		5E1A0C0B2D00000000000935 /* MWMSlotShape.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D00000000000934 /* MWMSlotShape.m */; };
 		5E1A0C0B2D00000000000917 /* TestConfigurationModifiers.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D00000000000916 /* TestConfigurationModifiers.m */; };
 		5E1A0C0B2D00000000000915 /* ConfigurationModifiersView.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D00000000000914 /* ConfigurationModifiersView.m */; };
 		5E1A0C0B2D00000000000912 /* ConfigurationMacKeyboard.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D00000000000911 /* ConfigurationMacKeyboard.m */; };
@@ -183,6 +187,12 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		5E1A0C0B2D00000000000940 /* TestMWMFormula.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TestMWMFormula.m; sourceTree = "<group>"; };
+		5E1A0C0B2D00000000000943 /* TestMWMSlotShape.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TestMWMSlotShape.m; sourceTree = "<group>"; };
+		5E1A0C0B2D00000000000930 /* MWMFormula.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Config/MWMFormula.h; sourceTree = "<group>"; };
+		5E1A0C0B2D00000000000931 /* MWMFormula.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Config/MWMFormula.m; sourceTree = "<group>"; };
+		5E1A0C0B2D00000000000933 /* MWMSlotShape.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Config/MWMSlotShape.h; sourceTree = "<group>"; };
+		5E1A0C0B2D00000000000934 /* MWMSlotShape.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Config/MWMSlotShape.m; sourceTree = "<group>"; };
 		5E1A0C0B2D00000000000916 /* TestConfigurationModifiers.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TestConfigurationModifiers.m; sourceTree = "<group>"; };
 		5E1A0C0B2D00000000000913 /* ConfigurationModifiersView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = UI/ConfigurationModifiersView.h; sourceTree = "<group>"; };
 		5E1A0C0B2D00000000000914 /* ConfigurationModifiersView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = UI/ConfigurationModifiersView.m; sourceTree = "<group>"; };
@@ -531,6 +541,8 @@
 				5E1A0C0B2D00000000000638 /* TestMWMAction.m */,
 				5E1A0C0B2D00000000000654 /* TestMWMDisplays.m */,
 				5E1A0C0B2D00000000000674 /* TestMWMSlots.m */,
+				5E1A0C0B2D00000000000940 /* TestMWMFormula.m */,
+				5E1A0C0B2D00000000000943 /* TestMWMSlotShape.m */,
 				5E1A0C0B2D00000000000688 /* TestConfigurationSlots.m */,
 				5E1A0C0B2D00000000000708 /* TestMWMShortcutIndex.m */,
 				5E1A0C0B2D00000000000770 /* TestSnapshots.m */,
@@ -606,6 +618,10 @@
 				5E1A0C0B2D00000000000652 /* MWMDisplays.m */,
 				5E1A0C0B2D00000000000670 /* MWMSlots.h */,
 				5E1A0C0B2D00000000000672 /* MWMSlots.m */,
+				5E1A0C0B2D00000000000930 /* MWMFormula.h */,
+				5E1A0C0B2D00000000000931 /* MWMFormula.m */,
+				5E1A0C0B2D00000000000933 /* MWMSlotShape.h */,
+				5E1A0C0B2D00000000000934 /* MWMSlotShape.m */,
 				5E1A0C0B2D00000000000700 /* MWMReservedShortcuts.h */,
 				5E1A0C0B2D00000000000702 /* MWMReservedShortcuts.m */,
 				5E1A0C0B2D00000000000704 /* MWMShortcutIndex.h */,
@@ -995,6 +1011,8 @@
 				5E1A0C0B2D00000000000633 /* MWMAction.m in Sources */,
 				5E1A0C0B2D00000000000653 /* MWMDisplays.m in Sources */,
 				5E1A0C0B2D00000000000673 /* MWMSlots.m in Sources */,
+				5E1A0C0B2D00000000000932 /* MWMFormula.m in Sources */,
+				5E1A0C0B2D00000000000935 /* MWMSlotShape.m in Sources */,
 				5E1A0C0B2D00000000000703 /* MWMReservedShortcuts.m in Sources */,
 				5E1A0C0B2D00000000000707 /* MWMShortcutIndex.m in Sources */,
 				5E1A0C0B2D00000000000782 /* MWMConfigFormat.m in Sources */,
@@ -1102,6 +1120,8 @@
 				5E1A0C0B2D00000000000639 /* TestMWMAction.m in Sources */,
 				5E1A0C0B2D00000000000655 /* TestMWMDisplays.m in Sources */,
 				5E1A0C0B2D00000000000675 /* TestMWMSlots.m in Sources */,
+				5E1A0C0B2D00000000000941 /* TestMWMFormula.m in Sources */,
+				5E1A0C0B2D00000000000944 /* TestMWMSlotShape.m in Sources */,
 				5E1A0C0B2D00000000000689 /* TestConfigurationSlots.m in Sources */,
 				5E1A0C0B2D00000000000709 /* TestMWMShortcutIndex.m in Sources */,
 				5E1A0C0B2D00000000000771 /* TestSnapshots.m in Sources */,

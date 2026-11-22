@@ -44,6 +44,27 @@
   return [result.issues firstObject];
 }
 
+// Slot formulas are checked on their own, even when no shortcut uses them.
+- (void)testABrokenSlotFormulaIsReportedEvenIfNothingUsesIt {
+  NSString *source = @"positions:\n  broken: move screenOriginX;screenOriginY screenSizeX/3;screenSizeZ\n  fine: move screenOriginX;screenOriginY screenSizeX/3;screenSizeY\n";
+  MWMConfigValidationResult *result = [MWMConfigValidator validateSource:source];
+  XCTAssertEqual([result.issues count], 1u);
+  MWMConfigIssue *issue = result.issues.firstObject;
+  XCTAssertTrue(issue.isError);
+  XCTAssertTrue([issue.message hasPrefix:@"Slot “broken”: Height: "], @"%@", issue.message);
+  XCTAssertEqualObjects(issue.entryName, @"broken");
+}
+
+- (void)testASlotFormulaWithAnAliasIsChecked {
+  NSString *good = @"aliases:\n  gap: \"14\"\npositions:\n  padded: move screenOriginX+${gap};screenOriginY+${gap} screenSizeX-2*${gap};screenSizeY-2*${gap}\n";
+  XCTAssertEqualObjects([MWMConfigValidator validateSource:good].issues, @[]);
+}
+
+- (void)testSyntaxTheWindowDoesNotCheckIsLeftAlone {
+  NSString *source = @"positions:\n  odd: move screenOriginX;screenOriginY FUNCTION(screenSizeX,'abs');screenSizeY\n";
+  XCTAssertEqualObjects([MWMConfigValidator validateSource:source].issues, @[], @"the runtime accepts more than the window checks");
+}
+
 - (void)testValidConfig {
   NSString *source = [self configWithBindings:
     @"  - key: pad5\n    mods: ${hyper}\n    action: ${full}\n"

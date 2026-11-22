@@ -20,6 +20,7 @@
 #import "MWMConfig.h"
 #import "MWMConfigDocument.h"
 #import "MWMShortcut.h"
+#import "MWMFormula.h"
 
 @implementation MWMConfigIssue
 
@@ -92,6 +93,17 @@
       issue.entryName = setting.name;
       [issues addObject:issue];
     }
+  }
+
+  // Slot formulas are checked whether or not a shortcut uses them, without needing the real screens.
+  for (MWMConfigEntry *slot in doc.positions) {
+    NSString *text = [doc expandAliases:[slot.value description]];
+    if ([MWMFormula moveTextUsesUnsupportedSyntax:text]) continue;
+    NSString *problem = [MWMFormula errorForMoveText:text];
+    if (problem == nil) continue;
+    MWMConfigIssue *issue = [MWMConfigIssue issueWithError:YES message:[NSString stringWithFormat:@"Slot “%@”: %@", slot.name, problem] line:slot.line];
+    issue.entryName = slot.name;
+    [issues addObject:issue];
   }
 
   NSMutableDictionary<NSString *, NSNumber *> *seenHotkeys = [NSMutableDictionary dictionary];
