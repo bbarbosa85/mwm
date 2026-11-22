@@ -1,0 +1,36 @@
+name: Build
+
+# Builds the app and runs the tests on every pull request, and on master.
+on:
+  pull_request:
+  push:
+    branches: [master]
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # The project signs with the author's certificate, which CI doesn't have: sign ad hoc instead.
+      - name: Test
+        run: |
+          xcodebuild test -project MWM.xcodeproj -scheme MWM -destination 'platform=macOS' \
+            CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY=- DEVELOPMENT_TEAM= \
+            | tail -40
+
+      - name: Build a universal app
+        run: |
+          xcodebuild -project MWM.xcodeproj -scheme MWM -configuration Release \
+            -destination 'generic/platform=macOS' ONLY_ACTIVE_ARCH=NO \
+            -derivedDataPath build/DerivedData \
+            CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY=- DEVELOPMENT_TEAM= build
+          ditto -c -k --sequesterRsrc --keepParent build/DerivedData/Build/Products/Release/MWM.app MWM-ci.zip
+          lipo -archs build/DerivedData/Build/Products/Release/MWM.app/Contents/MacOS/MWM
+
+      - name: Keep the app from this build
+        uses: actions/upload-artifact@v4
+        with:
+          name: MWM-app
+          path: MWM-ci.zip
+          retention-days: 14

@@ -1,0 +1,719 @@
+//
+//  MWMConfig.m
+//  Slate
+//
+//  Created by Jigish Patel on 5/18/11.
+//  Copyright 2011 Jigish Patel. All rights reserved.
+//
+//  This program is free software: you can redistribute it and/or modify
+//  it under the terms of the GNU General Public License as published by
+//  the Free Software Foundation, either version 3 of the License, or
+//  (at your option) any later version.
+//
+//  This program is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//  GNU General Public License for more details.
+//
+//  You should have received a copy of the GNU General Public License
+//  along with this program.  If not, see http://www.gnu.org/licenses
+
+#import "Binding.h"
+#import "NSAlert+MWM.h"
+#import "Constants.h"
+#import "Layout.h"
+#import "LayoutOperation.h"
+#import "ScreenState.h"
+#import "ScreenWrapper.h"
+#import "MWMConfig.h"
+#import "MWMConfigDocument.h"
+#import "MWMDisplays.h"
+#import "MWMLegacyMigration.h"
+#import "StringTokenizer.h"
+#import "Snapshot.h"
+#import "SnapshotList.h"
+
+#import "MWMLogger.h"
+#import "NSFileManager+ApplicationSupport.h"
+#import "NSString+Indicies.h"
+#import "ActivateSnapshotOperation.h"
+#import "JSController.h"
+#import "Operation.h"
+#import "JSScreenWrapper.h"
+
+@implementation MWMConfig
+
+@synthesize configs;
+@synthesize configDefaults;
+@synthesize bindings;
+@synthesize modalBindings;
+@synthesize layouts;
+@synthesize defaultLayouts;
+@synthesize aliases;
+@synthesize snapshots;
+@synthesize appConfigs;
+
+static MWMConfig *_instance = nil;
+
++ (MWMConfig *)getInstance {
+  static dispatch_once_t onceToken;
+  dispatch_once(&onceToken, ^{
+    [ScreenWrapper updateStatics];
+    _instance = [[[MWMConfig class] alloc] init];
+  });
+  return _instance;
+}
+
+- (id)init {
+  self = [super init];
+  if (self) {
+    [self setupDefaultConfigs];
+    [self setBindings:[NSMutableArray arrayWithCapacity:10]];
+    [self setModalBindings:[NSMutableDictionary dictionary]];
+    [self setLayouts:[NSMutableDictionary dictionary]];
+    [self setDefaultLayouts:[NSMutableArray array]];
+    [self setAliases:[NSMutableDictionary dictionary]];
+    [self setSnapshots:[NSMutableDictionary dictionary]];
+    
+    // Listen for screen change notifications with Quartz
+    CGDisplayRegisterReconfigurationCallback(onDisplayReconfiguration, (__bridge void *)(self));
+    //[nc addObserver:self selector:@selector(processNotification:) name:nil object:nil];
+  }
+  return self;
+}
+
+- (BOOL)getBoolConfig:(NSString *)key {
+  return [[self getConfig:key] boolValue];
+}
+
+- (NSInteger)getIntegerConfig:(NSString *)key {
+  return [[self getConfig:key] integerValue];
+}
+
+- (double)getDoubleConfig:(NSString *)key {
+  return [[self getConfig:key] doubleValue];
+}
+
+- (float)getFloatConfig:(NSString *)key {
+  return [[self getConfig:key] floatValue];
+}
+
+- (NSArray *)getArrayConfig:(NSString *)key {
+  return [[self getConfig:key] componentsSeparatedByString:SEMICOLON];
+}
+
+- (NSString *)getConfig:(NSString *)key {
+  NSString *c = [configs objectForKey:key];
+  if ([c hasPrefix:@"_javascript_::"]) {
+    NSString *fkey = [c stringByReplacingOccurrencesOfString:@"_javascript_::" withString:@""];
+    id ret = [[JSController getInstance] runCallableFunction:fkey];
+    return [NSString stringWithFormat:@"%@", ret];
+  }
+  return c;
+}
+
+- (void)setConfig:(NSString *)key to:(NSString *)value {
+  [configs setObject:value forKey:key];
+}
+
+- (NSString *)getConfigDefault:(NSString *)key {
+  return [configDefaults objectForKey:key];
+}
+
+- (NSString *)getConfig:(NSString *)key app:(NSString *)app {
+  NSMutableDictionary *configsForApp = [appConfigs objectForKey:app];
+  if (configsForApp == nil) return [self getConfigDefault:key];
+  NSString *config = [configsForApp objectForKey:key];
+  if (config == nil) return [self getConfigDefault:key];
+  return config;
+}
+
++ (NSAlert *)warningAlertWithKeyEquivalents:(NSArray *)titles {
+  NSAlert *alert = [NSAlert mwm_alert];
+  [alert setAlertStyle:NSAlertStyleWarning];
+  for (NSString *title in titles) {
+    [[alert addButtonWithTitle:title] setKeyEquivalent:[[title substringToIndex: 1] lowercaseString]];
+  }
+  return alert;
+}
+
+- (BOOL)load {
+  MWMLogger(@"Loading config...");
+
+  // Reset configs and bindings in case we are calling from menu
+  [self setupDefaultConfigs];
+  [self setBindings:[[NSMutableArray alloc] initWithCapacity:10]];
+  [self setLayouts:[[NSMutableDictionary alloc] init]];
+  [self setDefaultLayouts:[[NSMutableArray alloc] init]];
+  [self setAliases:[[NSMutableDictionary alloc] init]];
+
+  // Converts ~/.slate, ~/.slate.js and ~/.slate.yml into ~/.mwm.yml. If the user postpones
+  // it or it fails, ~/.slate keeps loading below; ~/.slate.js never runs.
+  [MWMLegacyMigration runStartupMigration];
+  [MWMLegacyMigration runFormatMigration];
+
+  NSString *ymlPath = [MWMConfigDocument defaultPath];
+  BOOL hasYAML = [[NSFileManager defaultManager] fileExistsAtPath:ymlPath];
+  NSError *yamlError = nil;
+  BOOL loadedYAML = hasYAML && [self loadYAMLConfigAtPath:ymlPath error:&yamlError];
+  BOOL loadedDefault = [self loadConfigFileWithPath:@"~/.slate"];
+  if ([[NSFileManager defaultManager] fileExistsAtPath:[@"~/.slate.js" stringByExpandingTildeInPath]]) {
+    MWMLogger(@"  Ignoring ~/.slate.js: MWM no longer runs JavaScript configurations.");
+  }
+
+  if (yamlError != nil || (!loadedYAML && !loadedDefault)) {
+    NSString *message = yamlError ? @"~/.mwm.yml has an error" : @"Could not load ~/.mwm.yml";
+    MWMLogger(@"  ERROR %@: %@", message, [yamlError localizedDescription]);
+    NSAlert *alert = [MWMConfig warningAlertWithKeyEquivalents: [NSArray arrayWithObjects:@"Continue", @"Quit", @"Open configuration", nil]];
+    [alert setMessageText:message];
+    [alert setInformativeText:[NSString stringWithFormat:@"%@MWM will use %@. Choose Open configuration to %@.",
+                               yamlError ? [NSString stringWithFormat:@"%@\n\n", [yamlError localizedDescription]] : @"",
+                               loadedDefault ? @"only ~/.slate" : @"its default configuration",
+                               yamlError ? @"see the problem" : @"create ~/.mwm.yml from the defaults and edit it"]];
+    NSModalResponse response = [alert runModal];
+    if (response == NSAlertSecondButtonReturn) {
+      MWMLogger(@"User selected exit");
+      [NSApp terminate:nil];
+    } else if (response == NSAlertThirdButtonReturn) {
+      // After launch finishes, so the window opens on a fully set-up app.
+      [(NSObject *)[NSApp delegate] performSelector:@selector(configureMWM) withObject:nil afterDelay:0];
+    }
+    if (!loadedDefault) return [self loadConfigFileWithPath:[[NSBundle mainBundle] pathForResource:@"default" ofType:@"slate"]];
+  }
+
+  if (![self loadSnapshots]) {
+    MWMLogger(@"  ERROR Could not load %@", SNAPSHOTS_FILE);
+    NSAlert *alert = [MWMConfig warningAlertWithKeyEquivalents: [NSArray arrayWithObjects:@"Quit", @"Skip", nil]];
+    [alert setMessageText:[NSString stringWithFormat:@"ERROR Could not load %@", SNAPSHOTS_FILE]];
+    [alert setInformativeText:[NSString stringWithFormat:@"I dunno. Figure it out. Maybe try deleting %@", SNAPSHOTS_FILE]];
+    if ([alert runModal] == NSAlertFirstButtonReturn) {
+      MWMLogger(@"User selected exit");
+      [NSApp terminate:nil];
+    }
+    return NO;
+  }
+
+  if ([[MWMConfig getInstance] getBoolConfig:CHECK_DEFAULTS_ON_LOAD]) {
+    MWMLogger(@"Config loaded. Checking defaults...");
+    [self checkDefaults];
+    MWMLogger(@"Defaults loaded.");
+  } else {
+    MWMLogger(@"Config loaded.");
+  }
+
+  return YES;
+}
+
+- (BOOL)loadConfigFileWithPath:(NSString *)file {
+  if (file == nil) return NO;
+  NSString *configFile = file;
+  if ([file rangeOfString:SLASH].location != 0 && [file rangeOfString:TILDA].location != 0)
+    configFile = [NSString stringWithFormat:@"~/%@", file];
+  if ([configFile hasSuffix:EXT_JS]) {
+    // Configurations never run code; `source` of a .js file is ignored.
+    MWMLogger(@"  Not loading %@: MWM no longer runs JavaScript configurations.", configFile);
+    return NO;
+  }
+  NSError *err;
+  NSString *fileString = [NSString stringWithContentsOfFile:[configFile stringByExpandingTildeInPath] encoding:NSUTF8StringEncoding error:&err];
+  if (err == nil && fileString != nil && fileString != NULL) { return [self append:fileString]; }
+  return NO;
+}
+
+// Reads ~/.mwm.yml and registers its settings and bindings. Nothing in it is run.
+// What each screen role of the loaded config turned into, to notice when a
+// dock or undock changes it.
+static NSDictionary<NSString *, NSString *> *gLoadedRoleReferences = nil;
+
+static NSDictionary<NSString *, NSString *> *RoleReferencesForDocument(MWMConfigDocument *document) {
+  NSMutableDictionary *references = [NSMutableDictionary dictionary];
+  for (MWMConfigEntry *entry in document.monitors) {
+    NSString *value = [entry.value description];
+    if ([MWMDisplays isRole:value]) references[value] = [MWMDisplays referenceForValue:value];
+  }
+  return references;
+}
+
+- (BOOL)loadYAMLConfigAtPath:(NSString *)path error:(NSError **)error {
+  MWMConfigDocument *document = [MWMConfigDocument documentWithContentsOfFile:path error:error];
+  MWMResolvedConfig *resolved = [document resolve:error];
+  if (resolved == nil) return NO;
+  gLoadedRoleReferences = RoleReferencesForDocument(document);
+  MWMLogger(@"  Loading %@", path);
+  for (MWMConfigEntry *setting in resolved.settings) {
+    id value = setting.value;
+    NSString *text = [value isKindOfClass:[NSNumber class]] && CFGetTypeID((__bridge CFTypeRef)value) == CFBooleanGetTypeID()
+      ? ([value boolValue] ? @"true" : @"false")
+      : [NSString stringWithFormat:@"%@", value];
+    [configs setObject:text forKey:setting.name];
+  }
+  for (MWMResolvedBinding *binding in resolved.bindings) {
+    @try {
+      Binding *bind = [[Binding alloc] initWithString:[NSString stringWithFormat:@"bind %@ %@", binding.hotkey, binding.action]];
+      if (binding.repeat != nil) [bind setRepeat:[binding.repeat boolValue]];
+      [self addBinding:bind];
+    } @catch (NSException *ex) {
+      MWMLogger(@"   ERROR %@",[ex name]);
+      NSAlert *alert = [MWMConfig warningAlertWithKeyEquivalents: [NSArray arrayWithObjects:@"Quit", @"Skip", nil]];
+      [alert setMessageText:[ex name]];
+      [alert setInformativeText:[NSString stringWithFormat:@"~/.mwm.yml, binding #%lu: %@", (unsigned long)binding.index + 1, [ex reason]]];
+      if ([alert runModal] == NSAlertFirstButtonReturn) {
+        MWMLogger(@"User selected exit");
+        [NSApp terminate:nil];
+      }
+    }
+  }
+  return YES;
+}
+
+- (NSString *)stripComments:(NSString *)line {
+  if (line == nil) { return nil; }
+  NSString *theLine = [line stringByTrimmingCharactersInSet:[NSCharacterSet characterSetWithCharactersInString:WHITESPACE]];
+  if ([theLine length] == 0 || [theLine characterAtIndex:0] == COMMENT_CHARACTER) {
+    return nil;
+  }
+  NSInteger idx = [theLine indexOfChar:COMMENT_CHARACTER];
+  if (idx < 0) { return theLine; }
+  return [[theLine substringToIndex:idx] stringByTrimmingCharactersInSet:[NSCharacterSet characterSetWithCharactersInString:WHITESPACE]];
+}
+
+- (BOOL)addLayout:(NSString *)name dict:(NSDictionary *)dict {
+  Layout *l = [[Layout alloc] initWithName:(NSString *)name dict:dict];
+  if (l == nil) { return NO; }
+  [[self layouts] setObject:l forKey:name];
+  return YES;
+}
+
+- (void)addBinding:(Binding *)bind {
+  if ([bind modalKey] != nil) {
+    NSMutableArray *theBindings = [modalBindings objectForKey:[bind modalHashKey]];
+    if (theBindings == nil) theBindings = [NSMutableArray array];
+    [theBindings addObject:bind];
+    [modalBindings setObject:theBindings forKey:[bind modalHashKey]];
+  } else {
+    [bindings addObject:bind];
+  }
+}
+
+- (BOOL)append:(NSString *)configString {
+  if (configString == nil)
+    return NO;
+  NSArray *lines = [configString componentsSeparatedByString:@"\n"];
+
+  NSEnumerator *e = [lines objectEnumerator];
+  NSString *line = [e nextObject];
+  while (line) {
+    line = [self stripComments:line];
+    if (line == nil || [line length] == 0) { line = [e nextObject]; continue; }
+    @try {
+      line = [self replaceAliases:line];
+    } @catch (NSException *ex) {
+      MWMLogger(@"   ERROR %@",[ex name]);
+      NSAlert *alert = [MWMConfig warningAlertWithKeyEquivalents: [NSArray arrayWithObjects:@"Quit", @"Skip", nil]];
+      [alert setMessageText:[ex name]];
+      [alert setInformativeText:[ex reason]];
+      if ([alert runModal] == NSAlertFirstButtonReturn) {
+        MWMLogger(@"User selected exit");
+        [NSApp terminate:nil];
+      }
+    }
+    NSMutableArray *tokens = [[NSMutableArray alloc] initWithCapacity:10];
+    [StringTokenizer tokenize:line into:tokens];
+    if ([tokens count] >= 3 && [[tokens objectAtIndex:0] isEqualToString:CONFIG]) {
+      // config <key>[:<app>] <value>
+      MWMLogger(@"  LoadingC: %@",line);
+      NSArray *splitKey = [[tokens objectAtIndex:1] componentsSeparatedByString:@":"];
+      NSString *key = [splitKey count] > 1 ? [splitKey objectAtIndex:0] : [tokens objectAtIndex:1];
+      if ([configs objectForKey:key] == nil) {
+        MWMLogger(@"   ERROR Unrecognized config '%@'",[tokens objectAtIndex:1]);
+        NSAlert *alert = [MWMConfig warningAlertWithKeyEquivalents: [NSArray arrayWithObjects:@"Quit", @"Skip", nil]];
+        [alert setMessageText:[NSString stringWithFormat:@"Unrecognized Config '%@'",[tokens objectAtIndex:1]]];
+        [alert setInformativeText:line];
+        if ([alert runModal] == NSAlertFirstButtonReturn) {
+          MWMLogger(@"User selected exit");
+          [NSApp terminate:nil];
+        }
+      } else {
+        if ([splitKey count] > 1 && [[splitKey objectAtIndex:1] length] > 2) {
+          NSString *appName = [[splitKey objectAtIndex:1] substringWithRange:NSMakeRange(1, [[splitKey objectAtIndex:1] length] - 2)];
+          MWMLogger(@"    Found App Config for App: '%@' Key: %@", appName, key);
+          NSMutableDictionary *configsForApp = [appConfigs objectForKey:appName];
+          if (configsForApp == nil) { configsForApp = [NSMutableDictionary dictionary]; }
+          [configsForApp setObject:[tokens objectAtIndex:2] forKey:key];
+          [appConfigs setObject:configsForApp forKey:appName];
+        } else {
+          [configs setObject:[tokens objectAtIndex:2] forKey:[tokens objectAtIndex:1]];
+        }
+      }
+    } else if ([tokens count] >= 3 && [[tokens objectAtIndex:0] isEqualToString:BIND]) {
+      // bind <key:modifiers|modal-key> <op> <parameters>
+      @try {
+        MWMLogger(@"  LoadingB: %@",line);
+        Binding *bind = [[Binding alloc] initWithString:line];
+        [self addBinding:bind];
+      } @catch (NSException *ex) {
+        MWMLogger(@"   ERROR %@",[ex name]);
+        NSAlert *alert = [MWMConfig warningAlertWithKeyEquivalents: [NSArray arrayWithObjects:@"Quit", @"Skip", nil]];
+        [alert setMessageText:[ex name]];
+        [alert setInformativeText:[ex reason]];
+        if ([alert runModal] == NSAlertFirstButtonReturn) {
+          MWMLogger(@"User selected exit");
+          [NSApp terminate:nil];
+        }
+      }
+    } else if ([tokens count] >= 4 && [[tokens objectAtIndex:0] isEqualToString:LAYOUT]) {
+      // layout <name> <app name> <op+params> (| <op+params>)*
+      @try {
+        if ([layouts objectForKey:[tokens objectAtIndex:1]] == nil) {
+          Layout *layout = [[Layout alloc] initWithString:line];
+          MWMLogger(@"  LoadingL: %@",line);
+          [layouts setObject:layout forKey:[layout name]];
+        } else {
+          Layout *layout = [layouts objectForKey:[tokens objectAtIndex:1]];
+          [layout addWithString:line];
+          MWMLogger(@"  LoadingL: %@",line);
+        }
+      } @catch (NSException *ex) {
+        MWMLogger(@"   ERROR %@",[ex name]);
+        NSAlert *alert = [MWMConfig warningAlertWithKeyEquivalents: [NSArray arrayWithObjects:@"Quit", @"Skip", nil]];
+        [alert setMessageText:[ex name]];
+        [alert setInformativeText:[ex reason]];
+        if ([alert runModal] == NSAlertFirstButtonReturn) {
+          MWMLogger(@"User selected exit");
+          [NSApp terminate:nil];
+        }
+      }
+    } else if ([tokens count] >= 3 && [[tokens objectAtIndex:0] isEqualToString:DEFAULT]) {
+      // default <name> <screen-setup>
+      @try {
+        ScreenState *state = [[ScreenState alloc] initWithString:line];
+        if (state == nil) {
+          MWMLogger(@"   ERROR Loading default layout");
+          NSAlert *alert = [MWMConfig warningAlertWithKeyEquivalents: [NSArray arrayWithObjects:@"Quit", @"Skip", nil]];
+          [alert setMessageText:@"Error loading default layout"];
+          [alert setInformativeText:line];
+          if ([alert runModal] == NSAlertFirstButtonReturn) {
+            MWMLogger(@"User selected exit");
+            [NSApp terminate:nil];
+          }
+        } else {
+          [defaultLayouts addObject:state];
+          MWMLogger(@"  LoadingDL: %@",line);
+        }
+      } @catch (NSException *ex) {
+        MWMLogger(@"   ERROR %@",[ex name]);
+        NSAlert *alert = [MWMConfig warningAlertWithKeyEquivalents: [NSArray arrayWithObjects:@"Quit", @"Skip", nil]];
+        [alert setMessageText:[ex name]];
+        [alert setInformativeText:[ex reason]];
+        if ([alert runModal] == NSAlertFirstButtonReturn) {
+          MWMLogger(@"User selected exit");
+          [NSApp terminate:nil];
+        }
+      }
+    } else if ([tokens count] >= 3 && [[tokens objectAtIndex:0] isEqualToString:ALIAS]) {
+      // alias <name> <value>
+      @try {
+        [self addAlias:line];
+        MWMLogger(@"  LoadingA: %@",line);
+      } @catch (NSException *ex) {
+        MWMLogger(@"   ERROR %@",[ex name]);
+        NSAlert *alert = [MWMConfig warningAlertWithKeyEquivalents: [NSArray arrayWithObjects:@"Quit", @"Skip", nil]];
+        [alert setMessageText:[ex name]];
+        [alert setInformativeText:[ex reason]];
+        if ([alert runModal] == NSAlertFirstButtonReturn) {
+          MWMLogger(@"User selected exit");
+          [NSApp terminate:nil];
+        }
+      }
+    } else if ([tokens count] >= 2 && [[tokens objectAtIndex:0] isEqualToString:SOURCE]) {
+      // source filename optional:if_exists
+      MWMLogger(@"  LoadingS: %@",line);
+      if (![self loadConfigFileWithPath:[tokens objectAtIndex:1]]) {
+        if ([tokens count] >= 3 && [[tokens objectAtIndex:2] isEqualToString:IF_EXISTS]) {
+          MWMLogger(@"   Could not find file '%@' but that's ok. User specified if_exists.",[tokens objectAtIndex:1]);
+        } else {
+          MWMLogger(@"   ERROR Sourcing file '%@'",[tokens objectAtIndex:1]);
+          NSAlert *alert = [MWMConfig warningAlertWithKeyEquivalents: [NSArray arrayWithObjects:@"Quit", @"Skip", nil]];
+          [alert setMessageText:[NSString stringWithFormat:@"ERROR Sourcing file '%@'",[tokens objectAtIndex:1]]];
+          [alert setInformativeText:@"I dunno. Figure it out."];
+          if ([alert runModal] == NSAlertFirstButtonReturn) {
+            MWMLogger(@"User selected exit");
+            [NSApp terminate:nil];
+          }
+        }
+      }
+    }
+    line = [e nextObject];
+  }
+  return YES;
+}
+
+- (void)addDefault:(id)screenConfig layout:(id)layout {
+  ScreenState *state = [[ScreenState alloc] initWithConfig:screenConfig layout:layout];
+  if (state == nil) return;
+  [defaultLayouts addObject:state];
+}
+
+- (void)snapshotsFromDictionary:(NSDictionary *)snapshotsDict {
+  NSArray *keys = [snapshotsDict allKeys];
+  for (NSString *name in keys) {
+    SnapshotList *list = [SnapshotList snapshotListFromDictionary:[snapshotsDict objectForKey:name]];
+    [snapshots setObject:list forKey:[list name]];
+  }
+}
+
+- (BOOL)loadSnapshots {
+  NSData *fileData = [NSData dataWithContentsOfURL:[MWMConfig snapshotsFile]];
+  if (fileData == nil || [fileData length] == 0)
+    return YES;
+  NSError *jsonErr = nil;
+  id iShouldBeADictionary = [NSJSONSerialization JSONObjectWithData:fileData options:0 error:&jsonErr];
+  if (jsonErr != nil || ![iShouldBeADictionary isKindOfClass:[NSDictionary class]]) return NO;
+  NSDictionary *snapshotsDict = iShouldBeADictionary;
+  [self snapshotsFromDictionary:snapshotsDict];
+  return YES;
+}
+
+- (void)addAlias:(NSString *)line {
+  NSMutableArray *tokens = [[NSMutableArray alloc] initWithCapacity:10];
+  [StringTokenizer tokenize:line into:tokens maxTokens:3];
+  [aliases setObject:[tokens objectAtIndex:2] forKey:[NSString stringWithFormat:@"${%@}",[tokens objectAtIndex:1]]];
+}
+
+- (NSString *)replaceAliases:(NSString *)line {
+  NSArray *aliasNames = [aliases allKeys];
+  for (NSInteger i = 0; i < [aliasNames count]; i++) {
+    line = [line stringByReplacingOccurrencesOfString:[aliasNames objectAtIndex:i] withString:[aliases objectForKey:[aliasNames objectAtIndex:i]]];
+  }
+  if ([line rangeOfString:@"${"].length > 0) {
+    @throw([NSException exceptionWithName:@"Unrecognized Alias" reason:[NSString stringWithFormat:@"Unrecognized alias in '%@'", line] userInfo:nil]);
+  }
+  return line;
+}
+
+/*- (void)processNotification:(id)notification {
+  MWMLogger(@"Notification: %@", notification);
+  MWMLogger(@"Notification Name: <%@>", [notification name]);
+}*/
+
+- (void)activateLayoutOrSnapshot:(id)name {
+  if ([name isKindOfClass:[Operation class]]) {
+    [name doOperation];
+  } else if ([layouts objectForKey:name] != nil) {
+    [LayoutOperation activateLayout:name];
+  } else if ([snapshots objectForKey:name] != nil) {
+    [ActivateSnapshotOperation activateSnapshot:name remove:NO];
+  }
+}
+
+- (void)checkDefaults {
+  ScreenWrapper *sw = [[ScreenWrapper alloc] init];
+  NSInteger screenCount = [sw getScreenCount];
+  NSMutableArray *resolutions = [[NSMutableArray alloc] initWithCapacity:10];
+  [sw getScreenResolutionStrings:resolutions];
+  [resolutions sortUsingSelector:@selector(compare:)];
+  for (NSInteger i = 0; i < [defaultLayouts count]; i++) {
+    ScreenState *state = [defaultLayouts objectAtIndex:i];
+    // Check count
+    if ([state type] == TYPE_COUNT && [state count] == screenCount) {
+      MWMLogger(@"onScreenChange count found");
+      [self activateLayoutOrSnapshot:[state layout]];
+      break;
+    }
+    // Check resolutions
+    if ([resolutions count] == [[state resolutions] count]) {
+      MWMLogger(@"onScreenChange resolution counts equal. Check %@ vs %@",resolutions,[state resolutions]);
+      BOOL isEqual = YES;
+      for (NSInteger j = 0; j < [resolutions count]; j++) {
+        if (![[resolutions objectAtIndex:j] isEqualToString:[[state resolutions] objectAtIndex:j]]) {
+          isEqual = NO;
+          break;
+        }
+      }
+      if (isEqual) {
+        MWMLogger(@"onScreenChange resolution found");
+        [self activateLayoutOrSnapshot:[state layout]];
+        break;
+      }
+    }
+  }
+
+}
+
+// Screen roles are turned into screen numbers when the config loads, so docking
+// or undocking means loading it again, which MWM does by restarting.
+- (void)relaunchIfScreenRolesChanged {
+  if ([gLoadedRoleReferences count] == 0) return;
+  for (NSString *role in gLoadedRoleReferences) {
+    if ([[MWMDisplays referenceForValue:role] isEqualToString:gLoadedRoleReferences[role]]) continue;
+    MWMLogger(@"Screens changed for %@: restarting to load the config again", role);
+    gLoadedRoleReferences = nil;  // once is enough
+    [NSApp sendAction:NSSelectorFromString(@"relaunch") to:[NSApp delegate] from:nil];
+    return;
+  }
+}
+
+- (void)onScreenChange:(id)notification {
+  MWMLogger(@"onScreenChange");
+  if (![ScreenWrapper hasScreenConfigChanged]) return;
+  [self relaunchIfScreenRolesChanged];
+  [self checkDefaults];
+  [[JSController getInstance] runCallbacks:@"screenConfigurationChanged" payload:nil];
+}
+
+- (NSDictionary *)snapshotsToDictionary {
+  NSMutableDictionary *snapshotDict = [NSMutableDictionary dictionary];
+  NSArray *keys = [snapshots allKeys];
+  for (NSString *name in keys) {
+    SnapshotList *list = [snapshots objectForKey:name];
+    if (![list saveToDisk]) continue;
+    [snapshotDict setObject:[list toDictionary] forKey:name];
+  }
+  return snapshotDict;
+}
+
+- (void)saveSnapshots {
+  // Build NSDictionary with snapshots
+  NSDictionary *snapshotDict = [self snapshotsToDictionary];
+
+  // Get NSData from NSDictionary
+  NSError *jsonErr = nil;
+  NSData *jsonData = [NSJSONSerialization dataWithJSONObject:snapshotDict options:0 error:&jsonErr];
+
+  // Save NSData to file
+  if (jsonData != nil && jsonErr == nil) {
+    [jsonData writeToURL:[MWMConfig snapshotsFile] atomically:YES];
+  }
+}
+
+- (void)addSnapshot:(Snapshot *)snapshot name:(NSString *)name saveToDisk:(BOOL)saveToDisk isStack:(BOOL)isStack stackSize:(NSUInteger)stackSize {
+  SnapshotList *list = [snapshots objectForKey:name];
+  if (list == nil) {
+    list = [[SnapshotList alloc] initWithName:name saveToDisk:saveToDisk isStack:isStack];
+  } else {
+    [list setName:name];
+    [list setSaveToDisk:saveToDisk];
+    [list setIsStack:isStack];
+  }
+  [list addSnapshot:snapshot];
+  [snapshots setObject:list forKey:name];
+
+  [self saveSnapshots];
+  [self announceSnapshotsChanged:name];
+}
+
+- (void)deleteSnapshot:(NSString *)name pop:(BOOL)pop {
+  if (pop) {
+    SnapshotList *list = [snapshots objectForKey:name];
+    if (list) {
+      [list popSnapshot:YES];
+    }
+  } else {
+    [snapshots removeObjectForKey:name];
+  }
+
+  [self saveSnapshots];
+  [self announceSnapshotsChanged:name];
+}
+
+// A page showing snapshots refreshes itself. The engine's own undo history isn't one of them.
+- (void)announceSnapshotsChanged:(NSString *)name {
+  if ([name hasPrefix:@"_internal_"]) return;
+  dispatch_async(dispatch_get_main_queue(), ^{ [[NSNotificationCenter defaultCenter] postNotificationName:@"MWMSnapshotsDidChangeNotification" object:nil]; });
+}
+
+- (Snapshot *)popSnapshot:(NSString *)name remove:(BOOL)remove {
+  SnapshotList *list = [snapshots objectForKey:name];
+  Snapshot *snapshot = nil;
+  if (list) {
+    snapshot = [list popSnapshot:remove];
+  }
+  [self saveSnapshots];
+  return snapshot;
+}
+
+- (void)setupDefaultConfigs {
+  [self setConfigDefaults:[NSMutableDictionary dictionaryWithCapacity:10]];
+  [configDefaults setObject:DEFAULT_TO_CURRENT_SCREEN_DEFAULT forKey:DEFAULT_TO_CURRENT_SCREEN];
+  [configDefaults setObject:NUDGE_PERCENT_OF_DEFAULT forKey:NUDGE_PERCENT_OF];
+  [configDefaults setObject:RESIZE_PERCENT_OF_DEFAULT forKey:RESIZE_PERCENT_OF];
+  [configDefaults setObject:REPEAT_ON_HOLD_OPS_DEFAULT forKey:REPEAT_ON_HOLD_OPS];
+  [configDefaults setObject:SECONDS_BEFORE_REPEAT_DEFAULT forKey:SECONDS_BEFORE_REPEAT];
+  [configDefaults setObject:SECONDS_BETWEEN_REPEAT_DEFAULT forKey:SECONDS_BETWEEN_REPEAT];
+  [configDefaults setObject:CHECK_DEFAULTS_ON_LOAD_DEFAULT forKey:CHECK_DEFAULTS_ON_LOAD];
+  [configDefaults setObject:FOCUS_CHECK_WIDTH_DEFAULT forKey:FOCUS_CHECK_WIDTH];
+  [configDefaults setObject:FOCUS_CHECK_WIDTH_MAX_DEFAULT forKey:FOCUS_CHECK_WIDTH_MAX];
+  [configDefaults setObject:FOCUS_PREFER_SAME_APP_DEFAULT forKey:FOCUS_PREFER_SAME_APP];
+  [configDefaults setObject:ORDER_SCREENS_LEFT_TO_RIGHT_DEFAULT forKey:ORDER_SCREENS_LEFT_TO_RIGHT];
+  [configDefaults setObject:WINDOW_HINTS_BACKGROUND_COLOR_DEFAULT forKey:WINDOW_HINTS_BACKGROUND_COLOR];
+  [configDefaults setObject:WINDOW_HINTS_FONT_COLOR_DEFAULT forKey:WINDOW_HINTS_FONT_COLOR];
+  [configDefaults setObject:WINDOW_HINTS_FONT_NAME_DEFAULT forKey:WINDOW_HINTS_FONT_NAME];
+  [configDefaults setObject:WINDOW_HINTS_FONT_SIZE_DEFAULT forKey:WINDOW_HINTS_FONT_SIZE];
+  [configDefaults setObject:WINDOW_HINTS_HEIGHT_DEFAULT forKey:WINDOW_HINTS_HEIGHT];
+  [configDefaults setObject:WINDOW_HINTS_WIDTH_DEFAULT forKey:WINDOW_HINTS_WIDTH];
+  [configDefaults setObject:WINDOW_HINTS_DURATION_DEFAULT forKey:WINDOW_HINTS_DURATION];
+  [configDefaults setObject:WINDOW_HINTS_ROUNDED_CORNER_SIZE_DEFAULT forKey:WINDOW_HINTS_ROUNDED_CORNER_SIZE];
+  [configDefaults setObject:WINDOW_HINTS_IGNORE_HIDDEN_WINDOWS_DEFAULT forKey:WINDOW_HINTS_IGNORE_HIDDEN_WINDOWS];
+  [configDefaults setObject:WINDOW_HINTS_TOP_LEFT_X_DEFAULT forKey:WINDOW_HINTS_TOP_LEFT_X];
+  [configDefaults setObject:WINDOW_HINTS_TOP_LEFT_Y_DEFAULT forKey:WINDOW_HINTS_TOP_LEFT_Y];
+  [configDefaults setObject:WINDOW_HINTS_ORDER_DEFAULT forKey:WINDOW_HINTS_ORDER];
+  [configDefaults setObject:WINDOW_HINTS_SHOW_ICONS_DEFAULT forKey:WINDOW_HINTS_SHOW_ICONS];
+  [configDefaults setObject:WINDOW_HINTS_ICON_ALPHA_DEFAULT forKey:WINDOW_HINTS_ICON_ALPHA];
+  [configDefaults setObject:WINDOW_HINTS_SPREAD_DEFAULT forKey:WINDOW_HINTS_SPREAD];
+  [configDefaults setObject:WINDOW_HINTS_SPREAD_SEARCH_WIDTH_DEFAULT forKey:WINDOW_HINTS_SPREAD_SEARCH_WIDTH];
+  [configDefaults setObject:WINDOW_HINTS_SPREAD_SEARCH_HEIGHT_DEFAULT forKey:WINDOW_HINTS_SPREAD_SEARCH_HEIGHT];
+  [configDefaults setObject:WINDOW_HINTS_SPREAD_PADDING_DEFAULT forKey:WINDOW_HINTS_SPREAD_PADDING];
+  [configDefaults setObject:SWITCH_ICON_SIZE_DEFAULT forKey:SWITCH_ICON_SIZE];
+  [configDefaults setObject:SWITCH_ICON_PADDING_DEFAULT forKey:SWITCH_ICON_PADDING];
+  [configDefaults setObject:SWITCH_BACKGROUND_COLOR_DEFAULT forKey:SWITCH_BACKGROUND_COLOR];
+  [configDefaults setObject:SWITCH_SELECTED_BACKGROUND_COLOR_DEFAULT forKey:SWITCH_SELECTED_BACKGROUND_COLOR];
+  [configDefaults setObject:SWITCH_SELECTED_BORDER_COLOR_DEFAULT forKey:SWITCH_SELECTED_BORDER_COLOR];
+  [configDefaults setObject:SWITCH_SELECTED_BORDER_SIZE_DEFAULT forKey:SWITCH_SELECTED_BORDER_SIZE];
+  [configDefaults setObject:SWITCH_ROUNDED_CORNER_SIZE_DEFAULT forKey:SWITCH_ROUNDED_CORNER_SIZE];
+  [configDefaults setObject:SWITCH_ORIENTATION_DEFAULT forKey:SWITCH_ORIENTATION];
+  [configDefaults setObject:SWITCH_SECONDS_BETWEEN_REPEAT_DEFAULT forKey:SWITCH_SECONDS_BETWEEN_REPEAT];
+  [configDefaults setObject:SWITCH_SECONDS_BEFORE_REPEAT_DEFAULT forKey:SWITCH_SECONDS_BEFORE_REPEAT];
+  [configDefaults setObject:SWITCH_STOP_REPEAT_AT_EDGE_DEFAULT forKey:SWITCH_STOP_REPEAT_AT_EDGE];
+  [configDefaults setObject:SWITCH_ONLY_FOCUS_MAIN_WINDOW_DEFAULT forKey:SWITCH_ONLY_FOCUS_MAIN_WINDOW];
+  [configDefaults setObject:SWITCH_FONT_COLOR_DEFAULT forKey:SWITCH_FONT_COLOR];
+  [configDefaults setObject:SWITCH_FONT_SIZE_DEFAULT forKey:SWITCH_FONT_SIZE];
+  [configDefaults setObject:SWITCH_FONT_NAME_DEFAULT forKey:SWITCH_FONT_NAME];
+  [configDefaults setObject:SWITCH_SHOW_TITLES_DEFAULT forKey:SWITCH_SHOW_TITLES];
+  [configDefaults setObject:SWITCH_TYPE_DEFAULT forKey:SWITCH_TYPE];
+  [configDefaults setObject:SWITCH_SELECTED_PADDING_DEFAULT forKey:SWITCH_SELECTED_PADDING];
+  [configDefaults setObject:KEYBOARD_LAYOUT_DEFAULT forKey:KEYBOARD_LAYOUT];
+  [configDefaults setObject:SNAPSHOT_TITLE_MATCH_DEFAULT forKey:SNAPSHOT_TITLE_MATCH];
+  [configDefaults setObject:GRID_BACKGROUND_COLOR_DEFAULT forKey:GRID_BACKGROUND_COLOR];
+  [configDefaults setObject:GRID_ROUNDED_CORNER_SIZE_DEFAULT forKey:GRID_ROUNDED_CORNER_SIZE];
+  [configDefaults setObject:GRID_CELL_BACKGROUND_COLOR_DEFAULT forKey:GRID_CELL_BACKGROUND_COLOR];
+  [configDefaults setObject:GRID_CELL_SELECTED_COLOR_DEFAULT forKey:GRID_CELL_SELECTED_COLOR];
+  [configDefaults setObject:GRID_CELL_ROUNDED_CORNER_SIZE_DEFAULT forKey:GRID_CELL_ROUNDED_CORNER_SIZE];
+  [configDefaults setObject:LAYOUT_FOCUS_ON_ACTIVATE_DEFAULT forKey:LAYOUT_FOCUS_ON_ACTIVATE];
+  [configDefaults setObject:SNAPSHOT_MAX_STACK_SIZE_DEFAULT forKey:SNAPSHOT_MAX_STACK_SIZE];
+  [configDefaults setObject:UNDO_MAX_STACK_SIZE_DEFAULT forKey:UNDO_MAX_STACK_SIZE];
+  [configDefaults setObject:UNDO_OPS_DEFAULT forKey:UNDO_OPS];
+  [configDefaults setObject:MODAL_ESCAPE_KEY_DEFAULT forKey:MODAL_ESCAPE_KEY];
+  [configDefaults setObject:JS_RECEIVE_MOVE_EVENT_DEFAULT forKey:JS_RECEIVE_MOVE_EVENT];
+  [configDefaults setObject:JS_RECEIVE_RESIZE_EVENT_DEFAULT forKey:JS_RECEIVE_RESIZE_EVENT];
+  [self setConfigs:[NSMutableDictionary dictionary]];
+  [self setAppConfigs:[NSMutableDictionary dictionary]];
+  [configs setValuesForKeysWithDictionary:configDefaults];
+}
+
++ (NSURL *)snapshotsFile {
+  NSFileManager *sharedFM = [NSFileManager defaultManager];
+  NSURL *appSupportDir = [sharedFM applicationSupportDirectory];
+  NSURL *snapshotsFile = nil;
+  if (appSupportDir) {
+    snapshotsFile = [appSupportDir URLByAppendingPathComponent:SNAPSHOTS_FILE];
+  }
+  MWMLogger(@"TEST ------------- %@", [snapshotsFile absoluteString]);
+  return snapshotsFile;
+}
+
+@end
+
+void onDisplayReconfiguration (CGDirectDisplayID display, CGDisplayChangeSummaryFlags flags, void *userInfo) {
+    MWMLogger(@"onDisplayReconfiguration");
+    [(__bridge id)userInfo onScreenChange:nil];
+}

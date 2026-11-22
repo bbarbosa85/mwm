@@ -1,6 +1,6 @@
 # Classic Configuration Guide (`.slate`)
 
-Slate is configured using a plain-text configuration file located at `~/.slate`. If no `~/.slate` or `~/.slate.js` is found upon launch, Slate loads its built-in fallback configuration ([`Slate/default.slate`](file:///Users/brunobarbosa/Projetos/mwm/mwm/Slate/default.slate)).
+Slate is configured using a plain-text configuration file located at `~/.slate`. If no `~/.slate` or `~/.slate.js` is found upon launch, Slate loads its built-in fallback configuration ([`MWM/default.slate`](file:///Users/brunobarbosa/Projetos/mwm/mwm/MWM/default.slate)).
 
 ---
 

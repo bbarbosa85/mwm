@@ -6,17 +6,19 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
 CONFIGURATION="${1:-Release}"
-DMG_NAME="MWM.dmg"
+# Files carry the version: MWM-1.0.dmg, from CFBundleShortVersionString in MWM-Info.plist.
+VERSION="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$(dirname "$0")/../MWM/App/MWM-Info.plist")"
+DMG_NAME="MWM-${VERSION}.dmg"
 OUTPUT_DIR="${ROOT_DIR}/build"
 STAGING_DIR="/tmp/mwm_dmg_staging_$$"
 
 echo "==> Building MWM (${CONFIGURATION})..."
 cd "${ROOT_DIR}"
 # A universal app (Apple silicon and Intel), installed into its own folder so it never replaces the
-# development build that the tests and "script/screens" use (tmp/Slate.dst).
+# development build that the tests and "script/screens" use (tmp/MWM.dst).
 RELEASE_DST="/tmp/MWMRelease.dst"
 rm -rf "${RELEASE_DST}"
-xcodebuild -scheme Slate \
+xcodebuild -scheme MWM \
            -configuration "${CONFIGURATION}" \
            -destination 'generic/platform=macOS' \
            -derivedDataPath /tmp/MWMDerivedData \
@@ -64,15 +66,20 @@ hdiutil create -volname "MWM" \
                "${DMG_PATH}"
 
 # The same signed app as a zip, and checksums for both.
-ZIP_PATH="${OUTPUT_DIR}/MWM.zip"
+ZIP_PATH="${OUTPUT_DIR}/MWM-${VERSION}.zip"
 rm -f "${ZIP_PATH}"
 ditto -c -k --sequesterRsrc --keepParent "${STAGING_DIR}/MWM.app" "${ZIP_PATH}"
-(cd "${OUTPUT_DIR}" && shasum -a 256 MWM.dmg MWM.zip > SHA256SUMS.txt)
+(cd "${OUTPUT_DIR}" && shasum -a 256 "${DMG_NAME}" "$(basename "${ZIP_PATH}")" > SHA256SUMS.txt)
 
 # The product page serves the files from docs/downloads (GitHub Pages), so they are copied there.
 DOWNLOADS="$(dirname "$0")/../docs/downloads"
 mkdir -p "${DOWNLOADS}"
-cp "${DMG_PATH}" "${ZIP_PATH}" "${OUTPUT_DIR}/SHA256SUMS.txt" "${DOWNLOADS}/"
+cp "${DMG_PATH}" "${ZIP_PATH}" "${DOWNLOADS}/"
+cp "${OUTPUT_DIR}/SHA256SUMS.txt" "${DOWNLOADS}/SHA256SUMS.txt"
+# ...and the page's download links are pointed at them.
+for page in index.html docs.html; do
+  sed -i '' -E "s#downloads/MWM[-0-9.]*\.(dmg|zip)#downloads/MWM-${VERSION}.\1#g" "$(dirname "$0")/../docs/${page}"
+done
 
 rm -rf "${STAGING_DIR}"
 

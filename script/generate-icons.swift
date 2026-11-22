@@ -6,8 +6,8 @@
 //  Draws MWM's icons, so they can be changed and regenerated instead of
 //  edited as binary files:
 //
-//    swift script/generate-icons.swift Slate/Resources
-//    swift script/generate-icons.swift Slate/Resources --preview /tmp/mwm-preview
+//    swift script/generate-icons.swift MWM/Resources
+//    swift script/generate-icons.swift MWM/Resources --preview /tmp/mwm-preview
 //
 //  Writes icon.icns (the app icon), status.pdf and statusActive.pdf (the menu
 //  bar symbol, as template images). With --preview it also writes PNGs to look at.

@@ -8,7 +8,7 @@ Slate's JavaScript runtime (`~/.slate.js`) offered programmatic scripting, dynam
 
 ## 1. Runtime Architecture
 
-Slate embeds WebKit's JavaScript engine through a headless `WebView` managed by [`JSController`](file:///Users/brunobarbosa/Projetos/mwm/mwm/Slate/JSController.m).
+Slate embeds WebKit's JavaScript engine through a headless `WebView` managed by [`JSController`](file:///Users/brunobarbosa/Projetos/mwm/mwm/MWM/JSController.m).
 
 ```mermaid
 flowchart LR
@@ -19,10 +19,10 @@ flowchart LR
 ```
 
 When initializing, Slate loads:
-1. **[`underscore.js`](file:///Users/brunobarbosa/Projetos/mwm/mwm/Slate/underscore.js)**: Full Underscore.js utility library (`_`).
-2. **[`utils.js`](file:///Users/brunobarbosa/Projetos/mwm/mwm/Slate/utils.js)**: Helper functions for type checking and array/dictionary conversion.
+1. **[`underscore.js`](file:///Users/brunobarbosa/Projetos/mwm/mwm/MWM/underscore.js)**: Full Underscore.js utility library (`_`).
+2. **[`utils.js`](file:///Users/brunobarbosa/Projetos/mwm/mwm/MWM/utils.js)**: Helper functions for type checking and array/dictionary conversion.
 3. **`Scripting/managed-config.js`**: Resolves the managed `config` object used by `slate.applyConfig` (see section 6).
-4. **[`initialize.js`](file:///Users/brunobarbosa/Projetos/mwm/mwm/Slate/initialize.js)**: Creates the global `slate` (and shorthand `S`) object, binds methods, and connects callbacks.
+4. **[`initialize.js`](file:///Users/brunobarbosa/Projetos/mwm/mwm/MWM/initialize.js)**: Creates the global `slate` (and shorthand `S`) object, binds methods, and connects callbacks.
 
 ---
 
