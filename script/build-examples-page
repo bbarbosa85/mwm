@@ -179,7 +179,7 @@ page = f"""<!doctype html>
 <pre><code>cp ~/.mwm.yml ~/.mwm.yml.backup    # only if you already have one
 mv ~/Downloads/starter.mwm.yml ~/.mwm.yml</code></pre>
         <p class="sub">Or in Finder: <b>Go → Go to Folder…</b>, type <code>~</code>, and drag the file in. Files that start with a dot are hidden; <kbd>⌘</kbd><kbd>⇧</kbd><kbd>.</kbd> shows them.</p></div></li>
-      <li><div><p><b>Open MWM and press Apply.</b> Choose <b>Configure MWM…</b> from the menu bar, then <b>Apply</b>. Now change the app and screen names to yours, right in the app.</p>
+      <li><div><p><b>Open MWM and press Apply and Restart.</b> Choose <b>Configure MWM…</b> from the menu bar, then <b>Apply and Restart</b>. Now change the app and screen names to yours, right in the app.</p>
         <p class="sub">More help in the <a href="docs.html#first-shortcut">documentation</a>.</p></div></li>
     </ol>
     <p style="margin:16px 0 0"><a class="btn small" href="examples/mwm-examples.zip" download>Download all {len(examples)} as a zip</a></p>

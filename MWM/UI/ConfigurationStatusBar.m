@@ -25,6 +25,7 @@ static const CGFloat kBarHeight = 44;
 @property (strong) NSImageView *savedIcon;
 @property (strong) NSTextField *savedLabel;
 @property (strong, readwrite) NSButton *statusButton;
+@property (strong, readwrite) NSButton *saveButton;
 @end
 
 @implementation ConfigurationStatusBar
@@ -63,7 +64,12 @@ static const CGFloat kBarHeight = 44;
     [[self.statusButton cell] setLineBreakMode:NSLineBreakByTruncatingTail];
     [self.statusButton setContentCompressionResistancePriority:NSLayoutPriorityDefaultLow forOrientation:NSLayoutConstraintOrientationHorizontal];
 
-    NSButton *apply = [NSButton buttonWithTitle:@"Apply" target:target action:@selector(apply:)];
+    self.saveButton = [NSButton buttonWithTitle:@"Save" target:target action:@selector(saveDocument:)];
+    [self.saveButton setTranslatesAutoresizingMaskIntoConstraints:NO];
+    [self.saveButton setKeyEquivalent:@"s"];
+    [self.saveButton setKeyEquivalentModifierMask:NSEventModifierFlagCommand];
+    [self.saveButton setToolTip:@"Save ~/.mwm.yml without restarting MWM (⌘S)"];
+    NSButton *apply = [NSButton buttonWithTitle:@"Apply and Restart" target:target action:@selector(apply:)];
     [apply setTranslatesAutoresizingMaskIntoConstraints:NO];
     [apply setBezelColor:[MWMTheme accent]];
     [apply setToolTip:@"Close and restart MWM to apply ~/.mwm.yml"];
@@ -73,7 +79,7 @@ static const CGFloat kBarHeight = 44;
     [close setKeyEquivalentModifierMask:NSEventModifierFlagCommand];
     [close setToolTip:@"Close this window (⌘W)"];
 
-    for (NSView *view in @[separator, self.savedIcon, self.savedLabel, pathLabel, self.statusButton, apply, close]) {
+    for (NSView *view in @[separator, self.savedIcon, self.savedLabel, pathLabel, self.statusButton, self.saveButton, apply, close]) {
       [self addSubview:view];
     }
 
@@ -99,11 +105,18 @@ static const CGFloat kBarHeight = 44;
 
       [close.trailingAnchor constraintEqualToAnchor:self.trailingAnchor constant:-14],
       [close.centerYAnchor constraintEqualToAnchor:self.centerYAnchor],
-      [apply.trailingAnchor constraintEqualToAnchor:close.leadingAnchor constant:-8],
+      [self.saveButton.trailingAnchor constraintEqualToAnchor:close.leadingAnchor constant:-8],
+      [self.saveButton.centerYAnchor constraintEqualToAnchor:self.centerYAnchor],
+      [apply.trailingAnchor constraintEqualToAnchor:self.saveButton.leadingAnchor constant:-8],
       [apply.centerYAnchor constraintEqualToAnchor:self.centerYAnchor],
     ]];
   }
   return self;
+}
+
+- (void)setSaved:(BOOL)saved enabled:(BOOL)enabled {
+  [self.saveButton setTitle:saved ? @"Saved" : @"Save"];
+  [self.saveButton setEnabled:enabled];
 }
 
 - (void)setSavedText:(NSString *)text symbol:(NSString *)symbol color:(NSColor *)color {

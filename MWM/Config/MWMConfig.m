@@ -154,6 +154,7 @@ static MWMConfig *_instance = nil;
 
   NSString *ymlPath = [MWMConfigDocument defaultPath];
   BOOL hasYAML = [[NSFileManager defaultManager] fileExistsAtPath:ymlPath];
+  self.loadedConfigText = hasYAML ? [NSString stringWithContentsOfFile:ymlPath encoding:NSUTF8StringEncoding error:nil] : nil;
   NSError *yamlError = nil;
   BOOL loadedYAML = hasYAML && [self loadYAMLConfigAtPath:ymlPath error:&yamlError];
   BOOL loadedDefault = [self loadConfigFileWithPath:@"~/.slate"];

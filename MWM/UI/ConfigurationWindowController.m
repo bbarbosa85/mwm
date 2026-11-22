@@ -24,6 +24,7 @@
 #import "MWMConfigDocument.h"
 #import "MWMConfigValidator.h"
 #import "MWMLegacyMigration.h"
+#import "MWMConfig.h"
 
 typedef NS_ENUM(NSInteger, SaveState) {
   SaveStateSaved,       // the file on disk matches the form
@@ -48,8 +49,9 @@ typedef NS_ENUM(NSInteger, SaveState) {
 // The previous file goes to .bak once per editing session, not on every save.
 @property (assign) BOOL backedUp;
 @property (assign) BOOL resolvingConflict;
-// Tests point the window at a temporary file instead of ~/.mwm.yml.
+// Tests point the window at a temporary file instead of ~/.mwm.yml, and say what the running app "loaded".
 @property (copy, nullable) NSString *configPathOverride;
+@property (copy, nullable) NSString *appliedTextOverride;
 @end
 
 @implementation ConfigurationWindowController
@@ -104,8 +106,16 @@ typedef NS_ENUM(NSInteger, SaveState) {
 
 #pragma mark - Showing and loading
 
+// MWM lives in the menu bar with no Dock icon. While the configuration window is open it is a regular
+// app (Dock icon, ⌘Tab, a menu bar), so clicking another app doesn't lose the window.
+- (void)useRegularActivationPolicy:(BOOL)regular {
+  if (NSClassFromString(@"XCTestCase") != nil) return;  // tests don't need a Dock icon
+  [NSApp setActivationPolicy:regular ? NSApplicationActivationPolicyRegular : NSApplicationActivationPolicyAccessory];
+}
+
 - (void)showConfiguration {
   if (![[self window] isVisible]) [self loadFromDisk];
+  [self useRegularActivationPolicy:YES];
   [NSApp activateIgnoringOtherApps:YES];
   [self showWindow:self];
   [[self window] makeKeyAndOrderFront:self];
@@ -308,10 +318,20 @@ typedef NS_ENUM(NSInteger, SaveState) {
   }
 }
 
-// ⌘S: commits a cell being edited, which saves it.
+// What the running MWM loaded at launch. Saved text that differs from it hasn't been applied yet.
+- (NSString *)appliedText {
+  if (self.configPathOverride != nil) return self.appliedTextOverride;
+  return [MWMConfig getInstance].loadedConfigText;
+}
+
+// The Save button and ⌘S: commits a cell being edited and writes the file without restarting MWM.
+// If there is no file yet, it creates it from the form.
 - (IBAction)saveDocument:(id)sender {
   [[self window] makeFirstResponder:nil];
+  if (self.formView.document == nil) return;
   [self validateAndSave];
+  if (self.lastResult.errorCount > 0 || self.resolvingConflict) return;
+  if (self.savedText == nil) [self writeText:[self currentText]];
 }
 
 - (void)updateSaveState:(SaveState)state {
@@ -320,7 +340,12 @@ typedef NS_ENUM(NSInteger, SaveState) {
   NSColor *color;
   switch (state) {
     case SaveStateSaved:
-      text = @"Saved"; symbol = @"checkmark.circle.fill"; color = [MWMTheme textSecondary]; break;
+      if (self.savedText != nil && ![self.savedText isEqualToString:[self appliedText] ?: @""] ) {
+        text = @"Saved · not applied yet"; symbol = @"arrow.clockwise.circle.fill"; color = [MWMTheme warning];
+      } else {
+        text = @"Saved"; symbol = @"checkmark.circle.fill"; color = [MWMTheme textSecondary];
+      }
+      break;
     case SaveStateNotCreated:
       text = @"Not created yet"; symbol = @"doc.badge.plus"; color = [MWMTheme textSecondary]; break;
     case SaveStateBlocked:
@@ -329,6 +354,7 @@ typedef NS_ENUM(NSInteger, SaveState) {
       text = @"Not loaded"; symbol = @"exclamationmark.circle.fill"; color = [MWMTheme danger]; break;
   }
   [self.bar setSavedText:text symbol:symbol color:color];
+  [self.bar setSaved:state == SaveStateSaved enabled:state != SaveStateSaved && state != SaveStateUnreadable];
   [[self window] setDocumentEdited:state == SaveStateBlocked];
 }
 
@@ -442,6 +468,7 @@ typedef NS_ENUM(NSInteger, SaveState) {
 }
 
 - (void)windowWillClose:(NSNotification *)notification {
+  [self useRegularActivationPolicy:NO];
   // Commits a cell being edited, which saves it if it's valid. Changes with
   // errors are dropped, and the next open reloads the file.
   [[self window] makeFirstResponder:nil];

@@ -24,14 +24,17 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface ConfigurationStatusBar : NSView
 
-// The target receives showIssues:, apply: and closeWindow: from the bar's controls.
+// The target receives showIssues:, saveDocument:, apply: and closeWindow: from the bar's controls.
 - (instancetype)initWithTarget:(id)target path:(NSString *)path;
 
+// The Save button reads "Saved" and is disabled while the file matches the form.
+- (void)setSaved:(BOOL)saved enabled:(BOOL)enabled;
 - (void)setSavedText:(NSString *)text symbol:(NSString *)symbol color:(NSColor *)color;
 - (void)setStatusText:(NSString *)text symbol:(NSString *)symbol color:(NSColor *)color tip:(nullable NSString *)tip;
 
 // The validity status, for positioning the issue list under it.
 @property (readonly) NSButton *statusButton;
+@property (readonly) NSButton *saveButton;
 
 + (NSImage *)symbol:(NSString *)name color:(NSColor *)color;
 

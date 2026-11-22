@@ -44,6 +44,9 @@
 @property NSMutableArray *defaultLayouts;
 @property NSMutableDictionary *aliases;
 @property NSMutableDictionary *snapshots;
+// The text of ~/.mwm.yml as MWM loaded it at launch (nil if there was no file). The configuration window
+// compares it with the saved file to say when changes are saved but not applied yet.
+@property (copy, nullable) NSString *loadedConfigText;
 
 + (MWMConfig *)getInstance;
 + (NSAlert *)warningAlertWithKeyEquivalents:(NSArray *)titles;
