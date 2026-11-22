@@ -45,7 +45,7 @@ Just run this in your terminal:
 
 Slate is configured using a ".slate" file in the current user's home directory. Configuration is loaded upon running Slate. You can also re-load the config using the "Load Config" menu option on the status menu (use this at your own risk. It is better to simply restart Slate).
 
-**Note:** If no ".slate" file exists in the current user's home directory, the [default config file](https://github.com/bbarbosa85/mwm/blob/master/Slate/default.slate) will be used.
+**Note:** If no ".slate" file exists in the current user's home directory, the [default config file](https://github.com/bbarbosa85/mwm/blob/master/MWM/default.slate) will be used.
 
 Configuration is split into the following directives:
 

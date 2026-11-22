@@ -3,7 +3,7 @@
 1. Make sure `master` has what you want to ship and the tests pass:
 
    ```bash
-   xcodebuild test -project Slate.xcodeproj -scheme Slate -destination 'platform=macOS'
+   xcodebuild test -project MWM.xcodeproj -scheme MWM -destination 'platform=macOS'
    ```
 
 2. Build the release. This makes a universal app (Apple silicon and Intel), signs it with your
@@ -40,4 +40,4 @@
 - Accessibility permission survives updates only while releases are signed with the same
   certificate (see `permissions-and-codesigning.md`).
 - The version shown in About comes from `CFBundleShortVersionString` and `CFBundleVersion` in
-  `Slate/App/Slate-Info.plist`.
+  `MWM/App/MWM-Info.plist`.

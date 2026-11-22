@@ -107,7 +107,7 @@ aliases, and renaming them would change what `${monitor-samsung}` means in free 
   same text; anything else keeps its own text (`formula:` and `type: custom`), so saving never
   changes what a hand-written entry means.
 - **In memory:** the document keeps its model (named entries and action strings), so the window
-  and the engine don't change; `SlateConfigFormat` translates between that model and the file.
+  and the engine don't change; `MWMConfigFormat` translates between that model and the file.
   A monitor object is held as the pair (`name`, `name-size`) the Displays page uses.
 
 ## Decisions

@@ -50,7 +50,7 @@ Welcome to the internal and technical documentation for **Slate**, a highly cust
    - Directory structure and file manifest.
    - String tokenization (`StringTokenizer`), Levenshtein distance (`NSString+Levenshtein`), math utilities (`MathUtils`).
    - Keyboard layout plists (QWERTY, Dvorak, Colemak, AZERTY).
-   - Unit test suite (`SlateTests`).
+   - Unit test suite (`MWMTests`).
    - Build system, release pipeline (`slate.rb`), and DMG staging.
 
 8. **[macOS Permissions & Code Signing Guide](permissions-and-codesigning.md)**
@@ -66,11 +66,11 @@ Welcome to the internal and technical documentation for **Slate**, a highly cust
 
 | Directory / File | Description |
 | :--- | :--- |
-| `Slate/` | Main Objective-C source files, UI views, operation classes, JS bridge, and assets. |
-| `SlateTests/` | Unit tests for tokenizer, math parser, expressions, Levenshtein, and string helpers. |
+| `MWM/` | Main Objective-C source files, UI views, operation classes, JS bridge, and assets. |
+| `MWMTests/` | Unit tests for tokenizer, math parser, expressions, Levenshtein, and string helpers. |
 | `script/build-dmg.sh` | Modern native packaging script to build Release DMG disk images. |
 | `script/` | Build scripts and release automation helpers. |
-| `Slate.xcodeproj` | Xcode project defining `Slate`, `SlateTests`, and Release/Debug build targets. |
+| `MWM.xcodeproj` | Xcode project defining `MWM`, `MWMTests`, and Release/Debug build targets. |
 | `docs/` | Comprehensive technical architecture, configuration, operation, and permission documentation. |
 | `README.md` | User-facing usage instructions and quick configuration guide. |
 | `VERSION` | Current release number (1.0.25) and detailed release notes. |

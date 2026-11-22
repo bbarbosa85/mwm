@@ -4,15 +4,15 @@ Slate is an advanced, keyboard-driven window management system built for macOS. 
 
 ```mermaid
 flowchart TD
-    UserKeyboard[User Keyboard / Event Tap] -->|HotKey / Event Tap| SlateAppDelegate
-    SlateAppDelegate -->|Dispatches Key / Modal Event| Binding
+    UserKeyboard[User Keyboard / Event Tap] -->|HotKey / Event Tap| MWMAppDelegate
+    MWMAppDelegate -->|Dispatches Key / Modal Event| Binding
     Binding -->|Executes| Operation[Operation Hierarchy]
     Operation --> AccessibilityWrapper[AccessibilityWrapper (AXUIElementRef)]
     Operation --> ScreenWrapper[ScreenWrapper (NSScreen / Quartz)]
     AccessibilityWrapper -->|AX Actions| TargetWindows[macOS Window Server / Windows]
 
     subgraph Config Subsystem
-        ConfigLoader[SlateConfig] -->|Parses ~/.slate| Directives[Directives / Bindings / Layouts]
+        ConfigLoader[MWMConfig] -->|Parses ~/.slate| Directives[Directives / Bindings / Layouts]
         ConfigLoader -->|Loads ~/.slate.js| JSController[JSController / WebKit]
         JSController -->|Calls JS API| GlobalSlate[window.slate / window.S]
         GlobalSlate -->|Creates| JSOperation[JSOperationWrapper / Callbacks]
@@ -28,13 +28,13 @@ flowchart TD
 
 ---
 
-## 1. Application Lifecycle & Delegate (`SlateAppDelegate`)
+## 1. Application Lifecycle & Delegate (`MWMAppDelegate`)
 
-The central hub of Slate during runtime is [`SlateAppDelegate`](file:///Users/brunobarbosa/Projetos/mwm/mwm/Slate/SlateAppDelegate.m).
+The central hub of Slate during runtime is [`MWMAppDelegate`](file:///Users/brunobarbosa/Projetos/mwm/mwm/MWM/MWMAppDelegate.m).
 
 ### Key Responsibilities:
-1. **Status Item & Menu Management**: Runs MWM as a status-bar accessory application (`NSStatusItem`). The status menu offers "About MWM", "Configure MWM…", "Reload Configuration", "Launch MWM at Login" and "Quit MWM". Menus are built in code by `SlateAppDelegate` (there's no main nib); the app menus (MWM, Edit, Window) only show while an MWM window is in front.
-2. **Configuration Loading**: Dispatches config loading to `[SlateConfig getInstance]`, handling fallback to the embedded `default.slate` if neither `~/.slate` nor `~/.slate.js` exists.
+1. **Status Item & Menu Management**: Runs MWM as a status-bar accessory application (`NSStatusItem`). The status menu offers "About MWM", "Configure MWM…", "Reload Configuration", "Launch MWM at Login" and "Quit MWM". Menus are built in code by `MWMAppDelegate` (there's no main nib); the app menus (MWM, Edit, Window) only show while an MWM window is in front.
+2. **Configuration Loading**: Dispatches config loading to `[MWMConfig getInstance]`, handling fallback to the embedded `default.slate` if neither `~/.slate` nor `~/.slate.js` exists.
 3. **Global HotKey Registration**: Uses the Carbon Event Manager (`RegisterEventHotKey`, `InstallEventHandler`) to bind global keystrokes system-wide.
 4. **Modal HotKey Management**:
    - Supports modal states where an activation keystroke (e.g. `Ctrl+F4`) activates a temporary key-listening mode.
@@ -84,11 +84,11 @@ macOS features two conflicting coordinate systems:
    - Y coordinates increase **downwards**.
 
 ### Coordinate Normalization
-[`ScreenWrapper`](file:///Users/brunobarbosa/Projetos/mwm/mwm/Slate/ScreenWrapper.m) normalizes all screen bounds to accessibility window coordinates:
+[`ScreenWrapper`](file:///Users/brunobarbosa/Projetos/mwm/mwm/MWM/ScreenWrapper.m) normalizes all screen bounds to accessibility window coordinates:
 
 $$\text{windowY} = \text{primaryScreenHeight} - (\text{screenOriginY} + \text{screenHeight})$$
 
-[`MathUtils flipYCoordinateOfRect:withReference:`](file:///Users/brunobarbosa/Projetos/mwm/mwm/Slate/MathUtils.m) executes this inversion cleanly across arbitrary displays.
+[`MathUtils flipYCoordinateOfRect:withReference:`](file:///Users/brunobarbosa/Projetos/mwm/mwm/MWM/MathUtils.m) executes this inversion cleanly across arbitrary displays.
 
 ### Display Ordering & Identification
 Displays can be targeted using multiple conventions:
@@ -112,7 +112,7 @@ When `kCGDisplayDesktopShapeChangedFlag` fires, Slate:
 
 ## 4. Running Application & Window Tracking (`RunningApplications`)
 
-[`RunningApplications`](file:///Users/brunobarbosa/Projetos/mwm/mwm/Slate/RunningApplications.m) acts as a live registry for all running macOS applications and their open windows.
+[`RunningApplications`](file:///Users/brunobarbosa/Projetos/mwm/mwm/MWM/RunningApplications.m) acts as a live registry for all running macOS applications and their open windows.
 
 ### Mechanism:
 - Subscribes to `NSWorkspace` notifications:

@@ -26,8 +26,8 @@ mkdir -p "$OUT"
 
 # xcodebuild hands variables with this prefix to the tests (without it).
 TEST_RUNNER_MWM_SCREENS_DIR="$OUT" TEST_RUNNER_MWM_SCREENS_FILTER="$FILTER" \
-  xcodebuild test -project Slate.xcodeproj -scheme Slate -destination 'platform=macOS' \
-  -only-testing:SlateTests/TestSnapshots > "$OUT/build.log" 2>&1 || {
+  xcodebuild test -project MWM.xcodeproj -scheme MWM -destination 'platform=macOS' \
+  -only-testing:MWMTests/TestSnapshots > "$OUT/build.log" 2>&1 || {
   tail -30 "$OUT/build.log"; echo "The build or the drawing failed (full log: $OUT/build.log)"; exit 1; }
 
 STAMP=$(date +%s)

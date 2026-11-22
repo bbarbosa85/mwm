@@ -1,0 +1,1239 @@
+//
+//  ConfigurationFormView.m
+//  Slate
+//
+//  This program is free software: you can redistribute it and/or modify
+//  it under the terms of the GNU General Public License as published by
+//  the Free Software Foundation, either version 3 of the License, or
+//  (at your option) any later version.
+//
+//  This program is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//  GNU General Public License for more details.
+//
+//  You should have received a copy of the GNU General Public License
+//  along with this program.  If not, see http://www.gnu.org/licenses
+
+#import "ConfigurationFormView.h"
+#import "NSAlert+MWM.h"
+#import "MWMTheme.h"
+#import "MWMComponents.h"
+#import "MWMConfigDocument.h"
+#import "MWMConfig.h"
+#import "MWMShortcut.h"
+#import "ConfigurationShortcutView.h"
+#import "ConfigurationActionView.h"
+#import "ConfigurationSettingsView.h"
+#import "ConfigurationDisplaysView.h"
+#import "ConfigurationSlotsView.h"
+#import "ConfigurationPresetsView.h"
+#import "ConfigurationKeyboardView.h"
+#import "ConfigurationSnapshotsView.h"
+#import "MWMSnapshots.h"
+#import "MWMShortcutIndex.h"
+#import "MWMSlots.h"
+
+static NSString *const kColEnabled = @"enabled";
+static NSString *const kColModifiers = @"mods";
+static NSString *const kColKey = @"key";
+static NSString *const kColShortcut = @"shortcut";
+static NSString *const kColAction = @"action";
+static NSString *const kColNote = @"note";
+static NSString *const kColName = @"name";
+static NSString *const kColValue = @"value";
+static NSString *const kColDefault = @"default";
+static const CGFloat kSidebarWidth = 200;
+
+// Only ever holds string literals, so unretained is safe under ARC.
+typedef struct {
+  __unsafe_unretained NSString *title;
+  __unsafe_unretained NSString *symbol;
+  __unsafe_unretained NSString *info;
+} SectionInfo;
+
+static SectionInfo InfoFor(ConfigurationFormSection section) {
+  switch (section) {
+    case ConfigurationFormSectionKeyboard:
+      return (SectionInfo){@"Keyboard", @"keyboard", @"Every shortcut, with what it does."};
+    case ConfigurationFormSectionAdvanced:
+      return (SectionInfo){@"Advanced", @"slider.horizontal.3", @"Key repeat, how percentages are measured, and other settings."};
+    case ConfigurationFormSectionSnapshots:
+      return (SectionInfo){@"Snapshots", @"camera", @"Saved window arrangements."};
+    case ConfigurationFormSectionGeneral:
+      return (SectionInfo){@"General", @"gearshape", @"Everyday settings. Anything not listed uses MWM's default."};
+    case ConfigurationFormSectionModifiers:
+      return (SectionInfo){@"Modifiers", @"command", @"Named modifier combinations, used as ${name} in bindings."};
+    case ConfigurationFormSectionMonitors:
+      return (SectionInfo){@"Displays", @"display.2", @"Screens and their sizes, used as ${name} in shortcuts and slots."};
+    case ConfigurationFormSectionPositions:
+      return (SectionInfo){@"Slots", @"rectangle.split.3x1", @"Named window areas, used as ${name} in shortcuts."};
+    case ConfigurationFormSectionAliases:
+      return (SectionInfo){@"Other aliases", @"curlybraces", @"Other named values, used as ${name}."};
+    case ConfigurationFormSectionApps:
+      return (SectionInfo){@"Apps", @"square.grid.2x2", @"Shortcuts that bring an app to the front."};
+    case ConfigurationFormSectionLayout:
+      return (SectionInfo){@"Layout bindings", @"keyboard", @"Shortcuts that move windows to a position or monitor."};
+    case ConfigurationFormSectionWindowActions:
+      return (SectionInfo){@"Window actions", @"arrow.up.and.down.and.arrow.left.and.right", @"Resize, nudge, push, and focus by direction."};
+    default:
+      return (SectionInfo){@"Features", @"sparkles", @"Window hints, grid, app switcher, relaunch, and other operations."};
+  }
+}
+
+#pragma mark - Navigation
+
+// The sidebar: group headings and the pages under them.
+static NSArray<NSDictionary *> *NavRows(void) {
+  static NSArray *rows;
+  static dispatch_once_t once;
+  dispatch_once(&once, ^{
+    rows = @[
+      @{@"header": @"Shortcuts"},
+      @{@"section": @(ConfigurationFormSectionKeyboard)},
+      @{@"section": @(ConfigurationFormSectionModifiers)},
+      @{@"header": @"Screens"},
+      @{@"section": @(ConfigurationFormSectionMonitors)},
+      @{@"section": @(ConfigurationFormSectionPositions)},
+      @{@"section": @(ConfigurationFormSectionSnapshots)},
+      @{@"header": @"Settings"},
+      @{@"section": @(ConfigurationFormSectionGeneral)},
+      @{@"section": @(ConfigurationFormSectionAdvanced)},
+      @{@"section": @(ConfigurationFormSectionAliases)},
+    ];
+  });
+  return rows;
+}
+
+static NSInteger NavRowForSection(ConfigurationFormSection section) {
+  NSArray *rows = NavRows();
+  for (NSUInteger i = 0; i < [rows count]; i++) {
+    if ([rows[i][@"section"] integerValue] == section && rows[i][@"section"] != nil) return (NSInteger)i;
+  }
+  return -1;
+}
+
+static NSInteger NavSectionForRow(NSInteger row) {
+  NSArray *rows = NavRows();
+  if (row < 0 || row >= (NSInteger)[rows count] || rows[row][@"section"] == nil) return -1;
+  return [rows[row][@"section"] integerValue];
+}
+
+// The settings people change day to day; the rest are on the Advanced page.
+static BOOL IsEverydaySetting(NSString *name) {
+  static NSSet *names;
+  static dispatch_once_t once;
+  dispatch_once(&once, ^{
+    names = [NSSet setWithObjects:@"defaultToCurrentScreen", @"keyboardLayout", @"windowHintsShowIcons",
+                                  @"windowHintsSpread", @"windowHintsIgnoreHiddenWindows", nil];
+  });
+  return [names containsObject:name];
+}
+
+static BOOL IsSettingsSection(ConfigurationFormSection section) {
+  return section == ConfigurationFormSectionGeneral || section == ConfigurationFormSectionAdvanced;
+}
+
+static BOOL IsBoolean(id value) {
+  return [value isKindOfClass:[NSNumber class]] && CFGetTypeID((__bridge CFTypeRef)value) == CFBooleanGetTypeID();
+}
+
+// "true" -> YES, "0.4" -> 0.4, anything else stays a string.
+static id TypedSettingValue(NSString *text) {
+  if ([text isEqualToString:@"true"]) return @YES;
+  if ([text isEqualToString:@"false"]) return @NO;
+  NSRegularExpression *number = [NSRegularExpression regularExpressionWithPattern:@"^-?[0-9]+(\\.[0-9]+)?$" options:0 error:nil];
+  if ([number numberOfMatchesInString:text options:0 range:NSMakeRange(0, [text length])] == 1) return @([text doubleValue]);
+  return text;
+}
+
+static NSString *DisplayValue(id value) {
+  if (IsBoolean(value)) return [value boolValue] ? @"true" : @"false";
+  return [value description] ?: @"";
+}
+
+@interface ConfigurationFormView () <ConfigurationShortcutViewDelegate, ConfigurationActionViewDelegate, ConfigurationSettingsViewDelegate, ConfigurationDisplaysViewDelegate, ConfigurationSlotsViewDelegate, ConfigurationKeyboardViewDelegate, ConfigurationSnapshotsViewDelegate>
+@property (strong) NSTableView *sidebar;
+@property (strong) NSView *detail;
+@property (strong) NSTextField *titleLabel;
+@property (strong) NSTextField *infoLabel;
+@property (strong) NSButton *addButton;
+@property (strong) NSButton *removeButton;
+@property (strong) NSScrollView *tableScroll;
+@property (strong) NSView *filterBar;
+@property (strong) NSSegmentedControl *filterControl;
+@property (strong) NSLayoutConstraint *filterBarHeight;
+@property (strong) ConfigurationSettingsView *settingsView;
+@property (strong) ConfigurationDisplaysView *displaysView;
+@property (strong) ConfigurationSnapshotsView *snapshotsView;
+@property (strong) ConfigurationSlotsView *slotsView;
+@property (strong) ConfigurationPresetsView *presetsView;
+@property (strong) NSSegmentedControl *slotsSwitcher;
+@property (strong) ConfigurationKeyboardView *keyboardView;
+@property (strong) NSSegmentedControl *keyboardSwitcher;
+@property (strong) NSButton *conflictsButton;
+@property (strong) NSLayoutConstraint *keyboardTopBelowHeader;
+@property (strong) NSLayoutConstraint *keyboardTopFull;
+@property (strong) NSLayoutConstraint *slotsTopBelowHeader;
+@property (strong) NSLayoutConstraint *slotsTopFull;
+@property (assign) BOOL sublevelActive;
+@property (strong) NSTableView *table;
+@property (strong) NSView *unavailableView;
+@property (strong) NSTextField *unavailableLabel;
+// Rows of the current section: entries for name/value sections, bindings otherwise.
+@property (strong) NSArray *rows;
+@end
+
+@implementation ConfigurationFormView
+
+- (instancetype)initWithFrame:(NSRect)frame {
+  self = [super initWithFrame:frame];
+  if (self) {
+    _rows = @[];
+    _keyboardFilter = -1;
+    _selectedSection = ConfigurationFormSectionKeyboard;
+    [self buildInterface];
+  }
+  return self;
+}
+
+- (NSView *)initialFirstResponder {
+  return self.sidebar;
+}
+
+#pragma mark - Interface
+
+- (NSScrollView *)scrollViewFor:(NSView *)documentView {
+  NSScrollView *scroll = [[NSScrollView alloc] init];
+  [scroll setTranslatesAutoresizingMaskIntoConstraints:NO];
+  [scroll setHasVerticalScroller:YES];
+  [scroll setAutohidesScrollers:YES];
+  [scroll setDrawsBackground:NO];
+  [scroll setDocumentView:documentView];
+  return scroll;
+}
+
+- (NSButton *)symbolButton:(NSString *)symbol tip:(NSString *)tip action:(SEL)action {
+  NSButton *button = [NSButton buttonWithImage:[NSImage imageWithSystemSymbolName:symbol accessibilityDescription:tip] target:self action:action];
+  [button setTranslatesAutoresizingMaskIntoConstraints:NO];
+  [button setBezelStyle:NSBezelStyleRounded];
+  [button setToolTip:tip];
+  return button;
+}
+
+- (void)buildInterface {
+  // Sidebar
+  self.sidebar = [[NSTableView alloc] init];
+  [self.sidebar addTableColumn:[[NSTableColumn alloc] initWithIdentifier:@"section"]];
+  [self.sidebar setHeaderView:nil];
+  [self.sidebar setStyle:NSTableViewStyleSourceList];
+  [self.sidebar setRowHeight:28];
+  [self.sidebar setFloatsGroupRows:NO];
+  [self.sidebar setDataSource:self];
+  [self.sidebar setDelegate:self];
+  NSScrollView *sidebarScroll = [self scrollViewFor:self.sidebar];
+
+  NSView *divider = [MWMComponents separator];
+
+  // Detail: header, then the table
+  self.detail = [[NSView alloc] init];
+  [self.detail setTranslatesAutoresizingMaskIntoConstraints:NO];
+  self.titleLabel = [NSTextField labelWithString:@""];
+  [self.titleLabel setFont:[NSFont boldSystemFontOfSize:15]];
+  [self.titleLabel setTranslatesAutoresizingMaskIntoConstraints:NO];
+  self.infoLabel = [NSTextField wrappingLabelWithString:@""];
+  [self.infoLabel setTextColor:[MWMTheme textSecondary]];
+  [self.infoLabel setTranslatesAutoresizingMaskIntoConstraints:NO];
+  self.addButton = [self symbolButton:@"plus" tip:@"Add" action:@selector(add:)];
+  self.removeButton = [self symbolButton:@"minus" tip:@"Remove the selected rows" action:@selector(remove:)];
+
+  self.table = [[NSTableView alloc] init];
+  [self.table setStyle:NSTableViewStyleInset];
+  [self.table setUsesAlternatingRowBackgroundColors:YES];
+  [self.table setAllowsMultipleSelection:YES];
+  [self.table setRowHeight:24];
+  [self.table setColumnAutoresizingStyle:NSTableViewLastColumnOnlyAutoresizingStyle];
+  [self.table setDataSource:self];
+  [self.table setDelegate:self];
+  self.tableScroll = [self scrollViewFor:self.table];
+
+  // Keyboard page: filter the shortcuts by what they do.
+  self.filterBar = [[NSView alloc] init];
+  [self.filterBar setTranslatesAutoresizingMaskIntoConstraints:NO];
+  self.filterControl = [NSSegmentedControl segmentedControlWithLabels:@[@"All", @"Layout", @"Window actions", @"Apps", @"Features"]
+                                                         trackingMode:NSSegmentSwitchTrackingSelectOne
+                                                               target:self action:@selector(keyboardFilterChanged:)];
+  [self.filterControl setSelectedSegment:0];
+  [self.filterControl setTranslatesAutoresizingMaskIntoConstraints:NO];
+  [self.filterBar addSubview:self.filterControl];
+  [self.filterBar setHidden:YES];
+
+  // Pages that aren't built yet
+
+  self.presetsView = [[ConfigurationPresetsView alloc] init];
+  [self.presetsView setTranslatesAutoresizingMaskIntoConstraints:NO];
+  [self.presetsView setHidden:YES];
+
+  self.keyboardView = [[ConfigurationKeyboardView alloc] init];
+  [self.keyboardView setTranslatesAutoresizingMaskIntoConstraints:NO];
+  [self.keyboardView setDelegate:self];
+  [self.keyboardView setHidden:YES];
+  self.keyboardSwitcher = [NSSegmentedControl segmentedControlWithLabels:@[@"Map", @"List"] trackingMode:NSSegmentSwitchTrackingSelectOne target:self action:@selector(keyboardModeChanged:)];
+  [self.keyboardSwitcher setSelectedSegment:0];
+  [self.keyboardSwitcher setSegmentStyle:NSSegmentStyleRounded];
+  [self.keyboardSwitcher setTranslatesAutoresizingMaskIntoConstraints:NO];
+  [self.keyboardSwitcher setHidden:YES];
+  self.conflictsButton = [NSButton buttonWithTitle:@"" target:self action:@selector(conflictsPressed:)];
+  [self.conflictsButton setImage:[NSImage imageWithSystemSymbolName:@"exclamationmark.triangle.fill" accessibilityDescription:@"Conflicts"]];
+  [self.conflictsButton setImagePosition:NSImageLeft];
+  [self.conflictsButton setBordered:NO];
+  [self.conflictsButton setContentTintColor:[MWMTheme warning]];
+  [self.conflictsButton setTranslatesAutoresizingMaskIntoConstraints:NO];
+  [self.conflictsButton setHidden:YES];
+
+  self.slotsSwitcher = [NSSegmentedControl segmentedControlWithLabels:@[@"Custom", @"Presets"] trackingMode:NSSegmentSwitchTrackingSelectOne target:self action:@selector(slotsModeChanged:)];
+  [self.slotsSwitcher setSelectedSegment:0];
+  [self.slotsSwitcher setSegmentStyle:NSSegmentStyleRounded];
+  [self.slotsSwitcher setTranslatesAutoresizingMaskIntoConstraints:NO];
+  [self.slotsSwitcher setHidden:YES];
+
+  self.slotsView = [[ConfigurationSlotsView alloc] init];
+  [self.slotsView setTranslatesAutoresizingMaskIntoConstraints:NO];
+  [self.slotsView setDelegate:self];
+  [self.slotsView setHidden:YES];
+
+  self.displaysView = [[ConfigurationDisplaysView alloc] init];
+  [self.displaysView setTranslatesAutoresizingMaskIntoConstraints:NO];
+  [self.displaysView setDelegate:self];
+  [self.displaysView setHidden:YES];
+
+  self.snapshotsView = [[ConfigurationSnapshotsView alloc] init];
+  [self.snapshotsView setTranslatesAutoresizingMaskIntoConstraints:NO];
+  [self.snapshotsView setDelegate:self];
+  [self.snapshotsView setHidden:YES];
+
+  self.settingsView = [[ConfigurationSettingsView alloc] init];
+  [self.settingsView setTranslatesAutoresizingMaskIntoConstraints:NO];
+  [self.settingsView setDelegate:self];
+  [self.settingsView setHidden:YES];
+
+  for (NSView *view in @[self.titleLabel, self.infoLabel, self.addButton, self.removeButton, self.filterBar, self.tableScroll, self.settingsView, self.displaysView, self.snapshotsView, self.slotsView, self.presetsView, self.slotsSwitcher, self.keyboardView, self.keyboardSwitcher, self.conflictsButton]) {
+    [self.detail addSubview:view];
+  }
+
+  // Shown instead of everything else when the file can't be a form
+  self.unavailableLabel = [NSTextField wrappingLabelWithString:@""];
+  [self.unavailableLabel setAlignment:NSTextAlignmentCenter];
+  [self.unavailableLabel setTranslatesAutoresizingMaskIntoConstraints:NO];
+  NSButton *openEditor = [NSButton buttonWithTitle:@"Open in Text Editor" target:self action:@selector(openInTextEditor:)];
+  NSButton *reload = [NSButton buttonWithTitle:@"Reload" target:self action:@selector(reload:)];
+  NSStackView *buttons = [NSStackView stackViewWithViews:@[openEditor, reload]];
+  [buttons setTranslatesAutoresizingMaskIntoConstraints:NO];
+  self.unavailableView = [[NSView alloc] init];
+  [self.unavailableView setTranslatesAutoresizingMaskIntoConstraints:NO];
+  [self.unavailableView addSubview:self.unavailableLabel];
+  [self.unavailableView addSubview:buttons];
+  [self.unavailableView setHidden:YES];
+
+  for (NSView *view in @[sidebarScroll, divider, self.detail, self.unavailableView]) {
+    [self addSubview:view];
+  }
+
+  // The Custom Slots page sits under the header, or at the very top while a slot is being edited.
+  self.slotsTopBelowHeader = [self.slotsView.topAnchor constraintEqualToAnchor:self.infoLabel.bottomAnchor constant:6];
+  self.slotsTopFull = [self.slotsView.topAnchor constraintEqualToAnchor:self.detail.topAnchor];
+  self.slotsTopBelowHeader.active = YES;
+  self.keyboardTopBelowHeader = [self.keyboardView.topAnchor constraintEqualToAnchor:self.infoLabel.bottomAnchor constant:6];
+  self.keyboardTopFull = [self.keyboardView.topAnchor constraintEqualToAnchor:self.detail.topAnchor];
+  self.keyboardTopBelowHeader.active = YES;
+  self.filterBarHeight = [self.filterBar.heightAnchor constraintEqualToConstant:0];
+  self.filterBarHeight.active = YES;
+  [NSLayoutConstraint activateConstraints:@[
+    [sidebarScroll.topAnchor constraintEqualToAnchor:self.topAnchor],
+    [sidebarScroll.bottomAnchor constraintEqualToAnchor:self.bottomAnchor],
+    [sidebarScroll.leadingAnchor constraintEqualToAnchor:self.leadingAnchor],
+    [sidebarScroll.widthAnchor constraintEqualToConstant:kSidebarWidth],
+    [divider.topAnchor constraintEqualToAnchor:self.topAnchor],
+    [divider.bottomAnchor constraintEqualToAnchor:self.bottomAnchor],
+    [divider.leadingAnchor constraintEqualToAnchor:sidebarScroll.trailingAnchor],
+    [self.detail.topAnchor constraintEqualToAnchor:self.topAnchor],
+    [self.detail.bottomAnchor constraintEqualToAnchor:self.bottomAnchor],
+    [self.detail.leadingAnchor constraintEqualToAnchor:divider.trailingAnchor],
+    [self.detail.trailingAnchor constraintEqualToAnchor:self.trailingAnchor],
+
+    [self.titleLabel.topAnchor constraintEqualToAnchor:self.detail.topAnchor constant:16],
+    [self.titleLabel.leadingAnchor constraintEqualToAnchor:self.detail.leadingAnchor constant:20],
+    [self.infoLabel.topAnchor constraintEqualToAnchor:self.titleLabel.bottomAnchor constant:4],
+    [self.infoLabel.leadingAnchor constraintEqualToAnchor:self.titleLabel.leadingAnchor],
+    [self.infoLabel.trailingAnchor constraintLessThanOrEqualToAnchor:self.addButton.leadingAnchor constant:-16],
+    [self.removeButton.trailingAnchor constraintEqualToAnchor:self.detail.trailingAnchor constant:-20],
+    [self.removeButton.centerYAnchor constraintEqualToAnchor:self.titleLabel.bottomAnchor],
+    [self.addButton.trailingAnchor constraintEqualToAnchor:self.removeButton.leadingAnchor constant:-6],
+    [self.addButton.centerYAnchor constraintEqualToAnchor:self.removeButton.centerYAnchor],
+
+    [self.filterBar.topAnchor constraintEqualToAnchor:self.infoLabel.bottomAnchor constant:6],
+    [self.filterBar.leadingAnchor constraintEqualToAnchor:self.detail.leadingAnchor],
+    [self.filterBar.trailingAnchor constraintEqualToAnchor:self.detail.trailingAnchor],
+    [self.filterControl.leadingAnchor constraintEqualToAnchor:self.filterBar.leadingAnchor constant:20],
+    [self.filterControl.centerYAnchor constraintEqualToAnchor:self.filterBar.centerYAnchor],
+    [self.keyboardSwitcher.trailingAnchor constraintEqualToAnchor:self.detail.trailingAnchor constant:-20],
+    [self.keyboardSwitcher.centerYAnchor constraintEqualToAnchor:self.titleLabel.centerYAnchor constant:4],
+    [self.conflictsButton.trailingAnchor constraintEqualToAnchor:self.keyboardSwitcher.leadingAnchor constant:-10],
+    [self.conflictsButton.centerYAnchor constraintEqualToAnchor:self.keyboardSwitcher.centerYAnchor],
+    [self.keyboardView.bottomAnchor constraintEqualToAnchor:self.detail.bottomAnchor],
+    [self.keyboardView.leadingAnchor constraintEqualToAnchor:self.detail.leadingAnchor],
+    [self.keyboardView.trailingAnchor constraintEqualToAnchor:self.detail.trailingAnchor],
+    [self.slotsSwitcher.trailingAnchor constraintEqualToAnchor:self.detail.trailingAnchor constant:-20],
+    [self.slotsSwitcher.centerYAnchor constraintEqualToAnchor:self.titleLabel.centerYAnchor constant:4],
+    [self.presetsView.topAnchor constraintEqualToAnchor:self.infoLabel.bottomAnchor constant:6],
+    [self.presetsView.bottomAnchor constraintEqualToAnchor:self.detail.bottomAnchor],
+    [self.presetsView.leadingAnchor constraintEqualToAnchor:self.detail.leadingAnchor],
+    [self.presetsView.trailingAnchor constraintEqualToAnchor:self.detail.trailingAnchor],
+    [self.slotsView.bottomAnchor constraintEqualToAnchor:self.detail.bottomAnchor],
+    [self.slotsView.leadingAnchor constraintEqualToAnchor:self.detail.leadingAnchor],
+    [self.slotsView.trailingAnchor constraintEqualToAnchor:self.detail.trailingAnchor],
+    [self.displaysView.topAnchor constraintEqualToAnchor:self.infoLabel.bottomAnchor constant:6],
+    [self.displaysView.bottomAnchor constraintEqualToAnchor:self.detail.bottomAnchor],
+    [self.displaysView.leadingAnchor constraintEqualToAnchor:self.detail.leadingAnchor],
+    [self.displaysView.trailingAnchor constraintEqualToAnchor:self.detail.trailingAnchor],
+    [self.snapshotsView.topAnchor constraintEqualToAnchor:self.infoLabel.bottomAnchor constant:6],
+    [self.snapshotsView.bottomAnchor constraintEqualToAnchor:self.detail.bottomAnchor],
+    [self.snapshotsView.leadingAnchor constraintEqualToAnchor:self.detail.leadingAnchor],
+    [self.snapshotsView.trailingAnchor constraintEqualToAnchor:self.detail.trailingAnchor],
+    [self.settingsView.topAnchor constraintEqualToAnchor:self.infoLabel.bottomAnchor constant:6],
+    [self.settingsView.bottomAnchor constraintEqualToAnchor:self.detail.bottomAnchor],
+    [self.settingsView.leadingAnchor constraintEqualToAnchor:self.detail.leadingAnchor],
+    [self.settingsView.trailingAnchor constraintEqualToAnchor:self.detail.trailingAnchor],
+    [self.tableScroll.topAnchor constraintEqualToAnchor:self.filterBar.bottomAnchor constant:4],
+    [self.tableScroll.leadingAnchor constraintEqualToAnchor:self.detail.leadingAnchor],
+    [self.tableScroll.trailingAnchor constraintEqualToAnchor:self.detail.trailingAnchor],
+    [self.tableScroll.bottomAnchor constraintEqualToAnchor:self.detail.bottomAnchor],
+
+
+    [self.unavailableView.topAnchor constraintEqualToAnchor:self.topAnchor],
+    [self.unavailableView.bottomAnchor constraintEqualToAnchor:self.bottomAnchor],
+    [self.unavailableView.leadingAnchor constraintEqualToAnchor:self.leadingAnchor],
+    [self.unavailableView.trailingAnchor constraintEqualToAnchor:self.trailingAnchor],
+    [self.unavailableLabel.centerXAnchor constraintEqualToAnchor:self.unavailableView.centerXAnchor],
+    [self.unavailableLabel.centerYAnchor constraintEqualToAnchor:self.unavailableView.centerYAnchor constant:-20],
+    [self.unavailableLabel.widthAnchor constraintLessThanOrEqualToConstant:460],
+    [buttons.topAnchor constraintEqualToAnchor:self.unavailableLabel.bottomAnchor constant:14],
+    [buttons.centerXAnchor constraintEqualToAnchor:self.unavailableView.centerXAnchor],
+  ]];
+}
+
+#pragma mark - Document and sections
+
+- (void)setDocument:(MWMConfigDocument *)document {
+  _document = document;
+  [self.unavailableView setHidden:YES];
+  for (NSView *view in [self subviews]) {
+    if (view != self.unavailableView) [view setHidden:NO];
+  }
+  [self.sidebar reloadData];
+  [self selectNavRow];
+  [self showSection];
+}
+
+// Highlights the sidebar row of the current page (none for pages the sidebar doesn't list).
+- (void)selectNavRow {
+  NSInteger row = NavRowForSection(self.selectedSection);
+  if (row >= 0) [self.sidebar selectRowIndexes:[NSIndexSet indexSetWithIndex:row] byExtendingSelection:NO];
+  else [self.sidebar deselectAll:nil];
+}
+
+- (void)showUnavailableMessage:(NSString *)message {
+  _document = nil;
+  [self.unavailableLabel setStringValue:message];
+  for (NSView *view in [self subviews]) [view setHidden:view != self.unavailableView];
+}
+
+- (void)setSelectedSection:(ConfigurationFormSection)section {
+  if (section < 0 || section >= ConfigurationFormSectionCount) section = ConfigurationFormSectionGeneral;
+  _selectedSection = section;
+  [self selectNavRow];
+  [self showSection];
+}
+
+- (void)setKeyboardFilter:(NSInteger)filter {
+  _keyboardFilter = filter;
+  [self.filterControl setSelectedSegment:filter < 0 ? 0 : [[self filterCategories] indexOfObject:@(filter)] + 1];
+  if (self.selectedSection == ConfigurationFormSectionKeyboard) [self reloadRows];
+}
+
+// The kinds the filter offers, in the order of its segments after "All".
+- (NSArray<NSNumber *> *)filterCategories {
+  return @[@(MWMBindingCategoryLayout), @(MWMBindingCategoryWindowActions), @(MWMBindingCategoryApps), @(MWMBindingCategoryFeatures)];
+}
+
+- (void)keyboardFilterChanged:(NSSegmentedControl *)control {
+  NSInteger segment = [control selectedSegment];
+  _keyboardFilter = segment <= 0 ? -1 : [[self filterCategories][segment - 1] integerValue];
+  [self reloadRows];
+}
+
+- (BOOL)isBindingSection:(ConfigurationFormSection)section {
+  return (section >= ConfigurationFormSectionApps && section <= ConfigurationFormSectionFeatures) || section == ConfigurationFormSectionKeyboard;
+}
+
+- (MWMBindingCategory)categoryForSection:(ConfigurationFormSection)section {
+  switch (section) {
+    case ConfigurationFormSectionApps: return MWMBindingCategoryApps;
+    case ConfigurationFormSectionLayout: return MWMBindingCategoryLayout;
+    case ConfigurationFormSectionWindowActions: return MWMBindingCategoryWindowActions;
+    default: return MWMBindingCategoryFeatures;
+  }
+}
+
+- (NSMutableArray<MWMConfigEntry *> *)entriesForSection:(ConfigurationFormSection)section {
+  switch (section) {
+    case ConfigurationFormSectionGeneral:
+    case ConfigurationFormSectionAdvanced: return self.document.settings;
+    case ConfigurationFormSectionModifiers: return self.document.modifiers;
+    case ConfigurationFormSectionMonitors: return self.document.monitors;
+    case ConfigurationFormSectionPositions: return self.document.positions;
+    case ConfigurationFormSectionAliases: return self.document.aliases;
+    default: return nil;
+  }
+}
+
+- (NSArray<MWMBindingEntry *> *)bindingsForSection:(ConfigurationFormSection)section {
+  BOOL all = section == ConfigurationFormSectionKeyboard;
+  BOOL filtered = all && self.keyboardFilter >= 0;
+  MWMBindingCategory category = all ? (MWMBindingCategory)self.keyboardFilter : [self categoryForSection:section];
+  NSMutableArray *result = [NSMutableArray array];
+  for (MWMBindingEntry *binding in self.document.bindings) {
+    if ((all && !filtered) || [self.document categoryOfBinding:binding] == category) [result addObject:binding];
+  }
+  return result;
+}
+
+// The entries a page lists: the settings are split between General and Advanced.
+- (NSArray<MWMConfigEntry *> *)visibleEntriesForSection:(ConfigurationFormSection)section {
+  NSArray *entries = [self entriesForSection:section] ?: @[];
+  if (!IsSettingsSection(section)) return entries;
+  BOOL everyday = section == ConfigurationFormSectionGeneral;
+  NSMutableArray *visible = [NSMutableArray array];
+  for (MWMConfigEntry *entry in entries) {
+    if (IsEverydaySetting(entry.name) == everyday) [visible addObject:entry];
+  }
+  return visible;
+}
+
+- (NSUInteger)countForSection:(ConfigurationFormSection)section {
+  if (section == ConfigurationFormSectionSnapshots) return [[MWMSnapshots snapshots] count];
+  if (self.document == nil) return 0;
+  if (section == ConfigurationFormSectionKeyboard) return [self.document.bindings count];
+  if ([self isBindingSection:section]) return [[self bindingsForSection:section] count];
+  return [[self visibleEntriesForSection:section] count];
+}
+
+- (NSTableColumn *)column:(NSString *)identifier title:(NSString *)title width:(CGFloat)width {
+  NSTableColumn *column = [[NSTableColumn alloc] initWithIdentifier:identifier];
+  [column setTitle:title];
+  [column setWidth:width];
+  [column setMinWidth:MIN(width, 40)];
+  return column;
+}
+
+- (void)showSection {
+  ConfigurationFormSection section = self.selectedSection;
+  SectionInfo info = InfoFor(section);
+  [self.titleLabel setStringValue:info.title];
+  [self.infoLabel setStringValue:info.info];
+  BOOL cards = IsSettingsSection(section);  // rows of switches and sliders instead of a table
+  BOOL displays = section == ConfigurationFormSectionMonitors;
+  BOOL slots = section == ConfigurationFormSectionPositions;
+  BOOL keyboard = section == ConfigurationFormSectionKeyboard;
+  BOOL snapshots = section == ConfigurationFormSectionSnapshots;
+  [self.addButton setHidden:cards || displays || slots || keyboard || snapshots];
+  [self.removeButton setHidden:cards || displays || slots || keyboard || snapshots];
+  [self.tableScroll setHidden:cards || displays || slots || keyboard || snapshots];
+  [self.snapshotsView setHidden:!snapshots];
+  if (snapshots) [self.snapshotsView reload];
+  self.keyboardView.document = keyboard ? self.document : nil;
+  [self showKeyboardMode];
+  if (!slots) [self setSublevelActive:NO];  // leaving the page closes anything open on it
+  [self.displaysView setHidden:!displays];
+  self.displaysView.document = displays ? self.document : nil;
+  self.slotsView.document = slots ? self.document : nil;
+  [self showSlotsMode];
+  [self.settingsView setHidden:!cards];
+  if (cards) self.settingsView.page = section == ConfigurationFormSectionAdvanced ? ConfigurationSettingsPageAdvanced : ConfigurationSettingsPageGeneral;
+  self.settingsView.document = cards ? self.document : nil;
+  BOOL showsFilter = NO;  // the old filter bar is for the pages the sidebar no longer lists
+  [self.filterBar setHidden:!showsFilter];
+  self.filterBarHeight.constant = showsFilter ? 34 : 0;
+
+  // Empty the table first: changing columns makes it redraw, and the old
+  // section's rows don't fit the new section's columns.
+  self.rows = @[];
+  [self.table reloadData];
+  while ([[self.table tableColumns] count] > 0) [self.table removeTableColumn:[[self.table tableColumns] lastObject]];
+  if ([self isBindingSection:section]) {
+    [self.table addTableColumn:[self column:kColEnabled title:@"On" width:34]];
+    [self.table addTableColumn:[self column:kColShortcut title:@"Shortcut" width:250]];
+    [self.table addTableColumn:[self column:kColAction title:@"Action" width:480]];
+    [self.table addTableColumn:[self column:kColNote title:@"Note" width:160]];
+  } else if (IsSettingsSection(section)) {
+    [self.table addTableColumn:[self column:kColName title:@"Setting" width:230]];
+    [self.table addTableColumn:[self column:kColValue title:@"Value" width:200]];
+    [self.table addTableColumn:[self column:kColDefault title:@"Default" width:180]];
+  } else {
+    [self.table addTableColumn:[self column:kColName title:@"Name" width:200]];
+    [self.table addTableColumn:[self column:kColValue title:@"Value" width:460]];
+  }
+  [self reloadRows];
+}
+
+- (void)reloadRows {
+  ConfigurationFormSection section = self.selectedSection;
+  if ([self isBindingSection:section]) {
+    self.rows = [self bindingsForSection:section];
+  } else {
+    self.rows = [[self visibleEntriesForSection:section] copy] ?: @[];
+  }
+  [self.table reloadData];
+}
+
+// Section counts change as rows are added, removed, or move between categories.
+- (void)reloadSidebarKeepingSelection {
+  [self.sidebar reloadData];
+  [self selectNavRow];
+}
+
+- (void)documentChanged {
+  [self reloadSidebarKeepingSelection];
+  [self.delegate formViewDidChangeDocument:self];
+}
+
+#pragma mark - Table data
+
+- (NSInteger)numberOfRowsInTableView:(NSTableView *)tableView {
+  if (tableView == self.sidebar) return self.document ? (NSInteger)[NavRows() count] : 0;
+  return [self.rows count];
+}
+
+- (void)tableViewSelectionDidChange:(NSNotification *)notification {
+  if ([notification object] != self.sidebar) return;
+  NSInteger section = NavSectionForRow([self.sidebar selectedRow]);
+  if (section >= 0 && section != self.selectedSection) {
+    _selectedSection = (ConfigurationFormSection)section;
+    [self showSection];
+  }
+}
+
+- (BOOL)tableView:(NSTableView *)tableView isGroupRow:(NSInteger)row {
+  return tableView == self.sidebar && NavRows()[row][@"header"] != nil;
+}
+
+- (BOOL)tableView:(NSTableView *)tableView shouldSelectRow:(NSInteger)row {
+  return tableView != self.sidebar || NavRows()[row][@"header"] == nil;
+}
+
+- (NSView *)sidebarCellForRow:(NSInteger)navRow {
+  NSTableCellView *cell = [[NSTableCellView alloc] init];
+  NSString *header = NavRows()[navRow][@"header"];
+  if (header != nil) {
+    NSTextField *label = [NSTextField labelWithString:[header uppercaseString]];
+    [label setFont:[NSFont systemFontOfSize:11 weight:NSFontWeightSemibold]];
+    [label setTextColor:[MWMTheme textTertiary]];
+    [label setTranslatesAutoresizingMaskIntoConstraints:NO];
+    [cell addSubview:label];
+    [NSLayoutConstraint activateConstraints:@[
+      [label.leadingAnchor constraintEqualToAnchor:cell.leadingAnchor constant:4],
+      [label.bottomAnchor constraintEqualToAnchor:cell.bottomAnchor constant:-3],
+    ]];
+    return cell;
+  }
+  NSInteger row = NavSectionForRow(navRow);
+  SectionInfo info = InfoFor((ConfigurationFormSection)row);
+  NSImageView *icon = [NSImageView imageViewWithImage:[NSImage imageWithSystemSymbolName:info.symbol accessibilityDescription:nil]];
+  NSTextField *title = [NSTextField labelWithString:info.title];
+  [title setLineBreakMode:NSLineBreakByTruncatingTail];
+  NSUInteger count = [self countForSection:(ConfigurationFormSection)row];
+  NSTextField *countLabel = [NSTextField labelWithString:count > 0 ? [NSString stringWithFormat:@"%lu", (unsigned long)count] : @""];
+  [countLabel setTextColor:[MWMTheme textSecondary]];
+  [countLabel setFont:[NSFont monospacedDigitSystemFontOfSize:[NSFont smallSystemFontSize] weight:NSFontWeightRegular]];
+  for (NSView *view in @[icon, title, countLabel]) {
+    [view setTranslatesAutoresizingMaskIntoConstraints:NO];
+    [cell addSubview:view];
+  }
+  [cell setImageView:icon];
+  [cell setTextField:title];
+  [NSLayoutConstraint activateConstraints:@[
+    [icon.leadingAnchor constraintEqualToAnchor:cell.leadingAnchor constant:4],
+    [icon.centerYAnchor constraintEqualToAnchor:cell.centerYAnchor],
+    [icon.widthAnchor constraintEqualToConstant:18],
+    [title.leadingAnchor constraintEqualToAnchor:icon.trailingAnchor constant:6],
+    [title.centerYAnchor constraintEqualToAnchor:cell.centerYAnchor],
+    [countLabel.leadingAnchor constraintGreaterThanOrEqualToAnchor:title.trailingAnchor constant:6],
+    [countLabel.trailingAnchor constraintEqualToAnchor:cell.trailingAnchor constant:-6],
+    [countLabel.centerYAnchor constraintEqualToAnchor:cell.centerYAnchor],
+  ]];
+  return cell;
+}
+
+// Wraps a control so it's vertically centered in its row.
+- (NSView *)cellWith:(NSView *)control {
+  NSTableCellView *cell = [[NSTableCellView alloc] init];
+  [control setTranslatesAutoresizingMaskIntoConstraints:NO];
+  [cell addSubview:control];
+  [NSLayoutConstraint activateConstraints:@[
+    [control.leadingAnchor constraintEqualToAnchor:cell.leadingAnchor constant:2],
+    [control.trailingAnchor constraintEqualToAnchor:cell.trailingAnchor constant:-2],
+    [control.centerYAnchor constraintEqualToAnchor:cell.centerYAnchor],
+  ]];
+  return cell;
+}
+
+- (NSView *)textCell:(NSString *)text column:(NSString *)column monospaced:(BOOL)monospaced placeholder:(NSString *)placeholder {
+  NSTextField *field = [NSTextField textFieldWithString:text ?: @""];
+  [field setBordered:NO];
+  [field setDrawsBackground:NO];
+  [field setEditable:YES];
+  [field setIdentifier:column];
+  [field setTarget:self];
+  [field setAction:@selector(cellEdited:)];
+  [field setPlaceholderString:placeholder];
+  [field setLineBreakMode:NSLineBreakByTruncatingTail];
+  [[field cell] setSendsActionOnEndEditing:YES];
+  [field setFont:monospaced ? [MWMTheme fontMono] : [MWMTheme fontBody]];
+  return [self cellWith:field];
+}
+
+- (NSView *)checkboxCell:(BOOL)on action:(SEL)action {
+  NSButton *box = [NSButton checkboxWithTitle:@"" target:self action:action];
+  [box setState:on ? NSControlStateValueOn : NSControlStateValueOff];
+  return [self cellWith:box];
+}
+
+- (BOOL)isBooleanSetting:(MWMConfigEntry *)entry {
+  if (IsBoolean(entry.value)) return YES;
+  NSString *fallback = [[MWMConfig getInstance] getConfigDefault:entry.name];
+  return [entry.value isKindOfClass:[NSString class]] && ([fallback isEqualToString:@"true"] || [fallback isEqualToString:@"false"]) &&
+         ([entry.value isEqualToString:@"true"] || [entry.value isEqualToString:@"false"]);
+}
+
+- (NSView *)tableView:(NSTableView *)tableView viewForTableColumn:(NSTableColumn *)tableColumn row:(NSInteger)row {
+  if (tableView == self.sidebar) return [self sidebarCellForRow:row];
+  NSString *column = [tableColumn identifier];
+
+  if ([self isBindingSection:self.selectedSection]) {
+    MWMBindingEntry *binding = self.rows[row];
+    if ([column isEqualToString:kColEnabled]) return [self checkboxCell:binding.enabled action:@selector(enabledToggled:)];
+    if ([column isEqualToString:kColShortcut]) return [self shortcutCellForBinding:binding];
+    if ([column isEqualToString:kColAction]) return [self actionCellForBinding:binding];
+    return [self textCell:binding.note column:column monospaced:NO placeholder:@""];
+  }
+
+  MWMConfigEntry *entry = self.rows[row];
+  if ([column isEqualToString:kColName]) return [self textCell:entry.name column:column monospaced:NO placeholder:@"name"];
+  if ([column isEqualToString:kColDefault]) {
+    NSString *fallback = [[MWMConfig getInstance] getConfigDefault:entry.name];
+    NSTextField *label = [NSTextField labelWithString:fallback == nil ? @"Unknown setting" : ([fallback length] > 0 ? fallback : @"(empty)")];
+    [label setTextColor:fallback == nil ? [MWMTheme warning] : [MWMTheme textSecondary]];
+    [label setLineBreakMode:NSLineBreakByTruncatingTail];
+    return [self cellWith:label];
+  }
+  if (IsSettingsSection(self.selectedSection) && [self isBooleanSetting:entry]) {
+    return [self checkboxCell:[DisplayValue(entry.value) isEqualToString:@"true"] action:@selector(settingToggled:)];
+  }
+  return [self textCell:DisplayValue(entry.value) column:column monospaced:YES placeholder:@""];
+}
+
+#pragma mark - Settings and displays pages
+
+- (void)settingsViewDidChangeDocument:(ConfigurationSettingsView *)view {
+  [self documentChanged];
+}
+
+- (void)settingsViewWantsTextEditor:(ConfigurationSettingsView *)view {
+  [self.delegate formViewWantsTextEditor:self];
+}
+
+- (void)settingsViewWantsFinder:(ConfigurationSettingsView *)view {
+  if ([self.delegate respondsToSelector:@selector(formViewWantsFinder:)]) [self.delegate formViewWantsFinder:self];
+}
+
+- (BOOL)settingsViewLaunchesAtLogin:(ConfigurationSettingsView *)view {
+  return [self.delegate respondsToSelector:@selector(formViewLaunchesAtLogin:)] && [self.delegate formViewLaunchesAtLogin:self];
+}
+
+- (void)settingsView:(ConfigurationSettingsView *)view setLaunchesAtLogin:(BOOL)launches {
+  if ([self.delegate respondsToSelector:@selector(formView:setLaunchesAtLogin:)]) [self.delegate formView:self setLaunchesAtLogin:launches];
+}
+
+// Snapshots live outside the configuration file; only the sidebar count follows them.
+- (void)snapshotsViewDidChange:(ConfigurationSnapshotsView *)view {
+  [self reloadSidebarKeepingSelection];
+}
+
+- (void)displaysViewDidChangeDocument:(ConfigurationDisplaysView *)view {
+  [self documentChanged];
+}
+
+- (void)slotsViewDidChangeDocument:(ConfigurationSlotsView *)view {
+  [self documentChanged];
+}
+
+- (void)slotsView:(ConfigurationSlotsView *)view didChangeEditing:(BOOL)editing {
+  [self setSublevelActive:editing];
+}
+
+// The Map | List switcher and the conflicts pill at the top right of the Keyboard title.
+- (void)keyboardModeChanged:(NSSegmentedControl *)control {
+  self.keyboardView.mode = [control selectedSegment] == 1 ? ConfigurationKeyboardModeList : ConfigurationKeyboardModeMap;
+}
+
+- (void)showKeyboardList:(BOOL)list {
+  self.selectedSection = ConfigurationFormSectionKeyboard;
+  [self.keyboardSwitcher setSelectedSegment:list ? 1 : 0];
+  [self keyboardModeChanged:self.keyboardSwitcher];
+}
+
+- (void)beginNewShortcut {
+  self.selectedSection = ConfigurationFormSectionKeyboard;
+  [self.keyboardView startNewShortcut];
+}
+
+- (void)conflictsPressed:(id)sender {
+  [self.keyboardSwitcher setSelectedSegment:1];
+  [self.keyboardView showConflicts];
+}
+
+- (void)showKeyboardMode {
+  BOOL keyboard = self.selectedSection == ConfigurationFormSectionKeyboard;
+  [self.keyboardView setHidden:!keyboard];
+  [self.keyboardSwitcher setHidden:!keyboard || self.sublevelActive];
+  NSUInteger conflicts = keyboard ? self.keyboardView.conflictCount : 0;
+  [self.conflictsButton setHidden:!keyboard || self.sublevelActive || conflicts == 0];
+  [self.conflictsButton setTitle:[NSString stringWithFormat:@"%lu conflict%@", (unsigned long)conflicts, conflicts == 1 ? @"" : @"s"]];
+  if (keyboard) [self.infoLabel setStringValue:@"Every shortcut, by the keys that trigger it."];
+}
+
+- (void)keyboardViewDidChangeDocument:(ConfigurationKeyboardView *)view {
+  [self documentChanged];
+  [self showKeyboardMode];
+}
+
+- (void)keyboardViewWantsGroups:(ConfigurationKeyboardView *)view {
+  [self setSelectedSection:ConfigurationFormSectionModifiers];
+}
+
+- (void)keyboardView:(ConfigurationKeyboardView *)view didChangeEditing:(BOOL)editing {
+  [self setSublevelActive:editing];
+}
+
+// The Custom | Presets switcher at the top right of the Slots title.
+- (void)slotsModeChanged:(NSSegmentedControl *)control {
+  [self showSlotsMode];
+}
+
+- (BOOL)showsPresets {
+  return [self.slotsSwitcher selectedSegment] == 1;
+}
+
+// Shows the user's own slots or the read-only presets, and the line under the title that goes with them.
+- (void)showSlotsMode {
+  BOOL slotsPage = self.selectedSection == ConfigurationFormSectionPositions;
+  BOOL presets = slotsPage && [self showsPresets];
+  [self.slotsView setHidden:!slotsPage || presets];
+  [self.presetsView setHidden:!presets];
+  [self.slotsSwitcher setHidden:!slotsPage || self.sublevelActive];
+  if (slotsPage) [self.infoLabel setStringValue:presets ? @"Built in. They can't be changed, so your own slots need different names." : @"Named window areas, used as ${name} in shortcuts."];
+}
+
+// While a slot is open its back button is the header, and the window's bottom bar goes away.
+- (void)setSublevelActive:(BOOL)active {
+  if (_sublevelActive == active) return;
+  _sublevelActive = active;
+  for (NSView *view in @[self.titleLabel, self.infoLabel]) [view setHidden:active];
+  [self.slotsSwitcher setHidden:active || self.selectedSection != ConfigurationFormSectionPositions];
+  if (active) { self.keyboardTopBelowHeader.active = NO; self.keyboardTopFull.active = YES; }
+  else { self.keyboardTopFull.active = NO; self.keyboardTopBelowHeader.active = YES; }
+  [self showKeyboardMode];
+  if (active) { self.slotsTopBelowHeader.active = NO; self.slotsTopFull.active = YES; }
+  else { self.slotsTopFull.active = NO; self.slotsTopBelowHeader.active = YES; }
+  if ([self.delegate respondsToSelector:@selector(formView:didChangeSublevel:)]) [self.delegate formView:self didChangeSublevel:active];
+}
+
+#pragma mark - Actions
+
+// Every slot a shortcut can move to: the built-in ones, then the file's own.
+- (NSArray<MWMConfigEntry *> *)slotEntries {
+  NSMutableArray *entries = [NSMutableArray array];
+  NSSet *inFile = [NSSet setWithArray:[self.document.positions valueForKey:@"name"]];
+  for (MWMSlot *preset in [MWMSlots presets]) {
+    if (![inFile containsObject:preset.name]) [entries addObject:[MWMConfigEntry entryWithName:preset.name value:preset.formula]];
+  }
+  [entries addObjectsFromArray:self.document.positions];
+  return entries;
+}
+
+- (NSView *)actionCellForBinding:(MWMBindingEntry *)binding {
+  ConfigurationActionView *view = [[ConfigurationActionView alloc] init];
+  [view setDelegate:self];
+  [view setAction:binding.action ?: @"" positions:[self slotEntries] monitors:self.document.monitors];
+  return view;
+}
+
+- (void)actionView:(ConfigurationActionView *)view didChangeAction:(NSString *)action {
+  NSInteger row = [self.table rowForView:view];
+  if (row < 0 || row >= (NSInteger)[self.rows count] || ![self isBindingSection:self.selectedSection]) return;
+  MWMBindingEntry *binding = self.rows[row];
+  if ([action length] == 0 || [action isEqualToString:binding.action]) return;
+  MWMBindingCategory before = [self.document categoryOfBinding:binding];
+  binding.action = action;
+  if ([self.document categoryOfBinding:binding] != before) {
+    dispatch_async(dispatch_get_main_queue(), ^{ [self reloadRows]; });
+  }
+  [self documentChanged];
+}
+
+#pragma mark - Shortcuts
+
+// Shortcuts that fire on the same keys, from every enabled binding: identity -> bindings.
+- (NSDictionary<NSString *, NSArray<MWMBindingEntry *> *> *)bindingsByShortcut {
+  NSMutableDictionary *groups = [NSMutableDictionary dictionary];
+  for (MWMBindingEntry *binding in self.document.bindings) {
+    if (!binding.enabled) continue;
+    NSString *identity = [MWMShortcut identityForKey:[self.document expandAliases:binding.key]
+                                             modifiers:[self.document expandAliases:binding.modifiers ?: @""]];
+    if (identity == nil) continue;
+    groups[identity] = [(groups[identity] ?: @[]) arrayByAddingObject:binding];
+  }
+  return groups;
+}
+
+- (NSString *)conflictTextForBinding:(MWMBindingEntry *)binding groups:(NSDictionary *)groups {
+  if (!binding.enabled) return nil;
+  NSString *identity = [MWMShortcut identityForKey:[self.document expandAliases:binding.key]
+                                           modifiers:[self.document expandAliases:binding.modifiers ?: @""]];
+  NSArray<MWMBindingEntry *> *same = identity ? groups[identity] : nil;
+  if ([same count] < 2) return nil;
+  NSMutableArray *others = [NSMutableArray array];
+  for (MWMBindingEntry *other in same) {
+    if (other != binding) [others addObject:[NSString stringWithFormat:@"“%@”", other.action]];
+  }
+  return [NSString stringWithFormat:@"Same shortcut as %@", [others componentsJoinedByString:@", "]];
+}
+
+- (NSView *)shortcutCellForBinding:(MWMBindingEntry *)binding {
+  ConfigurationShortcutView *view = [[ConfigurationShortcutView alloc] init];
+  [view setDelegate:self];
+  NSString *key = [self.document expandAliases:binding.key];
+  NSString *expandedMods = [self.document expandAliases:binding.modifiers ?: @""];
+  NSArray *names = [MWMShortcut modifierNamesFromString:expandedMods];
+  BOOL known = [MWMShortcut identityForKey:key modifiers:nil] != nil && names != nil;
+  if (known) {
+    NSString *alias = nil;
+    NSRegularExpression *single = [NSRegularExpression regularExpressionWithPattern:@"^\\$\\{([^}]*)\\}$" options:0 error:nil];
+    NSTextCheckingResult *match = [single firstMatchInString:binding.modifiers ?: @"" options:0 range:NSMakeRange(0, [binding.modifiers length])];
+    if (match) alias = [binding.modifiers substringWithRange:[match rangeAtIndex:1]];
+    [view setKeyName:key modifierNames:names aliasName:alias
+            conflict:[self conflictTextForBinding:binding groups:[self bindingsByShortcut]]];
+  } else {
+    [view showRawText:[binding.modifiers length] > 0 ? [NSString stringWithFormat:@"%@ + %@", binding.modifiers, binding.key] : binding.key];
+  }
+  NSMenu *menu = [[NSMenu alloc] init];
+  [[menu addItemWithTitle:@"Edit as Text…" action:@selector(editShortcutAsText:) keyEquivalent:@""] setTarget:self];
+  [view setMenu:menu];
+  return [self cellWith:view];
+}
+
+- (void)shortcutViewWillBeginRecording:(ConfigurationShortcutView *)view {
+  NSInteger row = [self.table rowForView:view];
+  if (row >= 0) [self.table selectRowIndexes:[NSIndexSet indexSetWithIndex:row] byExtendingSelection:NO];
+}
+
+- (void)shortcutView:(ConfigurationShortcutView *)view didRecordKey:(NSString *)keyName modifierNames:(NSArray<NSString *> *)modifierNames {
+  NSInteger row = [self.table rowForView:view];
+  if (row < 0 || row >= (NSInteger)[self.rows count]) return;
+  MWMBindingEntry *binding = self.rows[row];
+  // A named group (like ${hyper}) that matches keeps the file readable.
+  NSString *alias = [MWMShortcut aliasForModifierNames:modifierNames inEntries:self.document.modifiers];
+  NSString *modifiers = alias ?: ([modifierNames count] > 0 ? [MWMShortcut stringFromModifierNames:modifierNames] : nil);
+  if ([binding.key isEqualToString:keyName] && ((modifiers == nil && [binding.modifiers length] == 0) || [modifiers isEqualToString:binding.modifiers])) return;
+  binding.key = keyName;
+  binding.modifiers = modifiers;
+  dispatch_async(dispatch_get_main_queue(), ^{ [self reloadRows]; });  // conflicts may have changed on other rows
+  [self documentChanged];
+}
+
+- (void)beginRecordingRow:(NSInteger)row {
+  [self.table selectRowIndexes:[NSIndexSet indexSetWithIndex:row] byExtendingSelection:NO];
+  [self.table scrollRowToVisible:row];
+  if ([self window] == nil) return;
+  NSInteger columnIndex = [self.table columnWithIdentifier:kColShortcut];
+  if (columnIndex < 0) return;
+  NSView *cell = [self.table viewAtColumn:columnIndex row:row makeIfNecessary:YES];
+  for (NSView *view in [cell subviews]) {
+    if ([view isKindOfClass:[ConfigurationShortcutView class]]) [(ConfigurationShortcutView *)view beginRecording];
+  }
+}
+
+// For what can't be recorded: a key with no physical equivalent, or a modal key (name:modal).
+- (void)editShortcutAsText:(NSMenuItem *)item {
+  NSInteger row = [self.table clickedRow];
+  if (row < 0 || row >= (NSInteger)[self.rows count]) return;
+  MWMBindingEntry *binding = self.rows[row];
+  NSTextField *keyField = [NSTextField textFieldWithString:binding.key ?: @""];
+  NSTextField *modifiersField = [NSTextField textFieldWithString:binding.modifiers ?: @""];
+  [keyField setPlaceholderString:@"r, pad5, left"];
+  [modifiersField setPlaceholderString:@"ctrl;alt;cmd or ${hyper}"];
+  NSStackView *fields = [NSStackView stackViewWithViews:@[
+    [NSTextField labelWithString:@"Key"], keyField, [NSTextField labelWithString:@"Modifiers"], modifiersField,
+  ]];
+  [fields setOrientation:NSUserInterfaceLayoutOrientationVertical];
+  [fields setAlignment:NSLayoutAttributeLeading];
+  [fields setFrameSize:NSMakeSize(300, 100)];
+  [keyField setFrameSize:NSMakeSize(300, 22)];
+  [modifiersField setFrameSize:NSMakeSize(300, 22)];
+  NSAlert *alert = [NSAlert mwm_alert];
+  [alert setMessageText:@"Edit shortcut as text"];
+  [alert addButtonWithTitle:@"Save"];
+  [alert addButtonWithTitle:@"Cancel"];
+  [alert setAccessoryView:fields];
+  if ([self window] == nil) return;
+  [alert beginSheetModalForWindow:[self window] completionHandler:^(NSModalResponse response) {
+    if (response != NSAlertFirstButtonReturn) return;
+    NSString *key = [[keyField stringValue] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+    NSString *mods = [[modifiersField stringValue] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+    if ([key length] == 0) {
+      NSBeep();
+      return;
+    }
+    binding.key = key;
+    binding.modifiers = [mods length] > 0 ? mods : nil;
+    [self reloadRows];
+    [self documentChanged];
+  }];
+}
+
+#pragma mark - Editing
+
+- (void)cellEdited:(NSTextField *)field {
+  NSInteger row = [self.table rowForView:field];
+  if (row < 0 || row >= (NSInteger)[self.rows count]) return;
+  NSString *column = [field identifier];
+  NSString *text = [[field stringValue] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+  BOOL changed = NO;
+
+  if ([self isBindingSection:self.selectedSection]) {
+    MWMBindingEntry *binding = self.rows[row];
+    MWMBindingCategory before = [self.document categoryOfBinding:binding];
+    if ([column isEqualToString:kColKey] || [column isEqualToString:kColAction]) {
+      NSString *current = [column isEqualToString:kColKey] ? binding.key : binding.action;
+      if ([text length] == 0) {  // a binding always needs both
+        NSBeep();
+        [field setStringValue:current];
+        return;
+      }
+      changed = ![text isEqualToString:current];
+      if ([column isEqualToString:kColKey]) binding.key = text; else binding.action = text;
+    } else {
+      NSString *value = [text length] > 0 ? text : nil;
+      NSString *current = [column isEqualToString:kColModifiers] ? binding.modifiers : binding.note;
+      changed = !((value == nil && current == nil) || [value isEqualToString:current]);
+      if ([column isEqualToString:kColModifiers]) binding.modifiers = value; else binding.note = value;
+    }
+    if (changed && [self.document categoryOfBinding:binding] != before) {
+      // The binding now belongs in another section; refresh once editing ends.
+      dispatch_async(dispatch_get_main_queue(), ^{ [self reloadRows]; });
+    }
+  } else {
+    MWMConfigEntry *entry = self.rows[row];
+    if ([column isEqualToString:kColName]) {
+      if ([text length] == 0) {
+        NSBeep();
+        [field setStringValue:entry.name];
+        return;
+      }
+      changed = ![text isEqualToString:entry.name];
+      entry.name = text;
+      if (IsSettingsSection(self.selectedSection)) {
+        dispatch_async(dispatch_get_main_queue(), ^{ [self reloadRows]; });  // default column follows the name
+      }
+    } else {
+      id value = IsSettingsSection(self.selectedSection) ? TypedSettingValue(text) : text;
+      changed = ![DisplayValue(value) isEqualToString:DisplayValue(entry.value)] || IsBoolean(value) != IsBoolean(entry.value);
+      entry.value = value;
+    }
+  }
+  if (changed) [self documentChanged];
+}
+
+- (void)enabledToggled:(NSButton *)box {
+  NSInteger row = [self.table rowForView:box];
+  if (row < 0) return;
+  MWMBindingEntry *binding = self.rows[row];
+  binding.enabled = [box state] == NSControlStateValueOn;
+  [self documentChanged];
+}
+
+- (void)settingToggled:(NSButton *)box {
+  NSInteger row = [self.table rowForView:box];
+  if (row < 0) return;
+  MWMConfigEntry *entry = self.rows[row];
+  entry.value = [box state] == NSControlStateValueOn ? @YES : @NO;
+  [self documentChanged];
+}
+
+- (NSString *)uniqueName:(NSString *)base {
+  NSMutableSet *taken = [NSMutableSet set];
+  for (NSArray<MWMConfigEntry *> *section in @[self.document.modifiers, self.document.monitors, self.document.positions, self.document.aliases]) {
+    [taken addObjectsFromArray:[section valueForKey:@"name"]];
+  }
+  NSString *name = base;
+  for (NSUInteger i = 2; [taken containsObject:name]; i++) name = [NSString stringWithFormat:@"%@%lu", base, (unsigned long)i];
+  return name;
+}
+
+- (MWMBindingEntry *)newBindingForSection:(ConfigurationFormSection)section {
+  NSString *hyper = [self.document.modifiers count] > 0 ? [NSString stringWithFormat:@"${%@}", self.document.modifiers[0].name] : @"ctrl;alt;cmd";
+  switch (section) {
+    case ConfigurationFormSectionApps:
+      return [MWMBindingEntry bindingWithKey:@"f12" modifiers:@"alt;shift" action:@"focus 'Finder'"];
+    case ConfigurationFormSectionLayout: {
+      NSString *position = [self.document.positions count] > 0 ? [NSString stringWithFormat:@"${%@}", self.document.positions[0].name]
+                                                                : @"move screenOriginX;screenOriginY screenSizeX;screenSizeY";
+      return [MWMBindingEntry bindingWithKey:@"f12" modifiers:hyper action:position];
+    }
+    case ConfigurationFormSectionWindowActions:
+      return [MWMBindingEntry bindingWithKey:@"f12" modifiers:hyper action:@"resize +10% +0"];
+    case ConfigurationFormSectionKeyboard:
+      return [MWMBindingEntry bindingWithKey:@"f12" modifiers:hyper action:@"focus left"];
+    default:
+      return [MWMBindingEntry bindingWithKey:@"f12" modifiers:hyper action:@"relaunch"];
+  }
+}
+
+- (void)beginEditingRow:(NSInteger)row column:(NSString *)column {
+  [self.table selectRowIndexes:[NSIndexSet indexSetWithIndex:row] byExtendingSelection:NO];
+  [self.table scrollRowToVisible:row];
+  if ([self window] == nil) return;
+  NSInteger columnIndex = [self.table columnWithIdentifier:column];
+  if (columnIndex >= 0) [self.table editColumn:columnIndex row:row withEvent:nil select:YES];
+}
+
+- (IBAction)add:(id)sender {
+  ConfigurationFormSection section = self.selectedSection;
+  if (IsSettingsSection(section)) {
+    [self showSettingsMenu];
+    return;
+  }
+  if ([self isBindingSection:section]) {
+    MWMBindingEntry *binding = [self newBindingForSection:section];
+    NSArray *existing = [self bindingsForSection:section];
+    // Keep a category's bindings together in the file.
+    NSUInteger index = [existing count] > 0 ? [self.document.bindings indexOfObjectIdenticalTo:[existing lastObject]] + 1 : [self.document.bindings count];
+    binding.group = [existing count] > 0 ? [(MWMBindingEntry *)[existing lastObject] group] : nil;
+    [self.document.bindings insertObject:binding atIndex:index];
+    [self reloadRows];
+    [self documentChanged];
+    [self beginRecordingRow:[self.rows indexOfObjectIdenticalTo:binding]];
+    return;
+  }
+  NSDictionary *defaults = @{
+    @(ConfigurationFormSectionModifiers): @[@"modifier", @"ctrl;alt;cmd"],
+    @(ConfigurationFormSectionMonitors): @[@"monitor", @"0"],
+    @(ConfigurationFormSectionPositions): @[@"position", @"move screenOriginX;screenOriginY screenSizeX;screenSizeY"],
+    @(ConfigurationFormSectionAliases): @[@"alias", @""],
+  };
+  NSArray *pair = defaults[@(section)];
+  MWMConfigEntry *entry = [MWMConfigEntry entryWithName:[self uniqueName:pair[0]] value:pair[1]];
+  [[self entriesForSection:section] addObject:entry];
+  [self reloadRows];
+  [self documentChanged];
+  [self beginEditingRow:[self.rows count] - 1 column:kColName];
+}
+
+- (void)showSettingsMenu {
+  NSDictionary *defaults = [[MWMConfig getInstance] configDefaults];
+  NSSet *present = [NSSet setWithArray:[self.document.settings valueForKey:@"name"]];
+  NSMenu *menu = [[NSMenu alloc] init];
+  for (NSString *name in [[defaults allKeys] sortedArrayUsingSelector:@selector(caseInsensitiveCompare:)]) {
+    if ([present containsObject:name]) continue;
+    NSMenuItem *item = [menu addItemWithTitle:name action:@selector(addSetting:) keyEquivalent:@""];
+    [item setTarget:self];
+    [item setRepresentedObject:name];
+  }
+  if ([menu numberOfItems] == 0) {
+    [menu addItemWithTitle:@"Every setting is already listed" action:nil keyEquivalent:@""];
+  }
+  [menu popUpMenuPositioningItem:nil atLocation:NSMakePoint(0, NSHeight([self.addButton bounds]) + 4) inView:self.addButton];
+}
+
+- (void)addSetting:(NSMenuItem *)item {
+  NSString *name = [item representedObject];
+  NSString *fallback = [[MWMConfig getInstance] getConfigDefault:name] ?: @"";
+  MWMConfigEntry *entry = [MWMConfigEntry entryWithName:name value:TypedSettingValue(fallback)];
+  [self.document.settings addObject:entry];
+  [self reloadRows];
+  [self documentChanged];
+  NSUInteger row = [self.rows indexOfObjectIdenticalTo:entry];  // it may belong on the other settings page
+  if (row != NSNotFound) [self beginEditingRow:row column:kColValue];
+}
+
+- (IBAction)remove:(id)sender {
+  NSIndexSet *selected = [self.table selectedRowIndexes];
+  if ([selected count] == 0) {
+    NSBeep();
+    return;
+  }
+  NSArray *doomed = [self.rows objectsAtIndexes:selected];
+  NSMutableArray *list = [self isBindingSection:self.selectedSection] ? (NSMutableArray *)self.document.bindings
+                                                                      : (NSMutableArray *)[self entriesForSection:self.selectedSection];
+  for (id row in doomed) [list removeObjectIdenticalTo:row];
+  [self reloadRows];
+  [self documentChanged];
+}
+
+- (IBAction)openInTextEditor:(id)sender {
+  [self.delegate formViewWantsTextEditor:self];
+}
+
+- (IBAction)reload:(id)sender {
+  [self.delegate formViewWantsReload:self];
+}
+
+#pragma mark - Revealing
+
+- (void)selectRowObject:(id)object {
+  NSUInteger row = [self.rows indexOfObjectIdenticalTo:object];
+  if (row == NSNotFound) return;
+  [self.table selectRowIndexes:[NSIndexSet indexSetWithIndex:row] byExtendingSelection:NO];
+  [self.table scrollRowToVisible:row];
+  if ([self window] != nil) [[self window] makeFirstResponder:self.table];
+}
+
+- (void)revealBindingAtIndex:(NSUInteger)index {
+  if (self.document == nil || index >= [self.document.bindings count]) return;
+  MWMBindingEntry *binding = self.document.bindings[index];
+  self.keyboardFilter = -1;  // the shortcut must be in the list
+  [self setSelectedSection:ConfigurationFormSectionKeyboard];
+  [self selectRowObject:binding];
+}
+
+- (void)revealEntryNamed:(NSString *)name {
+  if (self.document == nil) return;
+  NSArray *pages = @[@(ConfigurationFormSectionGeneral), @(ConfigurationFormSectionAdvanced), @(ConfigurationFormSectionModifiers), @(ConfigurationFormSectionMonitors),
+                     @(ConfigurationFormSectionPositions), @(ConfigurationFormSectionAliases)];
+  for (NSNumber *page in pages) {
+    ConfigurationFormSection section = (ConfigurationFormSection)[page integerValue];
+    for (MWMConfigEntry *entry in [self visibleEntriesForSection:section]) {
+      if (![entry.name isEqualToString:name]) continue;
+      [self setSelectedSection:section];
+      [self selectRowObject:entry];
+      if (section == ConfigurationFormSectionPositions) {
+        [self.slotsSwitcher setSelectedSegment:0];
+        [self showSlotsMode];
+        [self.slotsView selectSlotNamed:name];
+      }
+      return;
+    }
+  }
+}
+
+@end

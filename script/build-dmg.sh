@@ -6,8 +6,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
 CONFIGURATION="${1:-Release}"
-# Files carry the version: MWM-1.0.dmg, from CFBundleShortVersionString in Slate-Info.plist.
-VERSION="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$(dirname "$0")/../Slate/App/Slate-Info.plist")"
+# Files carry the version: MWM-1.0.dmg, from CFBundleShortVersionString in MWM-Info.plist.
+VERSION="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$(dirname "$0")/../MWM/App/MWM-Info.plist")"
 DMG_NAME="MWM-${VERSION}.dmg"
 OUTPUT_DIR="${ROOT_DIR}/build"
 STAGING_DIR="/tmp/mwm_dmg_staging_$$"
@@ -15,10 +15,10 @@ STAGING_DIR="/tmp/mwm_dmg_staging_$$"
 echo "==> Building MWM (${CONFIGURATION})..."
 cd "${ROOT_DIR}"
 # A universal app (Apple silicon and Intel), installed into its own folder so it never replaces the
-# development build that the tests and "script/screens" use (tmp/Slate.dst).
+# development build that the tests and "script/screens" use (tmp/MWM.dst).
 RELEASE_DST="/tmp/MWMRelease.dst"
 rm -rf "${RELEASE_DST}"
-xcodebuild -scheme Slate \
+xcodebuild -scheme MWM \
            -configuration "${CONFIGURATION}" \
            -destination 'generic/platform=macOS' \
            -derivedDataPath /tmp/MWMDerivedData \

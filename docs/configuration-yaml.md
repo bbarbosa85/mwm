@@ -66,7 +66,7 @@ The Snapshots page saves where every open window is (with the screens at the tim
 
 ### Supported YAML
 
-`SlateYAML` reads a strict subset: block mappings and lists, one-line lists and mappings (`[a, b]`, `{a: 1, b: [c]}`), plain, `"double"` and `'single'` quoted values, numbers, `true`/`false`, `null`/`~`, `#` comments, and empty `{}` / `[]`. Anchors, aliases (`&`, `*`), tags (`!`), multi-line strings (`|`, `>`), lists and mappings spread over several lines inside brackets, tabs for indentation and duplicate keys are errors that name the line, so a file never loads differently from how it reads. Quote a value that starts with a special character or contains `: ` or ` #`.
+`MWMYAML` reads a strict subset: block mappings and lists, one-line lists and mappings (`[a, b]`, `{a: 1, b: [c]}`), plain, `"double"` and `'single'` quoted values, numbers, `true`/`false`, `null`/`~`, `#` comments, and empty `{}` / `[]`. Anchors, aliases (`&`, `*`), tags (`!`), multi-line strings (`|`, `>`), lists and mappings spread over several lines inside brackets, tabs for indentation and duplicate keys are errors that name the line, so a file never loads differently from how it reads. Quote a value that starts with a special character or contains `: ` or ` #`.
 
 ## 2. The configuration window
 
@@ -74,7 +74,7 @@ The window is a form with a sidebar of sections: General (settings), Modifiers, 
 
 The bottom bar shows `{saved?} {file} … {valid?} … {Apply} {Close}`.
 
-- **Saving as you go.** Every change is validated (`SlateConfigValidator`) and, if it has no errors, written right away. Warnings don't block saving. Changes with errors show **Not saved**, and the file keeps its last valid version. The first save of a session copies the previous file to `~/.mwm.yml.bak`. Writes are atomic and go through a symlinked `~/.mwm.yml` to its target.
+- **Saving as you go.** Every change is validated (`MWMConfigValidator`) and, if it has no errors, written right away. Warnings don't block saving. Changes with errors show **Not saved**, and the file keeps its last valid version. The first save of a session copies the previous file to `~/.mwm.yml.bak`. Writes are atomic and go through a symlinked `~/.mwm.yml` to its target.
 - **Hand edits.** Opening the window doesn't rewrite the file, so comments and layout are kept until something changes in the window, which then writes the canonical layout. If the file changes on disk while the window is open, the window reloads it when it comes to the front (or asks, if it has unsaved changes with errors).
 - **Validity.** The status lists errors (YAML problems, unknown aliases, bindings Slate's parser rejects) and warnings (unknown settings, keys bound twice). Choosing one selects the binding or entry it's about. Validation never registers keys or runs operations or shell commands.
 - **Unreadable file.** If `~/.mwm.yml` isn't valid YAML in the supported subset, the window shows the error with **Open in Text Editor** and **Reload**.
@@ -82,7 +82,7 @@ The bottom bar shows `{saved?} {file} … {valid?} … {Apply} {Close}`.
 
 ## 3. Migration
 
-On startup, `SlateLegacyMigration` converts the older files into `~/.mwm.yml`:
+On startup, `MWMLegacyMigration` converts the older files into `~/.mwm.yml`:
 
 - **`~/.slate.yml`** (the name this file had before the app was renamed) is read as is and merged in.
 - **`~/.slate`**: `config`, `alias` and `bind` lines become settings, aliases and bindings. Each alias is sorted into `modifiers`, `monitors`, `positions` or `aliases` by its value, and `${…}` references are kept as written. Commented-out `bind` lines become bindings with `enabled: false`. A binding's `group` comes from the nearest `# HEADER` comment with a `# ----` underline, and its `note` from comments directly above it. `layout`, `default` and `source` lines, per-app configs and redefined aliases can't be represented; they're listed in the migration alert.
