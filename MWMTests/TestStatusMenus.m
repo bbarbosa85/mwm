@@ -102,7 +102,10 @@
   XCTAssertNotNil([[menu itemWithTitle:@"Keyboard Shortcuts"] submenu]);
   XCTAssertEqual([titles indexOfObject:@"Backup…"], (NSUInteger)NSNotFound);
   XCTAssertEqual([titles indexOfObject:@"Open Page"], (NSUInteger)NSNotFound);
-  XCTAssertEqualObjects([titles objectAtIndex:[titles count] - 2], @"About MWM");
+  NSUInteger updates = [titles indexOfObject:@"Check for Updates…"];
+  XCTAssertEqual(updates, about + 1, @"grouped right under About: %@", titles);
+  XCTAssertEqualObjects([titles objectAtIndex:[titles count] - 3], @"Check for Updates…");
+  XCTAssertEqualObjects([titles objectAtIndex:[titles count] - 2], @"-");
   XCTAssertEqualObjects([titles lastObject], @"Quit MWM");
 }
 

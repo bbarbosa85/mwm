@@ -21,14 +21,17 @@
 3. Commit `docs/downloads/` in a pull request. Once merged, GitHub Pages serves the files, and the
    product page (`docs/index.html`) links to `docs/downloads/MWM-<version>.dmg` and `.zip` on `master` (`github.com/bbarbosa85/mwm/raw/master/docs/downloads/...`). Each release adds about 3.5 MB to the repository's history.
 
-   Optionally also publish a GitHub release for the version tag:
+4. **Publish a GitHub release for the version** (not a draft), tagged `v` plus the app's version
+   (`v1.0` for `CFBundleShortVersionString` 1.0). MWM's "Check for Updates" reads the repository's
+   latest release and compares its tag with the running version, so without a newer release
+   nobody is told there is an update. The release can have notes only; the downloads are served from
+   the site:
 
    ```bash
-   gh release create v1.0 build/MWM-1.0.dmg build/MWM-1.0.zip build/SHA256SUMS.txt \
-     --title "MWM 1.0" --notes "First MWM release."
+   gh release create v1.0 --title "MWM 1.0" --notes "First MWM release."
    ```
 
-4. Turn on GitHub Pages for the repository (Settings → Pages → Deploy from a branch → `master`,
+5. Turn on GitHub Pages for the repository (Settings → Pages → Deploy from a branch → `master`,
    folder `/docs`). The page is then at `https://bbarbosa85.github.io/mwm/`.
 
 ## Notes

@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		5E1A0C0B2D00000000000903 /* MWMUpdateChecker.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D00000000000902 /* MWMUpdateChecker.m */; };
+		5E1A0C0B2D00000000000905 /* TestUpdateChecker.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D00000000000904 /* TestUpdateChecker.m */; };
 		5E1A0C0B2D00000000000872 /* TestExampleConfigs.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D00000000000871 /* TestExampleConfigs.m */; };
 		5E1A0C0B2D00000000000862 /* TestStatusMenus.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D00000000000861 /* TestStatusMenus.m */; };
 		5E1A0C0B2D00000000000852 /* MWMStatusMenus.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D00000000000851 /* MWMStatusMenus.m */; };
@@ -178,6 +180,9 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		5E1A0C0B2D00000000000901 /* MWMUpdateChecker.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = App/MWMUpdateChecker.h; sourceTree = "<group>"; };
+		5E1A0C0B2D00000000000902 /* MWMUpdateChecker.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = App/MWMUpdateChecker.m; sourceTree = "<group>"; };
+		5E1A0C0B2D00000000000904 /* TestUpdateChecker.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TestUpdateChecker.m; sourceTree = "<group>"; };
 		5E1A0C0B2D00000000000871 /* TestExampleConfigs.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TestExampleConfigs.m; sourceTree = "<group>"; };
 		5E1A0C0B2D00000000000861 /* TestStatusMenus.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TestStatusMenus.m; sourceTree = "<group>"; };
 		5E1A0C0B2D00000000000850 /* MWMStatusMenus.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UI/MWMStatusMenus.h; sourceTree = "<group>"; };
@@ -522,6 +527,7 @@
 				5E1A0C0B2D00000000000708 /* TestMWMShortcutIndex.m */,
 				5E1A0C0B2D00000000000770 /* TestSnapshots.m */,
 				5E1A0C0B2D00000000000793 /* TestAppIcon.m */,
+				5E1A0C0B2D00000000000904 /* TestUpdateChecker.m */,
 				5E1A0C0B2D00000000000871 /* TestExampleConfigs.m */,
 				5E1A0C0B2D00000000000861 /* TestStatusMenus.m */,
 				5E1A0C0B2D00000000000841 /* TestDialogs.m */,
@@ -820,6 +826,8 @@
 				5E1A0C0B2D00000000000318 /* ConfigurationWindowController.h */,
 				47C4A2A51384E8890066B6DE /* MWMAppDelegate.h */,
 				47C4A2A61384E8890066B6DE /* MWMAppDelegate.m */,
+				5E1A0C0B2D00000000000901 /* MWMUpdateChecker.h */,
+				5E1A0C0B2D00000000000902 /* MWMUpdateChecker.m */,
 			);
 			path = MWM;
 			sourceTree = "<group>";
@@ -966,6 +974,7 @@
 			files = (
 				47C4A2A11384E8890066B6DE /* main.m in Sources */,
 				47C4A2A71384E8890066B6DE /* MWMAppDelegate.m in Sources */,
+				5E1A0C0B2D00000000000903 /* MWMUpdateChecker.m in Sources */,
 				47C4A2CB1384EA510066B6DE /* MWMConfig.m in Sources */,
 				5E1A0C0B2D00000000000114 /* MWMConfigDocument.m in Sources */,
 				5E1A0C0B2D00000000000611 /* MWMYAML.m in Sources */,
@@ -1082,6 +1091,7 @@
 				5E1A0C0B2D00000000000709 /* TestMWMShortcutIndex.m in Sources */,
 				5E1A0C0B2D00000000000771 /* TestSnapshots.m in Sources */,
 				5E1A0C0B2D00000000000794 /* TestAppIcon.m in Sources */,
+				5E1A0C0B2D00000000000905 /* TestUpdateChecker.m in Sources */,
 				5E1A0C0B2D00000000000872 /* TestExampleConfigs.m in Sources */,
 				5E1A0C0B2D00000000000862 /* TestStatusMenus.m in Sources */,
 				5E1A0C0B2D00000000000842 /* TestDialogs.m in Sources */,
