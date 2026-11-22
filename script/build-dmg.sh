@@ -69,6 +69,11 @@ rm -f "${ZIP_PATH}"
 ditto -c -k --sequesterRsrc --keepParent "${STAGING_DIR}/MWM.app" "${ZIP_PATH}"
 (cd "${OUTPUT_DIR}" && shasum -a 256 MWM.dmg MWM.zip > SHA256SUMS.txt)
 
+# The product page serves the files from docs/downloads (GitHub Pages), so they are copied there.
+DOWNLOADS="$(dirname "$0")/../docs/downloads"
+mkdir -p "${DOWNLOADS}"
+cp "${DMG_PATH}" "${ZIP_PATH}" "${OUTPUT_DIR}/SHA256SUMS.txt" "${DOWNLOADS}/"
+
 rm -rf "${STAGING_DIR}"
 
 echo "==> Successfully created the release:"
