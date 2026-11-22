@@ -24,6 +24,7 @@
 #import "MWMAppDelegate.h"
 #import "MWMDesignGallery.h"
 #import "MWMAboutWindow.h"
+#import "MWMUpdateChecker.h"
 #import "MWMStatusMenus.h"
 #import "MWMConfig.h"
 #import "JSController.h"
@@ -148,6 +149,10 @@ static EventHandlerRef modifiersEvent;
   [self setUndoSnapshotOperation:undoSnapOp];
   [self setUndoDeleteSnapshotOperation:[DeleteSnapshotOperation operationFromString:[NSString stringWithFormat:@"delete-snapshot %@ all", UNDO_SNAPSHOT]]];
   [[self undoDeleteSnapshotOperation] doOperation];
+}
+
+- (IBAction)checkForUpdates:(id)sender {
+  [[MWMUpdateChecker shared] checkNow];
 }
 
 - (IBAction)aboutWindow {
@@ -447,6 +452,10 @@ OSStatus OnModifiersChangedEvent(EventHandlerCallRef nextHandler, EventRef theEv
       if (keyUpRunLoopSource) CFRelease(keyUpRunLoopSource);
     }
   }
+  // A few seconds after MWM opens, look for a new version (unless turned off in the settings).
+  dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(8 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+    [[MWMUpdateChecker shared] checkAutomatically];
+  });
 }
 
 - (void)setLaunchOnLoginItemStatus {
@@ -495,6 +504,8 @@ OSStatus OnModifiersChangedEvent(EventHandlerCallRef nextHandler, EventRef theEv
   [self setLaunchOnLoginItemStatus];
   [menu addItem:[NSMenuItem separatorItem]];
   [self setSymbol:@"info.circle" on:[self addItem:@"About MWM" action:@selector(aboutWindow) key:@"" to:menu]];
+  [self setSymbol:@"arrow.down.circle" on:[self addItem:@"Check for Updates…" action:@selector(checkForUpdates:) key:@"" to:menu]];
+  [menu addItem:[NSMenuItem separatorItem]];
   [menu addItemWithTitle:@"Quit MWM" action:@selector(terminate:) keyEquivalent:@"q"];
   return menu;
 }

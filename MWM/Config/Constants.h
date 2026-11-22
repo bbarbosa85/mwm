@@ -38,6 +38,8 @@ extern NSString *const SOURCE;
 extern NSString *const IF_EXISTS;
 
 // Config Keys
+extern NSString *const CHECK_FOR_UPDATES;
+extern NSString *const CHECK_FOR_UPDATES_DEFAULT;
 extern NSString *const DEFAULT_TO_CURRENT_SCREEN;
 extern NSString *const DEFAULT_TO_CURRENT_SCREEN_DEFAULT;
 extern NSString *const NUDGE_PERCENT_OF;

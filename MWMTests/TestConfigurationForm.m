@@ -259,7 +259,7 @@ static NSString *const kConfig =
   XCTAssertTrue([[form valueForKey:@"tableScroll"] isHidden]);
   NSMutableArray *ids = [NSMutableArray array];
   for (NSSwitch *toggle in [self subviewsOf:general ofClass:[NSSwitch class]]) [ids addObject:[toggle identifier]];
-  XCTAssertEqualObjects(ids, (@[@"launchAtLogin", @"defaultToCurrentScreen", @"windowHintsShowIcons", @"windowHintsSpread", @"windowHintsIgnoreHiddenWindows"]));
+  XCTAssertEqualObjects(ids, (@[@"launchAtLogin", @"checkForUpdates", @"defaultToCurrentScreen", @"windowHintsShowIcons", @"windowHintsSpread", @"windowHintsIgnoreHiddenWindows"]));
 }
 
 - (ConfigurationFormView *)advancedFormWithSettings:(NSString *)settings document:(MWMConfigDocument **)outDoc {

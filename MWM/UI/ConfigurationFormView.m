@@ -124,7 +124,7 @@ static BOOL IsEverydaySetting(NSString *name) {
   static NSSet *names;
   static dispatch_once_t once;
   dispatch_once(&once, ^{
-    names = [NSSet setWithObjects:@"defaultToCurrentScreen", @"keyboardLayout", @"windowHintsShowIcons",
+    names = [NSSet setWithObjects:@"checkForUpdates", @"defaultToCurrentScreen", @"keyboardLayout", @"windowHintsShowIcons",
                                   @"windowHintsSpread", @"windowHintsIgnoreHiddenWindows", nil];
   });
   return [names containsObject:name];

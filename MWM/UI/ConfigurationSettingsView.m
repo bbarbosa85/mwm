@@ -32,7 +32,7 @@ static NSArray<NSString *> *ControlledAdvancedSettings(void) {
 
 // The everyday settings, shown on the General page.
 static NSArray<NSString *> *EverydaySettings(void) {
-  return @[@"defaultToCurrentScreen", @"keyboardLayout", @"windowHintsShowIcons", @"windowHintsSpread", @"windowHintsIgnoreHiddenWindows"];
+  return @[@"checkForUpdates", @"defaultToCurrentScreen", @"keyboardLayout", @"windowHintsShowIcons", @"windowHintsSpread", @"windowHintsIgnoreHiddenWindows"];
 }
 
 // "true" -> YES, "0.4" -> 0.4, anything else stays text.
@@ -162,6 +162,7 @@ static id TypedValue(NSString *text) {
   BOOL login = [self.delegate respondsToSelector:@selector(settingsViewLaunchesAtLogin:)] && [self.delegate settingsViewLaunchesAtLogin:self];
   [self addBlock:[self blockWithSymbol:@"power" title:@"Startup" subtitle:@"Runs quietly in the menu bar" rows:@[
     [self rowWithTitle:@"Launch MWM at login" subtitle:nil control:[self switchNamed:kLaunchAtLogin on:login]],
+    [self toggleRowTitle:@"Check for updates" subtitle:@"Looks at GitHub when MWM opens" setting:@"checkForUpdates"],
   ]]];
 
   [self addBlock:[self blockWithSymbol:@"macwindow" title:@"Windows" subtitle:@"Where shortcuts act by default" rows:@[
