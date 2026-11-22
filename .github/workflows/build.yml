@@ -10,7 +10,7 @@ jobs:
   build:
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # The project signs with the author's certificate, which CI doesn't have: sign ad hoc instead.
       - name: Test
@@ -29,7 +29,7 @@ jobs:
           lipo -archs build/DerivedData/Build/Products/Release/MWM.app/Contents/MacOS/MWM
 
       - name: Keep the app from this build
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: MWM-app
           path: MWM-ci.zip
