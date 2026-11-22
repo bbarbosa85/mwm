@@ -103,12 +103,12 @@ static NSString *const kConfig =
 - (void)testSwitchingAShortcutOffSavesAndClearsItsConflict {
   SlateConfigDocument *doc;
   ConfigurationShortcutListView *list = [self listWith:&doc];
-  NSSwitch *toggle = nil;
+  NSButton *toggle = nil;
   NSMutableArray *queue = [NSMutableArray arrayWithObject:list];
   while ([queue count] > 0) {
     NSView *view = [queue lastObject];
     [queue removeLastObject];
-    if ([view isKindOfClass:[NSSwitch class]] && [(NSSwitch *)view tag] == 4) toggle = (NSSwitch *)view;
+    if ([view isKindOfClass:[NSButton class]] && [[view identifier] isEqualToString:@"enabled-4"]) toggle = (NSButton *)view;
     [queue addObjectsFromArray:[view subviews]];
   }
   XCTAssertNotNil(toggle);

@@ -219,9 +219,11 @@ static const CGFloat kKeysColumnWidth = 210;
 
   NSView *keys = [ConfigurationKeyViews shortcutViewForInfo:info size:22];
   [[keys.widthAnchor constraintEqualToConstant:kKeysColumnWidth] setActive:YES];
-  NSTextField *title = [self labelWithText:info.title size:13 color:[MWMTheme textPrimary] weight:NSFontWeightRegular];
+  BOOL active = info.binding.enabled;
+  if (!active) [keys setAlphaValue:0.45];
+  NSTextField *title = [self labelWithText:info.title size:13 color:active ? [MWMTheme textPrimary] : [MWMTheme textTertiary] weight:NSFontWeightRegular];
   NSMutableArray *textViews = [NSMutableArray arrayWithObject:title];
-  if ([info.detail length] > 0) [textViews addObject:[self labelWithText:info.detail size:12 color:[MWMTheme textSecondary] weight:NSFontWeightRegular]];
+  if ([info.detail length] > 0) [textViews addObject:[self labelWithText:info.detail size:12 color:active ? [MWMTheme textSecondary] : [MWMTheme textTertiary] weight:NSFontWeightRegular]];
   NSStackView *text = [NSStackView stackViewWithViews:textViews];
   [text setSpacing:8];
   [text setContentHuggingPriority:1 forOrientation:NSLayoutConstraintOrientationHorizontal];
@@ -232,22 +234,26 @@ static const CGFloat kKeysColumnWidth = 210;
     [warn setToolTip:@"Another shortcut has the same keys"];
     [views addObject:warn];
   }
-  NSSwitch *toggle = [[NSSwitch alloc] init];
-  [toggle setControlSize:NSControlSizeSmall];
-  [toggle setState:info.binding.enabled ? NSControlStateValueOn : NSControlStateValueOff];
+  // The checkbox is pinned to the right edge of the row, so the column lines up whatever else the row holds.
+  NSButton *toggle = [NSButton checkboxWithTitle:@"" target:self action:@selector(toggled:)];
+  [toggle setState:active ? NSControlStateValueOn : NSControlStateValueOff];
   [toggle setTag:(NSInteger)info.index];
-  [toggle setTarget:self];
-  [toggle setAction:@selector(toggled:)];
-  [views addObject:toggle];
+  [toggle setIdentifier:[NSString stringWithFormat:@"enabled-%lu", (unsigned long)info.index]];
+  [toggle setToolTip:active ? @"On. Uncheck to switch this shortcut off." : @"Off. Check to switch this shortcut on."];
+  [toggle setTranslatesAutoresizingMaskIntoConstraints:NO];
   NSStackView *content = [NSStackView stackViewWithViews:views];
   [content setSpacing:12];
   [content setAlignment:NSLayoutAttributeCenterY];
-  [content setEdgeInsets:NSEdgeInsetsMake(7, 8, 7, 8)];
+  [content setEdgeInsets:NSEdgeInsetsMake(7, 8, 7, 0)];
   [content setTranslatesAutoresizingMaskIntoConstraints:NO];
   [row addSubview:content];
+  [row addSubview:toggle];
   [NSLayoutConstraint activateConstraints:@[
     [content.topAnchor constraintEqualToAnchor:row.topAnchor], [content.bottomAnchor constraintEqualToAnchor:row.bottomAnchor],
-    [content.leadingAnchor constraintEqualToAnchor:row.leadingAnchor], [content.trailingAnchor constraintEqualToAnchor:row.trailingAnchor],
+    [content.leadingAnchor constraintEqualToAnchor:row.leadingAnchor],
+    [content.trailingAnchor constraintEqualToAnchor:toggle.leadingAnchor constant:-8],
+    [toggle.trailingAnchor constraintEqualToAnchor:row.trailingAnchor constant:-12],
+    [toggle.centerYAnchor constraintEqualToAnchor:row.centerYAnchor],
   ]];
   [self.rowsStack addArrangedSubview:row];
   [[row.widthAnchor constraintEqualToAnchor:self.rowsStack.widthAnchor] setActive:YES];
@@ -282,7 +288,7 @@ static const CGFloat kKeysColumnWidth = 210;
 
 #pragma mark - Actions
 
-- (void)toggled:(NSSwitch *)toggle {
+- (void)toggled:(NSButton *)toggle {
   NSUInteger index = (NSUInteger)[toggle tag];
   if (index >= [self.document.bindings count]) return;
   self.document.bindings[index].enabled = [toggle state] == NSControlStateValueOn;
