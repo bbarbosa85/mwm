@@ -19,7 +19,7 @@
    the script also copies the three files to `docs/downloads/`, which is committed.
 
 3. Commit `docs/downloads/` in a pull request. Once merged, GitHub Pages serves the files, and the
-   product page (`docs/index.html`) links to `downloads/MWM.dmg` and `downloads/MWM.zip`, so keep
+   product page (`docs/index.html`) links to `docs/downloads/MWM.dmg` and `MWM.zip` on `master` (`github.com/bbarbosa85/mwm/raw/master/docs/downloads/...`), so keep
    those two file names. Each release adds about 3.5 MB to the repository's history.
 
    Optionally also publish a GitHub release for the version tag:
