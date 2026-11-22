@@ -15,3 +15,7 @@ Slate.xcodeproj/xcuserdata/jigish.xcuserdatad/
 tmp
 build/DerivedData/
 *.profraw
+
+build/*.dmg
+build/*.zip
+build/SHA256SUMS.txt
