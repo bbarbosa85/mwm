@@ -1,0 +1,91 @@
+# Example: jump between apps and switch whole desktops.
+# alt + shift + a letter focuses an app. hyper + a letter restores a snapshot, and
+# hyper + shift + the same letter saves it (ctrl + alt + cmd + shift).
+# Arrange your windows, press the save shortcut once, and restore it any time.
+
+version: 2
+
+settings:
+  defaultToCurrentScreen: true
+
+modifiers:
+  hyper: [ctrl, alt, cmd]
+  shyper: [shift, ctrl, alt, cmd]
+
+monitors: {}
+
+slots: {}
+
+aliases: {}
+
+bindings:
+  - group: Apps
+    key: f
+    mods: [alt, shift]
+    action: {type: focus-app, app: Finder}
+  - group: Apps
+    key: s
+    mods: [alt, shift]
+    action: {type: focus-app, app: Safari}
+  - group: Apps
+    key: c
+    mods: [alt, shift]
+    action: {type: focus-app, app: Google Chrome}
+  - group: Apps
+    key: t
+    mods: [alt, shift]
+    action: {type: focus-app, app: Terminal}
+  - group: Apps
+    key: n
+    mods: [alt, shift]
+    action: {type: focus-app, app: Notes}
+  - group: Apps
+    key: m
+    mods: [alt, shift]
+    action: {type: focus-app, app: Mail}
+  - group: Apps
+    key: a
+    mods: [alt, shift]
+    action: {type: focus-app, app: Calendar}
+  - group: Apps
+    key: "y"
+    mods: [alt, shift]
+    action: {type: focus-app, app: Spotify}
+  - group: Apps
+    key: v
+    mods: [alt, shift]
+    action: {type: focus-app, app: Visual Studio Code}
+  - group: Apps
+    key: k
+    mods: [alt, shift]
+    action: {type: focus-app, app: Slack}
+  - group: Desktops
+    key: w
+    mods: hyper
+    action: {type: restore-snapshot, name: work}
+    note: Restore "work"
+  - group: Desktops
+    key: w
+    mods: shyper
+    action: {type: save-snapshot, name: work, keep: true}
+    note: Save "work"
+  - group: Desktops
+    key: m
+    mods: hyper
+    action: {type: restore-snapshot, name: meeting}
+    note: Restore "meeting"
+  - group: Desktops
+    key: m
+    mods: shyper
+    action: {type: save-snapshot, name: meeting, keep: true}
+    note: Save "meeting"
+  - group: Desktops
+    key: f
+    mods: hyper
+    action: {type: restore-snapshot, name: focus}
+    note: Restore "focus"
+  - group: Desktops
+    key: f
+    mods: shyper
+    action: {type: save-snapshot, name: focus, keep: true}
+    note: Save "focus"
