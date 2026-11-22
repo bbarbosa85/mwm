@@ -38,7 +38,7 @@ NS_ASSUME_NONNULL_BEGIN
 + (instancetype)headerWithBackTitle:(NSString *)backTitle title:(NSString *)title target:(nullable id)target action:(nullable SEL)action;
 @end
 
-// The bar under an editor, below a line: whether there is anything to save, then Cancel and Save.
+// The bar under an editor, below a line: whether there is anything to save, then Save and Cancel.
 @interface MWMSaveBar : NSView
 @property (readonly) MWMChipView *chip;
 @property (readonly) NSButton *cancelButton;

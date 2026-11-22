@@ -351,7 +351,7 @@
   [columns setEdgeInsets:NSEdgeInsetsMake(8, 20, 16, 20)];
   [columns setContentHuggingPriority:1 forOrientation:NSLayoutConstraintOrientationVertical];
 
-  // The save bar, under a line: whether there's anything to save, then Cancel and Save.
+  // The save bar, under a line: whether there is anything to save, then Save and Cancel.
   MWMSaveBar *saveBar = [MWMSaveBar barWithTarget:self cancel:@selector(cancelPressed:) save:@selector(savePressed:)];
   self.saveBar = saveBar;
   self.changesChip = saveBar.chip;
@@ -677,21 +677,6 @@
   [self refresh];
 }
 
-// Renaming a slot renames it wherever a shortcut or alias uses it.
-- (void)renameReferencesFrom:(NSString *)from to:(NSString *)to {
-  NSString *old = [NSString stringWithFormat:@"${%@}", from], *new = [NSString stringWithFormat:@"${%@}", to];
-  for (MWMBindingEntry *binding in self.document.bindings) {
-    binding.action = [binding.action stringByReplacingOccurrencesOfString:old withString:new];
-    if (binding.key) binding.key = [binding.key stringByReplacingOccurrencesOfString:old withString:new];
-    if (binding.modifiers) binding.modifiers = [binding.modifiers stringByReplacingOccurrencesOfString:old withString:new];
-  }
-  for (NSArray *section in @[self.document.modifiers, self.document.monitors, self.document.positions, self.document.aliases]) {
-    for (MWMConfigEntry *entry in section) {
-      if ([entry.value isKindOfClass:[NSString class]]) entry.value = [entry.value stringByReplacingOccurrencesOfString:old withString:new];
-    }
-  }
-}
-
 - (void)save {
   if (![self hasUnsavedChanges] || [self problem] != nil) return;
   NSString *name = [self.draftName stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
@@ -701,7 +686,7 @@
   } else {
     MWMConfigEntry *entry = [self positionNamed:self.originalName];
     if (entry == nil) return;
-    if (![name isEqualToString:self.originalName]) [self renameReferencesFrom:self.originalName to:name];
+    if (![name isEqualToString:self.originalName]) [self.document renameReferencesFrom:self.originalName to:name];
     entry.name = name;
     entry.value = formula;
   }

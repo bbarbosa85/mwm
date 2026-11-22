@@ -27,6 +27,7 @@
 #import "ConfigurationSettingsView.h"
 #import "ConfigurationDisplaysView.h"
 #import "ConfigurationSlotsView.h"
+#import "ConfigurationModifiersView.h"
 #import "ConfigurationPresetsView.h"
 #import "ConfigurationKeyboardView.h"
 #import "ConfigurationSnapshotsView.h"
@@ -63,7 +64,7 @@ static SectionInfo InfoFor(ConfigurationFormSection section) {
     case ConfigurationFormSectionGeneral:
       return (SectionInfo){@"General", @"gearshape", @"Everyday settings. Anything not listed uses MWM's default."};
     case ConfigurationFormSectionModifiers:
-      return (SectionInfo){@"Modifiers", @"command", @"Named modifier combinations, used as ${name} in bindings."};
+      return (SectionInfo){@"Modifiers", @"command", @"Names for sets of modifier keys, like hyper, to pick instead of pressing every key."};
     case ConfigurationFormSectionMonitors:
       return (SectionInfo){@"Displays", @"display.2", @"Screens and their sizes, used as ${name} in shortcuts and slots."};
     case ConfigurationFormSectionPositions:
@@ -152,7 +153,7 @@ static NSString *DisplayValue(id value) {
   return [value description] ?: @"";
 }
 
-@interface ConfigurationFormView () <ConfigurationShortcutViewDelegate, ConfigurationActionViewDelegate, ConfigurationSettingsViewDelegate, ConfigurationDisplaysViewDelegate, ConfigurationSlotsViewDelegate, ConfigurationKeyboardViewDelegate, ConfigurationSnapshotsViewDelegate>
+@interface ConfigurationFormView () <ConfigurationShortcutViewDelegate, ConfigurationActionViewDelegate, ConfigurationSettingsViewDelegate, ConfigurationDisplaysViewDelegate, ConfigurationSlotsViewDelegate, ConfigurationModifiersViewDelegate, ConfigurationKeyboardViewDelegate, ConfigurationSnapshotsViewDelegate>
 @property (strong) NSTableView *sidebar;
 @property (strong) NSView *detail;
 @property (strong) NSTextField *titleLabel;
@@ -167,6 +168,9 @@ static NSString *DisplayValue(id value) {
 @property (strong) ConfigurationDisplaysView *displaysView;
 @property (strong) ConfigurationSnapshotsView *snapshotsView;
 @property (strong) ConfigurationSlotsView *slotsView;
+@property (strong) ConfigurationModifiersView *modifiersView;
+@property (strong) NSLayoutConstraint *modifiersTopBelowHeader;
+@property (strong) NSLayoutConstraint *modifiersTopFull;
 @property (strong) ConfigurationPresetsView *presetsView;
 @property (strong) NSSegmentedControl *slotsSwitcher;
 @property (strong) ConfigurationKeyboardView *keyboardView;
@@ -302,6 +306,11 @@ static NSString *DisplayValue(id value) {
   [self.slotsView setDelegate:self];
   [self.slotsView setHidden:YES];
 
+  self.modifiersView = [[ConfigurationModifiersView alloc] init];
+  [self.modifiersView setTranslatesAutoresizingMaskIntoConstraints:NO];
+  [self.modifiersView setDelegate:self];
+  [self.modifiersView setHidden:YES];
+
   self.displaysView = [[ConfigurationDisplaysView alloc] init];
   [self.displaysView setTranslatesAutoresizingMaskIntoConstraints:NO];
   [self.displaysView setDelegate:self];
@@ -317,7 +326,7 @@ static NSString *DisplayValue(id value) {
   [self.settingsView setDelegate:self];
   [self.settingsView setHidden:YES];
 
-  for (NSView *view in @[self.titleLabel, self.infoLabel, self.addButton, self.removeButton, self.filterBar, self.tableScroll, self.settingsView, self.displaysView, self.snapshotsView, self.slotsView, self.presetsView, self.slotsSwitcher, self.keyboardView, self.keyboardSwitcher, self.conflictsButton]) {
+  for (NSView *view in @[self.titleLabel, self.infoLabel, self.addButton, self.removeButton, self.filterBar, self.tableScroll, self.settingsView, self.modifiersView, self.displaysView, self.snapshotsView, self.slotsView, self.presetsView, self.slotsSwitcher, self.keyboardView, self.keyboardSwitcher, self.conflictsButton]) {
     [self.detail addSubview:view];
   }
 
@@ -343,6 +352,9 @@ static NSString *DisplayValue(id value) {
   self.slotsTopBelowHeader = [self.slotsView.topAnchor constraintEqualToAnchor:self.infoLabel.bottomAnchor constant:6];
   self.slotsTopFull = [self.slotsView.topAnchor constraintEqualToAnchor:self.detail.topAnchor];
   self.slotsTopBelowHeader.active = YES;
+  self.modifiersTopBelowHeader = [self.modifiersView.topAnchor constraintEqualToAnchor:self.infoLabel.bottomAnchor constant:6];
+  self.modifiersTopFull = [self.modifiersView.topAnchor constraintEqualToAnchor:self.detail.topAnchor];
+  self.modifiersTopBelowHeader.active = YES;
   self.keyboardTopBelowHeader = [self.keyboardView.topAnchor constraintEqualToAnchor:self.infoLabel.bottomAnchor constant:6];
   self.keyboardTopFull = [self.keyboardView.topAnchor constraintEqualToAnchor:self.detail.topAnchor];
   self.keyboardTopBelowHeader.active = YES;
@@ -392,6 +404,9 @@ static NSString *DisplayValue(id value) {
     [self.slotsView.bottomAnchor constraintEqualToAnchor:self.detail.bottomAnchor],
     [self.slotsView.leadingAnchor constraintEqualToAnchor:self.detail.leadingAnchor],
     [self.slotsView.trailingAnchor constraintEqualToAnchor:self.detail.trailingAnchor],
+    [self.modifiersView.bottomAnchor constraintEqualToAnchor:self.detail.bottomAnchor],
+    [self.modifiersView.leadingAnchor constraintEqualToAnchor:self.detail.leadingAnchor],
+    [self.modifiersView.trailingAnchor constraintEqualToAnchor:self.detail.trailingAnchor],
     [self.displaysView.topAnchor constraintEqualToAnchor:self.infoLabel.bottomAnchor constant:6],
     [self.displaysView.bottomAnchor constraintEqualToAnchor:self.detail.bottomAnchor],
     [self.displaysView.leadingAnchor constraintEqualToAnchor:self.detail.leadingAnchor],
@@ -546,14 +561,17 @@ static NSString *DisplayValue(id value) {
   BOOL slots = section == ConfigurationFormSectionPositions;
   BOOL keyboard = section == ConfigurationFormSectionKeyboard;
   BOOL snapshots = section == ConfigurationFormSectionSnapshots;
-  [self.addButton setHidden:cards || displays || slots || keyboard || snapshots];
-  [self.removeButton setHidden:cards || displays || slots || keyboard || snapshots];
-  [self.tableScroll setHidden:cards || displays || slots || keyboard || snapshots];
+  BOOL modifiers = section == ConfigurationFormSectionModifiers;
+  [self.addButton setHidden:cards || displays || slots || keyboard || snapshots || modifiers];
+  [self.removeButton setHidden:cards || displays || slots || keyboard || snapshots || modifiers];
+  [self.tableScroll setHidden:cards || displays || slots || keyboard || snapshots || modifiers];
+  [self.modifiersView setHidden:!modifiers];
+  self.modifiersView.document = modifiers ? self.document : nil;
   [self.snapshotsView setHidden:!snapshots];
   if (snapshots) [self.snapshotsView reload];
   self.keyboardView.document = keyboard ? self.document : nil;
   [self showKeyboardMode];
-  if (!slots) [self setSublevelActive:NO];  // leaving the page closes anything open on it
+  if (!slots && !modifiers) [self setSublevelActive:NO];  // leaving the page closes anything open on it
   [self.displaysView setHidden:!displays];
   self.displaysView.document = displays ? self.document : nil;
   self.slotsView.document = slots ? self.document : nil;
@@ -781,6 +799,14 @@ static NSString *DisplayValue(id value) {
   [self setSublevelActive:editing];
 }
 
+- (void)modifiersViewDidChangeDocument:(ConfigurationModifiersView *)view {
+  [self documentChanged];
+}
+
+- (void)modifiersView:(ConfigurationModifiersView *)view didChangeEditing:(BOOL)editing {
+  [self setSublevelActive:editing];
+}
+
 // The Map | List switcher and the conflicts pill at the top right of the Keyboard title.
 - (void)keyboardModeChanged:(NSSegmentedControl *)control {
   self.keyboardView.mode = [control selectedSegment] == 1 ? ConfigurationKeyboardModeList : ConfigurationKeyboardModeMap;
@@ -855,6 +881,8 @@ static NSString *DisplayValue(id value) {
   [self showKeyboardMode];
   if (active) { self.slotsTopBelowHeader.active = NO; self.slotsTopFull.active = YES; }
   else { self.slotsTopFull.active = NO; self.slotsTopBelowHeader.active = YES; }
+  if (active) { self.modifiersTopBelowHeader.active = NO; self.modifiersTopFull.active = YES; }
+  else { self.modifiersTopFull.active = NO; self.modifiersTopBelowHeader.active = YES; }
   if ([self.delegate respondsToSelector:@selector(formView:didChangeSublevel:)]) [self.delegate formView:self didChangeSublevel:active];
 }
 
