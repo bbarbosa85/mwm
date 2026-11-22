@@ -15,10 +15,14 @@
    ```
 
    The build uses its own install folder (`/tmp/MWMRelease.dst`), so it never replaces the
-   development build the tests and `script/screens` use. The files in `build/` are not committed.
+   development build the tests and `script/screens` use. The files in `build/` are not committed;
+   the script also copies the three files to `docs/downloads/`, which is committed.
 
-3. Publish the files as a GitHub release. The product page (`docs/index.html`) links to
-   `releases/latest/download/MWM.dmg` and `MWM.zip`, so keep those two file names:
+3. Commit `docs/downloads/` in a pull request. Once merged, GitHub Pages serves the files, and the
+   product page (`docs/index.html`) links to `downloads/MWM.dmg` and `downloads/MWM.zip`, so keep
+   those two file names. Each release adds about 3.5 MB to the repository's history.
+
+   Optionally also publish a GitHub release for the version tag:
 
    ```bash
    gh release create v1.0 build/MWM.dmg build/MWM.zip build/SHA256SUMS.txt \
