@@ -156,6 +156,15 @@ static NSString *const kOriginal =
   XCTAssertTrue([[NSFileManager defaultManager] fileExistsAtPath:self.path]);
 }
 
+// Ready to pick by name: shift + cmd and alt + cmd.
+- (void)testTheDefaultsComeWithShiftCmdAndAltCmdGroups {
+  [self load];
+  NSMutableDictionary *groups = [NSMutableDictionary dictionary];
+  for (MWMConfigEntry *entry in [self document].modifiers) groups[entry.name] = [entry.value description];
+  XCTAssertEqualObjects(groups[@"altcmd"], @"alt;cmd");
+  XCTAssertEqualObjects(groups[@"shiftcmd"], @"shift;cmd");
+}
+
 #pragma mark - Save and "not applied yet"
 
 - (NSString *)savedLabel {

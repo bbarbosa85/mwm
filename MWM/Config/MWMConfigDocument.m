@@ -520,6 +520,20 @@ static const NSUInteger kMaxAliasDepth = 20;
   return [MWMConfigFormat textForDocument:self header:kHeader];
 }
 
+- (void)renameReferencesFrom:(NSString *)from to:(NSString *)to {
+  NSString *old = [NSString stringWithFormat:@"${%@}", from], *new = [NSString stringWithFormat:@"${%@}", to];
+  for (MWMBindingEntry *binding in self.bindings) {
+    binding.action = [binding.action stringByReplacingOccurrencesOfString:old withString:new];
+    if (binding.key) binding.key = [binding.key stringByReplacingOccurrencesOfString:old withString:new];
+    if (binding.modifiers) binding.modifiers = [binding.modifiers stringByReplacingOccurrencesOfString:old withString:new];
+  }
+  for (NSArray *section in @[self.modifiers, self.monitors, self.positions, self.aliases]) {
+    for (MWMConfigEntry *entry in section) {
+      if ([entry.value isKindOfClass:[NSString class]]) entry.value = [entry.value stringByReplacingOccurrencesOfString:old withString:new];
+    }
+  }
+}
+
 - (BOOL)writeToFile:(NSString *)path error:(NSError **)error {
   return [MWMConfigDocument writeString:[self stringRepresentation] toFile:path error:error];
 }

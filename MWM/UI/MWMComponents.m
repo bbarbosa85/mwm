@@ -142,7 +142,8 @@
   bar->_chip = [MWMChipView chipWithText:@"No changes" color:nil];
   bar->_cancelButton = [MWMComponents secondaryButtonWithTitle:@"Cancel" target:target action:cancel];
   bar->_saveButton = [MWMComponents primaryButtonWithTitle:@"Save" target:target action:save];
-  NSStackView *stack = [NSStackView stackViewWithViews:@[bar->_chip, [MWMComponents spacer], bar->_cancelButton, bar->_saveButton]];
+  // Save first, then the way out: the same order as the window's bottom bar (Apply and Restart, Save, Close).
+  NSStackView *stack = [NSStackView stackViewWithViews:@[bar->_chip, [MWMComponents spacer], bar->_saveButton, bar->_cancelButton]];
   [stack setSpacing:MWMSpacingS];
   [stack setAlignment:NSLayoutAttributeCenterY];
   [stack setEdgeInsets:NSEdgeInsetsMake(10, MWMSpacingXL, 12, MWMSpacingXL)];

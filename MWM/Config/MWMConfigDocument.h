@@ -128,6 +128,9 @@ typedef NS_ENUM(NSInteger, MWMBindingCategory) {
 // symlinked path is written through to its target.
 - (BOOL)writeToFile:(NSString *)path error:(NSError **)error;
 
+// Renames ${from} to ${to} wherever a shortcut or an entry uses it (a slot, a modifier group...).
+- (void)renameReferencesFrom:(NSString *)from to:(NSString *)to;
+
 // The same safe write (atomic, .bak, through symlinks) for arbitrary text.
 + (BOOL)writeString:(NSString *)contents toFile:(NSString *)path error:(NSError **)error;
 

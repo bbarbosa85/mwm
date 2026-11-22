@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		5E1A0C0B2D00000000000917 /* TestConfigurationModifiers.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D00000000000916 /* TestConfigurationModifiers.m */; };
+		5E1A0C0B2D00000000000915 /* ConfigurationModifiersView.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D00000000000914 /* ConfigurationModifiersView.m */; };
+		5E1A0C0B2D00000000000912 /* ConfigurationMacKeyboard.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D00000000000911 /* ConfigurationMacKeyboard.m */; };
 		5E1A0C0B2D00000000000903 /* MWMUpdateChecker.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D00000000000902 /* MWMUpdateChecker.m */; };
 		5E1A0C0B2D00000000000905 /* TestUpdateChecker.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D00000000000904 /* TestUpdateChecker.m */; };
 		5E1A0C0B2D00000000000872 /* TestExampleConfigs.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D00000000000871 /* TestExampleConfigs.m */; };
@@ -180,6 +183,11 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		5E1A0C0B2D00000000000916 /* TestConfigurationModifiers.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TestConfigurationModifiers.m; sourceTree = "<group>"; };
+		5E1A0C0B2D00000000000913 /* ConfigurationModifiersView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = UI/ConfigurationModifiersView.h; sourceTree = "<group>"; };
+		5E1A0C0B2D00000000000914 /* ConfigurationModifiersView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = UI/ConfigurationModifiersView.m; sourceTree = "<group>"; };
+		5E1A0C0B2D00000000000910 /* ConfigurationMacKeyboard.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = UI/ConfigurationMacKeyboard.h; sourceTree = "<group>"; };
+		5E1A0C0B2D00000000000911 /* ConfigurationMacKeyboard.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = UI/ConfigurationMacKeyboard.m; sourceTree = "<group>"; };
 		5E1A0C0B2D00000000000901 /* MWMUpdateChecker.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = App/MWMUpdateChecker.h; sourceTree = "<group>"; };
 		5E1A0C0B2D00000000000902 /* MWMUpdateChecker.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = App/MWMUpdateChecker.m; sourceTree = "<group>"; };
 		5E1A0C0B2D00000000000904 /* TestUpdateChecker.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TestUpdateChecker.m; sourceTree = "<group>"; };
@@ -528,6 +536,7 @@
 				5E1A0C0B2D00000000000770 /* TestSnapshots.m */,
 				5E1A0C0B2D00000000000793 /* TestAppIcon.m */,
 				5E1A0C0B2D00000000000904 /* TestUpdateChecker.m */,
+				5E1A0C0B2D00000000000916 /* TestConfigurationModifiers.m */,
 				5E1A0C0B2D00000000000871 /* TestExampleConfigs.m */,
 				5E1A0C0B2D00000000000861 /* TestStatusMenus.m */,
 				5E1A0C0B2D00000000000841 /* TestDialogs.m */,
@@ -819,6 +828,10 @@
 				5E1A0C0B2D00000000000720 /* ConfigurationKeyboardView.m */,
 				5E1A0C0B2D00000000000730 /* ConfigurationKeyboardMapView.h */,
 				5E1A0C0B2D00000000000732 /* ConfigurationKeyboardMapView.m */,
+				5E1A0C0B2D00000000000910 /* ConfigurationMacKeyboard.h */,
+				5E1A0C0B2D00000000000911 /* ConfigurationMacKeyboard.m */,
+				5E1A0C0B2D00000000000913 /* ConfigurationModifiersView.h */,
+				5E1A0C0B2D00000000000914 /* ConfigurationModifiersView.m */,
 				5E1A0C0B2D00000000000510 /* ConfigurationStatusBar.h */,
 				5E1A0C0B2D00000000000412 /* ConfigurationFormView.m */,
 				5E1A0C0B2D00000000000410 /* ConfigurationFormView.h */,
@@ -1008,6 +1021,8 @@
 				5E1A0C0B2D00000000000852 /* MWMStatusMenus.m in Sources */,
 				5E1A0C0B2D00000000000721 /* ConfigurationKeyboardView.m in Sources */,
 				5E1A0C0B2D00000000000733 /* ConfigurationKeyboardMapView.m in Sources */,
+				5E1A0C0B2D00000000000912 /* ConfigurationMacKeyboard.m in Sources */,
+				5E1A0C0B2D00000000000915 /* ConfigurationModifiersView.m in Sources */,
 				5E1A0C0B2D00000000000413 /* ConfigurationFormView.m in Sources */,
 				5E1A0C0B2D0000000000031B /* ConfigurationWindowController.m in Sources */,
 				5E1A0C0B2D00000000000313 /* MWMConfigValidator.m in Sources */,
@@ -1092,6 +1107,7 @@
 				5E1A0C0B2D00000000000771 /* TestSnapshots.m in Sources */,
 				5E1A0C0B2D00000000000794 /* TestAppIcon.m in Sources */,
 				5E1A0C0B2D00000000000905 /* TestUpdateChecker.m in Sources */,
+				5E1A0C0B2D00000000000917 /* TestConfigurationModifiers.m in Sources */,
 				5E1A0C0B2D00000000000872 /* TestExampleConfigs.m in Sources */,
 				5E1A0C0B2D00000000000862 /* TestStatusMenus.m in Sources */,
 				5E1A0C0B2D00000000000842 /* TestDialogs.m in Sources */,

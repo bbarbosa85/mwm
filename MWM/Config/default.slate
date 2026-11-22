@@ -5,6 +5,10 @@ config defaultToCurrentScreen true
 config nudgePercentOf screenSize
 config resizePercentOf screenSize
 
+# Modifier groups, ready to pick by name in the shortcut editor and shown on the keyboard map.
+alias altcmd alt;cmd
+alias shiftcmd shift;cmd
+
 # Resize Bindings
 bind right:alt       resize +10% +0
 bind left:alt        resize -10% +0

@@ -20,6 +20,7 @@
 #import "MWMComponents.h"
 #import "ConfigurationBlockView.h"
 #import "ConfigurationKeyViews.h"
+#import "ConfigurationMacKeyboard.h"
 #import "MWMAction.h"
 #import "MWMConfigDocument.h"
 #import "MWMReservedShortcuts.h"
@@ -28,86 +29,6 @@
 #import "MWMSlots.h"
 
 static const CGFloat kGroupsWidth = 188;
-static const CGFloat kUnitsWide = 19.5;
-static const CGFloat kUnitsTall = 5.8;
-
-typedef NS_ENUM(NSInteger, MapKeyState) {
-  MapKeyStateFree,
-  MapKeyStateTaken,      // has a shortcut in this group (colored by what it does)
-  MapKeyStateConflict,
-  MapKeyStateReserved,   // macOS uses it with this group's modifiers
-};
-
-#pragma mark - A key
-
-@interface ConfigurationMapKey : NSView
-@property (copy) NSString *keyName;
-@property (copy) NSString *label;
-@property (assign) MapKeyState state;
-@property (strong, nullable) NSColor *tint;
-@property (assign) BOOL selected;
-@property (assign) BOOL modifier;   // drawn dashed; can't hold a shortcut
-@property (assign) NSRect units;    // x, y, width, height in key units
-@property (copy) void (^onClick)(void);
-@end
-
-@implementation ConfigurationMapKey
-- (BOOL)acceptsFirstMouse:(NSEvent *)event { return YES; }
-- (void)mouseDown:(NSEvent *)event { if (!self.modifier && self.onClick) self.onClick(); }
-- (void)drawRect:(NSRect)dirtyRect {
-  CGFloat radius = MIN(7, NSHeight([self bounds]) * 0.22);
-  NSRect rect = NSInsetRect([self bounds], 1, 1);
-  NSBezierPath *path = [NSBezierPath bezierPathWithRoundedRect:rect xRadius:radius yRadius:radius];
-  NSColor *fill, *stroke, *text;
-  switch (self.state) {
-    case MapKeyStateTaken:
-      fill = [self.tint colorWithAlphaComponent:0.20]; stroke = [self.tint colorWithAlphaComponent:0.55]; text = self.tint; break;
-    case MapKeyStateConflict:
-      fill = [[MWMTheme warning] colorWithAlphaComponent:0.25]; stroke = [MWMTheme warning]; text = [MWMTheme warning]; break;
-    case MapKeyStateReserved:
-      fill = [[MWMTheme reserved] colorWithAlphaComponent:0.12]; stroke = [[MWMTheme reserved] colorWithAlphaComponent:0.5]; text = [MWMTheme reserved]; break;
-    default:
-      fill = [[MWMTheme textPrimary] colorWithAlphaComponent:self.modifier ? 0.02 : 0.05]; stroke = [NSColor quaternaryLabelColor]; text = [MWMTheme textTertiary]; break;
-  }
-  [fill setFill];
-  [path fill];
-  [stroke setStroke];
-  [path setLineWidth:0.8];
-  if (self.modifier) { CGFloat dash[] = {3, 2}; [path setLineDash:dash count:2 phase:0]; }
-  [path stroke];
-  if (self.selected) {
-    NSBezierPath *ring = [NSBezierPath bezierPathWithRoundedRect:NSInsetRect(rect, -1, -1) xRadius:radius + 1 yRadius:radius + 1];
-    [[MWMTheme accent] setStroke];
-    [ring setLineWidth:2.2];
-    [ring stroke];
-  }
-  CGFloat unit = NSHeight([self bounds]) / MAX(0.5, self.units.size.height);
-  CGFloat size = MAX(7, unit * ([self.label length] > 2 ? 0.27 : 0.4));
-  NSDictionary *attributes = @{NSFontAttributeName: [NSFont systemFontOfSize:size weight:NSFontWeightMedium], NSForegroundColorAttributeName: text};
-  NSSize textSize = [self.label sizeWithAttributes:attributes];
-  [self.label drawAtPoint:NSMakePoint(NSMidX([self bounds]) - textSize.width / 2, NSMidY([self bounds]) - textSize.height / 2) withAttributes:attributes];
-}
-@end
-
-#pragma mark - The keyboard
-
-// A Mac keyboard drawn in key units; the keys follow the width they're given.
-@interface ConfigurationMacKeyboard : NSView
-@property (copy) NSArray<ConfigurationMapKey *> *keys;
-@end
-
-@implementation ConfigurationMacKeyboard
-- (BOOL)isFlipped { return YES; }
-- (void)layout {
-  [super layout];
-  CGFloat unit = NSWidth([self bounds]) / kUnitsWide;
-  CGFloat gap = unit * 0.12;
-  for (ConfigurationMapKey *key in self.keys) {
-    NSRect u = key.units;
-    [key setFrame:NSMakeRect(u.origin.x * unit + gap / 2, u.origin.y * unit + gap / 2, u.size.width * unit - gap, u.size.height * unit - gap)];
-  }
-}
-@end
 
 #pragma mark - Page
 
@@ -149,9 +70,9 @@ typedef NS_ENUM(NSInteger, MapKeyState) {
   fill.priority = 750;
   [NSLayoutConstraint activateConstraints:@[
     fill,
-    [self.keyboard.widthAnchor constraintLessThanOrEqualToConstant:kUnitsWide * 40],
-    [self.keyboard.widthAnchor constraintGreaterThanOrEqualToConstant:kUnitsWide * 20],
-    [self.keyboard.heightAnchor constraintEqualToAnchor:self.keyboard.widthAnchor multiplier:kUnitsTall / kUnitsWide],
+    [self.keyboard.widthAnchor constraintLessThanOrEqualToConstant:kMacKeyboardUnitsWide * 40],
+    [self.keyboard.widthAnchor constraintGreaterThanOrEqualToConstant:kMacKeyboardUnitsWide * 20],
+    [self.keyboard.heightAnchor constraintEqualToAnchor:self.keyboard.widthAnchor multiplier:kMacKeyboardUnitsTall / kMacKeyboardUnitsWide],
     [self.keyboard.topAnchor constraintEqualToAnchor:keyboardCard.topAnchor constant:16],
     [self.keyboard.bottomAnchor constraintEqualToAnchor:keyboardCard.bottomAnchor constant:-16],
     [self.keyboard.centerXAnchor constraintEqualToAnchor:keyboardCard.centerXAnchor],
@@ -285,52 +206,9 @@ typedef NS_ENUM(NSInteger, MapKeyState) {
 
 #pragma mark - Keyboard
 
-// The Mac layout: name, label, width in units. A name starting with "-" is a modifier (not bindable).
+// The Mac layout (see ConfigurationMacKeyboard).
 + (NSArray<ConfigurationMapKey *> *)buildKeys {
-  NSMutableArray *keys = [NSMutableArray array];
-  void (^add)(NSString *, NSString *, CGFloat, CGFloat, CGFloat, CGFloat, BOOL) = ^(NSString *name, NSString *label, CGFloat x, CGFloat y, CGFloat w, CGFloat h, BOOL modifier) {
-    ConfigurationMapKey *key = [[ConfigurationMapKey alloc] init];
-    key.keyName = name;
-    key.label = label ?: [MWMShortcut displayForKeyName:name];
-    key.units = NSMakeRect(x, y, w, h);
-    key.modifier = modifier;
-    [key setIdentifier:[(modifier ? @"modifier-" : @"key-") stringByAppendingString:name]];
-    [keys addObject:key];
-  };
-  void (^row)(CGFloat, CGFloat, NSArray *) = ^(CGFloat x, CGFloat y, NSArray *items) {
-    for (NSArray *item in items) {
-      CGFloat w = [item[2] doubleValue];
-      add(item[0], [item[1] length] > 0 ? item[1] : nil, x, y, w, 1, [item count] > 3);
-      x += w;
-    }
-  };
-  // Function row.
-  CGFloat x = 0;
-  add(@"esc", @"esc", x, 0, 1.5, 0.65, NO); x += 1.5;
-  for (int i = 1; i <= 12; i++) { add([NSString stringWithFormat:@"f%d", i], [NSString stringWithFormat:@"F%d", i], x, 0, 1, 0.65, NO); x += 1; }
-  add(@"power", @"⏻", x, 0, 1.5, 0.65, YES);
-  NSArray *(^letters)(NSString *) = ^NSArray *(NSString *chars) {
-    NSMutableArray *items = [NSMutableArray array];
-    for (NSUInteger i = 0; i < [chars length]; i++) { NSString *c = [chars substringWithRange:NSMakeRange(i, 1)]; [items addObject:@[c, @"", @1]]; }
-    return items;
-  };
-  row(0, 0.8, [[letters(@"`1234567890-=") ?: @[] arrayByAddingObject:@[@"delete", @"delete", @2]] copy]);
-  row(0, 1.8, [[@[@[@"tab", @"tab", @1.5]] arrayByAddingObjectsFromArray:letters(@"qwertyuiop[]")] arrayByAddingObject:@[@"backslash", @"\\", @1.5]]);
-  row(0, 2.8, [[@[@[@"caps", @"caps", @1.75]] arrayByAddingObjectsFromArray:letters(@"asdfghjkl;'")] arrayByAddingObject:@[@"return", @"return", @2.25]]);
-  row(0, 3.8, [[@[@[@"shiftL", @"shift", @2.25, @1]] arrayByAddingObjectsFromArray:letters(@"zxcvbnm,./")] arrayByAddingObject:@[@"shiftR", @"shift", @2.75, @1]]);
-  row(0, 4.8, @[@[@"fn", @"fn", @1, @1], @[@"ctrlL", @"ctrl", @1, @1], @[@"optL", @"opt", @1, @1], @[@"cmdL", @"⌘", @1.25, @1], @[@"space", @"", @5.5],
-                @[@"cmdR", @"⌘", @1.25, @1], @[@"optR", @"opt", @1, @1], @[@"left", @"←", @1]]);
-  add(@"up", @"↑", 13, 4.8, 1, 0.5, NO);
-  add(@"down", @"↓", 13, 5.3, 1, 0.5, NO);
-  add(@"right", @"→", 14, 4.8, 1, 1, NO);
-  // Number pad.
-  row(15.5, 0.8, @[@[@"padClear", @"clr", @1], @[@"pad=", @"=", @1], @[@"pad/", @"/", @1], @[@"pad*", @"*", @1]]);
-  row(15.5, 1.8, @[@[@"pad7", @"7", @1], @[@"pad8", @"8", @1], @[@"pad9", @"9", @1], @[@"pad-", @"−", @1]]);
-  row(15.5, 2.8, @[@[@"pad4", @"4", @1], @[@"pad5", @"5", @1], @[@"pad6", @"6", @1], @[@"pad+", @"+", @1]]);
-  row(15.5, 3.8, @[@[@"pad1", @"1", @1], @[@"pad2", @"2", @1], @[@"pad3", @"3", @1]]);
-  add(@"padEnter", @"↩", 18.5, 3.8, 1, 2, NO);
-  row(15.5, 4.8, @[@[@"pad0", @"0", @2], @[@"pad.", @".", @1]]);
-  return keys;
+  return [ConfigurationMacKeyboard buildKeys];
 }
 
 - (void)rebuildKeyboard {
@@ -348,6 +226,10 @@ typedef NS_ENUM(NSInteger, MapKeyState) {
   }
   self.keyboard.keys = keys;
   self.keys = keys;
+  // Choosing keys for a shortcut that isn't in a group: its modifiers are built on this same keyboard.
+  if (self.pickerMode && [[self currentGroup] custom]) {
+    [self.keyboard showModifierPickerWithSelected:modifiers dimOthers:NO toggle:^(NSString *name) { [weakSelf toggleModifierNamed:name]; }];
+  }
   [self.keyboard setNeedsLayout:YES];
   [self rebuildLegend];
 }
@@ -555,10 +437,10 @@ typedef NS_ENUM(NSInteger, MapKeyState) {
   [self reload];
 }
 
-- (void)toggleModifier:(NSButton *)button {
+// A click on ctrl, opt, shift or ⌘ on the keyboard while choosing keys for an ungrouped shortcut.
+- (void)toggleModifierNamed:(NSString *)name {
   NSMutableSet *chosen = [NSMutableSet setWithArray:self.customModifiers ?: @[]];
-  NSString *name = button.identifier;
-  if ([button state] == NSControlStateValueOn) [chosen addObject:name]; else [chosen removeObject:name];
+  if ([chosen containsObject:name]) [chosen removeObject:name]; else [chosen addObject:name];
   NSMutableArray *ordered = [NSMutableArray array];
   for (NSString *each in @[@"ctrl", @"alt", @"shift", @"cmd"]) if ([chosen containsObject:each]) [ordered addObject:each];
   self.customModifiers = ordered;
@@ -580,16 +462,7 @@ typedef NS_ENUM(NSInteger, MapKeyState) {
   [[[self.selectionStack arrangedSubviews].lastObject.widthAnchor constraintEqualToAnchor:self.selectionStack.widthAnchor constant:-32] setActive:YES];
 
   if (group.custom) {
-    NSMutableArray *toggles = [NSMutableArray array];
-    for (NSString *name in @[@"ctrl", @"alt", @"shift", @"cmd"]) {
-      NSButton *check = [NSButton checkboxWithTitle:[NSString stringWithFormat:@"%@ %@", [MWMShortcut symbolForModifierName:name], name] target:self action:@selector(toggleModifier:)];
-      [check setIdentifier:name];
-      [check setState:[modifiers containsObject:name] ? NSControlStateValueOn : NSControlStateValueOff];
-      [toggles addObject:check];
-    }
-    NSStackView *row = [NSStackView stackViewWithViews:toggles];
-    [row setSpacing:16];
-    [self.selectionStack addArrangedSubview:row];
+    [self.selectionStack addArrangedSubview:[self labelWithText:@"Click ctrl, opt, shift or ⌘ on the left of the keyboard to change the modifiers." size:12 color:[MWMTheme textTertiary] weight:NSFontWeightRegular]];
   }
 
   // What stands in the way of these keys.
@@ -610,7 +483,7 @@ typedef NS_ENUM(NSInteger, MapKeyState) {
   NSButton *use = [MWMComponents primaryButtonWithTitle:@"Use these keys" target:self action:@selector(usePickPressed:)];
   [use setEnabled:!blocked];
   [use setIdentifier:@"pick-use"];
-  NSStackView *buttons = [NSStackView stackViewWithViews:@[spacer, cancel, use]];
+  NSStackView *buttons = [NSStackView stackViewWithViews:@[spacer, use, cancel]];
   [buttons setSpacing:8];
   [self.selectionStack addArrangedSubview:buttons];
   [[buttons.widthAnchor constraintEqualToAnchor:self.selectionStack.widthAnchor constant:-32] setActive:YES];

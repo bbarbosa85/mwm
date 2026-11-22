@@ -141,10 +141,13 @@ static NSString *const kConfig =
 - (void)testAddedAliasGetsUniqueName {
   MWMConfigDocument *doc = [self document];
   ConfigurationFormView *form = [self formWithDocument:doc];
-  form.selectedSection = ConfigurationFormSectionModifiers;
+  form.selectedSection = ConfigurationFormSectionAliases;
+  NSUInteger before = [doc.aliases count];
   [form performSelector:@selector(add:) withObject:nil];
   [form performSelector:@selector(add:) withObject:nil];
-  XCTAssertEqualObjects([doc.modifiers valueForKey:@"name"], (@[@"hyper", @"modifier", @"modifier2"]));
+  NSArray *names = [doc.aliases valueForKey:@"name"];
+  XCTAssertEqual([names count], before + 2);
+  XCTAssertEqual([[NSSet setWithArray:names] count], [names count], @"each new alias gets its own name: %@", names);
 }
 
 - (void)testEditingACellUpdatesTheDocument {
@@ -393,8 +396,12 @@ static NSString *const kConfig =
   form.selectedSection = ConfigurationFormSectionKeyboard;
   XCTAssertFalse([[form valueForKey:@"keyboardView"] isHidden], @"the Keyboard page has its own view");
   form.selectedSection = ConfigurationFormSectionModifiers;
-  XCTAssertFalse([[form valueForKey:@"tableScroll"] isHidden]);
+  XCTAssertFalse([[form valueForKey:@"modifiersView"] isHidden], @"Modifiers has its own page");
+  XCTAssertTrue([[form valueForKey:@"tableScroll"] isHidden]);
   XCTAssertTrue([[form valueForKey:@"keyboardView"] isHidden]);
+  form.selectedSection = ConfigurationFormSectionAliases;
+  XCTAssertFalse([[form valueForKey:@"tableScroll"] isHidden], @"aliases are still a table");
+  XCTAssertTrue([[form valueForKey:@"modifiersView"] isHidden]);
 }
 
 - (void)testRevealSelectsTheRow {

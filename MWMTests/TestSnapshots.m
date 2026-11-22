@@ -35,6 +35,7 @@
 #import "WindowSnapshot.h"
 #import "ConfigurationShortcutListView.h"
 #import "ConfigurationSlotsView.h"
+#import "ConfigurationModifiersView.h"
 #import "ConfigurationShortcutEditorView.h"
 #import "MWMDesignGallery.h"
 #import "MWMConfigDocument.h"
@@ -167,6 +168,27 @@ static NSString *const kConfig =
     ConfigurationShortcutListView *list = [[ConfigurationShortcutListView alloc] initWithFrame:NSMakeRect(0, 0, 1000, 520)];
     list.document = doc;
     [self checkView:list size:NSMakeSize(1000, 520) name:@"shortcut-list" dark:[dark boolValue]];
+  }
+}
+
+- (void)testTheModifiersPageAndEditorLookTheSame {
+  for (NSNumber *dark in @[@NO, @YES]) {
+    MWMConfigDocument *doc = [MWMConfigDocument documentFromString:kConfig error:nil];
+    ConfigurationModifiersView *page = [[ConfigurationModifiersView alloc] initWithFrame:NSMakeRect(0, 0, 1000, 640)];
+    page.document = doc;
+    [self checkView:page size:NSMakeSize(1000, 640) name:@"modifiers-page" dark:[dark boolValue]];
+    ConfigurationModifiersView *editor = [[ConfigurationModifiersView alloc] initWithFrame:NSMakeRect(0, 0, 1000, 640)];
+    editor.document = doc;
+    [editor editGroupNamed:@"hyper"];
+    [editor toggleModifier:@"cmd"];
+    [self checkView:editor size:NSMakeSize(1000, 640) name:@"modifiers-editor" dark:[dark boolValue]];
+    // Taking ⌘ out of hyper makes Chrome's shortcut share its keys with another one.
+    MWMConfigDocument *clash = [MWMConfigDocument documentFromString:[kConfig stringByAppendingString:@"  - key: c\n    mods: ctrl;alt\n    action: undo\n"] error:nil];
+    ConfigurationModifiersView *warning = [[ConfigurationModifiersView alloc] initWithFrame:NSMakeRect(0, 0, 1000, 640)];
+    warning.document = clash;
+    [warning editGroupNamed:@"hyper"];
+    [warning toggleModifier:@"cmd"];
+    [self checkView:warning size:NSMakeSize(1000, 640) name:@"modifiers-editor-warning" dark:[dark boolValue]];
   }
 }
 
