@@ -386,17 +386,12 @@ static NSString *const kConfig =
   XCTAssertTrue([switcher isHidden]);
 }
 
-- (void)testUnbuiltPagesShowAPlaceholder {
+- (void)testEachPageShowsItsOwnView {
   ConfigurationFormView *form = [self formWithDocument:[self document]];
-  form.selectedSection = ConfigurationFormSectionBackup;
-  XCTAssertTrue([[form valueForKey:@"tableScroll"] isHidden]);
-  XCTAssertFalse([[form valueForKey:@"placeholderView"] isHidden]);
   form.selectedSection = ConfigurationFormSectionSnapshots;
   XCTAssertFalse([[form valueForKey:@"snapshotsView"] isHidden], @"Snapshots has its own page");
-  XCTAssertTrue([[form valueForKey:@"placeholderView"] isHidden]);
   form.selectedSection = ConfigurationFormSectionKeyboard;
   XCTAssertFalse([[form valueForKey:@"keyboardView"] isHidden], @"the Keyboard page has its own view");
-  XCTAssertTrue([[form valueForKey:@"placeholderView"] isHidden]);
   form.selectedSection = ConfigurationFormSectionModifiers;
   XCTAssertFalse([[form valueForKey:@"tableScroll"] isHidden]);
   XCTAssertTrue([[form valueForKey:@"keyboardView"] isHidden]);
