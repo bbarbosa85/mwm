@@ -46,33 +46,47 @@ func writePNG(_ rep: NSBitmapImageRep, to url: URL) {
 
 // MARK: - App icon
 
+// Flat and strong: a solid body and three solid tiles, no gradients or shadows.
+struct IconPalette { let body: UInt32; let big: UInt32; let top: UInt32; let bottom: UInt32 }
+let palettes: [String: IconPalette] = [
+  "blue": IconPalette(body: 0x1F5BFF, big: 0xFFFFFF, top: 0xFFD21F, bottom: 0xFF5A5F),
+  "violet": IconPalette(body: 0x6B2BFF, big: 0xFFFFFF, top: 0x2CE5A7, bottom: 0xFF4FA3),
+  "orange": IconPalette(body: 0xFF4B1F, big: 0xFFFFFF, top: 0xFFD21F, bottom: 0x14163A),
+  "black": IconPalette(body: 0x111114, big: 0xFFFFFF, top: 0x3DFF9A, bottom: 0xFF3D81),
+  "green": IconPalette(body: 0x00B86B, big: 0xFFFFFF, top: 0xFFE14D, bottom: 0x0B2A4A),
+  "green-lime": IconPalette(body: 0x00B86B, big: 0xFFFFFF, top: 0xC6FF00, bottom: 0x06281B),
+  "green-coral": IconPalette(body: 0x00B86B, big: 0xFFFFFF, top: 0xFF6B4A, bottom: 0x0B2A4A),
+  "green-pure": IconPalette(body: 0x12C93C, big: 0xFFFFFF, top: 0xFFE14D, bottom: 0x0A1F44),
+  "green-forest": IconPalette(body: 0x06402B, big: 0x3DFFA8, top: 0xFFFFFF, bottom: 0xC6FF00),
+  "green-navy": IconPalette(body: 0x00B86B, big: 0x0B2A4A, top: 0xFFFFFF, bottom: 0xFFE14D),
+  "green-sky": IconPalette(body: 0x00B86B, big: 0xFFFFFF, top: 0x3DB8FF, bottom: 0xFFE14D),
+  "red": IconPalette(body: 0xE5192D, big: 0xFFFFFF, top: 0xFFC400, bottom: 0x16181F),
+  "teal": IconPalette(body: 0x00A3B4, big: 0xFFFFFF, top: 0xFF9F1C, bottom: 0x1B1F5E),
+  "yellow": IconPalette(body: 0xFFC800, big: 0x15161A, top: 0xFFFFFF, bottom: 0xFF4B3E),
+]
+let layout = ProcessInfo.processInfo.environment["MWM_LAYOUT"] ?? "split"
+var palette = palettes[ProcessInfo.processInfo.environment["MWM_ICON"] ?? "blue"]!
+// MWM_BODY=RRGGBB changes only the background color.
+if let hex = ProcessInfo.processInfo.environment["MWM_BODY"], let value = UInt32(hex, radix: 16) {
+  palette = IconPalette(body: value, big: palette.big, top: palette.top, bottom: palette.bottom)
+}
+// MWM_TOP=RRGGBB and MWM_BOTTOM=RRGGBB change the two colored blocks.
+if let hex = ProcessInfo.processInfo.environment["MWM_TOP"], let value = UInt32(hex, radix: 16) {
+  palette = IconPalette(body: palette.body, big: palette.big, top: value, bottom: palette.bottom)
+}
+if let hex = ProcessInfo.processInfo.environment["MWM_BOTTOM"], let value = UInt32(hex, radix: 16) {
+  palette = IconPalette(body: palette.body, big: palette.big, top: palette.top, bottom: value)
+}
+
 // Drawn on a 1024 x 1024 canvas, on Apple's icon grid: an 824-point body with a 100-point margin.
 func drawAppIcon(_ ctx: CGContext, scale s: CGFloat) {
   ctx.saveGState()
   ctx.scaleBy(x: s, y: s)
 
   let body = CGRect(x: 100, y: 100, width: 824, height: 824)
-  let bodyPath = roundedRect(body, 185)
-
-  // Body, with its shadow.
-  ctx.saveGState()
-  ctx.setShadow(offset: CGSize(width: 0, height: -12 * s), blur: 28 * s, color: color(0x000000, 0.35))
-  ctx.addPath(bodyPath)
-  ctx.setFillColor(color(0x2B35A8))
+  ctx.addPath(roundedRect(body, 185))
+  ctx.setFillColor(color(palette.body))
   ctx.fillPath()
-  ctx.restoreGState()
-
-  // Indigo to blue, with a soft light from the top.
-  ctx.saveGState()
-  ctx.addPath(bodyPath)
-  ctx.clip()
-  let base = CGGradient(colorsSpace: sRGB, colors: [color(0x6F8CFF), color(0x2B35A8)] as CFArray, locations: [0, 1])!
-  ctx.drawLinearGradient(base, start: CGPoint(x: 300, y: body.maxY), end: CGPoint(x: 700, y: body.minY),
-                         options: [.drawsBeforeStartLocation, .drawsAfterEndLocation])
-  let light = CGGradient(colorsSpace: sRGB, colors: [color(0xFFFFFF, 0.20), color(0xFFFFFF, 0)] as CFArray, locations: [0, 1])!
-  ctx.drawLinearGradient(light, start: CGPoint(x: 512, y: body.maxY), end: CGPoint(x: 512, y: 520),
-                         options: [.drawsBeforeStartLocation, .drawsAfterEndLocation])
-  ctx.restoreGState()
 
   // Three tiled windows: a tall one on the left, two stacked on the right.
   let area = CGRect(x: 232, y: 232, width: 560, height: 560)
@@ -84,25 +98,40 @@ func drawAppIcon(_ ctx: CGContext, scale s: CGFloat) {
   let rightBottom = CGRect(x: left.maxX + gap, y: area.minY, width: rightWidth, height: rightHeight)
   let rightTop = CGRect(x: left.maxX + gap, y: rightBottom.maxY + gap, width: rightWidth, height: rightHeight)
 
-  let tiles: [(CGRect, CGColor)] = [
-    (left, color(0xFFFFFF, 0.96)),
-    (rightTop, color(0xFFFFFF, 0.70)),
-    (rightBottom, color(0x7FE3FF, 0.96)),
+  var tiles: [(CGRect, CGColor)] = [
+    (left, color(palette.big)),
+    (rightTop, color(palette.top)),
+    (rightBottom, color(palette.bottom)),
   ]
+  var dots = true
+  if layout == "quad" {  // a 2 x 2 grid: one big tile and three small
+    let w = (area.width - gap) / 2
+    tiles = [
+      (CGRect(x: area.minX, y: area.minY + w + gap, width: w, height: w), color(palette.big)),
+      (CGRect(x: area.minX + w + gap, y: area.minY + w + gap, width: w, height: w), color(palette.top)),
+      (CGRect(x: area.minX, y: area.minY, width: w, height: w), color(palette.bottom)),
+      (CGRect(x: area.minX + w + gap, y: area.minY, width: w, height: w), color(palette.big, 0.35)),
+    ]
+    dots = false
+  } else if layout == "thirds" {  // three columns, the middle one tallest
+    let w = (area.width - 2 * gap) / 3
+    tiles = [
+      (CGRect(x: area.minX, y: area.minY, width: w, height: area.height), color(palette.top)),
+      (CGRect(x: area.minX + w + gap, y: area.minY, width: w, height: area.height), color(palette.big)),
+      (CGRect(x: area.minX + 2 * (w + gap), y: area.minY, width: w, height: area.height), color(palette.bottom)),
+    ]
+    dots = false
+  }
   for (rect, fill) in tiles {
-    ctx.saveGState()
-    ctx.setShadow(offset: CGSize(width: 0, height: -6 * s), blur: 16 * s, color: color(0x0A1055, 0.35))
     ctx.addPath(roundedRect(rect, 44))
     ctx.setFillColor(fill)
     ctx.fillPath()
-    ctx.restoreGState()
   }
 
   // Window buttons on the big tile.
-  let dotColors: [CGColor] = [color(0x2B35A8, 0.30), color(0x2B35A8, 0.30), color(0x2B35A8, 0.30)]
-  for (i, dot) in dotColors.enumerated() {
+  for i in 0..<(dots ? 3 : 0) {
     let center = CGPoint(x: left.minX + 46 + CGFloat(i) * 34, y: left.maxY - 46)
-    ctx.setFillColor(dot)
+    ctx.setFillColor(color(palette.body))
     ctx.fillEllipse(in: CGRect(x: center.x - 11, y: center.y - 11, width: 22, height: 22))
   }
 
