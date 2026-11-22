@@ -2,46 +2,103 @@
 """Builds docs/examples.html and docs/examples/mwm-examples.zip from docs/examples/*.mwm.yml.
 
 Run after adding or changing an example:  script/build-examples-page
+The plain-language lists below are written by hand: keep them in step with the files.
 """
 import html, os, zipfile
 
 root = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "docs")
 ex = os.path.join(root, "examples")
+DMG = "https://github.com/bbarbosa85/mwm/raw/master/docs/downloads/MWM.dmg"
+BLUE, SUN, CORAL, WHITE = "#1f5bff", "#ffd21f", "#ff5a5f", "#ffffff"
 
-# file -> (title, who it is for, what you get)
-meta = [
-    ("starter.mwm.yml", "Starter", "Anyone new to MWM", "Halves, thirds and full screen on hyper, jump to Finder, Safari and Terminal, window hints, and a work snapshot."),
-    ("ultrawide.mwm.yml", "Ultrawide", "One very wide monitor", "Thirds, two-thirds, a centered column and quarters, so a 21:9 or 32:9 screen is never one giant window."),
-    ("two-displays.mwm.yml", "Laptop + external display", "Two screens", "Names both screens, halves per screen, throw to the next screen, and a desk-setup snapshot."),
-    ("apps-and-snapshots.mwm.yml", "Apps and snapshots", "Jumping between apps and layouts", "Ten app shortcuts on alt + shift and three snapshots (work, meeting, focus) to save and restore."),
-    ("daily-driver.mwm.yml", "The author's daily setup", "A real, lived-in file", "A MacBook with a 5120x1440 ultrawide: slots on the number row and keypad, app shortcuts, hints and snapshots."),
+
+def screen(tiles, w=240, h=150, x0=0, y0=0):
+    """A little picture of a screen. tiles: (x, y, w, h, color) in percent of the screen."""
+    pad, top = 6, 12
+    aw, ah = w - 2 * pad, h - top - pad
+    out = [f'<rect x="{x0 + 1}" y="{y0 + 1}" width="{w - 2}" height="{h - 2}" rx="9" fill="#33318f" stroke="rgba(255,255,255,.3)" stroke-width="2"/>',
+           f'<rect x="{x0 + 1}" y="{y0 + 1}" width="{w - 2}" height="9" rx="4.5" fill="rgba(0,0,0,.3)"/>']
+    for (x, y, tw, th, c) in tiles:
+        out.append(f'<rect x="{x0 + pad + x / 100 * aw:.1f}" y="{y0 + top + y / 100 * ah:.1f}" width="{tw / 100 * aw - 3:.1f}" height="{th / 100 * ah - 3:.1f}" rx="4" fill="{c}"/>')
+    return "".join(out)
+
+
+def svg(w, h, body):
+    return f'<svg viewBox="0 0 {w} {h}" role="img" aria-hidden="true">{body}</svg>'
+
+
+def label(x, y, text):
+    return f'<text x="{x}" y="{y}" text-anchor="middle" font-size="13" font-weight="700" fill="currentColor" font-family="-apple-system, sans-serif">{text}</text>'
+
+
+def apps_grid():
+    cells = []
+    for i, (k, c) in enumerate([("F", BLUE), ("S", "#1e7bf0"), ("C", CORAL), ("T", "#4a4d5c"), ("N", SUN), ("M", "#28a745"), ("A", "#e0457b"), ("K", "#6b3fd1")]):
+        x, y = 12 + (i % 4) * 56, 14 + (i // 4) * 56
+        cells.append(f'<rect x="{x}" y="{y}" width="48" height="48" rx="12" fill="{c}"/><text x="{x + 24}" y="{y + 32}" text-anchor="middle" font-size="22" font-weight="800" fill="{"#222" if c == SUN else "#fff"}" font-family="-apple-system, sans-serif">{k}</text>')
+    return svg(240, 126, "".join(cells))
+
+
+# (file, title, best for, picture, what to change, [(keys, what it does)])
+examples = [
+    ("starter.mwm.yml", "Starter", "Anyone new to MWM",
+     svg(240, 150, screen([(0, 0, 50, 100, WHITE), (50, 0, 50, 50, SUN), (50, 50, 50, 50, CORAL)])),
+     "Change Finder, Safari and Terminal to the apps you use.",
+     [("⌃⌥⌘ ← →", "Left half, right half"), ("⌃⌥⌘ ↑", "Full screen"), ("⌃⌥⌘ 1 2 3", "Left, middle and right third"),
+      ("⌥⇧ F S T", "Jump to Finder, Safari, Terminal"), ("⌘⇧ H", "Show a letter on every window, to jump to it"),
+      ("⌃⌥⌘ S · W", "Save your desktop as \"work\", and bring it back")]),
+    ("ultrawide.mwm.yml", "Ultrawide", "One very wide monitor",
+     svg(420, 112, screen([(0, 0, 34, 100, WHITE), (34, 0, 33, 100, SUN), (67, 0, 33, 100, CORAL)], w=420, h=112)),
+     "Nothing needed. It works on any screen, but shines on wide ones.",
+     [("⌃⌥⌘ 1 2 3", "Left, middle and right third"), ("⌃⌥⌘ 4 · 6", "Left two thirds, right two thirds"), ("⌃⌥⌘ 5", "Centered, two thirds wide"),
+      ("⌃⌥⌘ 9", "A narrow column in the middle, for reading"), ("⌃⌥⌘ 0", "Full screen"), ("⇧⌃⌥⌘ 1 2 3 4", "The four quarters"), ("⌘⇧ H", "Window hints")]),
+    ("two-displays.mwm.yml", "Laptop and external display", "Two screens",
+     svg(300, 150, screen([(0, 0, 50, 100, WHITE), (50, 0, 50, 100, SUN)], w=110, h=84, x0=4, y0=28)
+         + screen([(0, 0, 50, 100, CORAL), (50, 0, 50, 100, "#7fb0ff")], w=170, h=110, x0=124, y0=10)
+         + label(59, 20, "laptop") + label(209, 136, "desk")),
+     "Name your two screens in <b>Displays</b>, or change <code>Studio Display</code> in the file to your monitor's name.",
+     [("⌃⌥⌘ 1 · 2", "Fill the laptop, or fill the desk screen"), ("⌃⌥⌘ Tab", "Send the window to the other screen"),
+      ("⌃⌥⌘ arrows", "Halves of the desk screen"), ("⇧⌃⌥⌘ ← →", "Halves of the laptop screen"),
+      ("⌃⌥⌘ D · R", "Save your desk setup, and bring it back after plugging in")]),
+    ("apps-and-snapshots.mwm.yml", "Apps and snapshots", "Switching between apps and layouts",
+     apps_grid(),
+     "Change the ten app names to your own. Snapshots start empty: arrange your windows, then press the save shortcut.",
+     [("⌥⇧ + a letter", "Jump to Finder, Safari, Chrome, Terminal, Notes, Mail, Calendar, Spotify, VS Code or Slack"),
+      ("⌃⌥⌘ W · M · F", "Bring back your \"work\", \"meeting\" or \"focus\" desktop"),
+      ("⇧⌃⌥⌘ W · M · F", "Save the desktop you have now as work, meeting or focus")]),
+    ("daily-driver.mwm.yml", "The author's daily setup", "A real, lived-in setup",
+     svg(420, 120, screen([(0, 0, 25, 100, WHITE), (25, 0, 50, 100, SUN), (75, 0, 25, 100, CORAL)], w=300, h=84, x0=4, y0=6)
+         + screen([(0, 0, 100, 100, "#7fb0ff")], w=96, h=66, x0=318, y0=24)),
+     "Rename the apps and screens to yours. It uses a MacBook and a 5120×1440 ultrawide.",
+     [("⌃⌥⌘ number row and keypad", "Halves, thirds and quarters, on either screen"), ("⌥⇧ + a letter", "Jump to the apps the author uses every day"),
+      ("⌘⇧ H", "Window hints"), ("⌃⌥⌘ and ⇧⌃⌥⌘", "Save and restore snapshots"), ("Lots of shortcuts", "The most complete example. A good one to read through and borrow from.")]),
 ]
 
 with zipfile.ZipFile(os.path.join(ex, "mwm-examples.zip"), "w", zipfile.ZIP_DEFLATED) as z:
-    for name, *_ in meta:
+    for name, *_ in examples:
         z.write(os.path.join(ex, name), name)
 
-cards = []
-for name, title, who, what in meta:
+
+def card(name, title, who, picture, change, rows):
     text = open(os.path.join(ex, name), encoding="utf-8").read()
-    lines = text.count("\n")
-    bindings = text.count("\n  - ")
-    cards.append(f"""
-    <article class="ex" id="{name.split('.')[0]}" data-text="{html.escape((title + ' ' + who + ' ' + what).lower())}">
-      <div class="head">
-        <div>
-          <h2>{html.escape(title)}</h2>
-          <p class="who">{html.escape(who)} · {bindings} shortcuts · {lines} lines</p>
-          <p>{html.escape(what)}</p>
-        </div>
+    n = text.count("\n  - ")
+    items = "".join(f'<li><span class="k">{html.escape(k)}</span><span>{html.escape(v)}</span></li>' for k, v in rows)
+    return f"""
+    <article class="ex" id="{name.split('.')[0]}">
+      <div class="art">{picture}</div>
+      <div class="body">
+        <h2>{html.escape(title)}</h2>
+        <p class="who">{html.escape(who)} · {n} shortcuts</p>
+        <ul class="does">{items}</ul>
+        <p class="change"><b>Before you use it:</b> {change}</p>
         <div class="acts">
           <a class="btn primary small" href="examples/{name}" download>Download</a>
-          <button class="btn small" type="button" data-copy="{name}">Copy</button>
-          <button class="btn small" type="button" data-toggle="{name}">Preview</button>
+          <button class="btn small" type="button" data-copy="{name}">Copy the file</button>
         </div>
+        <details><summary>See the file</summary><pre id="pre-{name}"><code>{html.escape(text)}</code></pre></details>
       </div>
-      <pre id="pre-{name}" hidden><code>{html.escape(text)}</code></pre>
-    </article>""")
+    </article>"""
+
 
 page = f"""<!doctype html>
 <html lang="en">
@@ -49,26 +106,43 @@ page = f"""<!doctype html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>MWM examples</title>
-<meta name="description" content="Ready-made MWM configurations you can download: starter, ultrawide, two displays, apps and snapshots.">
+<meta name="description" content="Ready-made MWM setups you can download: starter, ultrawide, two displays, apps and snapshots.">
 <link rel="icon" href="assets/icon.png">
 <link rel="stylesheet" href="assets/site.css">
 <style>
-  .page {{ max-width: 920px; margin: 0 auto; padding: 40px 24px 90px; }}
-  h1 {{ font-size: clamp(30px, 4vw, 42px); letter-spacing: -.02em; margin: 0 0 8px; line-height: 1.1; }}
-  .lead {{ color: var(--muted); font-size: 18px; margin: 0 0 22px; }}
-  .tools {{ display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 22px; }}
-  .tools input {{ flex: 1; min-width: 220px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 11px 14px; color: var(--fg); font: inherit; outline: 0; }}
-  .tools input:focus {{ border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 20%, transparent); }}
-  .ex {{ background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 22px; margin-bottom: 16px; }}
-  .ex .head {{ display: flex; gap: 20px; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; }}
-  .ex h2 {{ margin: 0 0 2px; font-size: 21px; }}
-  .ex .who {{ margin: 0 0 8px; color: var(--accent); font-size: 14px; font-weight: 600; }}
-  .ex p {{ margin: 0; color: var(--muted); }}
-  .ex .acts {{ display: flex; gap: 8px; flex-wrap: wrap; }}
-  .ex pre {{ margin: 18px 0 0; max-height: 460px; overflow: auto; }}
-  .how {{ background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 18px 22px; margin-bottom: 22px; }}
-  .how ol {{ margin: 8px 0 0; padding-left: 22px; }} .how li {{ margin: 4px 0; }}
-  #none {{ display: none; color: var(--muted); text-align: center; padding: 30px 0; }}
+  .layout {{ display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 40px; max-width: 1240px; margin: 0 auto; padding: 0 24px; }}
+  .exnav {{ position: sticky; top: 56px; align-self: start; padding: 40px 0; font-size: 14px; }}
+  .exnav h4 {{ margin: 0 0 8px; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }}
+  .exnav a {{ display: block; padding: 6px 10px; margin-left: -10px; border-radius: 8px; color: var(--muted); }}
+  .exnav a:hover {{ color: var(--fg); background: var(--surface-2); text-decoration: none; }}
+  .exnav a.on {{ color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); }}
+  .exnav .gap {{ height: 14px; }}
+  .page {{ min-width: 0; padding: 40px 0 90px; }}
+  .ex, .how {{ scroll-margin-top: 76px; }}
+  h1 {{ font-size: clamp(32px, 4.4vw, 46px); letter-spacing: -.025em; margin: 0 0 8px; line-height: 1.08; }}
+  .lead {{ color: var(--muted); font-size: 19px; margin: 0 0 28px; max-width: 700px; }}
+  .how {{ background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 22px; margin-bottom: 30px; }}
+  .how h2 {{ margin: 0 0 14px; font-size: 20px; }}
+  .how ol {{ list-style: none; padding: 0; margin: 0; display: grid; gap: 14px; counter-reset: q; }}
+  .how li {{ counter-increment: q; display: grid; grid-template-columns: 30px 1fr; gap: 12px; align-items: start; }}
+  .how li::before {{ content: counter(q); width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; font-size: 13px; color: #fff; background: #1f5bff; }}
+  .how li p {{ margin: 0; }} .how li .sub {{ color: var(--muted); font-size: 15px; margin-top: 4px; }}
+  .how pre {{ margin: 8px 0 0; }}
+  .ex {{ display: grid; grid-template-columns: 300px 1fr; gap: 28px; background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 22px; margin-bottom: 18px; align-items: start; }}
+  .ex .art {{ background: var(--surface-2); border-radius: 14px; padding: 18px; color: var(--fg); }}
+  .ex .art svg {{ display: block; width: 100%; height: auto; }}
+  .ex h2 {{ margin: 0 0 2px; font-size: 24px; letter-spacing: -.015em; }}
+  .ex .who {{ margin: 0 0 14px; color: var(--accent); font-size: 14px; font-weight: 600; }}
+  .does {{ list-style: none; padding: 0; margin: 0 0 14px; display: grid; gap: 8px; }}
+  .does li {{ display: grid; grid-template-columns: 165px 1fr; gap: 12px; align-items: baseline; font-size: 15px; }}
+  .does .k {{ font: 600 13px ui-monospace, Menlo, monospace; background: var(--surface-2); border: 1px solid var(--line); border-radius: 8px; padding: 3px 8px; justify-self: start; }}
+  .change {{ margin: 0 0 14px; padding: 10px 14px; border-left: 3px solid var(--warn); background: color-mix(in srgb, var(--warn) 9%, transparent); border-radius: 0 10px 10px 0; font-size: 14.5px; }}
+  .acts {{ display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 6px; }}
+  .ex details {{ background: transparent; border: 0; padding: 0; margin: 0; }}
+  .ex summary {{ font-weight: 500; color: var(--muted); padding: 8px 0; }}
+  .ex pre {{ max-height: 380px; overflow: auto; margin: 4px 0 0; }}
+  @media (max-width: 960px) {{ .layout {{ display: block; padding: 0 20px; }} .exnav {{ top: 56px; z-index: 5; display: flex; gap: 6px; overflow-x: auto; padding: 10px 0; margin: 0 -20px; padding-left: 20px; padding-right: 20px; background: color-mix(in srgb, var(--bg) 92%, transparent); backdrop-filter: blur(12px); white-space: nowrap; }} .exnav h4, .exnav .gap {{ display: none; }} .exnav a {{ margin: 0; padding: 7px 12px; background: var(--surface); border: 1px solid var(--line); }} .page {{ padding-top: 24px; }} }}
+  @media (max-width: 820px) {{ .ex {{ grid-template-columns: 1fr; }} .ex .art {{ max-width: 360px; }} .does li {{ grid-template-columns: 1fr; gap: 3px; }} }}
 </style>
 </head>
 <body>
@@ -79,50 +153,58 @@ page = f"""<!doctype html>
       <a href="index.html#top">Overview</a>
       <a href="docs.html">Docs</a>
       <a href="examples.html" style="color:var(--fg)">Examples</a>
-      <a class="btn primary small cta" href="index.html#download">Download</a>
+      <a class="btn primary small cta" href="{DMG}">Download</a>
     </div>
   </div>
 </nav>
 
+<div class="layout">
+<aside class="exnav" id="exnav" aria-label="On this page">
+  <h4>On this page</h4>
+  <a href="#how">How to use</a>
+  <div class="gap"></div>
+  <h4>Examples</h4>
+  {''.join(f'<a href="#{e[0].split(".")[0]}">{html.escape(e[1])}</a>' for e in examples)}
+</aside>
 <div class="page">
   <h1>Examples</h1>
-  <p class="lead">Ready-made configurations. Download one, change the app and screen names to yours, and you're set.</p>
+  <p class="lead">Ready-made setups. Pick the one closest to how you work, download it, and change what you need. Each one lists what its shortcuts do.</p>
 
-  <div class="how">
-    <b>To use one</b>
+  <div class="how" id="how">
+    <h2>How to use an example</h2>
     <ol>
-      <li>Download it, then save it as <code>~/.mwm.yml</code> (in Finder: <b>Go → Go to Folder…</b>, type <code>~</code>; files starting with a dot are hidden, <kbd>⌘</kbd><kbd>⇧</kbd><kbd>.</kbd> shows them). If you already have one, keep a copy first.</li>
-      <li>Open the MWM menu and choose <b>Configure MWM…</b>, then press <b>Apply</b>.</li>
-      <li>Edit it in the window, or by hand. The <a href="docs.html#config-file">documentation</a> explains every field.</li>
+      <li><div><p><b>Download it</b> with the button on a card below.</p></div></li>
+      <li><div><p><b>Save it as <code>~/.mwm.yml</code></b>, in your home folder. This replaces your current settings, so make a copy first if you have any.</p>
+        <p class="sub">Easiest way, in Terminal (use the file name you downloaded):</p>
+<pre><code>cp ~/.mwm.yml ~/.mwm.yml.backup    # only if you already have one
+mv ~/Downloads/starter.mwm.yml ~/.mwm.yml</code></pre>
+        <p class="sub">Or in Finder: <b>Go → Go to Folder…</b>, type <code>~</code>, and drag the file in. Files that start with a dot are hidden; <kbd>⌘</kbd><kbd>⇧</kbd><kbd>.</kbd> shows them.</p></div></li>
+      <li><div><p><b>Open MWM and press Apply.</b> Choose <b>Configure MWM…</b> from the menu bar, then <b>Apply</b>. Now change the app and screen names to yours, right in the app.</p>
+        <p class="sub">More help in the <a href="docs.html#first-shortcut">documentation</a>.</p></div></li>
     </ol>
-    <p style="margin:12px 0 0"><a class="btn small" href="examples/mwm-examples.zip" download>Download all ({len(meta)}) as a zip</a></p>
+    <p style="margin:16px 0 0"><a class="btn small" href="examples/mwm-examples.zip" download>Download all {len(examples)} as a zip</a></p>
   </div>
-
-  <div class="tools"><input id="q" type="search" placeholder="Filter examples: ultrawide, apps, two screens …" aria-label="Filter examples"></div>
-  {''.join(cards)}
-  <div id="none">No example matches that.</div>
+  {''.join(card(*e) for e in examples)}
+</div>
 </div>
 
 <script>
 (function () {{
-  var cards = Array.prototype.slice.call(document.querySelectorAll('.ex'));
-  document.getElementById('q').addEventListener('input', function (e) {{
-    var terms = e.target.value.toLowerCase().split(/\\s+/).filter(Boolean), shown = 0;
-    cards.forEach(function (c) {{ var ok = terms.every(function (t) {{ return c.dataset.text.indexOf(t) !== -1; }}); c.hidden = !ok; if (ok) shown++; }});
-    document.getElementById('none').style.display = shown ? 'none' : 'block';
-  }});
   document.addEventListener('click', function (e) {{
-    var t = e.target;
-    if (t.dataset.toggle) {{
-      var pre = document.getElementById('pre-' + t.dataset.toggle); pre.hidden = !pre.hidden; t.textContent = pre.hidden ? 'Preview' : 'Hide';
-    }}
-    if (t.dataset.copy) {{
-      var text = document.getElementById('pre-' + t.dataset.copy).textContent;
-      if (navigator.clipboard) navigator.clipboard.writeText(text);
-      t.textContent = 'Copied'; setTimeout(function () {{ t.textContent = 'Copy'; }}, 1200);
-    }}
+    var name = e.target.getAttribute && e.target.getAttribute('data-copy');
+    if (!name) return;
+    var text = document.getElementById('pre-' + name).textContent;
+    if (navigator.clipboard) navigator.clipboard.writeText(text);
+    var old = e.target.textContent; e.target.textContent = 'Copied'; setTimeout(function () {{ e.target.textContent = old; }}, 1200);
   }});
-  if (location.hash) {{ var el = document.querySelector(location.hash); if (el) el.querySelector('[data-toggle]').click(); }}
+  var links = Array.prototype.slice.call(document.querySelectorAll('#exnav a'));
+  if ('IntersectionObserver' in window) {{
+    var io = new IntersectionObserver(function (entries) {{
+      entries.forEach(function (en) {{ if (en.isIntersecting) links.forEach(function (a) {{ a.classList.toggle('on', a.getAttribute('href') === '#' + en.target.id); }}); }});
+    }}, {{ rootMargin: '-15% 0px -70% 0px' }});
+    Array.prototype.forEach.call(document.querySelectorAll('.how, .ex'), function (el) {{ io.observe(el); }});
+  }}
+  if (location.hash) {{ var el = document.querySelector(location.hash); if (el) {{ var d = el.querySelector('details'); if (d) d.open = true; }} }}
 }})();
 </script>
 </body>

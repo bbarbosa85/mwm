@@ -4,52 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>MWM documentation</title>
-<meta name="description" content="Quick start and full reference for MWM: the configuration window, the ~/.mwm.yml file, settings, slots, shortcuts and actions.">
+<meta name="description" content="How to use MWM: get started in minutes, then learn each feature in the app, or in the settings file if you prefer.">
 <link rel="icon" href="assets/icon.png">
 <link rel="stylesheet" href="assets/site.css">
-<style>
-  .docs-wrap { display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 44px; max-width: 1180px; margin: 0 auto; padding: 0 24px; }
-  aside { position: sticky; top: 56px; align-self: start; max-height: calc(100vh - 56px); overflow-y: auto; padding: 26px 0 40px; font-size: 14px; }
-  aside h4 { margin: 18px 0 6px; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
-  aside a { display: block; padding: 4px 10px; margin-left: -10px; border-radius: 8px; color: var(--muted); }
-  aside a:hover { color: var(--fg); background: var(--surface-2); text-decoration: none; }
-  aside a.on { color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); }
-  aside .none { display: none; }
-  main { padding: 30px 0 80px; min-width: 0; }
-  .searchbar { position: sticky; top: 56px; z-index: 5; background: color-mix(in srgb, var(--bg) 92%, transparent); backdrop-filter: blur(12px); padding: 14px 0 10px; }
-  .searchbar .box { display: flex; align-items: center; gap: 10px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 0 14px; }
-  .searchbar .box:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 20%, transparent); }
-  .searchbar input { flex: 1; border: 0; outline: 0; background: transparent; color: var(--fg); font: inherit; padding: 12px 0; }
-  .searchbar kbd { color: var(--muted); }
-  .searchbar button { border: 0; background: transparent; color: var(--muted); font: inherit; cursor: pointer; display: none; }
-  .searchbar.active button { display: block; }
-  #status { font-size: 13px; color: var(--muted); margin: 8px 2px 0; min-height: 20px; }
-  h1.page { font-size: clamp(30px, 4vw, 42px); letter-spacing: -.02em; margin: 6px 0 6px; line-height: 1.1; }
-  .lead { color: var(--muted); font-size: 18px; margin: 0 0 6px; }
-  .doc { padding: 34px 0 6px; border-top: 1px solid var(--line); margin-top: 34px; scroll-margin-top: 130px; }
-  .doc:first-of-type { border-top: 0; margin-top: 8px; }
-  .doc h2 { font-size: 28px; letter-spacing: -.015em; margin: 0 0 10px; line-height: 1.15; }
-  .doc h3 { font-size: 19px; margin: 26px 0 6px; }
-  .doc p, .doc li { color: var(--fg); }
-  .doc p.muted, .muted { color: var(--muted); }
-  .doc ul, .doc ol { padding-left: 22px; } .doc li { margin: 5px 0; }
-  .doc table { margin: 14px 0; font-size: 14.5px; }
-  .doc td code, .doc th code { white-space: nowrap; }
-  .doc pre { position: relative; }
-  .copy { position: absolute; top: 8px; right: 8px; border: 1px solid var(--line); background: var(--surface); color: var(--muted); border-radius: 8px; font: 12px/1 -apple-system, sans-serif; padding: 6px 9px; cursor: pointer; opacity: 0; transition: opacity .15s; }
-  pre:hover .copy, .copy:focus { opacity: 1; }
-  mark { background: var(--sun); color: #16161a; border-radius: 3px; padding: 0 1px; }
-  .callout { border-left: 3px solid var(--accent); background: color-mix(in srgb, var(--accent) 8%, transparent); padding: 10px 14px; border-radius: 0 10px 10px 0; margin: 14px 0; font-size: 15px; }
-  .callout.warn { border-color: var(--warn); background: color-mix(in srgb, var(--warn) 9%, transparent); }
-  .steps2 { counter-reset: q; list-style: none; padding: 0 !important; display: grid; gap: 12px; }
-  .steps2 > li { counter-increment: q; display: grid; grid-template-columns: 34px 1fr; gap: 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px; margin: 0; }
-  .steps2 > li::before { content: counter(q); width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; font-size: 14px; color: #fff; background: #1f5bff; }
-  .steps2 > li > div > :first-child { margin-top: 0; font-weight: 600; } .steps2 > li > div > :last-child { margin-bottom: 0; }
-  .pill { display: inline-block; font-size: 12px; padding: 1px 9px; border-radius: 99px; background: color-mix(in srgb, var(--accent) 14%, transparent); color: var(--accent); vertical-align: 1px; }
-  .keys { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 14px; }
-  #empty { display: none; padding: 40px 0; text-align: center; color: var(--muted); }
-  @media (max-width: 900px) { .docs-wrap { grid-template-columns: 1fr; } aside { display: none; } }
-</style>
+<link rel="stylesheet" href="assets/docs.css">
 </head>
 <body>
 
@@ -60,514 +18,429 @@
       <a href="index.html#top">Overview</a>
       <a href="docs.html" style="color:var(--fg)">Docs</a>
       <a href="examples.html">Examples</a>
-      <a class="btn primary small cta" href="index.html#download">Download</a>
+      <a class="btn primary small cta" href="https://github.com/bbarbosa85/mwm/raw/master/docs/downloads/MWM.dmg">Download</a>
     </div>
   </div>
 </nav>
 
 <div class="docs-wrap">
   <aside id="toc" aria-label="Contents">
-    <h4>Get started</h4>
-    <a href="#quick-start">Quick start</a>
-    <a href="#window">The configuration window</a>
-    <a href="#menu-bar">The menu bar menu</a>
-    <h4>The configuration file</h4>
-    <a href="#config-file">Overview</a>
-    <a href="#settings">Settings</a>
-    <a href="#modifiers">Modifiers</a>
-    <a href="#monitors">Monitors</a>
-    <a href="#slots">Slots</a>
-    <a href="#aliases">Aliases</a>
-    <a href="#bindings">Bindings</a>
-    <a href="#actions">Actions</a>
-    <h4>Reference</h4>
-    <a href="#keys">Keys and modifiers</a>
-    <a href="#defaults">Default shortcuts</a>
-    <a href="#snapshots">Snapshots</a>
-    <a href="#formulas">Slot formulas</a>
-    <a href="#migration">Moving from Slate</a>
-    <a href="#troubleshooting">Troubleshooting</a>
-  </aside>
-
-  <main>
     <div class="searchbar" id="searchbar">
       <div class="box">
         <span aria-hidden="true">🔍</span>
-        <input id="q" type="search" placeholder="Search the docs: slot, snapshot, hyper, focus-app …" autocomplete="off" aria-label="Search the documentation">
-        <button id="clear" type="button">Clear</button>
+        <input id="q" type="search" placeholder="Search…" autocomplete="off" aria-label="Search the documentation">
+        <button id="clear" type="button" aria-label="Clear search">✕</button>
         <kbd>/</kbd>
       </div>
       <div id="status" role="status"></div>
     </div>
+    <div class="links-list">
+    <h4>Start here</h4>
+    <a href="#quick-start">Get started</a>
+    <a href="#first-shortcut">Your first shortcut</a>
+    <h4>How do I…</h4>
+    <a href="#move-windows">Put a window in part of the screen</a>
+    <a href="#jump-to-apps">Jump to an app</a>
+    <a href="#screens">Work with more screens</a>
+    <a href="#snapshots">Save my whole desktop</a>
+    <a href="#resize-nudge">Resize and nudge</a>
+    <a href="#window-hints">Jump with window hints</a>
+    <a href="#modifier-groups">Use the hyper key</a>
+    <h4>Find your way around</h4>
+    <a href="#window">The configuration window</a>
+    <a href="#menu-bar">The menu bar</a>
+    <a href="#defaults">Shortcuts you get</a>
+    <h4>The settings file</h4>
+    <a href="#config-file">What is in it</a>
+    <a href="#settings">All settings</a>
+    <a href="#keys">Key names</a>
+    <a href="#actions">Everything a shortcut can do</a>
+    <a href="#formulas">Slot formulas</a>
+    <h4>Help</h4>
+    <a href="#migration">Coming from Slate</a>
+    <a href="#troubleshooting">Something is wrong</a>
+    </div>
+  </aside>
 
+  <main>
     <h1 class="page">Documentation</h1>
-    <p class="lead">Everything you need to set MWM up, from the first launch to a hand-written <code>~/.mwm.yml</code>. Looking for ready-made setups? See the <a href="examples.html">examples</a>.</p>
+    <p class="lead">Most things are a few clicks in the app. Everything you set is also saved in one simple text file.</p>
 
-    <div id="empty">Nothing matches that. Try a shorter word, or <a href="#" id="empty-clear">clear the search</a>.</div>
+    <div id="empty">Nothing matches that. <a href="#" id="empty-clear">Clear the search</a>.</div>
 
-    <!-- ===== Quick start ===== -->
-    <section class="doc" id="quick-start" data-title="Quick start">
-      <h2>Quick start</h2>
-      <p class="muted">Five minutes from download to your first shortcut.</p>
-      <ol class="steps2">
-        <li><div><p>Install MWM</p><p><a href="https://github.com/bbarbosa85/mwm/raw/master/docs/downloads/MWM.dmg">Download MWM.dmg</a>, open it and drag <b>MWM</b> to <b>Applications</b>, then open it. MWM has no Dock icon; it lives in the menu bar at the top right. It needs macOS 12 or later and runs on Apple silicon and Intel.</p></div></li>
-        <li><div><p>Open it the first time</p><p>MWM is signed but not notarized, so macOS may say it can't check it for malicious software. Choose <b>System Settings → Privacy &amp; Security → Open Anyway</b>, or right-click MWM and choose <b>Open</b>, or run once:</p>
-<pre><code>xattr -dr com.apple.quarantine /Applications/MWM.app</code></pre></div></li>
-        <li><div><p>Allow Accessibility</p><p>macOS only lets an app move other apps' windows with your permission. MWM asks on first launch: choose <b>Open System Settings</b> and turn on <b>MWM</b> under <b>Privacy &amp; Security → Accessibility</b>.</p></div></li>
-        <li><div><p>Add your first shortcut</p><p>Click the MWM icon in the menu bar and choose <b>Configure MWM…</b> (<kbd>⌘</kbd><kbd>,</kbd>). On <b>Keyboard</b>, pick a group on the left (create one such as <code>hyper</code> under <b>Modifiers</b> first if you have none), click a free key and choose <b>Add Shortcut</b>. Pick an action, <b>Record</b> or <b>Pick on map</b> the keys, then <b>Save</b>. Press <b>Apply</b> at the bottom to restart MWM with the change.</p></div></li>
-      </ol>
-      <h3>Optional</h3>
-      <ul>
-        <li><b>Try a default shortcut.</b> Open Finder and another app, then press <kbd>⌥</kbd><kbd>⇧</kbd><kbd>F</kbd> to jump to Finder, or <kbd>⌘</kbd><kbd>esc</kbd> for window hints. The <a href="#defaults">defaults</a> work until you add your own configuration.</li>
-        <li><b>Name your displays.</b> On <b>Displays</b>, press <b>Add</b> next to a screen to name it, so shortcuts can send windows to it. See <a href="#monitors">Monitors</a>.</li>
-        <li><b>Save a snapshot.</b> Arrange your windows, open <b>Snapshots</b>, name the <b>New snapshot</b> card and press <b>Save</b>. <b>Restore</b> puts everything back. See <a href="#snapshots">Snapshots</a>.</li>
-      </ul>
-      <div class="callout">Prefer a file? Copy an <a href="examples.html">example</a> to <code>~/.mwm.yml</code>, open <b>Configure MWM…</b> and press <b>Apply</b>.</div>
+    <section class="doc" id="quick-start" data-title="Get started install download open accessibility first launch">
+      <h2>Get started</h2>
+      <div class="cards3">
+        <div class="step"><span class="n">1</span><svg class="ic" viewBox="0 0 48 48" aria-hidden="true"><rect width="48" height="48" rx="13" fill="#1f5bff"/><path d="M24 11v18M16 22l8 8 8-8M13 36h22" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/></svg><h3>Install</h3>
+          <p><a href="https://github.com/bbarbosa85/mwm/raw/master/docs/downloads/MWM.dmg">Download MWM</a>, drag it into <b>Applications</b> and open it. It lives in the menu bar. Needs macOS 12 or later.</p></div>
+        <div class="step"><span class="n">2</span><svg class="ic" viewBox="0 0 48 48" aria-hidden="true"><rect width="48" height="48" rx="13" fill="#1f5bff"/><path d="M24 10 12 15v9c0 8 5 12 12 15 7-3 12-7 12-15v-9z" fill="none" stroke="#fff" stroke-width="3.2" stroke-linejoin="round"/><path d="M18 24l5 5 8-9" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg><h3>Open it once</h3>
+          <p>macOS may warn that MWM isn't notarized. Choose <b>Privacy &amp; Security → Open Anyway</b>, or right-click MWM and choose <b>Open</b>.</p></div>
+        <div class="step"><span class="n">3</span><svg class="ic" viewBox="0 0 48 48" aria-hidden="true"><rect width="48" height="48" rx="13" fill="#1f5bff"/><rect x="9" y="15" width="30" height="18" rx="4" fill="none" stroke="#fff" stroke-width="3"/><path d="M15 22h2M21 22h2M27 22h2M33 22h1M17 28h14" stroke="#fff" stroke-width="3" stroke-linecap="round"/></svg><h3>Allow Accessibility</h3>
+          <p>So MWM can move windows. Turn on <b>MWM</b> under <b>Privacy &amp; Security → Accessibility</b>.</p></div>
+      </div>
+      <details class="small"><summary>Prefer Terminal for step 2?</summary>
+        <pre><code>xattr -dr com.apple.quarantine /Applications/MWM.app</code></pre></details>
     </section>
 
-    <!-- ===== Window ===== -->
-    <section class="doc" id="window" data-title="The configuration window">
-      <h2>The configuration window</h2>
-      <p>Open it from the menu bar (<b>Configure MWM…</b>) or with <kbd>⌘</kbd><kbd>,</kbd>. The sidebar has three groups. Changes are saved to <code>~/.mwm.yml</code> as you make them; <b>Apply</b> restarts MWM so they take effect. The bar at the bottom says whether the file is valid.</p>
-
-      <h3>Keyboard</h3>
-      <p>Every shortcut, two ways. Switch with <b>Map | List</b> at the top right.</p>
-      <ul>
-        <li><b>Map:</b> a Mac keyboard. Pick a modifier group on the left and keys are colored by what they do there: blue moves to a slot, green focuses apps and windows, purple is a feature, orange is a conflict, yellow is a key macOS keeps. Click a key to see "Press … to …", then <b>Edit</b>, <b>Remove</b> or <b>Add Shortcut</b>.</li>
-        <li><b>List:</b> search, and filter by what it does, by group, or only conflicts. Each row has an on/off switch.</li>
-      </ul>
-      <h3>Adding and editing a shortcut</h3>
-      <p>The editor has a list of what the shortcut can do on the left (Focus app, Move to, Focus window, Resize, Nudge, Push, Throw to screen, Save snapshot, Restore snapshot, Window hints, Grid, Switch windows, Relaunch, Advanced…) and its settings on the right.</p>
-      <ul>
-        <li><b>Record:</b> press the keys you want. <kbd>Enter</kbd> uses them, <kbd>Esc</kbd> cancels.</li>
-        <li><b>Pick on map:</b> choose a group and a key on the keyboard. Keys already used in that group are colored. In <b>Custom</b> you toggle the modifiers yourself.</li>
-        <li>Combinations macOS keeps (<kbd>⌘</kbd><kbd>S</kbd>, <kbd>⌘</kbd><kbd>Q</kbd> …), and any key with no modifier, can't be saved.</li>
-        <li>A warning appears if another shortcut already uses the same keys.</li>
-      </ul>
-      <h3>Modifiers</h3>
-      <p>Named groups of modifier keys, like <code>hyper</code> = <kbd>⌃</kbd><kbd>⌥</kbd><kbd>⌘</kbd>. Shortcuts that use a group are shown under its name.</p>
-      <h3>Displays</h3>
-      <p>Lists the screens that are connected and gives each a name. <b>Add</b> next to a screen names it (for example <code>laptop</code>); MWM finds it again by its model whenever it is plugged in. Identical monitors are numbered left to right.</p>
-      <h3>Slots</h3>
-      <p>Named areas of the screen. The built-in presets (halves, thirds, quarters and rows) are locked and shown on the <b>Presets</b> side; your own are on <b>Custom</b>. <b>New Slot</b> opens a canvas where you drag a slot or type exact percentages, with a grid to snap to and a preview on each connected screen.</p>
-      <h3>Snapshots</h3>
-      <p>Cards for each saved arrangement, ending with a <b>New snapshot</b> card. See <a href="#snapshots">Snapshots</a>.</p>
-      <h3>General, Advanced and Other aliases</h3>
-      <p><b>General</b> has everyday settings (startup, windows, window hints, keyboard layout, config file) and <b>Advanced</b> the rest (nudge and resize, held keys). <b>Other aliases</b> lists named text that doesn't fit elsewhere.</p>
+    <section class="doc" id="first-shortcut" data-title="Your first shortcut add keyboard record apply configure">
+      <h2>Your first shortcut</h2>
+      <p class="intro">MWM already has <a href="#defaults">some shortcuts</a> to try. To add your own:</p>
+      <div class="split2">
+        <div>
+          <ol class="s"><li><div>Menu bar icon → <b>Configure MWM…</b> → <b>Keyboard</b>.</div></li><li><div>Click a free key and choose <b>Add Shortcut</b>. Pick what it does.</div></li><li><div><b>Record</b> the keys, press <b>Save</b>, then <b>Apply</b>.</div></li></ol>
+          <div class="tip">Or start from an <a href="examples.html">example</a>.</div>
+        </div>
+        <div class="window"><div class="bar"><i></i><i></i><i></i><span>Editing shortcut</span></div><picture><source srcset="assets/shortcut-editor-dark.png" media="(prefers-color-scheme: dark)"><img src="assets/shortcut-editor-light.png" alt="The shortcut editor: choose what it does and record the keys"></picture></div>
+      </div>
     </section>
 
-    <section class="doc" id="menu-bar" data-title="The menu bar menu">
-      <h2>The menu bar menu</h2>
-      <p>Click the MWM icon at the top right of your screen.</p>
-      <table>
-        <thead><tr><th>Item</th><th>What it does</th></tr></thead>
-        <tbody>
-          <tr><td><b>Snapshots</b></td><td><b>Save Current Windows…</b>, and a submenu for each snapshot with <b>Restore</b>, <b>Update with Current Windows</b>, <b>Keep after Restart</b> and <b>Delete…</b>. <b>Manage Snapshots…</b> opens the page.</td></tr>
-          <tr><td><b>Keyboard Shortcuts</b></td><td>Open the map or the list, start a <b>New Shortcut…</b>, or open <b>Modifier Groups</b>.</td></tr>
-          <tr><td><b>Configure MWM…</b></td><td>Opens the configuration window (<kbd>⌘</kbd><kbd>,</kbd>).</td></tr>
-          <tr><td><b>Reload Configuration</b></td><td>Restarts MWM so it reads <code>~/.mwm.yml</code> again.</td></tr>
-          <tr><td><b>Launch MWM at Login</b></td><td>Starts MWM when you log in.</td></tr>
-          <tr><td><b>About MWM</b>, <b>Quit MWM</b></td><td>Version information, and quit.</td></tr>
-        </tbody>
-      </table>
-    </section>
-
-    <!-- ===== File ===== -->
-    <section class="doc" id="config-file" data-title="The configuration file overview version 2 yaml">
-      <h2>The configuration file</h2>
-      <p>MWM keeps everything in one plain-text file, <code>~/.mwm.yml</code>. It is data, not code: MWM reads it and nothing in it is ever run. The configuration window edits it for you, and you can edit it by hand too.</p>
-      <div class="callout warn">When the window saves, it rewrites the file, so comments you add by hand are not kept. Keep notes in a shortcut's <code>note</code> field instead.</div>
-      <p>The file has a <code>version: 2</code> line and up to six sections:</p>
-<pre><code>version: 2
-
-settings:           # global options (name: value)
-  defaultToCurrentScreen: true
-
-modifiers:          # named groups of modifier keys
-  hyper: [ctrl, alt, cmd]
-
-monitors:           # your screens, by name
-  laptop: {display: built-in}
-
-slots:              # named areas of the screen
-  left-two-thirds: {x: 0%, y: 0%, width: 66.666667%, height: 100%}
-
-aliases: {}         # any other named text
-
-bindings:           # the shortcuts
+    
+    <section class="doc how" id="move-windows" data-title="Put a window in part of the screen slot slots halves thirds quarters move snap left right corner">
+      <h2>Put a window in part of the screen</h2>
+      <p class="intro">Snap the window you are using to a half, a third, a corner or any area. Each area is called a <b>slot</b>.</p>
+      <div class="figs c4"><div class="fig"><svg viewBox="0 0 240 180" role="img" aria-hidden="true"><defs><linearGradient id="g150" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2b3a8f"/><stop offset="1" stop-color="#6a2f9a"/></linearGradient></defs><rect x="1" y="1" width="238" height="148" rx="10" fill="url(#g150)" stroke="rgba(255,255,255,.25)" stroke-width="2"/><rect x="1" y="1" width="238" height="10" rx="5" fill="rgba(0,0,0,.3)"/><rect x="7.0" y="15.0" width="110.0" height="125.0" rx="5" fill="#ffffff"/><rect x="120.0" y="15.0" width="110.0" height="125.0" rx="5" fill="#ffd21f"/><text x="120.0" y="171" text-anchor="middle" font-size="15" font-weight="700" fill="currentColor" font-family="-apple-system, sans-serif">Halves</text></svg></div><div class="fig"><svg viewBox="0 0 240 180" role="img" aria-hidden="true"><defs><linearGradient id="g70338" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2b3a8f"/><stop offset="1" stop-color="#6a2f9a"/></linearGradient></defs><rect x="1" y="1" width="238" height="148" rx="10" fill="url(#g70338)" stroke="rgba(255,255,255,.25)" stroke-width="2"/><rect x="1" y="1" width="238" height="10" rx="5" fill="rgba(0,0,0,.3)"/><rect x="7.0" y="15.0" width="73.8" height="125.0" rx="5" fill="#ffffff"/><rect x="83.8" y="15.0" width="71.6" height="125.0" rx="5" fill="#ffd21f"/><rect x="158.4" y="15.0" width="71.6" height="125.0" rx="5" fill="#ff5a5f"/><text x="120.0" y="171" text-anchor="middle" font-size="15" font-weight="700" fill="currentColor" font-family="-apple-system, sans-serif">Thirds</text></svg></div><div class="fig"><svg viewBox="0 0 240 180" role="img" aria-hidden="true"><defs><linearGradient id="g99124" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2b3a8f"/><stop offset="1" stop-color="#6a2f9a"/></linearGradient></defs><rect x="1" y="1" width="238" height="148" rx="10" fill="url(#g99124)" stroke="rgba(255,255,255,.25)" stroke-width="2"/><rect x="1" y="1" width="238" height="10" rx="5" fill="rgba(0,0,0,.3)"/><rect x="7.0" y="15.0" width="110.0" height="61.0" rx="5" fill="#ffffff"/><rect x="120.0" y="15.0" width="110.0" height="61.0" rx="5" fill="#ffd21f"/><rect x="7.0" y="79.0" width="110.0" height="61.0" rx="5" fill="#ff5a5f"/><rect x="120.0" y="79.0" width="110.0" height="61.0" rx="5" fill="#7fb0ff"/><text x="120.0" y="171" text-anchor="middle" font-size="15" font-weight="700" fill="currentColor" font-family="-apple-system, sans-serif">Quarters</text></svg></div><div class="fig"><svg viewBox="0 0 240 180" role="img" aria-hidden="true"><defs><linearGradient id="g87496" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2b3a8f"/><stop offset="1" stop-color="#6a2f9a"/></linearGradient></defs><rect x="1" y="1" width="238" height="148" rx="10" fill="url(#g87496)" stroke="rgba(255,255,255,.25)" stroke-width="2"/><rect x="1" y="1" width="238" height="10" rx="5" fill="rgba(0,0,0,.3)"/><rect x="7.0" y="15.0" width="53.5" height="125.0" rx="5" fill="rgba(255,255,255,.25)"/><rect x="63.5" y="15.0" width="110.0" height="125.0" rx="5" fill="#ffffff"/><rect x="176.5" y="15.0" width="53.5" height="125.0" rx="5" fill="rgba(255,255,255,.25)"/><text x="120.0" y="171" text-anchor="middle" font-size="15" font-weight="700" fill="currentColor" font-family="-apple-system, sans-serif">Your own</text></svg></div></div>
+      <div class="pane app"><div class="label"><span>In the app</span></div><ol class="s"><li><div>Add a shortcut (<a href="#first-shortcut">how</a>) and choose <b>Move to</b>.</div></li><li><div>Pick a slot. Halves, thirds and quarters are built in.</div></li></ol><div class="tip">Need your own area? <b>Slots → New Slot</b>: drag on the picture, or type percentages.</div></div>
+      <div class="pane file"><div class="label"><span>In the file</span></div><pre><code>bindings:
   - key: left
     mods: hyper
-    action: {type: move, slot: lefthalf}</code></pre>
-      <h3>YAML you can use</h3>
-      <p>MWM reads a strict subset of YAML so a file never loads differently from how it reads: block mappings and lists, one-line lists and mappings (<code>[a, b]</code>, <code>{x: 0%, y: 0%}</code>), plain or quoted text, numbers, <code>true</code>/<code>false</code> and <code>#</code> comments. Anchors, tags, multi-line strings and brackets that span several lines are errors that name the line. Quote a value that starts with a special character or contains <code>: </code> or <code> #</code>.</p>
-      <h3>Names</h3>
-      <p>Modifiers, monitors, slots and aliases share one set of names, so each name can be used once. Fields that take a name (<code>mods</code>, <code>slot</code>, <code>screen</code>) take it plain. In free text (<code>aliases</code>, <code>custom</code> actions, slot <code>formula</code>) write it as <code>${name}</code>.</p>
-      <h3>Older files</h3>
-      <p>Files without <code>version:</code> still load. At startup MWM converts them to version 2 and keeps the old one next to it as <code>~/.mwm.yml.v1-&lt;timestamp&gt;</code>. See <a href="#migration">Moving from Slate</a>.</p>
+    action: {type: move, slot: lefthalf}
+
+slots:                      # your own areas
+  center: {x: 20%, y: 0%, width: 60%, height: 100%}</code></pre></div>
+    </section>
+    
+    <section class="doc how" id="jump-to-apps" data-title="Jump to an app focus app jump switch open application">
+      <h2>Jump to an app</h2>
+      <p class="intro">Bring any app to the front with one shortcut.</p>
+      <div class="fig wide"><svg viewBox="0 0 560 110" role="img" aria-hidden="true"><g font-family="-apple-system, sans-serif" font-weight="700" font-size="15" fill="#fff" text-anchor="middle"><g transform="translate(20 20)"><rect width="110" height="70" rx="14" fill="#1f5bff"/><text x="55" y="31" font-size="22">S</text><text x="55" y="55" font-size="13" font-weight="600" opacity=".9">Safari</text></g><g transform="translate(155 20)"><rect width="110" height="70" rx="14" fill="#4a4d5c"/><text x="55" y="31" font-size="22">T</text><text x="55" y="55" font-size="13" font-weight="600" opacity=".9">Terminal</text></g><g transform="translate(290 20)"><rect width="110" height="70" rx="14" fill="#28a745"/><text x="55" y="31" font-size="22">M</text><text x="55" y="55" font-size="13" font-weight="600" opacity=".9">Messages</text></g><g transform="translate(425 20)"><rect width="110" height="70" rx="14" fill="#ff5a5f"/><text x="55" y="31" font-size="22">C</text><text x="55" y="55" font-size="13" font-weight="600" opacity=".9">Calendar</text></g></g></svg></div>
+      <div class="pane app"><div class="label"><span>In the app</span></div><ol class="s"><li><div>Add a shortcut (<a href="#first-shortcut">how</a>) and choose <b>Focus app</b>.</div></li><li><div>Type the app's name exactly as the menu bar shows it, such as <code>Google Chrome</code>.</div></li></ol><div class="tip">The app must already be running. MWM does not open closed apps.</div></div>
+      <div class="pane file"><div class="label"><span>In the file</span></div><pre><code>  - key: s
+    mods: [alt, shift]
+    action: {type: focus-app, app: Safari}</code></pre></div>
+    </section>
+    
+    <section class="doc how" id="screens" data-title="Work with more than one screen displays monitors screens throw next previous external laptop">
+      <h2>Work with more than one screen</h2>
+      <p class="intro">Name each screen once. MWM remembers the names, even after you unplug and reconnect.</p>
+      <div class="fig wide"><svg viewBox="0 0 560 190" role="img" aria-hidden="true">
+<defs><linearGradient id="gs1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2b3a8f"/><stop offset="1" stop-color="#6a2f9a"/></linearGradient></defs>
+<rect x="10" y="30" width="190" height="118" rx="9" fill="url(#gs1)" stroke="rgba(255,255,255,.25)" stroke-width="2"/>
+<rect x="22" y="44" width="80" height="90" rx="5" fill="#ffffff"/><rect x="108" y="44" width="80" height="90" rx="5" fill="#ffd21f"/>
+<rect x="95" y="152" width="20" height="12" fill="#8b8fa3"/><rect x="75" y="164" width="60" height="6" rx="3" fill="#8b8fa3"/>
+<text x="105" y="20" text-anchor="middle" font-size="14" font-weight="700" fill="currentColor" font-family="-apple-system, sans-serif">laptop</text>
+<rect x="290" y="30" width="260" height="118" rx="9" fill="url(#gs1)" stroke="rgba(255,255,255,.25)" stroke-width="2"/>
+<rect x="302" y="42" width="118" height="94" rx="5" fill="#ff5a5f" opacity=".4"/><rect x="426" y="42" width="112" height="94" rx="5" fill="#ff5a5f" opacity=".4"/>
+<rect x="400" y="152" width="40" height="12" fill="#8b8fa3"/><rect x="375" y="164" width="90" height="6" rx="3" fill="#8b8fa3"/>
+<text x="420" y="20" text-anchor="middle" font-size="14" font-weight="700" fill="currentColor" font-family="-apple-system, sans-serif">desk</text>
+<path d="M205 90 H282" stroke="#1f5bff" stroke-width="5" stroke-linecap="round" stroke-dasharray="2 10"/><path d="M270 78 L286 90 L270 102" fill="none" stroke="#1f5bff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="178" y="56" width="52" height="34" rx="5" fill="#ffd21f" stroke="#fff" stroke-width="2"/>
+</svg><p class="cap">Give each screen a name. Then send a window to <b>desk</b>, or to the <b>next</b> screen.</p></div>
+      <div class="pane app"><div class="label"><span>In the app</span></div><ol class="s"><li><div>Open <b>Displays</b>, press <b>Add</b> next to a screen, and name it (<code>laptop</code>, <code>desk</code>).</div></li><li><div>Add a shortcut: <b>Move to</b> with that screen under <b>On screen</b>, or <b>Throw to screen</b> to send the window to the <b>next</b> one.</div></li></ol><div class="tip">If a named screen is missing, MWM uses the one you are on.</div></div>
+      <div class="pane file"><div class="label"><span>In the file</span></div><pre><code>monitors:
+  laptop: {display: built-in}
+  desk: {display: &quot;Studio Display&quot;}
+
+bindings:
+  - key: tab
+    mods: hyper
+    action: {type: throw, screen: next}
+  - key: left
+    mods: shyper
+    action: {type: move, slot: lefthalf, screen: desk}</code></pre></div>
+    </section>
+    
+    <section class="doc how" id="snapshots" data-title="Save and restore your desktop snapshot save restore desktop layout pin keep arrangement">
+      <h2>Save and restore your desktop</h2>
+      <p class="intro">A snapshot remembers where every window is. Bring any of them back in a click or with a shortcut.</p>
+      <div class="fig wide"><svg viewBox="0 0 560 170" role="img" aria-hidden="true">
+<defs><linearGradient id="gs2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2b3a8f"/><stop offset="1" stop-color="#6a2f9a"/></linearGradient></defs>
+<rect x="10" y="10" width="200" height="130" rx="9" fill="url(#gs2)" stroke="rgba(255,255,255,.25)" stroke-width="2"/>
+<rect x="24" y="30" width="96" height="70" rx="5" fill="#ffffff"/><rect x="62" y="48" width="96" height="70" rx="5" fill="#ffd21f"/><rect x="100" y="64" width="90" height="62" rx="5" fill="#ff5a5f"/>
+<text x="110" y="162" text-anchor="middle" font-size="13" font-weight="600" fill="currentColor" font-family="-apple-system, sans-serif">Your desktop, as it is</text>
+<g transform="translate(236 40)"><rect width="88" height="64" rx="12" fill="#1f5bff"/><circle cx="44" cy="34" r="17" fill="none" stroke="#fff" stroke-width="5"/><circle cx="44" cy="34" r="6" fill="#fff"/><rect x="26" y="6" width="22" height="9" rx="3" fill="#fff"/></g>
+<text x="280" y="132" text-anchor="middle" font-size="13" font-weight="700" fill="currentColor" font-family="-apple-system, sans-serif">Save</text>
+<path d="M334 72 H356" stroke="#1f5bff" stroke-width="5" stroke-linecap="round"/><path d="M348 62 L360 72 L348 82" fill="none" stroke="#1f5bff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="360" y="10" width="190" height="130" rx="9" fill="url(#gs2)" stroke="rgba(255,255,255,.25)" stroke-width="2"/>
+<rect x="372" y="22" width="88" height="106" rx="5" fill="#ffffff"/><rect x="466" y="22" width="72" height="50" rx="5" fill="#ffd21f"/><rect x="466" y="78" width="72" height="50" rx="5" fill="#ff5a5f"/>
+<text x="455" y="162" text-anchor="middle" font-size="13" font-weight="600" fill="currentColor" font-family="-apple-system, sans-serif">Restore: everything back in place</text>
+</svg></div>
+      <div class="pane app"><div class="label"><span>In the app</span></div><ol class="s"><li><div>Arrange your windows. Open <b>Snapshots</b>, name the <b>New snapshot</b> card and press <b>Save</b>.</div></li><li><div>Press <b>Restore</b> on a card to put everything back.</div></li><li><div>Click the pin to <b>keep it after restart</b>. Without it, MWM forgets the snapshot when it quits.</div></li></ol><div class="tip">For a shortcut, choose <b>Save snapshot</b> or <b>Restore snapshot</b>.</div></div>
+      <div class="pane file"><div class="label"><span>In the file</span></div><pre><code>  - key: s
+    mods: shyper
+    action: {type: save-snapshot, name: work, keep: true}
+  - key: w
+    mods: hyper
+    action: {type: restore-snapshot, name: work}</code></pre></div>
+    </section>
+    
+    <section class="doc how" id="resize-nudge" data-title="Resize, nudge and push resize nudge push grow move edge size">
+      <h2>Resize, nudge and push</h2>
+      <p class="intro">Fine-tune a window without the mouse.</p>
+      <div class="figs c3"><div class="fig"><svg viewBox="0 0 240 180" role="img" aria-hidden="true"><defs><linearGradient id="g10735" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2b3a8f"/><stop offset="1" stop-color="#6a2f9a"/></linearGradient></defs><rect x="1" y="1" width="238" height="148" rx="10" fill="url(#g10735)" stroke="rgba(255,255,255,.25)" stroke-width="2"/><rect x="1" y="1" width="238" height="10" rx="5" fill="rgba(0,0,0,.3)"/><rect x="29.6" y="40.6" width="121.3" height="73.8" rx="5" fill="#ffffff"/><text x="120.0" y="171" text-anchor="middle" font-size="15" font-weight="700" fill="currentColor" font-family="-apple-system, sans-serif">Resize</text></svg></div><div class="fig"><svg viewBox="0 0 240 180" role="img" aria-hidden="true"><defs><linearGradient id="g96984" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2b3a8f"/><stop offset="1" stop-color="#6a2f9a"/></linearGradient></defs><rect x="1" y="1" width="238" height="148" rx="10" fill="url(#g96984)" stroke="rgba(255,255,255,.25)" stroke-width="2"/><rect x="1" y="1" width="238" height="10" rx="5" fill="rgba(0,0,0,.3)"/><rect x="61.2" y="50.8" width="121.3" height="73.8" rx="5" fill="#ffffff"/><text x="120.0" y="171" text-anchor="middle" font-size="15" font-weight="700" fill="currentColor" font-family="-apple-system, sans-serif">Nudge</text></svg></div><div class="fig"><svg viewBox="0 0 240 180" role="img" aria-hidden="true"><defs><linearGradient id="g81200" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2b3a8f"/><stop offset="1" stop-color="#6a2f9a"/></linearGradient></defs><rect x="1" y="1" width="238" height="148" rx="10" fill="url(#g81200)" stroke="rgba(255,255,255,.25)" stroke-width="2"/><rect x="1" y="1" width="238" height="10" rx="5" fill="rgba(0,0,0,.3)"/><rect x="7.0" y="15.0" width="71.6" height="125.0" rx="5" fill="#ffffff"/><text x="120.0" y="171" text-anchor="middle" font-size="15" font-weight="700" fill="currentColor" font-family="-apple-system, sans-serif">Push to an edge</text></svg></div></div>
+      <div class="pane app"><div class="label"><span>In the app</span></div><ol class="s"><li><div>Add a shortcut (<a href="#first-shortcut">how</a>) and choose <b>Resize</b>, <b>Nudge</b> or <b>Push</b>.</div></li><li><div>Say how much: pixels (<code>+50</code>) or percent of the screen (<code>+10%</code>).</div></li></ol></div>
+      <div class="pane file"><div class="label"><span>In the file</span></div><pre><code>  - key: right
+    mods: alt
+    action: {type: resize, x: +10%, y: +0}
+  - key: up
+    mods: [shift, alt]
+    action: {type: nudge, x: +0, y: -10%}
+  - key: left
+    mods: [ctrl, cmd]
+    action: {type: push, direction: left, options: &quot;bar-resize:screenSizeX/3&quot;}</code></pre></div>
+    </section>
+    
+    <section class="doc how" id="window-hints" data-title="Jump to any window with hints hint hints letters jump window badge">
+      <h2>Jump to any window with hints</h2>
+      <p class="intro">Show a letter on every window, then press one to jump there. Built in on <kbd>⌘</kbd><kbd>esc</kbd>.</p>
+      <div class="fig wide"><div style="max-width:420px;margin:0 auto"><svg viewBox="0 0 300 170" role="img" aria-hidden="true"><defs><linearGradient id="g39958" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2b3a8f"/><stop offset="1" stop-color="#6a2f9a"/></linearGradient></defs><rect x="1" y="1" width="298" height="168" rx="10" fill="url(#g39958)" stroke="rgba(255,255,255,.25)" stroke-width="2"/><rect x="1" y="1" width="298" height="10" rx="5" fill="rgba(0,0,0,.3)"/><rect x="12.7" y="20.9" width="128.6" height="133.2" rx="5" fill="rgba(255,255,255,.9)"/><rect x="155.7" y="20.9" width="128.6" height="62.1" rx="5" fill="#ffd21f"/><rect x="155.7" y="92.0" width="128.6" height="62.1" rx="5" fill="#ff5a5f"/><g><rect x="62" y="70" width="34" height="34" rx="9" fill="#17171c" stroke="#fff" stroke-width="2"/><text x="79" y="94" text-anchor="middle" font-size="20" font-weight="800" fill="#fff" font-family="-apple-system, sans-serif">A</text></g><g><rect x="190" y="38" width="34" height="34" rx="9" fill="#17171c" stroke="#fff" stroke-width="2"/><text x="207" y="62" text-anchor="middle" font-size="20" font-weight="800" fill="#fff" font-family="-apple-system, sans-serif">S</text></g><g><rect x="190" y="100" width="34" height="34" rx="9" fill="#17171c" stroke="#fff" stroke-width="2"/><text x="207" y="124" text-anchor="middle" font-size="20" font-weight="800" fill="#fff" font-family="-apple-system, sans-serif">D</text></g></svg></div><p class="cap">Press the shortcut. A letter appears on every window. Press a letter to jump there.</p></div>
+      <div class="pane app"><div class="label"><span>In the app</span></div><ol class="s"><li><div>Add a shortcut (<a href="#first-shortcut">how</a>) and choose <b>Window hints</b>.</div></li><li><div>Press the shortcut, then a letter.</div></li></ol></div>
+      <div class="pane file"><div class="label"><span>In the file</span></div><pre><code>  - key: esc
+    mods: cmd
+    action: {type: hint, letters: ASDFJKL}</code></pre></div>
+    </section>
+    
+    <section class="doc how" id="modifier-groups" data-title="The &quot;hyper&quot; key and modifier groups modifier group hyper shyper ctrl alt shift cmd fn keys combos">
+      <h2>The "hyper" key and modifier groups</h2>
+      <p class="intro">A <b>modifier group</b> is a name for a set of modifier keys. The most common is <b>hyper</b>.</p>
+      <div class="fig wide"><div class="hyper"><span class="capline"><kbd>⌃</kbd><span class="plus">+</span><kbd>⌥</kbd><span class="plus">+</span><kbd>⌘</kbd></span><span class="eq">=</span><span class="pill big">hyper</span></div></div>
+      <div class="pane app"><div class="label"><span>In the app</span></div><ol class="s"><li><div>Open <b>Modifiers</b> and press <b>New</b>. Choose its keys.</div></li><li><div>When you add a shortcut, pick the group by name.</div></li></ol><div class="tip">MWM blocks combos macOS needs, such as <kbd>⌘</kbd><kbd>C</kbd>, and keys with no modifier.</div></div>
+      <div class="pane file"><div class="label"><span>In the file</span></div><pre><code>modifiers:
+  hyper: [ctrl, alt, cmd]
+  shyper: [shift, ctrl, alt, cmd]
+
+bindings:
+  - key: left
+    mods: hyper          # a group
+  - key: f
+    mods: [alt, shift]   # or the keys</code></pre></div>
     </section>
 
-    <section class="doc" id="settings" data-title="Settings options defaults window hints keyboard layout nudge resize repeat">
-      <h2>Settings</h2>
-      <p>Global options, written as <code>name: value</code> under <code>settings:</code>. Values are text, numbers or <code>true</code>/<code>false</code>; a list is joined with <code>;</code>. Anything you leave out uses its default.</p>
-      <h3>Windows and screens</h3>
+    <section class="doc" id="window" data-title="The configuration window tour keyboard modifiers displays slots snapshots general advanced apply">
+      <h2>The configuration window</h2>
+      <p class="intro">Open it with <b>Configure MWM…</b> or <kbd>⌘</kbd><kbd>,</kbd>. Changes save as you go. Press <b>Apply</b> to start using them.</p>
+      <div class="window"><div class="bar"><i></i><i></i><i></i><span>MWM configuration</span></div><picture><source srcset="assets/keyboard-map-dark.png" media="(prefers-color-scheme: dark)"><img src="assets/keyboard-map-light.png" alt="The keyboard map: every shortcut on a Mac keyboard, colored by what it does" loading="lazy"></picture></div>
+      <div class="cards2">
+        <div class="mini"><h3>Keyboard</h3><p>All shortcuts, as a <b>Map</b> or a searchable <b>List</b>. Conflicts are flagged.</p></div>
+        <div class="mini"><h3>Modifiers</h3><p>Your key groups, like hyper.</p></div>
+        <div class="mini"><h3>Displays</h3><p>Your screens and their names.</p></div>
+        <div class="mini"><h3>Slots</h3><p>Areas of the screen. Presets plus your own.</p></div>
+        <div class="mini"><h3>Snapshots</h3><p>Your saved desktops.</p></div>
+        <div class="mini"><h3>General · Advanced</h3><p>Window hints, keyboard layout, key repeat.</p></div>
+      </div>
+    </section>
+
+    <section class="doc" id="menu-bar" data-title="The menu bar menu snapshots keyboard shortcuts configure reload launch login about quit">
+      <h2>The menu bar</h2>
+      <p class="intro">Click the MWM icon at the top right of your screen.</p>
       <table>
-        <thead><tr><th>Setting</th><th>Default</th><th>What it does</th></tr></thead>
         <tbody>
-          <tr><td><code>defaultToCurrentScreen</code></td><td><code>false</code></td><td>Use the screen you're on when the screen a shortcut names isn't connected.</td></tr>
-          <tr><td><code>orderScreensLeftToRight</code></td><td><code>true</code></td><td>Number screens by position, left to right, instead of by macOS id.</td></tr>
-          <tr><td><code>nudgePercentOf</code></td><td><code>screenSize</code></td><td>What a percent nudge is a percent of: <code>screenSize</code> or <code>windowSize</code>.</td></tr>
-          <tr><td><code>resizePercentOf</code></td><td><code>screenSize</code></td><td>The same, for percent resizes.</td></tr>
-          <tr><td><code>repeatOnHoldOps</code></td><td><code>resize,nudge</code></td><td>Actions that repeat while you hold the keys.</td></tr>
-          <tr><td><code>secondsBeforeRepeat</code></td><td><code>0.4</code></td><td>How long to hold before repeating starts.</td></tr>
-          <tr><td><code>secondsBetweenRepeat</code></td><td><code>0.2</code></td><td>The time between repeats.</td></tr>
-          <tr><td><code>keyboardLayout</code></td><td><code>qwerty</code></td><td>The layout your keys are named for: <code>qwerty</code>, <code>dvorak</code>, <code>colemak</code> or <code>azerty</code>.</td></tr>
+          <tr><td><b>Snapshots</b></td><td>Save, restore, update or delete.</td></tr>
+          <tr><td><b>Keyboard Shortcuts</b></td><td>Open the map or list, or add a shortcut.</td></tr>
+          <tr><td><b>Configure MWM…</b></td><td>Open the window (<kbd>⌘</kbd><kbd>,</kbd>).</td></tr>
+          <tr><td><b>Reload Configuration</b></td><td>Restart MWM to re-read your settings.</td></tr>
+          <tr><td><b>Launch MWM at Login</b></td><td>Start MWM when you log in.</td></tr>
         </tbody>
       </table>
-      <h3>Focus</h3>
+    </section>
+
+    <section class="doc" id="defaults" data-title="Shortcuts you get default out of the box apps finder safari terminal notes mail calendar hints">
+      <h2>Shortcuts you get</h2>
+      <p class="intro">MWM starts with these until you have a settings file of your own.</p>
+      <table>
+        <tbody>
+          <tr><td><kbd>⌥</kbd> + arrows</td><td>Resize by 10%</td></tr>
+          <tr><td><kbd>⌃</kbd><kbd>⌥</kbd> + arrows</td><td>Resize from the bottom-right corner</td></tr>
+          <tr><td><kbd>⌃</kbd><kbd>⌘</kbd> + arrows</td><td>Push to a screen edge</td></tr>
+          <tr><td><kbd>⇧</kbd><kbd>⌥</kbd> + arrows</td><td>Nudge by 10%</td></tr>
+          <tr><td><kbd>⌃</kbd><kbd>⌥</kbd> + <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd></td><td>Send to screen 1, 2 or 3</td></tr>
+          <tr><td><kbd>⌃</kbd><kbd>⌥</kbd><kbd>⌘</kbd> + arrows</td><td>Send to the screen in that direction</td></tr>
+          <tr><td><kbd>⌘</kbd> + arrows</td><td>Go to the window in that direction</td></tr>
+          <tr><td><kbd>⌘</kbd> + <kbd>esc</kbd></td><td>Window hints</td></tr>
+          <tr><td><kbd>⌥</kbd><kbd>⇧</kbd> + <kbd>F</kbd> <kbd>S</kbd> <kbd>T</kbd> <kbd>N</kbd> <kbd>M</kbd> <kbd>C</kbd></td><td>Jump to Finder, Safari, Terminal, Notes, Mail, Calendar</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="doc" id="config-file" data-title="The settings file what is in it version 2 yaml mwm.yml sections edit by hand">
+      <h2>The settings file</h2>
+      <p class="intro">Everything you set is saved in <code>~/.mwm.yml</code>. You never have to open it. It holds no code, so nothing in it can run.</p>
+      <div class="cards3">
+        <div class="mini"><h3><code>settings</code></h3><p>Everyday options.</p></div>
+        <div class="mini"><h3><code>modifiers</code></h3><p>Key groups, like hyper.</p></div>
+        <div class="mini"><h3><code>monitors</code></h3><p>Screen names.</p></div>
+        <div class="mini"><h3><code>slots</code></h3><p>Your own areas.</p></div>
+        <div class="mini"><h3><code>aliases</code></h3><p>Reusable text. Rarely needed.</p></div>
+        <div class="mini"><h3><code>bindings</code></h3><p>The shortcuts.</p></div>
+      </div>
+      <ul>
+        <li><b>The app and the file always agree.</b> After editing the file, press <b>Apply</b> or choose <b>Reload Configuration</b>.</li>
+        <li><b>Saving in the app rewrites the file,</b> so <code>#</code> comments are lost. Use a shortcut's <b>note</b> instead.</li>
+        <li><b>Names are shared</b> by groups, screens, slots and aliases, so each name is used once. In free text, write a name as <code>${name}</code>.</li>
+        <li>Each shortcut can also have <code>group</code>, <code>note</code>, <code>enabled: false</code> and <code>repeat</code>.</li>
+      </ul>
+    </section>
+
+    <section class="doc" id="settings" data-title="All settings options defaults window hints keyboard layout nudge resize repeat focus switcher grid undo snapshot">
+      <h2>All settings</h2>
+      <p class="intro">In the app: <b>General</b> and <b>Advanced</b>. In the file: under <code>settings:</code>. Leave out anything you don't change.</p>
+      <details><summary>Windows and screens</summary>
       <table>
         <thead><tr><th>Setting</th><th>Default</th><th>What it does</th></tr></thead>
         <tbody>
-          <tr><td><code>focusCheckWidth</code></td><td><code>100</code></td><td>How far (in pixels) <b>Focus window</b> looks for the next window.</td></tr>
-          <tr><td><code>focusCheckWidthMax</code></td><td><code>100</code></td><td>The farthest it widens that search.</td></tr>
+          <tr><td><code>defaultToCurrentScreen</code></td><td><code>false</code></td><td>If a named screen is missing, use the one you are on.</td></tr>
+          <tr><td><code>orderScreensLeftToRight</code></td><td><code>true</code></td><td>Number screens left to right.</td></tr>
+          <tr><td><code>nudgePercentOf</code></td><td><code>screenSize</code></td><td>Percent of <code>screenSize</code> or <code>windowSize</code>.</td></tr>
+          <tr><td><code>resizePercentOf</code></td><td><code>screenSize</code></td><td>The same, for resizing.</td></tr>
+          <tr><td><code>repeatOnHoldOps</code></td><td><code>resize,nudge</code></td><td>What repeats while you hold the keys.</td></tr>
+          <tr><td><code>secondsBeforeRepeat</code></td><td><code>0.4</code></td><td>Hold time before repeating.</td></tr>
+          <tr><td><code>secondsBetweenRepeat</code></td><td><code>0.2</code></td><td>Time between repeats.</td></tr>
+          <tr><td><code>keyboardLayout</code></td><td><code>qwerty</code></td><td><code>qwerty</code>, <code>dvorak</code>, <code>colemak</code> or <code>azerty</code>.</td></tr>
+        </tbody>
+      </table></details>
+      <details><summary>Going to another window</summary>
+      <table>
+        <thead><tr><th>Setting</th><th>Default</th><th>What it does</th></tr></thead>
+        <tbody>
+          <tr><td><code>focusCheckWidth</code></td><td><code>100</code></td><td>How far (pixels) to look for the next window.</td></tr>
+          <tr><td><code>focusCheckWidthMax</code></td><td><code>100</code></td><td>The farthest it widens the search.</td></tr>
           <tr><td><code>focusPreferSameApp</code></td><td><code>true</code></td><td>Prefer another window of the same app.</td></tr>
         </tbody>
-      </table>
-      <h3>Window hints</h3>
+      </table></details>
+      <details><summary>Window hints</summary>
       <table>
         <thead><tr><th>Setting</th><th>Default</th><th>What it does</th></tr></thead>
         <tbody>
-          <tr><td><code>windowHintsFontName</code></td><td><code>Helvetica</code></td><td>Font of the hint letters.</td></tr>
-          <tr><td><code>windowHintsFontSize</code></td><td><code>40</code></td><td>Size of the hint letters.</td></tr>
-          <tr><td><code>windowHintsFontColor</code></td><td><code>255;255;255;1.0</code></td><td>Letter color as red;green;blue;alpha.</td></tr>
+          <tr><td><code>windowHintsFontName</code></td><td><code>Helvetica</code></td><td>Font of the letters.</td></tr>
+          <tr><td><code>windowHintsFontSize</code></td><td><code>40</code></td><td>Size of the letters.</td></tr>
+          <tr><td><code>windowHintsFontColor</code></td><td><code>255;255;255;1.0</code></td><td>Letter color: red;green;blue;opacity.</td></tr>
           <tr><td><code>windowHintsBackgroundColor</code></td><td><code>50;53;58;0.9</code></td><td>Badge color.</td></tr>
-          <tr><td><code>windowHintsWidth</code>, <code>windowHintsHeight</code></td><td><code>100</code></td><td>Size of each badge, in pixels.</td></tr>
-          <tr><td><code>windowHintsRoundedCornerSize</code></td><td><code>5</code></td><td>Corner radius of a badge.</td></tr>
-          <tr><td><code>windowHintsDuration</code></td><td><code>3</code></td><td>Seconds before the hints go away.</td></tr>
-          <tr><td><code>windowHintsIgnoreHiddenWindows</code></td><td><code>true</code></td><td>No hints for minimized or hidden windows.</td></tr>
-          <tr><td><code>windowHintsShowIcons</code></td><td><code>false</code></td><td>Show the app's icon beside the letter.</td></tr>
-          <tr><td><code>windowHintsSpread</code></td><td><code>false</code></td><td>Move hints apart so badges don't overlap.</td></tr>
+          <tr><td><code>windowHintsWidth</code>, <code>windowHintsHeight</code></td><td><code>100</code></td><td>Badge size in pixels.</td></tr>
+          <tr><td><code>windowHintsRoundedCornerSize</code></td><td><code>5</code></td><td>Badge corner radius.</td></tr>
+          <tr><td><code>windowHintsDuration</code></td><td><code>3</code></td><td>Seconds before hints go away.</td></tr>
+          <tr><td><code>windowHintsIgnoreHiddenWindows</code></td><td><code>true</code></td><td>Skip minimized or hidden windows.</td></tr>
+          <tr><td><code>windowHintsShowIcons</code></td><td><code>false</code></td><td>Show the app icon by the letter.</td></tr>
+          <tr><td><code>windowHintsSpread</code></td><td><code>false</code></td><td>Spread badges so they don't overlap.</td></tr>
         </tbody>
-      </table>
-      <h3>Switcher, grid and undo</h3>
+      </table></details>
+      <details><summary>App switcher, grid, undo and snapshots</summary>
       <table>
         <thead><tr><th>Setting</th><th>Default</th><th>What it does</th></tr></thead>
         <tbody>
           <tr><td><code>switchType</code></td><td><code>app</code></td><td>Switch between <code>app</code>s or <code>window</code>s.</td></tr>
-          <tr><td><code>switchOrientation</code></td><td><code>horizontal</code></td><td>Lay the switcher out <code>horizontal</code>ly or <code>vertical</code>ly.</td></tr>
-          <tr><td><code>switchIconSize</code></td><td><code>100</code></td><td>Icon size in the switcher.</td></tr>
-          <tr><td><code>switchBackgroundColor</code>, <code>switchSelectedBackgroundColor</code></td><td><code>50;53;58;0.3</code> / <code>…;0.9</code></td><td>Colors of the switcher and of the selected item.</td></tr>
-          <tr><td><code>gridBackgroundColor</code>, <code>gridCellBackgroundColor</code>, <code>gridCellSelectedColor</code></td><td>see the app</td><td>Colors of the grid, its cells and the cells you drag over.</td></tr>
-          <tr><td><code>undoMaxStackSize</code></td><td><code>10</code></td><td>How many moves the undo history keeps.</td></tr>
-          <tr><td><code>snapshotTitleMatch</code></td><td><code>levenshtein</code></td><td>How a snapshot matches windows by title: <code>levenshtein</code> or <code>sequential</code>.</td></tr>
-          <tr><td><code>snapshotMaxStackSize</code></td><td><code>0</code></td><td>How many versions a stacked snapshot keeps (0 is no limit).</td></tr>
+          <tr><td><code>switchOrientation</code></td><td><code>horizontal</code></td><td><code>horizontal</code> or <code>vertical</code>.</td></tr>
+          <tr><td><code>switchIconSize</code></td><td><code>100</code></td><td>Icon size.</td></tr>
+          <tr><td><code>switchBackgroundColor</code>, <code>switchSelectedBackgroundColor</code></td><td><code>50;53;58;0.3</code> / <code>…;0.9</code></td><td>Switcher and selected item colors.</td></tr>
+          <tr><td><code>gridBackgroundColor</code>, <code>gridCellBackgroundColor</code>, <code>gridCellSelectedColor</code></td><td>see the app</td><td>Grid colors.</td></tr>
+          <tr><td><code>undoMaxStackSize</code></td><td><code>10</code></td><td>How many moves undo remembers.</td></tr>
+          <tr><td><code>snapshotTitleMatch</code></td><td><code>levenshtein</code></td><td>Match windows by title: <code>levenshtein</code> or <code>sequential</code>.</td></tr>
+          <tr><td><code>snapshotMaxStackSize</code></td><td><code>0</code></td><td>Versions a stacked snapshot keeps (0 = no limit).</td></tr>
         </tbody>
-      </table>
+      </table></details>
     </section>
 
-    <section class="doc" id="modifiers" data-title="Modifiers hyper groups ctrl alt shift cmd fn">
-      <h2>Modifiers</h2>
-      <p>A named group of modifier keys, so shortcuts can say <code>mods: hyper</code> instead of listing keys.</p>
-<pre><code>modifiers:
-  hyper: [ctrl, alt, cmd]
-  shyper: [shift, ctrl, alt, cmd]</code></pre>
-      <p>The modifier names are <code>ctrl</code>, <code>alt</code> (Option), <code>shift</code>, <code>cmd</code> and <code>fn</code>. A shortcut that lists the same keys written out is shown under the group's name, so the two stay interchangeable.</p>
-    </section>
-
-    <section class="doc" id="monitors" data-title="Monitors displays screens display screen size built-in">
-      <h2>Monitors</h2>
-      <p>Give each screen a name once, then send windows to it by name. One object per monitor:</p>
-<pre><code>monitors:
-  laptop: {display: built-in}
-  desk: {display: "Studio Display", size: 5120x2880}
-  old: {screen: "1"}</code></pre>
+    <section class="doc" id="keys" data-title="Key names letters digits arrows function reserved macOS modifiers shortcuts blocked">
+      <h2>Key names</h2>
+      <p class="intro">In the file, write keys by these names. Put digits and symbols in quotes: <code>key: "1"</code>.</p>
       <table>
-        <thead><tr><th>Field</th><th>What it is</th></tr></thead>
         <tbody>
-          <tr><td><code>display</code></td><td>The screen's model: <code>built-in</code>, or its name such as <code>Studio Display</code>. Identical displays are numbered left to right with <code>#1</code>, <code>#2</code>.</td></tr>
-          <tr><td><code>screen</code></td><td>An older kind of reference, for hand-written files: a number such as <code>"0"</code>, <code>ordered:1</code>, <code>next</code>. Use <code>display</code> or <code>screen</code>, not both.</td></tr>
-          <tr><td><code>size</code></td><td>The screen's size (<code>5120x1440</code>), used by slots drawn for that screen. A monitor with only a size is just that size.</td></tr>
-        </tbody>
-      </table>
-      <p>A display that isn't connected counts as "the screen you're on", so a shortcut still does something. Names keep any prefix you give them (the window suggests <code>monitor-samsung</code>); they are shared with slots and aliases.</p>
-    </section>
-
-    <section class="doc" id="slots" data-title="Slots areas presets percent x y width height formula">
-      <h2>Slots</h2>
-      <p>A slot is a named rectangle of the screen. Write it as percentages of the screen:</p>
-<pre><code>slots:
-  center-column: {x: 16.666667%, y: 0%, width: 66.666667%, height: 100%}
-  reading: {x: 30%, y: 0%, width: 40%, height: 100%}</code></pre>
-      <p><code>x</code> and <code>y</code> are from the top left. Percents can have decimals (up to six). For an area that depends on the window or on another screen, use a formula instead:</p>
-<pre><code>slots:
-  wide-with-gap: {formula: "move (screenOriginX+screenSizeX/5)+14;screenOriginY (4*screenSizeX/5)-14;screenSizeY"}</code></pre>
-      <h3>Built-in presets</h3>
-      <p>These exist without being written in the file, and their names are reserved:</p>
-      <div class="keys"><code>full</code><code>lefthalf</code><code>righthalf</code><code>tophalf</code><code>bottomhalf</code><code>third1</code><code>third2</code><code>third3</code><code>thirdrow1</code><code>thirdrow2</code><code>thirdrow3</code><code>quarter1</code><code>quarter2</code><code>quarter3</code><code>quarter4</code><code>quarterrow1</code><code>quarterrow2</code><code>quarterrow3</code><code>quarterrow4</code></div>
-      <p class="muted">A slot of your own can't reuse a preset's name, and can't be the same area as another slot.</p>
-    </section>
-
-    <section class="doc" id="aliases" data-title="Aliases free text name reference">
-      <h2>Aliases</h2>
-      <p>Named text for anything that doesn't fit another section. Use it as <code>${name}</code> in other aliases, <code>custom</code> actions and slot formulas.</p>
-<pre><code>aliases:
-  gap: "14"
-slots:
-  padded: {formula: "move screenOriginX+${gap};screenOriginY+${gap} screenSizeX-2*${gap};screenSizeY-2*${gap}"}</code></pre>
-      <p>Aliases can use other aliases; a name that doesn't exist, or a loop, is an error that names the place.</p>
-    </section>
-
-    <section class="doc" id="bindings" data-title="Bindings shortcuts key mods action group note enabled repeat">
-      <h2>Bindings</h2>
-      <p>A list of shortcuts. Each has the keys that trigger it and an action:</p>
-<pre><code>bindings:
-  - key: left
-    mods: hyper
-    action: {type: move, slot: lefthalf}
-    group: Windows
-    note: Left half</code></pre>
-      <table>
-        <thead><tr><th>Field</th><th>What it is</th></tr></thead>
-        <tbody>
-          <tr><td><code>key</code></td><td>The key, from <a href="#keys">the key names</a>.</td></tr>
-          <tr><td><code>mods</code></td><td>A modifier group by name (<code>hyper</code>) or a list (<code>[alt, shift]</code>). A key with no modifier is not allowed in the window; it would stop you typing.</td></tr>
-          <tr><td><code>action</code></td><td>What it does, an object with a <code>type</code>. See <a href="#actions">Actions</a>.</td></tr>
-          <tr><td><code>group</code> <span class="pill">optional</span></td><td>A heading to file it under.</td></tr>
-          <tr><td><code>note</code> <span class="pill">optional</span></td><td>A reminder, shown in the window.</td></tr>
-          <tr><td><code>enabled</code> <span class="pill">optional</span></td><td><code>false</code> switches it off without deleting it.</td></tr>
-          <tr><td><code>repeat</code> <span class="pill">optional</span></td><td><code>true</code> or <code>false</code> to repeat while held, instead of the action's own habit.</td></tr>
-        </tbody>
-      </table>
-      <p>Two enabled bindings on the same keys conflict: only one of them works. The window shows which.</p>
-    </section>
-
-    <section class="doc" id="actions" data-title="Actions types move focus-app focus throw nudge resize push hint grid switch relaunch custom save-snapshot restore-snapshot">
-      <h2>Actions</h2>
-      <p>An action is an object with a <code>type</code> and the fields that type takes. An action with no fields can be written as plain text (<code>action: relaunch</code>).</p>
-      <table>
-        <thead><tr><th>Type</th><th>Fields</th><th>What it does</th></tr></thead>
-        <tbody>
-          <tr><td><code>move</code></td><td><code>slot</code>, optional <code>screen</code></td><td>Puts the focused window in a slot, on a named monitor or the current screen.</td></tr>
-          <tr><td><code>focus-app</code></td><td><code>app</code></td><td>Brings a running app to the front, by name.</td></tr>
-          <tr><td><code>focus</code></td><td><code>direction</code></td><td>Focuses the window <code>left</code>, <code>right</code>, <code>up</code>, <code>down</code> or <code>behind</code> the current one.</td></tr>
-          <tr><td><code>throw</code></td><td><code>screen</code>, optional <code>style</code></td><td>Sends the window to another screen: a monitor name, a number, <code>next</code> or <code>previous</code>. <code>style: resize</code> fits it to the new screen.</td></tr>
-          <tr><td><code>nudge</code></td><td><code>x</code>, <code>y</code></td><td>Moves the window by pixels (<code>+50</code>) or a percent (<code>+10%</code>).</td></tr>
-          <tr><td><code>resize</code></td><td><code>x</code>, <code>y</code></td><td>Grows or shrinks the window by the same kind of amounts.</td></tr>
-          <tr><td><code>push</code></td><td><code>direction</code>, optional <code>options</code></td><td>Pushes the window to a screen edge (<code>up</code>, <code>down</code>, <code>left</code>, <code>right</code>); <code>options: bar-resize:screenSizeX/3</code> sets its thickness.</td></tr>
-          <tr><td><code>hint</code></td><td>optional <code>letters</code></td><td>Shows a letter on every window; press it to jump there.</td></tr>
-          <tr><td><code>grid</code></td><td>optional <code>arguments</code></td><td>Shows a grid; drag over cells to place the window.</td></tr>
-          <tr><td><code>switch</code></td><td>none</td><td>MWM's app switcher.</td></tr>
-          <tr><td><code>relaunch</code></td><td>none</td><td>Restarts MWM so it reads the file again.</td></tr>
-          <tr><td><code>save-snapshot</code></td><td><code>name</code>, optional <code>keep</code></td><td>Remembers where every window is. <code>keep: true</code> keeps it after MWM restarts.</td></tr>
-          <tr><td><code>restore-snapshot</code></td><td><code>name</code></td><td>Puts the windows back as that snapshot had them.</td></tr>
-          <tr><td><code>custom</code></td><td><code>text</code></td><td>Any operation written as text, for what the window can't show as fields (<code>chain</code>, <code>shell</code>, <code>layout</code> …).</td></tr>
-        </tbody>
-      </table>
-      <h3>Examples</h3>
-<pre><code>action: {type: move, slot: third2, screen: desk}
-action: {type: focus-app, app: Google Chrome}
-action: {type: throw, screen: next, style: resize}
-action: {type: resize, x: +10%, y: +0}
-action: {type: push, direction: left, options: "bar-resize:screenSizeX/3"}
-action: {type: hint, letters: ASDFJKL}
-action: {type: save-snapshot, name: work, keep: true}
-action: {type: custom, text: "chain push up | push right"}</code></pre>
-      <p class="muted">When a binding can't be written as fields (extra spaces, different quoting), the window keeps its text as <code>custom</code> so saving never changes what it does.</p>
-    </section>
-
-    <!-- ===== Reference ===== -->
-    <section class="doc" id="keys" data-title="Keys and modifiers key names letters digits arrows function reserved macOS">
-      <h2>Keys and modifiers</h2>
-      <h3>Key names</h3>
-      <p>Use these in <code>key:</code>. Letters and punctuation are the characters on a US layout; a key with a special character in its name needs quotes (<code>key: ";"</code>, <code>key: "1"</code>).</p>
-      <table>
-        <thead><tr><th>Keys</th><th>Names</th></tr></thead>
-        <tbody>
-          <tr><td>Letters and digits</td><td><code>a</code> … <code>z</code>, <code>0</code> … <code>9</code></td></tr>
+          <tr><td>Letters, digits</td><td><code>a</code> … <code>z</code>, <code>0</code> … <code>9</code></td></tr>
           <tr><td>Punctuation</td><td><code>-</code> <code>=</code> <code>[</code> <code>]</code> <code>;</code> <code>'</code> <code>,</code> <code>.</code> <code>/</code> <code>`</code> <code>backslash</code></td></tr>
           <tr><td>Editing</td><td><code>return</code> <code>tab</code> <code>space</code> <code>delete</code> <code>esc</code> <code>caps</code></td></tr>
-          <tr><td>Arrows and paging</td><td><code>left</code> <code>right</code> <code>up</code> <code>down</code> <code>home</code> <code>end</code> <code>pageUp</code> <code>pageDown</code></td></tr>
+          <tr><td>Arrows, paging</td><td><code>left</code> <code>right</code> <code>up</code> <code>down</code> <code>home</code> <code>end</code> <code>pageUp</code> <code>pageDown</code></td></tr>
           <tr><td>Function keys</td><td><code>f1</code> … <code>f20</code></td></tr>
           <tr><td>Number pad</td><td><code>pad0</code> … <code>pad9</code> <code>pad.</code> <code>pad+</code> <code>pad-</code> <code>pad*</code> <code>pad/</code> <code>pad=</code> <code>padEnter</code> <code>padClear</code></td></tr>
-          <tr><td>Other</td><td><code>help</code> <code>mute</code></td></tr>
+          <tr><td>Modifiers</td><td><code>ctrl</code> (⌃) <code>alt</code> (⌥) <code>shift</code> (⇧) <code>cmd</code> (⌘) <code>fn</code></td></tr>
         </tbody>
       </table>
-      <h3>Modifier names</h3>
-      <p><code>ctrl</code> (⌃), <code>alt</code> (⌥), <code>shift</code> (⇧), <code>cmd</code> (⌘) and <code>fn</code>. In a list: <code>[alt, shift]</code>.</p>
-      <h3>Combinations macOS keeps</h3>
-      <p>The window won't save a shortcut on these, because they already do something in every app:</p>
+      <details><summary>Shortcuts macOS keeps (blocked in the app)</summary>
       <table>
-        <thead><tr><th>Keys</th><th>macOS uses it to</th></tr></thead>
         <tbody>
           <tr><td><kbd>⌘</kbd> + <kbd>S</kbd> <kbd>C</kbd> <kbd>V</kbd> <kbd>X</kbd> <kbd>Z</kbd> <kbd>A</kbd></td><td>Save, copy, paste, cut, undo, select all</td></tr>
-          <tr><td><kbd>⌘</kbd> + <kbd>Q</kbd> <kbd>W</kbd> <kbd>N</kbd> <kbd>T</kbd> <kbd>F</kbd> <kbd>P</kbd> <kbd>O</kbd></td><td>Quit, close, new window, new tab, search, print, open</td></tr>
+          <tr><td><kbd>⌘</kbd> + <kbd>Q</kbd> <kbd>W</kbd> <kbd>N</kbd> <kbd>T</kbd> <kbd>F</kbd> <kbd>P</kbd> <kbd>O</kbd></td><td>Quit, close, new window, new tab, find, print, open</td></tr>
           <tr><td><kbd>⌘</kbd> + <kbd>tab</kbd> <kbd>space</kbd> <kbd>H</kbd> <kbd>M</kbd></td><td>Switch apps, Spotlight, hide, minimize</td></tr>
           <tr><td><kbd>⇧</kbd><kbd>⌘</kbd> + <kbd>3</kbd> <kbd>4</kbd> <kbd>5</kbd></td><td>Screenshots</td></tr>
           <tr><td><kbd>⌃</kbd><kbd>⌘</kbd> + <kbd>Q</kbd></td><td>Lock the screen</td></tr>
           <tr><td><kbd>⌥</kbd><kbd>⌘</kbd> + <kbd>esc</kbd></td><td>Force Quit</td></tr>
           <tr><td><kbd>⌃</kbd> + arrows</td><td>Spaces and Mission Control</td></tr>
         </tbody>
-      </table>
-      <p class="muted">This check runs when you change a shortcut in the window. MWM still loads a file that uses these, if you wrote it by hand.</p>
+      </table></details>
     </section>
 
-    <section class="doc" id="defaults" data-title="Default shortcuts out of the box apps finder safari terminal notes mail calendar">
-      <h2>Default shortcuts</h2>
-      <p>With no <code>~/.mwm.yml</code> yet, MWM starts with these. Once you have a configuration file, only what is in it applies.</p>
+    <section class="doc" id="actions" data-title="Everything a shortcut can do actions types move focus-app focus throw nudge resize push hint grid switch relaunch custom save-snapshot restore-snapshot">
+      <h2>Everything a shortcut can do</h2>
+      <p class="intro">In the app, the choices in the shortcut editor. In the file, an <code>action</code> with a <code>type</code>.</p>
       <table>
-        <thead><tr><th>Keys</th><th>What it does</th></tr></thead>
+        <thead><tr><th>In the app</th><th>Type</th><th>Fields</th><th>What it does</th></tr></thead>
         <tbody>
-          <tr><td><kbd>⌥</kbd> + arrows</td><td>Resize the focused window by 10%</td></tr>
-          <tr><td><kbd>⌃</kbd><kbd>⌥</kbd> + arrows</td><td>Resize from the bottom-right corner</td></tr>
-          <tr><td><kbd>⌃</kbd><kbd>⌘</kbd> + arrows</td><td>Push to a screen edge, a third wide or half high</td></tr>
-          <tr><td><kbd>⇧</kbd><kbd>⌥</kbd> + arrows</td><td>Nudge by 10%</td></tr>
-          <tr><td><kbd>⌃</kbd><kbd>⌥</kbd> + <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd></td><td>Throw to screen 1, 2 or 3</td></tr>
-          <tr><td><kbd>⌃</kbd><kbd>⌥</kbd><kbd>⌘</kbd> + arrows</td><td>Throw to the screen in that direction</td></tr>
-          <tr><td><kbd>⌘</kbd> + arrows</td><td>Focus the window in that direction</td></tr>
-          <tr><td><kbd>⌘</kbd><kbd>⌥</kbd> + <kbd>↑</kbd> <kbd>↓</kbd></td><td>Focus the window behind</td></tr>
-          <tr><td><kbd>⌘</kbd> + <kbd>esc</kbd></td><td>Window hints</td></tr>
-          <tr><td><kbd>⌥</kbd><kbd>⇧</kbd> + <kbd>F</kbd></td><td>Focus Finder</td></tr>
-          <tr><td><kbd>⌥</kbd><kbd>⇧</kbd> + <kbd>S</kbd></td><td>Focus Safari</td></tr>
-          <tr><td><kbd>⌥</kbd><kbd>⇧</kbd> + <kbd>T</kbd></td><td>Focus Terminal</td></tr>
-          <tr><td><kbd>⌥</kbd><kbd>⇧</kbd> + <kbd>N</kbd></td><td>Focus Notes</td></tr>
-          <tr><td><kbd>⌥</kbd><kbd>⇧</kbd> + <kbd>M</kbd></td><td>Focus Mail</td></tr>
-          <tr><td><kbd>⌥</kbd><kbd>⇧</kbd> + <kbd>C</kbd></td><td>Focus Calendar</td></tr>
+          <tr><td>Move to</td><td><code>move</code></td><td><code>slot</code>, <code>screen</code>?</td><td>Put the window in a slot.</td></tr>
+          <tr><td>Focus app</td><td><code>focus-app</code></td><td><code>app</code></td><td>Bring a running app forward.</td></tr>
+          <tr><td>Focus window</td><td><code>focus</code></td><td><code>direction</code></td><td>Go to the window <code>left</code>, <code>right</code>, <code>up</code>, <code>down</code> or <code>behind</code>.</td></tr>
+          <tr><td>Throw to screen</td><td><code>throw</code></td><td><code>screen</code>, <code>style</code>?</td><td>Send to another screen (name, number, <code>next</code>, <code>previous</code>). <code>style: resize</code> fits it.</td></tr>
+          <tr><td>Nudge</td><td><code>nudge</code></td><td><code>x</code>, <code>y</code></td><td>Move by pixels or percent.</td></tr>
+          <tr><td>Resize</td><td><code>resize</code></td><td><code>x</code>, <code>y</code></td><td>Grow or shrink.</td></tr>
+          <tr><td>Push</td><td><code>push</code></td><td><code>direction</code>, <code>options</code>?</td><td>Push against an edge.</td></tr>
+          <tr><td>Window hints</td><td><code>hint</code></td><td><code>letters</code>?</td><td>Letters on every window.</td></tr>
+          <tr><td>Grid</td><td><code>grid</code></td><td><code>arguments</code>?</td><td>Drag over a grid to place the window.</td></tr>
+          <tr><td>Switch windows</td><td><code>switch</code></td><td>none</td><td>MWM's app switcher.</td></tr>
+          <tr><td>Relaunch</td><td><code>relaunch</code></td><td>none</td><td>Restart MWM.</td></tr>
+          <tr><td>Save snapshot</td><td><code>save-snapshot</code></td><td><code>name</code>, <code>keep</code>?</td><td>Remember every window's place.</td></tr>
+          <tr><td>Restore snapshot</td><td><code>restore-snapshot</code></td><td><code>name</code></td><td>Put the windows back.</td></tr>
+          <tr><td>Advanced…</td><td><code>custom</code></td><td><code>text</code></td><td>Any classic Slate command, as text.</td></tr>
         </tbody>
       </table>
-      <p>An app shortcut brings a <b>running</b> app to the front; it doesn't open one that is closed. Change the names to the apps you use, in the window (<b>Keyboard → Focus app</b>) or the file.</p>
+      <p class="muted">? means optional. A shortcut with no fields can be plain text: <code>action: relaunch</code>.</p>
     </section>
 
-    <section class="doc" id="snapshots" data-title="Snapshots save restore keep after restart update window arrangement screens">
-      <h2>Snapshots</h2>
-      <p>A snapshot remembers every window (its app, title, position and size) and the screens that were connected. Restoring it moves each open window back, matching windows to the saved ones by title.</p>
-      <ul>
-        <li><b>Save:</b> from the <b>New snapshot</b> card on the Snapshots page, the menu bar, or a <code>save-snapshot</code> shortcut. Names can't contain spaces, so a shortcut can refer to them.</li>
-        <li><b>Restore:</b> the card's <b>Restore</b> button, the menu bar, or a <code>restore-snapshot</code> shortcut. Windows that are no longer open are skipped.</li>
-        <li><b>Keep after restart:</b> the pin. A pinned snapshot is written to disk; an unpinned one is forgotten when MWM quits. Snapshots live in <code>~/Library/Application Support/com.bbarbosa85.mwm/snapshots</code>, not in <code>~/.mwm.yml</code>.</li>
-        <li><b>Update with current windows:</b> in a card's ⋯ menu. It records the windows as they are now over that snapshot, keeping its name and pin.</li>
-        <li><b>Screens:</b> a card draws the screens it was taken on. A dashed screen isn't connected now, and the card says "screen missing". Restoring still works, with windows landing on the screens you have.</li>
-      </ul>
-      <div class="callout">Restoring and saving read and move other apps' windows, so they need the Accessibility permission.</div>
-    </section>
-
-    <section class="doc" id="formulas" data-title="Slot formulas expressions variables screenOriginX screenSizeX windowSizeX math">
-      <h2>Slot formulas</h2>
-      <p>A slot's <code>formula</code> is a <code>move</code> operation: <code>move &lt;x&gt;;&lt;y&gt; &lt;width&gt;;&lt;height&gt;</code>, optionally followed by a screen size. Numbers can be expressions with these variables. Spaces aren't allowed inside an expression (<code>screenSizeX/2</code>, not <code>screenSizeX / 2</code>).</p>
+    <section class="doc" id="formulas" data-title="Slot formulas expressions variables screenOriginX screenSizeX windowSizeX math advanced custom aliases">
+      <h2>Slot formulas <span class="pill">advanced</span></h2>
+      <p class="intro">For a slot that depends on the screen size, such as a 14-pixel margin all around, write a formula.</p>
+      <pre><code>aliases:
+  gap: &quot;14&quot;
+slots:
+  padded: {formula: &quot;move screenOriginX+${gap};screenOriginY+${gap} screenSizeX-2*${gap};screenSizeY-2*${gap}&quot;}</code></pre>
+      <p>A formula is <code>move x;y width;height</code>. Numbers can use the names below, with <b>no spaces inside a number</b> (<code>screenSizeX/2</code>). An <b>alias</b> is reusable text, written <code>${name}</code>.</p>
       <table>
-        <thead><tr><th>Variable</th><th>Meaning</th></tr></thead>
         <tbody>
-          <tr><td><code>screenOriginX</code>, <code>screenOriginY</code></td><td>Top-left corner of the target screen</td></tr>
-          <tr><td><code>screenSizeX</code>, <code>screenSizeY</code></td><td>Width and height of the target screen</td></tr>
-          <tr><td><code>windowTopLeftX</code>, <code>windowTopLeftY</code></td><td>Where the window is now</td></tr>
-          <tr><td><code>windowSizeX</code>, <code>windowSizeY</code></td><td>The window's current size</td></tr>
+          <tr><td><code>screenOriginX</code> <code>screenOriginY</code></td><td>Top-left corner of the screen</td></tr>
+          <tr><td><code>screenSizeX</code> <code>screenSizeY</code></td><td>Screen width and height</td></tr>
+          <tr><td><code>windowTopLeftX</code> <code>windowTopLeftY</code></td><td>Where the window is now</td></tr>
+          <tr><td><code>windowSizeX</code> <code>windowSizeY</code></td><td>The window's size</td></tr>
         </tbody>
       </table>
-      <p>Operators are <code>+ - * /</code> and <code>**</code>, with <code>min</code>, <code>max</code>, <code>floor</code>, <code>ceiling</code>, <code>abs</code>, <code>sqrt</code> and more. A slot written as percentages is turned into the same kind of formula, such as <code>move screenOriginX+screenSizeX/3;screenOriginY screenSizeX/3;screenSizeY</code>.</p>
-<pre><code>slots:
-  left-with-gap: {formula: "move screenOriginX+10;screenOriginY+10 screenSizeX/2-15;screenSizeY-20"}</code></pre>
+      <details><summary>Built-in slot names</summary>
+      <div class="chips"><code>full</code><code>lefthalf</code><code>righthalf</code><code>tophalf</code><code>bottomhalf</code><code>third1</code><code>third2</code><code>third3</code><code>thirdrow1</code><code>thirdrow2</code><code>thirdrow3</code><code>quarter1</code><code>quarter2</code><code>quarter3</code><code>quarter4</code><code>quarterrow1</code><code>quarterrow2</code><code>quarterrow3</code><code>quarterrow4</code></div></details>
     </section>
 
-    <section class="doc" id="migration" data-title="Moving from Slate migration slate .slate version 1 convert">
-      <h2>Moving from Slate</h2>
-      <p>MWM is a fork of <a href="https://github.com/jigish/slate">Slate</a>, so its old files still work.</p>
+    <section class="doc" id="migration" data-title="Coming from Slate migration slate .slate version 1 convert">
+      <h2>Coming from Slate</h2>
+      <p class="intro">MWM is a fork of <a href="https://github.com/jigish/slate">Slate</a>, and your old settings still work.</p>
       <ul>
-        <li><b><code>~/.slate</code> and <code>~/.slate.yml</code></b> are converted into <code>~/.mwm.yml</code> on first launch, and the old files are kept as backups. If you already have a <code>~/.mwm.yml</code>, MWM asks whether to merge.</li>
-        <li><b>JavaScript configurations</b> (<code>~/.slate.js</code>) can't be converted: MWM no longer runs code from a configuration. The file is set aside and an alert says so.</li>
-        <li><b>Older <code>~/.mwm.yml</code> files</b> (without <code>version:</code>) are rewritten once as version 2, keeping the old file as <code>~/.mwm.yml.v1-&lt;timestamp&gt;</code>. If the conversion wouldn't be exact, the file is left as it is.</li>
-        <li><b>Not carried over:</b> <code>layout</code>, <code>default</code> and <code>source</code> lines and per-app settings; the alert lists them.</li>
+        <li><code>~/.slate</code> and <code>~/.slate.yml</code> are converted to <code>~/.mwm.yml</code> on first launch. The old files are kept as backups.</li>
+        <li>JavaScript settings (<code>~/.slate.js</code>) can't be converted, because MWM no longer runs code from settings.</li>
+        <li>Classic commands (<code>chain</code>, <code>shell</code> …) still work as <b>Advanced…</b> actions. See the <a href="https://github.com/bbarbosa85/mwm/blob/master/docs/operations-reference.md">operations reference</a>.</li>
       </ul>
-      <p>The classic operations (<code>chain</code>, <code>sequence</code>, <code>corner</code>, <code>layout</code>, <code>shell</code>, <code>hide</code> …) still work as <code>custom</code> actions; see the <a href="https://github.com/bbarbosa85/mwm/blob/master/docs/operations-reference.md">operations reference</a>.</p>
     </section>
 
-    <section class="doc" id="troubleshooting" data-title="Troubleshooting problems windows don't move accessibility permission reload alerts">
-      <h2>Troubleshooting</h2>
-      <h3>Windows don't move</h3>
-      <p>Almost always the Accessibility permission. In <b>System Settings → Privacy &amp; Security → Accessibility</b>, check MWM is on. If it is, select it, press <b>−</b> to remove it, add it again, then choose <b>Reload Configuration</b>. macOS ties the permission to the exact app that was approved; MWM keeps it across updates when the new version is signed with the same certificate.</p>
-      <h3>A shortcut does nothing</h3>
-      <ul>
-        <li>Press <b>Apply</b> (or <b>Reload Configuration</b>) after changing shortcuts.</li>
-        <li>Look for a conflict: the map shows it in orange and the list has a <b>Conflicts</b> filter.</li>
-        <li>Another app, or macOS, may already own the keys.</li>
-        <li>A <code>focus-app</code> shortcut needs the app to be running, and its name must match exactly (<code>Google Chrome</code>, not <code>Chrome</code>).</li>
-      </ul>
-      <h3>The window shows an error</h3>
-      <p>The bar at the bottom names the line. A file that can't be read as a form stays on disk untouched; fix it in a text editor and reopen the window.</p>
-      <h3>Start over</h3>
-      <p>Quit MWM and move <code>~/.mwm.yml</code> out of the way. MWM starts with its defaults again. Your old file, and the <code>.bak</code> and <code>.v1-…</code> copies next to it, are untouched.</p>
+    <section class="doc" id="troubleshooting" data-title="Something is wrong troubleshooting problems windows don't move accessibility permission shortcut does nothing error start over">
+      <h2>Something is wrong</h2>
+      <details open><summary>My windows don't move</summary>
+        <p>Check <b>System Settings → Privacy &amp; Security → Accessibility</b>. If MWM is on, remove it with <b>−</b>, add it again, then choose <b>Reload Configuration</b>.</p></details>
+      <details><summary>A shortcut does nothing</summary>
+        <ul>
+          <li>Press <b>Apply</b> after changing shortcuts.</li>
+          <li>Look for a conflict (orange on the map, or the list's <b>Conflicts</b> filter).</li>
+          <li>For <b>Focus app</b>, the app must be running, with its exact name (<code>Google Chrome</code>).</li>
+        </ul></details>
+      <details><summary>The window shows an error</summary>
+        <p>The bottom bar names the line. Fix it in a text editor and reopen the window.</p></details>
+      <details><summary>I want to start over</summary>
+        <p>Quit MWM and move <code>~/.mwm.yml</code> aside. MWM starts with its defaults.</p></details>
     </section>
 
-    <p class="muted" style="margin-top:50px;font-size:14px">MWM is free software under the GPLv3, a fork of Slate by Jigish Patel and contributors. <a href="https://github.com/bbarbosa85/mwm">Source</a> · <a href="https://github.com/bbarbosa85/mwm/issues">Report a problem</a></p>
+    <p class="muted foot">MWM is free software under the GPLv3, a fork of Slate. <a href="https://github.com/bbarbosa85/mwm">Source</a> · <a href="https://github.com/bbarbosa85/mwm/issues">Report a problem</a></p>
   </main>
 </div>
 
-<script>
-(function () {
-  var input = document.getElementById('q'), status = document.getElementById('status'), bar = document.getElementById('searchbar');
-  var sections = Array.prototype.slice.call(document.querySelectorAll('.doc'));
-  var links = {};
-  Array.prototype.forEach.call(document.querySelectorAll('#toc a'), function (a) { links[a.getAttribute('href').slice(1)] = a; });
-  sections.forEach(function (s) { s.dataset.html = s.innerHTML; s.dataset.text = (s.dataset.title + ' ' + s.textContent).toLowerCase(); });
-
-  function highlight(root, terms) {
-    var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null), nodes = [], n;
-    while ((n = walker.nextNode())) { if (n.parentNode.nodeName !== 'SCRIPT' && n.parentNode.nodeName !== 'MARK') nodes.push(n); }
-    var pattern = new RegExp('(' + terms.map(function (t) { return t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }).join('|') + ')', 'ig');
-    nodes.forEach(function (node) {
-      if (!pattern.test(node.nodeValue)) return;
-      pattern.lastIndex = 0;
-      var span = document.createElement('span');
-      span.innerHTML = node.nodeValue.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(pattern, '<mark>$1</mark>');
-      node.parentNode.replaceChild(span, node);
-    });
-  }
-
-  function filter(raw) {
-    var q = raw.trim().toLowerCase(), terms = q.split(/\s+/).filter(Boolean), shown = 0;
-    bar.classList.toggle('active', terms.length > 0);
-    sections.forEach(function (s) {
-      s.innerHTML = s.dataset.html;
-      var match = terms.every(function (t) { return s.dataset.text.indexOf(t) !== -1; });
-      s.hidden = !match;
-      if (links[s.id]) links[s.id].classList.toggle('none', !match);
-      if (match) { shown++; if (terms.length) highlight(s, terms); }
-    });
-    document.getElementById('empty').style.display = (terms.length && shown === 0) ? 'block' : 'none';
-    status.textContent = terms.length ? (shown + (shown === 1 ? ' section matches' : ' sections match') + ' “' + raw.trim() + '”') : '';
-    if (history.replaceState) history.replaceState(null, '', terms.length ? '?q=' + encodeURIComponent(raw.trim()) + location.hash : location.pathname + location.hash);
-  }
-
-  input.addEventListener('input', function () { filter(input.value); });
-  function clear() { input.value = ''; filter(''); input.focus(); }
-  document.getElementById('clear').addEventListener('click', clear);
-  document.getElementById('empty-clear').addEventListener('click', function (e) { e.preventDefault(); clear(); });
-  document.addEventListener('keydown', function (e) {
-    var typing = /INPUT|TEXTAREA/.test(document.activeElement.nodeName);
-    if (e.key === '/' && !typing) { e.preventDefault(); input.focus(); input.select(); }
-    if (e.key === 'Escape' && document.activeElement === input) { if (input.value) clear(); else input.blur(); }
-  });
-
-  // Copy buttons on code blocks, and a highlight of where you are in the contents.
-  function addCopyButtons() {
-    Array.prototype.forEach.call(document.querySelectorAll('.doc pre'), function (pre) {
-      if (pre.querySelector('.copy')) return;
-      var b = document.createElement('button'); b.className = 'copy'; b.type = 'button'; b.textContent = 'Copy'; pre.appendChild(b);
-    });
-  }
-  addCopyButtons();
-  document.addEventListener('click', function (e) {
-    if (!e.target.classList || !e.target.classList.contains('copy')) return;
-    var code = e.target.parentNode.querySelector('code'), text = code ? code.textContent : '';
-    if (navigator.clipboard) navigator.clipboard.writeText(text);
-    var b = e.target; b.textContent = 'Copied'; setTimeout(function () { b.textContent = 'Copy'; }, 1200);
-  });
-  var observer = new IntersectionObserver(function (entries) {
-    entries.forEach(function (en) { if (en.isIntersecting && links[en.target.id]) { Object.keys(links).forEach(function (k) { links[k].classList.remove('on'); }); links[en.target.id].classList.add('on'); } });
-  }, { rootMargin: '-20% 0px -70% 0px' });
-  sections.forEach(function (s) { observer.observe(s); });
-
-  var initial = new URLSearchParams(location.search).get('q');
-  if (initial) { input.value = initial; filter(initial); addCopyButtons(); }
-  // After a search rewrites a section, copy buttons are part of its saved html, so they come back with it.
-})();
-</script>
+<script src="assets/docs.js"></script>
 </body>
 </html>

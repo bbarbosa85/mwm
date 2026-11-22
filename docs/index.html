@@ -7,6 +7,7 @@
 <meta name="description" content="MWM is a free, open-source window manager for macOS. Snap windows to slots, move them between displays and save whole desktops as snapshots, all from the keyboard.">
 <link rel="icon" href="assets/icon.png">
 <link rel="stylesheet" href="assets/site.css">
+<link rel="stylesheet" href="assets/demo.css">
 </head>
 <body>
 
@@ -17,14 +18,13 @@
       <a href="index.html#top">Overview</a>
       <a href="docs.html">Docs</a>
       <a href="examples.html">Examples</a>
-      <a class="btn primary small cta" href="index.html#download">Download</a>
+      <a class="btn primary small cta" href="https://github.com/bbarbosa85/mwm/raw/master/docs/downloads/MWM.dmg">Download</a>
     </div>
   </div>
 </nav>
 
 <header class="hero" id="top">
   <div class="wrap">
-    <img class="icon" src="assets/icon.png" alt="MWM app icon">
     <h1>Every window, <span>exactly where you want it.</span></h1>
     <p class="lead">MWM is a free window manager for macOS. Snap windows to slots, send them across displays and save whole desktops as snapshots, all from the keyboard.</p>
     <div class="actions">
@@ -32,15 +32,7 @@
       <a class="btn" href="#how">How it works</a>
     </div>
     <div class="meta">Version 1.0 · macOS 12 or later · Apple silicon and Intel · free and open source</div>
-    <div class="shot">
-      <div class="window">
-        <div class="bar"><i></i><i></i><i></i><span>MWM configuration</span></div>
-        <picture>
-          <source srcset="assets/keyboard-map-dark.png" media="(prefers-color-scheme: dark)">
-          <img src="assets/keyboard-map-light.png" alt="The keyboard map: every shortcut shown on a Mac keyboard, colored by what it does" width="2000" height="1280">
-        </picture>
-      </div>
-    </div>
+    <div class="demo" id="demo"></div>
   </div>
 </header>
 
@@ -63,6 +55,19 @@
 
 <section class="alt">
   <div class="wrap">
+    <div class="split flip">
+      <div class="text">
+        <h3>See every shortcut</h3>
+        <p>A keyboard map shows what each key does in each modifier group. Keys are colored by what they do, and conflicts and keys macOS keeps are flagged before they cause trouble.</p>
+      </div>
+      <div class="window"><div class="bar"><i></i><i></i><i></i><span>MWM configuration</span></div>
+        <picture><source srcset="assets/keyboard-map-dark.png" media="(prefers-color-scheme: dark)"><img src="assets/keyboard-map-light.png" alt="The keyboard map: every shortcut shown on a Mac keyboard, colored by what it does" loading="lazy"></picture></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
     <div class="split">
       <div class="text">
         <h3>Shortcuts you can see</h3>
@@ -79,7 +84,7 @@
   </div>
 </section>
 
-<section>
+<section class="alt">
   <div class="wrap">
     <div class="split flip">
       <div class="text">
@@ -96,7 +101,7 @@
   </div>
 </section>
 
-<section class="alt">
+<section>
   <div class="wrap">
     <div class="split">
       <div class="text">
@@ -111,6 +116,45 @@
       <div class="window"><div class="bar"><i></i><i></i><i></i><span>Snapshots</span></div>
         <picture><source srcset="assets/snapshots-dark.png" media="(prefers-color-scheme: dark)"><img src="assets/snapshots-light.png" alt="Snapshot cards with a picture of the windows on the screens" loading="lazy" style="aspect-ratio: 2000 / 1440; object-fit: cover; object-position: top"></picture></div>
     </div>
+  </div>
+</section>
+
+<section class="alt" id="how">
+  <div class="wrap">
+    <h2>Up and running in minutes</h2>
+    <p class="sub">The short version. The <a href="docs.html#quick-start">quick start</a> has every step.</p>
+    <ol class="steps">
+      <li><div>
+        <h3>Install and open</h3>
+        <p>Open <code>MWM.dmg</code>, drag <b>MWM</b> to <b>Applications</b> and open it. It lives in the menu bar. macOS may warn that it isn't notarized; <a href="docs.html#quick-start">here's how to open it</a>.</p>
+      </div></li>
+      <li><div>
+        <h3>Allow Accessibility</h3>
+        <p>macOS needs your permission to move other apps' windows. MWM asks on first launch. <a href="docs.html#troubleshooting">Windows not moving?</a></p>
+      </div></li>
+      <li><div>
+        <h3>Add a shortcut</h3>
+        <p>Choose <b>Configure MWM…</b> from the menu bar, pick a key on the keyboard map and say what it does. Or start from an <a href="examples.html">example configuration</a>.</p>
+      </div></li>
+    </ol>
+    <p style="text-align:center;margin-top:26px"><a class="btn primary" href="docs.html">Read the documentation</a> <a class="btn" href="examples.html">Browse examples</a></p>
+  </div>
+</section>
+
+<section id="shortcuts">
+  <div class="wrap">
+    <h2>Shortcuts out of the box</h2>
+    <p class="sub">Until you add your own, MWM comes with a set of defaults. A few of them:</p>
+    <table>
+      <thead><tr><th>Keys</th><th>What it does</th></tr></thead>
+      <tbody>
+        <tr><td><kbd>⌥</kbd> + arrows</td><td>Resize the focused window by 10%</td></tr>
+        <tr><td><kbd>⌘</kbd> + arrows</td><td>Focus the window in that direction</td></tr>
+        <tr><td><kbd>⌘</kbd> + <kbd>esc</kbd></td><td>Show window hints: press a letter to jump to that window</td></tr>
+        <tr><td><kbd>⌥</kbd><kbd>⇧</kbd> + <kbd>F</kbd> <kbd>S</kbd> <kbd>T</kbd> <kbd>N</kbd> <kbd>M</kbd> <kbd>C</kbd></td><td>Jump to Finder, Safari, Terminal, Notes, Mail or Calendar</td></tr>
+      </tbody>
+    </table>
+    <p style="color:var(--muted);margin:14px 0 0;font-size:15px">See <a href="docs.html#defaults">all the defaults</a>. Your own shortcuts live in <code>~/.mwm.yml</code>, described in the <a href="docs.html#config-file">documentation</a>.</p>
   </div>
 </section>
 
@@ -134,45 +178,6 @@
   </div>
 </section>
 
-<section id="how">
-  <div class="wrap">
-    <h2>Up and running in minutes</h2>
-    <p class="sub">The short version. The <a href="docs.html#quick-start">quick start</a> has every step.</p>
-    <ol class="steps">
-      <li><div>
-        <h3>Install and open</h3>
-        <p>Open <code>MWM.dmg</code>, drag <b>MWM</b> to <b>Applications</b> and open it. It lives in the menu bar. macOS may warn that it isn't notarized; <a href="docs.html#quick-start">here's how to open it</a>.</p>
-      </div></li>
-      <li><div>
-        <h3>Allow Accessibility</h3>
-        <p>macOS needs your permission to move other apps' windows. MWM asks on first launch. <a href="docs.html#troubleshooting">Windows not moving?</a></p>
-      </div></li>
-      <li><div>
-        <h3>Add a shortcut</h3>
-        <p>Choose <b>Configure MWM…</b> from the menu bar, pick a key on the keyboard map and say what it does. Or start from an <a href="examples.html">example configuration</a>.</p>
-      </div></li>
-    </ol>
-    <p style="text-align:center;margin-top:26px"><a class="btn primary" href="docs.html">Read the documentation</a> <a class="btn" href="examples.html">Browse examples</a></p>
-  </div>
-</section>
-
-<section class="alt" id="shortcuts">
-  <div class="wrap">
-    <h2>Shortcuts out of the box</h2>
-    <p class="sub">Until you add your own, MWM comes with a set of defaults. A few of them:</p>
-    <table>
-      <thead><tr><th>Keys</th><th>What it does</th></tr></thead>
-      <tbody>
-        <tr><td><kbd>⌥</kbd> + arrows</td><td>Resize the focused window by 10%</td></tr>
-        <tr><td><kbd>⌘</kbd> + arrows</td><td>Focus the window in that direction</td></tr>
-        <tr><td><kbd>⌘</kbd> + <kbd>esc</kbd></td><td>Show window hints: press a letter to jump to that window</td></tr>
-        <tr><td><kbd>⌥</kbd><kbd>⇧</kbd> + <kbd>F</kbd> <kbd>S</kbd> <kbd>T</kbd> <kbd>N</kbd> <kbd>M</kbd> <kbd>C</kbd></td><td>Jump to Finder, Safari, Terminal, Notes, Mail or Calendar</td></tr>
-      </tbody>
-    </table>
-    <p style="color:var(--muted);margin:14px 0 0;font-size:15px">See <a href="docs.html#defaults">all the defaults</a>. Your own shortcuts live in <code>~/.mwm.yml</code>, described in the <a href="docs.html#config-file">documentation</a>.</p>
-  </div>
-</section>
-
 <section id="faq">
   <div class="wrap">
     <h2>Questions</h2>
@@ -192,5 +197,6 @@
   </div>
 </footer>
 
+<script src="assets/demo.js"></script>
 </body>
 </html>
