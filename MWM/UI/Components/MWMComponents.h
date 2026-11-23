@@ -93,6 +93,16 @@ NS_ASSUME_NONNULL_BEGIN
 // A card with an icon, title and description in a column on the left, and the rows on the right.
 + (NSView *)settingsBlockWithSymbol:(NSString *)symbol title:(NSString *)title subtitle:(nullable NSString *)subtitle rows:(NSArray<NSView *> *)rows titleColumnWidth:(CGFloat)width;
 
+// A control with a small caption above it, as in a form.
++ (NSStackView *)fieldWithCaption:(NSString *)caption control:(NSView *)control;
+// Views in a column, each as wide as the column less its insets.
++ (NSStackView *)columnWithViews:(NSArray<NSView *> *)views spacing:(CGFloat)spacing insets:(NSEdgeInsets)insets;
+// Views side by side in equal widths, aligned at the top.
++ (NSStackView *)equalRowWithViews:(NSArray<NSView *> *)views spacing:(CGFloat)spacing;
+// A titled box for one topic of a form, with an optional control at the right of the title (a help button, a chip).
+// Its rows are as wide as the box less its padding.
++ (NSView *)groupBoxWithTitle:(NSString *)title views:(NSArray<NSView *> *)views accessory:(nullable NSView *)accessory;
+
 // Puts a view against the edges of another, inset.
 + (void)pinView:(NSView *)view toEdgesOf:(NSView *)container insets:(NSEdgeInsets)insets;
 

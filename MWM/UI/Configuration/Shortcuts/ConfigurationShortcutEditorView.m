@@ -553,6 +553,8 @@ static NSArray<NSString *> *InstalledApplicationNames(void) {
   for (MWMConfigEntry *entry in self.document.positions) {
     CGRect rect = CGRectZero;
     BOOL readable = [MWMSlots getRect:&rect fromFormula:[entry.value description]];
+    // Margins, pixel sizes and window names can't be drawn exactly, but they can be worked out for a sample screen.
+    if (!readable) readable = [MWMSlots getPreviewRect:&rect fromFormula:[self.document expandAliases:[entry.value description]]];
     MWMSlot *preset = [MWMSlots presetNamed:entry.name];
     BOOL isPreset = preset != nil && readable && [MWMSlots rect:rect isSameAreaAs:preset.rect];
     [choices addObject:@{@"name": entry.name, @"rect": readable ? [NSValue valueWithRect:NSRectFromCGRect(rect)] : [NSNull null], @"preset": @(isPreset)}];

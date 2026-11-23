@@ -19,6 +19,7 @@
 #import "MWMTheme.h"
 #import "MWMComponents.h"
 #import "MWMAction.h"
+#import "MWMSlots.h"
 #import "MWMConfigDocument.h"
 
 #pragma mark - Position preview
@@ -188,7 +189,7 @@ static NSArray<NSString *> *ApplicationNames(void) {
       CGRect rect;
       NSString *value = nil;
       for (MWMConfigEntry *entry in self.positions) if ([entry.name isEqualToString:m.a]) value = [entry.value description];
-      if ([MWMAction previewForPositionText:value rect:&rect]) { preview.fraction = rect; [self.stack addArrangedSubview:preview]; }
+      if ([MWMAction previewForPositionText:value rect:&rect] || (value != nil && [MWMSlots getPreviewRect:&rect fromFormula:value])) { preview.fraction = rect; [self.stack addArrangedSubview:preview]; }
       break;
     }
     case MWMActionKindFocusApp: {

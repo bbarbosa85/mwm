@@ -20,6 +20,7 @@
 #import "ConfigurationSlotCanvas.h"
 #import "MWMConfigDocument.h"
 #import "MWMSlots.h"
+#import "MWMSlotShape.h"
 
 @interface TestConfigurationSlots : XCTestCase <ConfigurationSlotsViewDelegate>
 @property (assign) NSUInteger changes;
@@ -170,6 +171,49 @@ static NSString *const kConfig =
   XCTAssertEqualObjects([self textOf:@"editorTitle" in:page], @"New Slot");
 }
 
+- (void)testANewSlotCanBeSimpleOrAdvanced {
+  MWMConfigDocument *doc;
+  ConfigurationSlotsView *page = [self pageWithConfig:kConfig document:&doc];
+  [page selectSlotNamed:@"centre"];
+  NSSegmentedControl *mode = [page valueForKey:@"modeControl"];
+  [page performSelector:NSSelectorFromString(@"refresh")];
+  XCTAssertTrue([mode isHidden], @"an existing slot opens the way it is written");
+  [page startNewSlot];
+  XCTAssertFalse([mode isHidden]);
+  XCTAssertEqual([mode selectedSegment], 0);
+  XCTAssertFalse([[page valueForKey:@"fieldsBlock"] isHidden]);
+  [mode setSelectedSegment:1];
+  [page performSelector:NSSelectorFromString(@"modeChanged:") withObject:mode];
+  XCTAssertTrue([page customMode]);
+  XCTAssertTrue([[page valueForKey:@"fieldsBlock"] isHidden]);
+  XCTAssertTrue([[page.draftFormulaText description] hasPrefix:@"move "], @"the formula starts from what the fields showed");
+  page.draftFormulaText = @"move screenOriginX;screenOriginY screenSizeX/2;screenSizeY";
+  [mode setSelectedSegment:0];
+  [page performSelector:NSSelectorFromString(@"modeChanged:") withObject:mode];
+  XCTAssertFalse([page customMode]);
+  XCTAssertEqualWithAccuracy(page.draftRect.size.width, 0.5, 0.001, @"a formula the fields can show goes back into them");
+}
+
+- (void)testAdvancedShowsTheFormulaInPixelsAndNamesWhatIsWrong {
+  MWMConfigDocument *doc;
+  ConfigurationSlotsView *page = [self pageWithConfig:kConfig document:&doc];
+  [page startNewSlot];
+  NSSegmentedControl *mode = [page valueForKey:@"modeControl"];
+  [mode setSelectedSegment:1];
+  [page performSelector:NSSelectorFromString(@"modeChanged:") withObject:mode];
+  page.draftFormulaText = @"move screenOriginX;screenOriginY screenSizeX/2;screenSizeY";
+  NSArray *results = [page valueForKey:@"resultFields"];
+  NSTextField *check = [page valueForKey:@"checkLabel"];
+  XCTAssertEqualObjects([results[0] stringValue], @"0 px");
+  XCTAssertTrue([[results[2] stringValue] hasSuffix:@" px"] && ![[results[2] stringValue] isEqualToString:@"0 px"], @"half the screen wide: %@", [results[2] stringValue]);
+  XCTAssertTrue([[check stringValue] hasPrefix:@"No problems"], @"%@", [check stringValue]);
+  page.draftFormulaText = @"move screenOriginX;screenOriginY screenSizeX / 2;screenSizeY";
+  XCTAssertTrue([[check stringValue] containsString:@"spaces"], @"%@", [check stringValue]);
+  XCTAssertEqualObjects([results[2] stringValue], @"–");
+  page.draftFormulaText = @"move screenOriginX;screenOriginY screenSizeX*2;screenSizeY";
+  XCTAssertTrue([[check stringValue] containsString:@"outside"], @"%@", [check stringValue]);
+}
+
 - (void)testTheGridControlSetsTheSnappingGrid {
   MWMConfigDocument *doc;
   ConfigurationSlotsView *page = [self pageWithConfig:kConfig document:&doc];
@@ -200,7 +244,7 @@ static NSString *const kConfig =
   XCTAssertFalse([self page:page showsRowNamed:@"third2"], @"presets are for reading, in the Presets popover");
   XCTAssertFalse([self page:page showsRowNamed:@"lefthalf"], @"a file entry that is the preset itself isn't a custom slot either");
   XCTAssertTrue([self page:page showsRowNamed:@"centre"]);
-  [page selectSlotNamed:@"third2"];
+  [page selectSlotNamed:@"middle"];
   XCTAssertNil(page.selectedName, @"a preset can't be opened for editing");
   [page selectSlotNamed:@"lefthalf"];
   XCTAssertNil(page.selectedName);
@@ -317,11 +361,150 @@ static NSString *const kConfig =
   XCTAssertNotNil([MWMConfigDocument documentFromString:[doc stringRepresentation] error:nil], @"the file is still valid");
 }
 
-- (void)testAFormulaSlotIsListedButNotEditable {
+static NSString *const kFormulas =
+  @"aliases:\n"
+  @"  gap: \"14\"\n"
+  @"positions:\n"
+  @"  rightfourfifths: move (screenOriginX+screenSizeX/5)+14;screenOriginY (4*screenSizeX/5)-14;screenSizeY\n"
+  @"  middle: move screenOriginX+(screenSizeX/3);screenOriginY screenSizeX/3;screenSizeY\n"
+  @"  floating: move windowTopLeftX;windowTopLeftY screenSizeX/3;screenSizeY/2\n"
+  @"  padded: move screenOriginX+${gap};screenOriginY+${gap} screenSizeX-2*${gap};screenSizeY-2*${gap}\n"
+  @"bindings:\n"
+  @"  - key: a\n    mods: ctrl\n    action: ${rightfourfifths}\n";
+
+// A formula the fields can't show opens as text, with nothing to save until it is changed.
+- (void)testACustomFormulaOpensAsText {
   MWMConfigDocument *doc;
-  ConfigurationSlotsView *page = [self pageWithConfig:kConfig document:&doc];
-  [page selectSlotNamed:@"sized"];
-  XCTAssertNil(page.selectedName, @"it names a screen, so there's nothing to draw and it can't be opened");
+  ConfigurationSlotsView *page = [self pageWithConfig:kFormulas document:&doc];
+  [page selectSlotNamed:@"floating"];
+  XCTAssertEqualObjects(page.selectedName, @"floating");
+  XCTAssertTrue(page.customMode);
+  XCTAssertNil(page.draftShape);
+  XCTAssertEqualObjects(page.draftFormulaText, @"move windowTopLeftX;windowTopLeftY screenSizeX/3;screenSizeY/2");
+  XCTAssertFalse(page.hasUnsavedChanges);
+  XCTAssertFalse(page.canvas.editable, @"the area follows the formula, it can't be dragged");
+}
+
+- (void)testEditingACustomFormulaSavesTheExactTextOnceItIsRight {
+  MWMConfigDocument *doc;
+  ConfigurationSlotsView *page = [self pageWithConfig:kFormulas document:&doc];
+  [page selectSlotNamed:@"floating"];
+  page.draftFormulaText = @"move windowTopLeftX;windowTopLeftY screenSizeX/3;screenSizeZ";
+  XCTAssertTrue(page.hasUnsavedChanges);
+  XCTAssertTrue([page.problem hasPrefix:@"Height: "], @"%@", page.problem);
+  XCTAssertTrue([page.problem containsString:@"isn't a name MWM knows"], @"%@", page.problem);
+  [page save];
+  XCTAssertEqual(self.changes, 0u, @"a formula with a mistake isn't saved");
+  page.draftFormulaText = @"move windowTopLeftX;windowTopLeftY screenSizeX/4;screenSizeY/2";
+  XCTAssertNil(page.problem);
+  [page save];
+  XCTAssertEqualObjects([[doc.positions[2] value] description], @"move windowTopLeftX;windowTopLeftY screenSizeX/4;screenSizeY/2");
+  XCTAssertEqual(self.changes, 1u);
+}
+
+- (void)testAFormulaCanUseAnAliasTheDocumentDefines {
+  MWMConfigDocument *doc;
+  ConfigurationSlotsView *page = [self pageWithConfig:kFormulas document:&doc];
+  [page selectSlotNamed:@"padded"];
+  XCTAssertTrue(page.customMode);
+  page.draftFormulaText = @"move screenOriginX+${gap};screenOriginY+${gap} screenSizeX-2*${gap};screenSizeY-2*${gap} ";
+  XCTAssertNil(page.problem, @"${gap} is worked out from the aliases");
+  page.draftFormulaText = @"move screenOriginX+${nope};screenOriginY screenSizeX;screenSizeY";
+  XCTAssertNotNil(page.problem);
+  XCTAssertTrue([page.problem containsString:@"${nope}"], @"%@", page.problem);
+}
+
+// A formula with margins opens in the fields.
+- (void)testAMarginSlotOpensInTheFieldsAndSavesNewMargins {
+  MWMConfigDocument *doc;
+  ConfigurationSlotsView *page = [self pageWithConfig:kFormulas document:&doc];
+  [page selectSlotNamed:@"rightfourfifths"];
+  XCTAssertFalse(page.customMode);
+  XCTAssertEqual(page.draftShape.horizontal.marginStart, 14);
+  XCTAssertFalse(page.hasUnsavedChanges);
+  XCTAssertFalse(page.canvas.editable, @"margins are set with the fields, not by dragging");
+  MWMSlotShape *shape = [page.draftShape copy];
+  shape.horizontal.marginStart = 20;
+  shape.vertical.marginStart = 8; shape.vertical.marginEnd = 8;
+  page.draftShape = shape;
+  XCTAssertTrue(page.hasUnsavedChanges);
+  XCTAssertNil(page.problem);
+  [page save];
+  XCTAssertEqualObjects([[doc.positions[0] value] description], @"move (screenOriginX+screenSizeX/5)+20;screenOriginY+8 (4*screenSizeX/5)-20;screenSizeY-16");
+}
+
+- (void)testPixelsAndCenteringBecomeAFormula {
+  MWMConfigDocument *doc;
+  ConfigurationSlotsView *page = [self pageWithConfig:kFormulas document:&doc];
+  [page startNewSlot];
+  MWMSlotShape *shape = [[MWMSlotShape alloc] init];
+  shape.horizontal.sizeInPixels = YES; shape.horizontal.sizePixels = 1200; shape.horizontal.centered = YES;
+  shape.vertical.sizeInPixels = YES; shape.vertical.sizePixels = 800; shape.vertical.centered = YES;
+  page.draftShape = shape;
+  page.draftName = @"dialog";
+  XCTAssertNil(page.problem, @"a pixel size isn't checked against the preview screen's size");
+  [page save];
+  XCTAssertEqualObjects([[doc.positions.lastObject value] description], @"move screenOriginX+(screenSizeX-1200)/2;screenOriginY+(screenSizeY-800)/2 1200;800");
+  [page selectSlotNamed:@"dialog"];
+  XCTAssertFalse(page.customMode, @"what the fields wrote opens in the fields");
+  XCTAssertTrue(page.draftShape.horizontal.centered);
+}
+
+- (void)testMarginsThatLeaveNothingAreRefused {
+  MWMConfigDocument *doc;
+  ConfigurationSlotsView *page = [self pageWithConfig:kFormulas document:&doc];
+  [page selectSlotNamed:@"rightfourfifths"];
+  MWMSlotShape *shape = [page.draftShape copy];
+  shape.horizontal.marginStart = 2000;
+  page.draftShape = shape;
+  XCTAssertNotNil(page.problem);
+}
+
+- (void)testAPlainSlotStaysDraggableAndKeepsItsText {
+  MWMConfigDocument *doc;
+  ConfigurationSlotsView *page = [self pageWithConfig:kFormulas document:&doc];
+  [page selectSlotNamed:@"middle"];
+  XCTAssertFalse(page.customMode, @"middle is a plain third, written with extra parentheses");
+  XCTAssertTrue(page.canvas.editable);
+  XCTAssertFalse(page.hasUnsavedChanges, @"opening it changes nothing");
+  [page save];
+  XCTAssertEqualObjects([[doc.positions[1] value] description], @"move screenOriginX+(screenSizeX/3);screenOriginY screenSizeX/3;screenSizeY");
+}
+
+- (void)testRenamingAMarginSlotKeepsTheShortcutsPointingAtIt {
+  MWMConfigDocument *doc;
+  ConfigurationSlotsView *page = [self pageWithConfig:kFormulas document:&doc];
+  [page selectSlotNamed:@"rightfourfifths"];
+  page.draftName = @"right";
+  [page save];
+  XCTAssertEqualObjects(doc.bindings[0].action, @"${right}");
+  XCTAssertEqualObjects([[doc.positions[0] value] description], @"move (screenOriginX+screenSizeX/5)+14;screenOriginY (4*screenSizeX/5)-14;screenSizeY", @"the formula is untouched");
+}
+
+// At the window's narrowest the editor still keeps its margin on the left, and nothing is wider than its card.
+- (void)testTheEditorKeepsItsPaddingAtTheNarrowestWindow {
+  MWMConfigDocument *doc = [MWMConfigDocument documentFromString:kFormulas error:nil];
+  ConfigurationSlotsView *page = [[ConfigurationSlotsView alloc] initWithFrame:NSMakeRect(0, 0, 880, 560)];   // the narrowest window (1080) less the 200 pt sidebar
+  NSWindow *window = [[NSWindow alloc] initWithContentRect:NSMakeRect(0, 0, 880, 560) styleMask:NSWindowStyleMaskTitled backing:NSBackingStoreBuffered defer:NO];
+  [window setContentView:page];
+  page.document = doc;
+  [page selectSlotNamed:@"rightfourfifths"];
+  [window layoutIfNeeded];
+  NSView *fields = [page valueForKey:@"fieldsBlock"];
+  NSView *editor = [page valueForKey:@"editorPage"];
+  XCTAssertLessThanOrEqual([editor fittingSize].width, 880, @"everything in the editor fits the narrowest page");
+  NSRect inPage = [page convertRect:[fields bounds] fromView:fields];
+  XCTAssertGreaterThanOrEqual(inPage.origin.x, 20, @"the card keeps the page's 20 pt margin: %@", NSStringFromRect(inPage));
+  for (NSView *row in fields.subviews) {
+    NSRect aligned = [row alignmentRectForFrame:row.frame];   // a label's frame is a little wider than what it lines up with
+    XCTAssertLessThanOrEqual(NSMaxX(aligned), NSWidth(fields.bounds) + 0.5, @"a row is wider than the card: %@", NSStringFromRect(aligned));
+  }
+}
+
+- (void)testEveryFormulaSlotCanBeOpenedFromTheGallery {
+  MWMConfigDocument *doc;
+  ConfigurationSlotsView *page = [self pageWithConfig:kFormulas document:&doc];
+  for (NSString *name in @[@"rightfourfifths", @"middle", @"floating", @"padded"]) XCTAssertTrue([self page:page showsRowNamed:name], @"%@", name);
 }
 
 @end

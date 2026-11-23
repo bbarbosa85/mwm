@@ -72,7 +72,7 @@ typedef NS_ENUM(NSInteger, SaveState) {
   self = [super initWithWindow:window];
   if (self) {
     [window setTitle:@"MWM configuration"];
-    [window setMinSize:NSMakeSize(900, 520)];
+    [window setMinSize:NSMakeSize(1080, 560)];
     [window setReleasedWhenClosed:NO];
     [window setDelegate:self];
     [window center];

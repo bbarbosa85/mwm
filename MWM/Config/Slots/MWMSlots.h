@@ -46,13 +46,22 @@ NS_ASSUME_NONNULL_BEGIN
 + (nullable MWMSlot *)presetWithRect:(CGRect)rect;
 
 + (NSString *)formulaForRect:(CGRect)rect;
+// The pieces formulaForRect: is made of, for formulas that add margins or pixel sizes to them:
+// "screenSizeX/4", "(3*screenSizeX/4)" (the variable itself for all of it), and "screenOriginX+screenSizeX/4".
++ (NSString *)scaledVariable:(NSString *)variable fraction:(CGFloat)fraction;
++ (NSString *)positionWithOrigin:(NSString *)origin size:(NSString *)size fraction:(CGFloat)fraction;
 // Reads a stored formula back into an area. NO if it depends on the window or a screen size.
 + (BOOL)getRect:(CGRect *)rect fromFormula:(NSString *)formula;
+// An area to draw for any formula that can be worked out (margins, pixel sizes, window names), as fractions of a sample
+// screen. Names the document defines as ${alias} must be expanded first. NO for a formula with a mistake.
++ (BOOL)getPreviewRect:(CGRect *)rect fromFormula:(NSString *)formula;
 
 + (BOOL)rect:(CGRect)a isSameAreaAs:(CGRect)b;
 
 // Why a slot can't be saved as it is, or nil if it can. Names must differ from
 // every other name (presets, slots, other aliases) and the area must be new.
+// The name part of that check alone.
++ (nullable NSString *)problemWithName:(NSString *)name takenNames:(NSSet<NSString *> *)taken;
 + (nullable NSString *)problemWithName:(NSString *)name rect:(CGRect)rect
                             otherSlots:(NSArray<MWMSlot *> *)others takenNames:(NSSet<NSString *> *)taken;
 

@@ -21,7 +21,7 @@
 
 #import <Cocoa/Cocoa.h>
 
-@class ConfigurationSlotsView, ConfigurationSlotCanvas, MWMConfigDocument;
+@class ConfigurationSlotsView, ConfigurationSlotCanvas, MWMConfigDocument, MWMSlotShape;
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -49,7 +49,13 @@ NS_ASSUME_NONNULL_BEGIN
 @property (readonly, nullable) NSString *problem;   // why Save is off, or nil
 @property (readonly) ConfigurationSlotCanvas *canvas;
 @property (copy, nullable) NSString *draftName;
+// The plain area of the slot as fractions of the screen (its start and size before pixels, centering and margins).
 @property (assign) CGRect draftRect;
+// The slot as units and margins; nil while a custom (hand-written) formula is being edited as text.
+@property (strong, nonatomic, nullable) MWMSlotShape *draftShape;
+// A formula the fields can't show: edited as text, with a preview and error messages.
+@property (readonly) BOOL customMode;
+@property (copy, nonatomic, nullable) NSString *draftFormulaText;
 
 // Removes a custom slot from the document (not while a shortcut uses it).
 - (void)removeSlotNamed:(NSString *)name;
