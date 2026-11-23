@@ -239,6 +239,95 @@ static NSString *const kConfig =
   XCTAssertEqualObjects([MWMAction parse:[[doc.bindings objectAtIndex:0] action]].string, [MWMAction actionOfKind:MWMActionKindRelaunch].string);
 }
 
+// Lets the editor's deferred refresh run.
+- (void)settle { [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.05]]; }
+
+- (void)testPushShowsItsStyleThicknessAndScreenAsControls {
+  MWMConfigDocument *doc;
+  ConfigurationShortcutEditorView *editor = [self editorWith:&doc];
+  [editor startNewWithGroup:nil keyName:nil];
+  [editor selectKind:MWMActionKindPush];
+  [self settle];
+  XCTAssertEqualObjects(editor.draftAction.b, @"bar-resize:screenSizeX/2");
+  XCTAssertNotNil([self viewIn:editor identifier:@"push-style"]);
+  XCTAssertNotNil([self viewIn:editor identifier:@"row-thickness"]);
+  XCTAssertNil([self viewIn:editor identifier:@"row-options"], @"the text field is only for text the controls can't show");
+  NSSegmentedControl *unit = (NSSegmentedControl *)[self viewIn:editor identifier:@"push-unit"];
+  [unit setSelectedSegment:0];   // % keeps the size: half the screen
+  [NSApp sendAction:[unit action] to:[unit target] from:unit];
+  [self settle];
+  XCTAssertEqualObjects(editor.draftAction.b, @"bar-resize:screenSizeX*50/100");
+  NSTextField *thickness = (NSTextField *)[self viewIn:editor identifier:@"push-thickness"];
+  [thickness setStringValue:@"30"];
+  [NSApp sendAction:[thickness action] to:[thickness target] from:thickness];
+  [self settle];
+  XCTAssertEqualObjects(editor.draftAction.b, @"bar-resize:screenSizeX*30/100");
+}
+
+- (void)testChangingThePushDirectionMovesTheThicknessToTheOtherSide {
+  MWMConfigDocument *doc;
+  ConfigurationShortcutEditorView *editor = [self editorWith:&doc];
+  [editor startNewWithGroup:nil keyName:nil];
+  [editor selectKind:MWMActionKindPush];
+  [self settle];
+  NSPopUpButton *direction = [self popupIn:[self viewIn:editor identifier:@"row-direction"]];
+  XCTAssertNotNil(direction);
+  [direction selectItemWithTitle:@"up"];
+  [NSApp sendAction:[direction action] to:[direction target] from:direction];
+  [self settle];
+  XCTAssertEqualObjects(editor.draftAction.a, @"up");
+  XCTAssertEqualObjects(editor.draftAction.b, @"bar-resize:screenSizeY/2", @"half the height now");
+}
+
+- (NSPopUpButton *)popupIn:(NSView *)root {
+  if ([root isKindOfClass:[NSPopUpButton class]]) return (NSPopUpButton *)root;
+  for (NSView *view in root.subviews) { NSPopUpButton *found = [self popupIn:view]; if (found != nil) return found; }
+  return nil;
+}
+
+- (void)testAThicknessTheControlsCanNotShowStaysAsText {
+  MWMConfigDocument *doc;
+  ConfigurationShortcutEditorView *editor = [self editorWith:&doc];
+  [editor startNewWithGroup:nil keyName:nil];
+  [editor selectKind:MWMActionKindPush];
+  editor.draftAction.b = @"bar-resize:(screenSizeX/3)+20";
+  [editor performSelector:NSSelectorFromString(@"refresh")];
+  XCTAssertNotNil([self viewIn:editor identifier:@"row-options"]);
+  XCTAssertNil([self viewIn:editor identifier:@"push-style"]);
+}
+
+- (void)testAThicknessOfZeroBlocksSave {
+  MWMConfigDocument *doc;
+  ConfigurationShortcutEditorView *editor = [self editorWith:&doc];
+  [editor startNewWithGroup:nil keyName:nil];
+  [editor useKeyName:@"j" modifierNames:@[@"ctrl", @"alt"] groupName:nil];
+  [editor selectKind:MWMActionKindPush];
+  XCTAssertNil(editor.problem);
+  editor.draftAction.b = @"bar-resize:screenSizeX/0";
+  XCTAssertTrue([editor.problem containsString:@"more than zero"], @"%@", editor.problem);
+}
+
+- (void)testAnAdvancedMoveShowsWhereItGoesAndNamesMistakes {
+  MWMConfigDocument *doc;
+  ConfigurationShortcutEditorView *editor = [self editorWith:&doc];
+  [editor startNewWithGroup:nil keyName:nil];
+  [editor useKeyName:@"j" modifierNames:@[@"ctrl", @"alt"] groupName:nil];
+  [editor selectKind:MWMActionKindCustom];
+  editor.draftAction.a = @"chain push up | push right";
+  [editor performSelector:NSSelectorFromString(@"refresh")];
+  XCTAssertNil([self viewIn:editor identifier:@"custom-check"], @"other operations keep the plain field");
+  XCTAssertNil(editor.problem);
+  editor.draftAction.a = @"move screenOriginX;screenOriginY screenSizeX/2;screenSizeY";
+  [editor performSelector:NSSelectorFromString(@"refresh")];
+  XCTAssertTrue([[(NSTextField *)[self viewIn:editor identifier:@"custom-check"] stringValue] hasPrefix:@"No problems"]);
+  XCTAssertNotNil([self viewIn:editor identifier:@"formula-help"]);
+  XCTAssertNil(editor.problem);
+  editor.draftAction.a = @"move screenOriginX;screenOriginY screenSizeX / 2;screenSizeY";
+  [editor performSelector:NSSelectorFromString(@"refresh")];
+  XCTAssertTrue([[(NSTextField *)[self viewIn:editor identifier:@"custom-check"] stringValue] containsString:@"spaces"]);
+  XCTAssertTrue([editor.problem containsString:@"spaces"], @"%@", editor.problem);
+}
+
 - (void)testANewShortcutNeedsKeysAndAnApplicationThenAddsABinding {
   MWMConfigDocument *doc;
   ConfigurationShortcutEditorView *editor = [self editorWith:&doc];

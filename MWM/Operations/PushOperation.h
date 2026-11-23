@@ -20,9 +20,15 @@
 
 #import "MoveOperation.h"
 
+NS_ASSUME_NONNULL_BEGIN
+
 @interface PushOperation : MoveOperation
 
 + (id)pushOperation;
 + (id)pushOperationFromString:(NSString *)pushOperation;
+// Where a push puts the window, as expressions: x, y, width and height. Nil when the direction or style isn't known.
++ (nullable NSDictionary<NSString *, NSString *> *)geometryForDirection:(NSString *)direction style:(nullable NSString *)style;
 
 @end
+
+NS_ASSUME_NONNULL_END

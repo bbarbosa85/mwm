@@ -109,4 +109,27 @@
   XCTAssertEqualObjects([[MWMAction actionOfKind:MWMActionKindSnapshot] string], @"snapshot  save-to-disk");
 }
 
+- (void)testMoveAndPushTextsAreWorkedOutOnASampleScreen {
+  CGRect rect;
+  BOOL applies = NO;
+  NSString *error = nil;
+  XCTAssertTrue([MWMAction getWindowRect:&rect forActionText:@"move screenOriginX;screenOriginY screenSizeX/2;screenSizeY" applies:&applies error:&error]);
+  XCTAssertTrue(applies);
+  XCTAssertEqualWithAccuracy(rect.size.width, 0.5, 0.001);
+  XCTAssertTrue([MWMAction getWindowRect:&rect forActionText:@"push right bar-resize:screenSizeX/4" applies:&applies error:&error]);
+  XCTAssertEqualWithAccuracy(rect.origin.x, 0.75, 0.001);
+  XCTAssertTrue([MWMAction getWindowRect:&rect forActionText:@"push up center" applies:&applies error:&error], @"a window is drawn for names that mean the window");
+  XCTAssertFalse([MWMAction getWindowRect:&rect forActionText:@"push sideways" applies:&applies error:&error]);
+  XCTAssertTrue(applies);
+  XCTAssertTrue([error containsString:@"Push where"], @"%@", error);
+  XCTAssertFalse([MWMAction getWindowRect:&rect forActionText:@"push left wobble" applies:&applies error:&error]);
+  XCTAssertTrue([error containsString:@"isn't a push style"], @"%@", error);
+  XCTAssertFalse([MWMAction getWindowRect:&rect forActionText:@"push left bar-resize:screenSizeX / 3" applies:&applies error:&error]);
+  XCTAssertFalse([MWMAction getWindowRect:&rect forActionText:@"move screenSizeX / 2;0 10;10" applies:&applies error:&error]);
+  XCTAssertTrue(applies);
+  XCTAssertFalse([MWMAction getWindowRect:&rect forActionText:@"chain push up | push right" applies:&applies error:&error]);
+  XCTAssertFalse(applies, @"only moves and pushes are checked");
+  XCTAssertNil(error);
+}
+
 @end

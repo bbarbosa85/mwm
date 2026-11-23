@@ -64,6 +64,11 @@ typedef NS_ENUM(NSInteger, MWMActionKind) {
 // Where a position puts a window, as fractions of the screen (x, y, width,
 // height, top-left origin), or NO if it can't be worked out (it depends on the window).
 + (BOOL)previewForPositionText:(NSString *)text rect:(CGRect *)rect;
+
+// For the text of a "move x;y w;h [screen]" or "push direction [style] [screen]" action: where it puts a window
+// on a sample screen, as fractions of it, with a sample window for the names that mean the window.
+// Returns NO with nil error for any other text; with an error in plain words when the text has a mistake.
++ (BOOL)getWindowRect:(CGRect *)rect forActionText:(NSString *)text applies:(BOOL *)applies error:(NSString * _Nullable * _Nullable)error;
 @end
 
 NS_ASSUME_NONNULL_END

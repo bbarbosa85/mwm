@@ -27,6 +27,9 @@
 #import "MWMShortcutIndex.h"
 #import "MWMSnapshots.h"
 #import "MWMSlots.h"
+#import "MWMPushOptions.h"
+#import "ConfigurationPushRows.h"
+#import "ConfigurationFormulaHelp.h"
 
 // What the shortcut can do, in the order the list shows them.
 static NSArray<NSNumber *> *KindsInOrder(void) {
@@ -47,6 +50,8 @@ static NSArray<NSString *> *InstalledApplicationNames(void) {
 
 @interface ConfigurationShortcutEditorView () <NSSearchFieldDelegate, NSTextFieldDelegate, ConfigurationKeyboardMapViewDelegate>
 @property (strong) MWMAction *draftAction;
+@property (strong) NSPopover *helpPopover;
+@property (strong) ConfigurationPushRows *pushRows;   // keeps the push controls' target alive
 @property (strong, nullable) MWMBindingEntry *original;   // nil for a new shortcut
 @property (copy) NSString *originalSignature;
 @property (assign) BOOL isNew;
@@ -262,6 +267,17 @@ static NSArray<NSString *> *InstalledApplicationNames(void) {
   }
   if ((a.kind == MWMActionKindMove || a.kind == MWMActionKindFocusApp) && [a.a length] == 0) return a.kind == MWMActionKindMove ? @"Choose a slot." : @"Choose an application.";
   if (a.kind == MWMActionKindCustom && [a.a length] == 0) return @"Write the action.";
+  // A move or push left as it was isn't checked again, so its shortcut can still be given other keys.
+  if (a.kind == MWMActionKindCustom && (self.isNew || ![[a string] isEqualToString:self.original.action ?: @""])) {
+    NSString *textProblem = nil;
+    BOOL applies = NO;
+    CGRect rect;
+    if (![MWMAction getWindowRect:&rect forActionText:[self.document expandAliases:a.a] applies:&applies error:&textProblem] && applies) return textProblem ?: @"This isn't something MWM can work out.";
+  }
+  if (a.kind == MWMActionKindPush) {
+    NSString *pushProblem = [[MWMPushOptions optionsFromText:a.b direction:a.a] problem];
+    if (pushProblem != nil) return pushProblem;
+  }
   if ((a.kind == MWMActionKindSnapshot || a.kind == MWMActionKindRestoreSnapshot) && [a.a length] == 0) return @"Name the snapshot.";
   if ((a.kind == MWMActionKindSnapshot || a.kind == MWMActionKindRestoreSnapshot) && [a.a rangeOfCharacterFromSet:[NSCharacterSet whitespaceCharacterSet]].location != NSNotFound) return @"A snapshot name can't have spaces.";
   return nil;
@@ -457,8 +473,8 @@ static NSArray<NSString *> *InstalledApplicationNames(void) {
       [self addRowWithLabel:@"Vertical" content:@[[self fieldWithText:m.b placeholder:@"+0" width:100 action:@selector(secondChanged:) identifier:@"field-b"]] identifier:@"row-y"];
       break;
     case MWMActionKindPush:
-      [self addRowWithLabel:@"Direction" content:@[[self popupWithTitles:[MWMAction pushDirections] values:[MWMAction pushDirections] selected:m.a placeholder:nil action:@selector(firstChanged:)]] identifier:@"row-direction"];
-      [self addRowWithLabel:@"Options" content:@[[self fieldWithText:m.b placeholder:@"bar-resize:screenSizeX/2" width:260 action:@selector(secondChanged:) identifier:@"field-b"]] identifier:@"row-options"];
+      [self addRowWithLabel:@"Direction" content:@[[self popupWithTitles:[MWMAction pushDirections] values:[MWMAction pushDirections] selected:m.a placeholder:nil action:@selector(pushDirectionChanged:)]] identifier:@"row-direction"];
+      [self addPushRows];
       break;
     case MWMActionKindHint:
       [self addRowWithLabel:@"Letters" content:@[[self fieldWithText:m.a placeholder:@"ASDFJKL" width:200 action:@selector(firstChanged:) identifier:@"field-a"]] identifier:@"row-letters"];
@@ -467,7 +483,7 @@ static NSArray<NSString *> *InstalledApplicationNames(void) {
       [self addRowWithLabel:@"Arguments" content:@[[self fieldWithText:m.a placeholder:@"padding:5 0:6,2" width:260 action:@selector(firstChanged:) identifier:@"field-a"]] identifier:@"row-grid"];
       break;
     case MWMActionKindCustom:
-      [self addRowWithLabel:@"Action" content:@[[self fieldWithText:m.a placeholder:@"operation" width:320 action:@selector(firstChanged:) identifier:@"field-a"]] identifier:@"row-custom"];
+      [self addCustomRows];
       break;
     case MWMActionKindSnapshot: {
       [self addRowWithLabel:@"Name" content:@[[self snapshotNameCombo:m.a]] identifier:@"row-snapshot"];
@@ -631,6 +647,68 @@ static NSArray<NSString *> *InstalledApplicationNames(void) {
 - (void)slotFilterChanged:(NSSegmentedControl *)control {
   self.slotFilter = [control selectedSegment];
   [self rebuildSlotList];
+}
+
+// The text of an advanced action. A move or a push also shows where it puts a window, with its mistakes named
+// and the names a formula can use.
+- (void)addCustomRows {
+  MWMAction *m = self.draftAction;
+  CGRect rect = CGRectZero;
+  NSString *error = nil;
+  BOOL applies = NO;
+  BOOL worked = [MWMAction getWindowRect:&rect forActionText:[self.document expandAliases:m.a] applies:&applies error:&error];
+  NSTextField *field = [self fieldWithText:m.a placeholder:@"operation" width:applies ? 460 : 320 action:@selector(firstChanged:) identifier:@"field-a"];
+  if (!applies) {
+    [self addRowWithLabel:@"Action" content:@[field] identifier:@"row-custom"];
+    return;
+  }
+  NSButton *help = [NSButton buttonWithTitle:@"" target:self action:@selector(showFormulaHelp:)];
+  [help setBezelStyle:NSBezelStyleHelpButton];
+  [help setToolTip:@"Names you can use in a formula"];
+  [help setIdentifier:@"formula-help"];
+  [self addRowWithLabel:@"Action" content:@[field, help] identifier:@"row-custom"];
+  ConfigurationSlotThumbnail *thumbnail = [[ConfigurationSlotThumbnail alloc] init];
+  [thumbnail setTranslatesAutoresizingMaskIntoConstraints:NO];
+  thumbnail.rect = worked ? rect : CGRectZero;
+  thumbnail.valid = worked;
+  [NSLayoutConstraint activateConstraints:@[[thumbnail.widthAnchor constraintEqualToConstant:80], [thumbnail.heightAnchor constraintEqualToConstant:50]]];
+  NSString *text = worked ? @"No problems. Worked out for a sample screen." : (error ?: @"This isn't something MWM can work out.");
+  NSTextField *status = [self labelWithText:text size:12 color:worked ? [MWMTheme success] : [MWMTheme warning] weight:NSFontWeightRegular];
+  [status setIdentifier:@"custom-check"];
+  [self addRowWithLabel:@"Result" content:@[thumbnail, status] identifier:@"row-result"];
+}
+
+- (void)showFormulaHelp:(NSButton *)sender {
+  if (self.helpPopover.shown) { [self.helpPopover close]; return; }
+  self.helpPopover = [ConfigurationFormulaHelp popover];
+  [self.helpPopover showRelativeToRect:[sender bounds] ofView:sender preferredEdge:NSRectEdgeMaxY];
+}
+
+// What follows a push's direction: the style, thickness and screen as controls, or, for text they can't show, the text.
+- (void)addPushRows {
+  MWMAction *m = self.draftAction;
+  MWMPushOptions *options = [MWMPushOptions optionsFromText:m.b direction:m.a];
+  if (options == nil) {
+    [self addRowWithLabel:@"Options" content:@[[self fieldWithText:m.b placeholder:@"bar-resize:screenSizeX/2" width:260 action:@selector(secondChanged:) identifier:@"field-b"]] identifier:@"row-options"];
+    return;
+  }
+  __weak ConfigurationShortcutEditorView *weakSelf = self;
+  self.pushRows = [ConfigurationPushRows rowsForOptions:options direction:m.a screens:[self screenNames] onChange:^(MWMPushOptions *changed) {
+    weakSelf.draftAction.b = [changed textForDirection:weakSelf.draftAction.a];
+    dispatch_async(dispatch_get_main_queue(), ^{ [weakSelf refresh]; });
+  }];
+  for (NSDictionary *row in self.pushRows.rows) [self addRowWithLabel:row[@"label"] content:row[@"views"] identifier:row[@"identifier"]];
+}
+
+// The thickness is written for one side of the screen, so a new direction rewrites it for the other.
+- (void)pushDirectionChanged:(NSPopUpButton *)popup {
+  NSString *direction = [[popup selectedItem] representedObject] ?: @"";
+  MWMAction *m = self.draftAction;
+  if ([direction isEqualToString:m.a]) return;
+  MWMPushOptions *options = [MWMPushOptions optionsFromText:m.b direction:m.a];
+  if (options != nil) m.b = [options textForDirection:direction];
+  m.a = direction;
+  dispatch_async(dispatch_get_main_queue(), ^{ [self refresh]; });
 }
 
 - (void)firstChanged:(id)control {

@@ -162,6 +162,27 @@ static NSString *const kConfig =
 }
 
 
+- (void)testThePushAndAdvancedActionEditorsLookTheSame {
+  for (NSNumber *dark in @[@NO, @YES]) {
+    MWMConfigDocument *doc = [MWMConfigDocument documentFromString:kConfig error:nil];
+    ConfigurationShortcutEditorView *push = [[ConfigurationShortcutEditorView alloc] initWithFrame:NSMakeRect(0, 0, 1000, 640)];
+    push.document = doc;
+    [push editBindingAtIndex:0];
+    [push selectKind:MWMActionKindPush];
+    push.draftAction.a = @"right";
+    push.draftAction.b = @"bar-resize:screenSizeX/4";
+    [push performSelector:NSSelectorFromString(@"refresh")];
+    [self checkView:push size:NSMakeSize(1000, 640) name:@"shortcut-editor-push" dark:[dark boolValue]];
+    ConfigurationShortcutEditorView *custom = [[ConfigurationShortcutEditorView alloc] initWithFrame:NSMakeRect(0, 0, 1000, 640)];
+    custom.document = doc;
+    [custom editBindingAtIndex:0];
+    [custom selectKind:MWMActionKindCustom];
+    custom.draftAction.a = @"move screenOriginX+screenSizeX/5;screenOriginY (4*screenSizeX/5)-14;screenSizeY";
+    [custom performSelector:NSSelectorFromString(@"refresh")];
+    [self checkView:custom size:NSMakeSize(1000, 640) name:@"shortcut-editor-advanced" dark:[dark boolValue]];
+  }
+}
+
 - (void)testTheShortcutListLooksTheSame {
   for (NSNumber *dark in @[@NO, @YES]) {
     MWMConfigDocument *doc = [MWMConfigDocument documentFromString:kConfig error:nil];
