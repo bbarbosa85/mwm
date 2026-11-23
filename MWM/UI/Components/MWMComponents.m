@@ -23,6 +23,7 @@
 @end
 
 @interface MWMAccentButton : NSButton
+@property (strong) NSColor *fill;   // the accent color unless set
 @end
 
 @implementation MWMAccentButton
@@ -45,7 +46,7 @@
 - (void)updateColors {
   [self.effectiveAppearance performAsCurrentDrawingAppearance:^{
     [[self layer] setCornerRadius:MWMRadiusS];
-    [[self layer] setBackgroundColor:[[[MWMTheme accent] colorWithAlphaComponent:self.isHighlighted ? 0.75 : 1] CGColor]];
+    [[self layer] setBackgroundColor:[[(self.fill ?: [MWMTheme accent]) colorWithAlphaComponent:self.isHighlighted ? 0.75 : 1] CGColor]];
   }];
 }
 - (void)setHighlighted:(BOOL)flag { [super setHighlighted:flag]; [self updateColors]; }
@@ -289,6 +290,12 @@
 + (NSButton *)primaryButtonWithTitle:(NSString *)title target:(id)target action:(SEL)action {
   NSButton *button = [self secondaryButtonWithTitle:title target:target action:action];
   [button setKeyEquivalent:@"\r"];
+  return button;
+}
+
++ (NSButton *)dangerButtonWithTitle:(NSString *)title target:(id)target action:(SEL)action {
+  NSButton *button = [self accentButtonWithTitle:title symbol:nil target:target action:action];
+  [(MWMAccentButton *)button setFill:[MWMTheme danger]];
   return button;
 }
 

@@ -16,7 +16,7 @@
 //  along with this program.  If not, see http://www.gnu.org/licenses
 
 #import "ConfigurationFormView.h"
-#import "NSAlert+MWM.h"
+#import "MWMAlert.h"
 #import "MWMTheme.h"
 #import "MWMComponents.h"
 #import "MWMConfigDocument.h"
@@ -1018,8 +1018,9 @@ static NSString *DisplayValue(id value) {
   [fields setFrameSize:NSMakeSize(300, 100)];
   [keyField setFrameSize:NSMakeSize(300, 22)];
   [modifiersField setFrameSize:NSMakeSize(300, 22)];
-  NSAlert *alert = [NSAlert mwm_alert];
+  MWMAlert *alert = [MWMAlert alert];
   [alert setMessageText:@"Edit shortcut as text"];
+  [alert setInformativeText:@"The key and modifiers, written as they are in the configuration file."];
   [alert addButtonWithTitle:@"Save"];
   [alert addButtonWithTitle:@"Cancel"];
   [alert setAccessoryView:fields];

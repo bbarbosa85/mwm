@@ -21,13 +21,14 @@
 //  along with this program.  If not, see http://www.gnu.org/licenses
 
 #import <XCTest/XCTest.h>
+#import "MWMDisplays.h"
 #import <objc/runtime.h>
 #import "ConfigurationDisplaysView.h"
 #import "ConfigurationKeyboardMapView.h"
 #import "ConfigurationPresetsView.h"
 #import "ConfigurationSettingsView.h"
 #import "MWMAboutWindow.h"
-#import "NSAlert+MWM.h"
+#import "MWMAlert.h"
 #import "ConfigurationSnapshotsView.h"
 #import "MWMSnapshots.h"
 #import "Snapshot.h"
@@ -54,6 +55,15 @@ static NSString *const kConfig =
 @end
 
 @implementation TestSnapshots
+
+// The screens the pictures were drawn with, whatever is plugged in now.
+- (void)setUp {
+  [MWMDisplays setConnectedOverride:@[[MWMDisplay displayNamed:@"Built-in Retina Display" width:1512 height:982 builtIn:YES x:0 y:0]]];
+}
+
+- (void)tearDown {
+  [MWMDisplays setConnectedOverride:nil];
+}
 
 - (NSString *)snapshotDirectory {
   return [[[NSString stringWithUTF8String:__FILE__] stringByDeletingLastPathComponent] stringByAppendingPathComponent:@"Snapshots"];
@@ -309,21 +319,27 @@ static NSString *const kConfig =
     NSView *about = [MWMAboutWindow contentView];
     [self checkView:about size:about.frame.size name:@"about" dark:d];
 
-    NSAlert *alert = [NSAlert mwm_alert];
-    [alert setMessageText:@"Your configuration was updated"];
-    [alert setInformativeText:@"~/.mwm.yml now uses the new format: one entry per monitor and slot, and actions written out as fields. Nothing changes in how your shortcuts work. The old file is kept as ~/.mwm.yml.v1-20261118-125904."];
-    [alert addButtonWithTitle:@"OK"];
-    [alert layout];
-    NSWindow *alertWindow = [alert window];
-    [alertWindow setAppearance:[NSAppearance appearanceNamed:d ? NSAppearanceNameDarkAqua : NSAppearanceNameAqua]];
-    NSView *alertContent = [alertWindow contentView];
-    [alertContent layoutSubtreeIfNeeded];
     NSString *screens = [[NSProcessInfo processInfo] environment][@"MWM_SCREENS_DIR"];
-    [[alertWindow effectiveAppearance] performAsCurrentDrawingAppearance:^{
-      NSBitmapImageRep *rep = [alertContent bitmapImageRepForCachingDisplayInRect:[alertContent bounds]];
-      [alertContent cacheDisplayInRect:[alertContent bounds] toBitmapImageRep:rep];
-      [[rep representationUsingType:NSBitmapImageFileTypePNG properties:@{}] writeToFile:[screens stringByAppendingPathComponent:[NSString stringWithFormat:@"alert-%@.png", d ? @"dark" : @"light"]] atomically:YES];
-    }];
+    NSArray *kinds = @[@[@"confirm", @(MWMAlertKindConfirm), @"Discard your changes?", @"This slot has changes that haven't been saved."],
+                       @[@"danger", @(MWMAlertKindDanger), @"Delete \"work\"?", @"The saved window arrangement is removed. A shortcut that restores it will do nothing."],
+                       @[@"warning", @(MWMAlertKindWarning), @"~/.mwm.yml has an error", @"Line 12: expected a mapping.\n\nMWM will use its default configuration. Choose Open configuration to see the problem."],
+                       @[@"success", @(MWMAlertKindSuccess), @"Your configuration was updated", @"~/.mwm.yml now uses the new format. Nothing changes in how your shortcuts work."],
+                       @[@"update", @(MWMAlertKindInfo), @"MWM 1.2 is available", @"You have version 1.1. MWM can download the new one and restart itself with it."]];
+    for (NSArray *spec in kinds) {
+      MWMAlert *alert = [MWMAlert alert];
+      [alert setShowsAppIcon:[spec[0] isEqualToString:@"update"]];
+      [alert setKind:(MWMAlertKind)[spec[1] integerValue]];
+      [alert setMessageText:spec[2]];
+      [alert setInformativeText:spec[3]];
+      if ([spec[0] isEqualToString:@"danger"]) { [alert addButtonWithTitle:@"Cancel"]; [alert addDestructiveButtonWithTitle:@"Delete"]; }
+      else if ([spec[0] isEqualToString:@"confirm"]) { [alert addButtonWithTitle:@"Keep editing"]; [alert addDestructiveButtonWithTitle:@"Discard"]; }
+      else if ([spec[0] isEqualToString:@"update"]) { [alert addButtonWithTitle:@"Update now"]; [alert addButtonWithTitle:@"What's new"]; [alert addButtonWithTitle:@"Not now"]; }
+      else [alert addButtonWithTitle:@"OK"];
+      NSWindow *alertWindow = [alert window];
+      [alertWindow setAppearance:[NSAppearance appearanceNamed:d ? NSAppearanceNameDarkAqua : NSAppearanceNameAqua]];
+      [self checkView:[alertWindow contentView] size:[[alertWindow contentView] frame].size name:[NSString stringWithFormat:@"alert-%@", spec[0]] dark:d];
+    }
+    (void)screens;
 
     ConfigurationShortcutEditorView *newShortcut = [[ConfigurationShortcutEditorView alloc] initWithFrame:NSMakeRect(0, 0, 1000, 640)];
     newShortcut.document = doc;

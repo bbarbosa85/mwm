@@ -16,7 +16,7 @@
 //  along with this program.  If not, see http://www.gnu.org/licenses
 
 #import "MWMLegacyMigration.h"
-#import "NSAlert+MWM.h"
+#import "MWMAlert.h"
 #import <Cocoa/Cocoa.h>
 #import <JavaScriptCore/JavaScriptCore.h>
 #import "MWMConfigDocument.h"
@@ -464,7 +464,8 @@ static id NilIfNull(id value) {
 #pragma mark - Startup
 
 + (void)showMigrationResult:(NSArray<NSString *> *)backups warnings:(NSArray<NSString *> *)warnings {
-  NSAlert *alert = [NSAlert mwm_alert];
+  MWMAlert *alert = [MWMAlert alert];
+  [alert setKind:MWMAlertKindSuccess];
   [alert setMessageText:@"MWM now uses ~/.mwm.yml"];
   NSMutableArray *names = [NSMutableArray array];
   for (NSString *backup in backups) [names addObject:[backup stringByAbbreviatingWithTildeInPath]];
@@ -473,7 +474,7 @@ static id NilIfNull(id value) {
     @"The old file%@ %@ saved as:\n%@", [backups count] == 1 ? @"" : @"s", [backups count] == 1 ? @"is" : @"are",
     [names componentsJoinedByString:@"\n"]];
   if ([warnings count] > 0) {
-    [alert setAlertStyle:NSAlertStyleWarning];
+    [alert setKind:MWMAlertKindWarning];
     [info appendString:@"\n\nWorth checking:\n"];
     NSUInteger shown = MIN([warnings count], (NSUInteger)8);
     for (NSUInteger i = 0; i < shown; i++) [info appendFormat:@"\n• %@", warnings[i]];
@@ -485,8 +486,8 @@ static id NilIfNull(id value) {
 }
 
 + (void)showAlert:(NSString *)message detail:(NSString *)detail {
-  NSAlert *alert = [NSAlert mwm_alert];
-  [alert setAlertStyle:NSAlertStyleWarning];
+  MWMAlert *alert = [MWMAlert alert];
+  [alert setKind:MWMAlertKindWarning];
   [alert setMessageText:message];
   [alert setInformativeText:detail];
   [alert addButtonWithTitle:@"OK"];
@@ -513,7 +514,8 @@ static id NilIfNull(id value) {
   if ([MWMConfigFormat migrateFileAtPath:path backupPath:&backup error:&error]) {
     NSString *shown = [backup stringByReplacingOccurrencesOfString:NSHomeDirectory() withString:@"~"];
     MWMLogger(@"Updated %@ to the current format; the old file is %@", path, shown);
-    NSAlert *alert = [NSAlert mwm_alert];
+    MWMAlert *alert = [MWMAlert alert];
+    [alert setKind:MWMAlertKindSuccess];
     [alert setMessageText:@"Your configuration was updated"];
     [alert setInformativeText:[NSString stringWithFormat:
       @"~/.mwm.yml now uses the new format: one entry per monitor and slot, and actions written out as fields. "
@@ -554,7 +556,8 @@ static id NilIfNull(id value) {
   NSString *names = [oldNames componentsJoinedByString:@", "];
 
   if ([fm fileExistsAtPath:ymlPath]) {
-    NSAlert *alert = [NSAlert mwm_alert];
+    MWMAlert *alert = [MWMAlert alert];
+    [alert setKind:MWMAlertKindConfirm];
     [alert setMessageText:[NSString stringWithFormat:@"Merge %@ into ~/.mwm.yml?", names]];
     [alert setInformativeText:[NSString stringWithFormat:
       @"MWM keeps its configuration in ~/.mwm.yml. You also have %@, so MWM can merge %@ in; ~/.mwm.yml wins "

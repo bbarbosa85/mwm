@@ -49,7 +49,6 @@
 @property (copy, nullable) NSString *loadedConfigText;
 
 + (MWMConfig *)getInstance;
-+ (NSAlert *)warningAlertWithKeyEquivalents:(NSArray *)titles;
 - (BOOL)load;
 - (BOOL)loadConfigFileWithPath:(NSString *)file;
 - (BOOL)addLayout:(NSString *)name dict:(NSDictionary *)dict;

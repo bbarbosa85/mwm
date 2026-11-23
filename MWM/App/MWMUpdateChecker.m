@@ -18,7 +18,8 @@
 #import "MWMUpdateChecker.h"
 #import "MWMConfig.h"
 #import "Constants.h"
-#import "NSAlert+MWM.h"
+#import "MWMAlert.h"
+#import "MWMUpdateInstaller.h"
 
 NSString *const MWMUpdateKindNewer = @"newer";
 NSString *const MWMUpdateKindCurrent = @"current";
@@ -41,6 +42,10 @@ static NSArray<NSNumber *> *VersionParts(NSString *text) {
   }
   return [parts count] > 0 ? parts : nil;
 }
+
+@interface MWMUpdateChecker ()
+@property (strong) MWMUpdateInstaller *installer;   // the update in progress
+@end
 
 @implementation MWMUpdateChecker
 
@@ -135,31 +140,115 @@ static NSArray<NSNumber *> *VersionParts(NSString *text) {
   [self showAlertFor:result];
 }
 
+#pragma mark - Updating
+
+- (void)openDownloadPage {
+  [[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:kDownloadPage]];
+}
+
+// Downloads the new version with a progress window, then asks before restarting into it. If MWM can't replace
+// itself where it is, or something goes wrong, the download page is the way out.
+- (void)installUpdate:(NSDictionary *)result {
+  MWMUpdateInstaller *installer = [[MWMUpdateInstaller alloc] initWithVersion:result[@"version"]];
+  if (![MWMUpdateInstaller canReplaceAppAtPath:installer.appPath]) {
+    MWMAlert *alert = [MWMAlert alert];
+    [alert setShowsAppIcon:YES];
+    [alert setKind:MWMAlertKindInfo];
+    [alert setMessageText:@"MWM can't update itself here"];
+    [alert setInformativeText:@"It isn't in a folder you can change. Download the new version and drag it over the old one in Applications."];
+    [alert addButtonWithTitle:@"Open download page"];
+    [alert addButtonWithTitle:@"Cancel"];
+    if ([alert runModal] == NSAlertFirstButtonReturn) [self openDownloadPage];
+    return;
+  }
+  self.installer = installer;
+  NSProgressIndicator *bar = [[NSProgressIndicator alloc] initWithFrame:NSMakeRect(0, 0, 100, 12)];
+  [bar setStyle:NSProgressIndicatorStyleBar];
+  [bar setIndeterminate:NO];
+  [bar setMinValue:0];
+  [bar setMaxValue:1];
+  MWMAlert *progress = [MWMAlert alert];
+  [progress setShowsAppIcon:YES];
+  [progress setKind:MWMAlertKindInfo];
+  [progress setMessageText:[NSString stringWithFormat:@"Downloading MWM %@", result[@"version"]]];
+  [progress setInformativeText:@"This takes a moment. MWM keeps working meanwhile."];
+  [progress setAccessoryView:bar];
+  [progress addButtonWithTitle:@"Cancel"];
+  __weak MWMUpdateChecker *weakSelf = self;
+  [progress setButtonHandler:^(NSModalResponse response) {
+    [installer cancel];
+    [progress dismiss];
+    weakSelf.installer = nil;
+  }];
+  [progress show];
+  [installer prepareWithProgress:^(double fraction) { [bar setDoubleValue:fraction]; } completion:^(NSError *error) {
+    [progress dismiss];
+    if (error != nil) {
+      MWMAlert *failed = [MWMAlert alert];
+      [failed setShowsAppIcon:YES];
+      [failed setKind:MWMAlertKindWarning];
+      [failed setMessageText:@"Couldn't update MWM"];
+      [failed setInformativeText:[NSString stringWithFormat:@"%@\n\nYou can download the new version yourself.", error.localizedDescription]];
+      [failed addButtonWithTitle:@"Open download page"];
+      [failed addButtonWithTitle:@"Cancel"];
+      if ([failed runModal] == NSAlertFirstButtonReturn) [weakSelf openDownloadPage];
+      [installer discard];
+      weakSelf.installer = nil;
+      return;
+    }
+    MWMAlert *ready = [MWMAlert alert];
+    [ready setShowsAppIcon:YES];
+    [ready setKind:MWMAlertKindSuccess];
+    [ready setMessageText:[NSString stringWithFormat:@"MWM %@ is ready", result[@"version"]]];
+    [ready setInformativeText:@"MWM restarts to finish the update. Your shortcuts stop working for a few seconds."];
+    [ready addButtonWithTitle:@"Restart and update"];
+    [ready addButtonWithTitle:@"Not now"];
+    if ([ready runModal] != NSAlertFirstButtonReturn) {
+      [installer discard];
+      weakSelf.installer = nil;
+      return;
+    }
+    NSError *installError = nil;
+    if ([installer installAfterQuit:&installError]) {
+      [NSApp terminate:nil];
+    } else {
+      MWMAlert *stuck = [MWMAlert alert];
+      [stuck setShowsAppIcon:YES];
+      [stuck setKind:MWMAlertKindWarning];
+      [stuck setMessageText:@"Couldn't update MWM"];
+      [stuck setInformativeText:installError.localizedDescription ?: @"The update didn't start."];
+      [stuck addButtonWithTitle:@"OK"];
+      [stuck runModal];
+    }
+  }];
+}
+
 - (void)showAlertFor:(NSDictionary *)result {
-  NSAlert *alert = [NSAlert mwm_alert];
+  MWMAlert *alert = [MWMAlert alert];
+  [alert setShowsAppIcon:YES];
   NSString *kind = result[@"kind"];
   if ([kind isEqualToString:MWMUpdateKindNewer]) {
+    [alert setKind:MWMAlertKindInfo];
     [alert setMessageText:[NSString stringWithFormat:@"MWM %@ is available", result[@"version"]]];
-    [alert setInformativeText:[NSString stringWithFormat:@"You have version %@. Download the new one, open it and drag MWM over the old one in Applications.", self.currentVersion]];
-    [alert addButtonWithTitle:@"Download"];
-    [alert addButtonWithTitle:@"What's New"];
-    [alert addButtonWithTitle:@"Not Now"];
-    [alert mwm_widen];
+    [alert setInformativeText:[NSString stringWithFormat:@"You have version %@. MWM can download the new one and restart itself with it.", self.currentVersion]];
+    [alert addButtonWithTitle:@"Update now"];
+    [alert addButtonWithTitle:@"What's new"];
+    [alert addButtonWithTitle:@"Not now"];
     NSModalResponse response = [alert runModal];
-    if (response == NSAlertFirstButtonReturn) [[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:kDownloadPage]];
+    if (response == NSAlertFirstButtonReturn) [self installUpdate:result];
     else if (response == NSAlertSecondButtonReturn && [result[@"notesURL"] length] > 0) [[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:result[@"notesURL"]]];
     return;
   }
   if ([kind isEqualToString:MWMUpdateKindCurrent]) {
+    [alert setKind:MWMAlertKindSuccess];
     [alert setMessageText:@"MWM is up to date"];
     [alert setInformativeText:[NSString stringWithFormat:@"You have the latest version (%@).", self.currentVersion]];
   } else {
     [alert setMessageText:@"Couldn't check for updates"];
     [alert setInformativeText:[NSString stringWithFormat:@"%@\n\nCheck your internet connection and try again.", result[@"message"] ?: @""]];
-    [alert setAlertStyle:NSAlertStyleWarning];
+    [alert setKind:MWMAlertKindWarning];
   }
   [alert addButtonWithTitle:@"OK"];
-  [alert mwm_widen];
   [alert runModal];
 }
 

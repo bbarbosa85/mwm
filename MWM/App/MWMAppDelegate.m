@@ -20,7 +20,7 @@
 
 #import <ServiceManagement/ServiceManagement.h>
 #import "Constants.h"
-#import "NSAlert+MWM.h"
+#import "MWMAlert.h"
 #import "MWMAppDelegate.h"
 #import "MWMDesignGallery.h"
 #import "MWMAboutWindow.h"
@@ -597,12 +597,12 @@ OSStatus OnModifiersChangedEvent(EventHandlerCallRef nextHandler, EventRef theEv
   BOOL isTrusted = AXIsProcessTrustedWithOptions((__bridge CFDictionaryRef)options);
   if (!isTrusted) {
     MWMLogger(@"Accessibility permission not yet granted; system authorization prompt requested.");
-    NSAlert *alert = [NSAlert mwm_alert];
-    [alert setMessageText:@"Accessibility Permission Required"];
-    [alert setInformativeText:@"MWM requires Accessibility permissions to manage windows.\n\nIf MWM is already enabled in System Settings, macOS requires you to remove it (using the '-' button) and re-add it because the application binary has been updated."];
-    [alert setAlertStyle:NSAlertStyleWarning];
+    MWMAlert *alert = [MWMAlert alert];
+    [alert setMessageText:@"MWM needs Accessibility permission"];
+    [alert setInformativeText:@"MWM moves and resizes windows through macOS Accessibility. Turn it on for MWM in System Settings.\n\nIf MWM is already listed after an update, remove it with the − button and add it again."];
+    [alert setKind:MWMAlertKindWarning];
     [alert addButtonWithTitle:@"Open System Settings"];
-    [alert addButtonWithTitle:@"Continue Anyway"];
+    [alert addButtonWithTitle:@"Continue anyway"];
     if ([alert runModal] == NSAlertFirstButtonReturn) {
       [[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:@"x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility"]];
     }

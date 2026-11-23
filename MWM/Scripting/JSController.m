@@ -9,6 +9,7 @@
 #import "Binding.h"
 #import "MWMLogger.h"
 #import "MWMConfig.h"
+#import "MWMAlert.h"
 #import "JSInfoWrapper.h"
 #import "JSScreenWrapper.h"
 #import "Constants.h"
@@ -117,10 +118,7 @@ static JSController *_instance = nil;
     [self runFile:[[NSBundle mainBundle] pathForResource:@"initialize" ofType:@"js"]];
   } @catch (NSException *ex) {
     MWMLogger(@"   ERROR %@",[ex name]);
-    NSAlert *alert = [MWMConfig warningAlertWithKeyEquivalents: [NSArray arrayWithObjects:@"Quit", @"Skip", nil]];
-    [alert setMessageText:[ex name]];
-    [alert setInformativeText:[ex reason]];
-    if ([alert runModal] == NSAlertFirstButtonReturn) {
+    if ([MWMAlert quitOrSkipAfterProblem:[ex name] reason:[ex reason] context:nil]) {
       MWMLogger(@"User selected exit");
       [NSApp terminate:nil];
     }
@@ -134,10 +132,7 @@ static JSController *_instance = nil;
     return [self runFile:[path stringByExpandingTildeInPath]];
   } @catch (NSException *ex) {
     MWMLogger(@"   ERROR %@",[ex name]);
-    NSAlert *alert = [MWMConfig warningAlertWithKeyEquivalents: [NSArray arrayWithObjects:@"Quit", @"Skip", nil]];
-    [alert setMessageText:[ex name]];
-    [alert setInformativeText:[ex reason]];
-    if ([alert runModal] == NSAlertFirstButtonReturn) {
+    if ([MWMAlert quitOrSkipAfterProblem:[ex name] reason:[ex reason] context:nil]) {
       MWMLogger(@"User selected exit");
       [NSApp terminate:nil];
     }
@@ -167,10 +162,7 @@ static JSController *_instance = nil;
     [[MWMConfig getInstance] addBinding:bind];
   } @catch (NSException *ex) {
     MWMLogger(@"   ERROR %@",[ex name]);
-    NSAlert *alert = [MWMConfig warningAlertWithKeyEquivalents: [NSArray arrayWithObjects:@"Quit", @"Skip", nil]];
-    [alert setMessageText:[ex name]];
-    [alert setInformativeText:[ex reason]];
-    if ([alert runModal] == NSAlertFirstButtonReturn) {
+    if ([MWMAlert quitOrSkipAfterProblem:[ex name] reason:[ex reason] context:nil]) {
       MWMLogger(@"User selected exit");
       [NSApp terminate:nil];
     }
@@ -190,10 +182,7 @@ static JSController *_instance = nil;
     [[MWMConfig getInstance] addBinding:bind];
   } @catch (NSException *ex) {
     MWMLogger(@"   ERROR %@",[ex name]);
-    NSAlert *alert = [MWMConfig warningAlertWithKeyEquivalents: [NSArray arrayWithObjects:@"Quit", @"Skip", nil]];
-    [alert setMessageText:[ex name]];
-    [alert setInformativeText:[ex reason]];
-    if ([alert runModal] == NSAlertFirstButtonReturn) {
+    if ([MWMAlert quitOrSkipAfterProblem:[ex name] reason:[ex reason] context:nil]) {
       MWMLogger(@"User selected exit");
       [NSApp terminate:nil];
     }
@@ -272,10 +261,7 @@ static JSController *_instance = nil;
     return [JSOperationWrapper operation:name options:opts];
   } @catch (NSException *ex) {
     MWMLogger(@"   ERROR %@",[ex name]);
-    NSAlert *alert = [MWMConfig warningAlertWithKeyEquivalents: [NSArray arrayWithObjects:@"Quit", @"Skip", nil]];
-    [alert setMessageText:[ex name]];
-    [alert setInformativeText:[ex reason]];
-    if ([alert runModal] == NSAlertFirstButtonReturn) {
+    if ([MWMAlert quitOrSkipAfterProblem:[ex name] reason:[ex reason] context:nil]) {
       MWMLogger(@"User selected exit");
       [NSApp terminate:nil];
     }
@@ -291,10 +277,7 @@ static JSController *_instance = nil;
     }
   } @catch (NSException *ex) {
     MWMLogger(@"   ERROR %@",[ex name]);
-    NSAlert *alert = [MWMConfig warningAlertWithKeyEquivalents: [NSArray arrayWithObjects:@"Quit", @"Skip", nil]];
-    [alert setMessageText:[ex name]];
-    [alert setInformativeText:[ex reason]];
-    if ([alert runModal] == NSAlertFirstButtonReturn) {
+    if ([MWMAlert quitOrSkipAfterProblem:[ex name] reason:[ex reason] context:nil]) {
       MWMLogger(@"User selected exit");
       [NSApp terminate:nil];
     }
@@ -325,10 +308,7 @@ static JSController *_instance = nil;
 - (void)on:(NSString *)what do:(JSValue *)callback {
   if (![self isValidEvent:what]) {
     MWMLogger(@"   ERROR: Invalid Event %@",what);
-    NSAlert *alert = [MWMConfig warningAlertWithKeyEquivalents: [NSArray arrayWithObjects:@"Quit", @"Skip", nil]];
-    [alert setMessageText:@"ERROR: Invalid Event"];
-    [alert setInformativeText:what];
-    if ([alert runModal] == NSAlertFirstButtonReturn) {
+    if ([MWMAlert quitOrSkipAfterProblem:@"ERROR: Invalid Event" reason:what context:nil]) {
       MWMLogger(@"User selected exit");
       [NSApp terminate:nil];
     }

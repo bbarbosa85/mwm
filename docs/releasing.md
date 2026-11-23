@@ -34,6 +34,16 @@
 5. Turn on GitHub Pages for the repository (Settings → Pages → Deploy from a branch → `master`,
    folder `/docs`). The page is then at `https://bbarbosa85.github.io/mwm/`.
 
+## How the app updates itself
+
+"Update now" in the update alert downloads `MWM-<version>.zip` and `SHA256SUMS.txt` from
+`docs/downloads/` on `master` (`github.com/bbarbosa85/mwm/raw/master/docs/downloads/`), so a release
+must have both there before its GitHub release is published. The app checks the zip against the
+checksum, checks that it is MWM at that version, and that it was signed by the same certificate as the
+running app (so Accessibility permission carries over). Then it quits, a small shell script swaps the
+app in place and opens the new one; if the swap fails the old app is put back. When MWM is somewhere
+the user can't write to, the alert opens the download page instead.
+
 ## Notes
 
 - The app is signed but **not notarized**, so macOS asks people to confirm the first launch. The

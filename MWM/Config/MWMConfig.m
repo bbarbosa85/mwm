@@ -19,13 +19,13 @@
 //  along with this program.  If not, see http://www.gnu.org/licenses
 
 #import "Binding.h"
-#import "NSAlert+MWM.h"
 #import "Constants.h"
 #import "Layout.h"
 #import "LayoutOperation.h"
 #import "ScreenState.h"
 #import "ScreenWrapper.h"
 #import "MWMConfig.h"
+#import "MWMAlert.h"
 #import "MWMConfigDocument.h"
 #import "MWMDisplays.h"
 #import "MWMLegacyMigration.h"
@@ -128,15 +128,6 @@ static MWMConfig *_instance = nil;
   return config;
 }
 
-+ (NSAlert *)warningAlertWithKeyEquivalents:(NSArray *)titles {
-  NSAlert *alert = [NSAlert mwm_alert];
-  [alert setAlertStyle:NSAlertStyleWarning];
-  for (NSString *title in titles) {
-    [[alert addButtonWithTitle:title] setKeyEquivalent:[[title substringToIndex: 1] lowercaseString]];
-  }
-  return alert;
-}
-
 - (BOOL)load {
   MWMLogger(@"Loading config...");
 
@@ -165,12 +156,16 @@ static MWMConfig *_instance = nil;
   if (yamlError != nil || (!loadedYAML && !loadedDefault)) {
     NSString *message = yamlError ? @"~/.mwm.yml has an error" : @"Could not load ~/.mwm.yml";
     MWMLogger(@"  ERROR %@: %@", message, [yamlError localizedDescription]);
-    NSAlert *alert = [MWMConfig warningAlertWithKeyEquivalents: [NSArray arrayWithObjects:@"Continue", @"Quit", @"Open configuration", nil]];
-    [alert setMessageText:message];
-    [alert setInformativeText:[NSString stringWithFormat:@"%@MWM will use %@. Choose Open configuration to %@.",
-                               yamlError ? [NSString stringWithFormat:@"%@\n\n", [yamlError localizedDescription]] : @"",
-                               loadedDefault ? @"only ~/.slate" : @"its default configuration",
-                               yamlError ? @"see the problem" : @"create ~/.mwm.yml from the defaults and edit it"]];
+    MWMAlert *alert = [MWMAlert alert];
+    alert.kind = MWMAlertKindWarning;
+    alert.messageText = message;
+    alert.informativeText = [NSString stringWithFormat:@"%@MWM will use %@. Choose Open configuration to %@.",
+                             yamlError ? [NSString stringWithFormat:@"%@\n\n", [yamlError localizedDescription]] : @"",
+                             loadedDefault ? @"only ~/.slate" : @"its default configuration",
+                             yamlError ? @"see the problem" : @"create ~/.mwm.yml from the defaults and edit it"];
+    [[alert addButtonWithTitle:@"Continue"] setKeyEquivalent:@"\r"];
+    [[alert addButtonWithTitle:@"Quit"] setKeyEquivalent:@"q"];
+    [[alert addButtonWithTitle:@"Open configuration"] setKeyEquivalent:@"o"];
     NSModalResponse response = [alert runModal];
     if (response == NSAlertSecondButtonReturn) {
       MWMLogger(@"User selected exit");
@@ -184,9 +179,12 @@ static MWMConfig *_instance = nil;
 
   if (![self loadSnapshots]) {
     MWMLogger(@"  ERROR Could not load %@", SNAPSHOTS_FILE);
-    NSAlert *alert = [MWMConfig warningAlertWithKeyEquivalents: [NSArray arrayWithObjects:@"Quit", @"Skip", nil]];
-    [alert setMessageText:[NSString stringWithFormat:@"ERROR Could not load %@", SNAPSHOTS_FILE]];
-    [alert setInformativeText:[NSString stringWithFormat:@"I dunno. Figure it out. Maybe try deleting %@", SNAPSHOTS_FILE]];
+    MWMAlert *alert = [MWMAlert alert];
+    alert.kind = MWMAlertKindWarning;
+    alert.messageText = @"Couldn't load your snapshots";
+    alert.informativeText = [NSString stringWithFormat:@"MWM can carry on without them, or quit so you can fix the file. Deleting %@ starts fresh.", SNAPSHOTS_FILE];
+    [[alert addButtonWithTitle:@"Quit"] setKeyEquivalent:@"q"];
+    [[alert addButtonWithTitle:@"Skip"] setKeyEquivalent:@"s"];
     if ([alert runModal] == NSAlertFirstButtonReturn) {
       MWMLogger(@"User selected exit");
       [NSApp terminate:nil];
@@ -255,10 +253,7 @@ static NSDictionary<NSString *, NSString *> *RoleReferencesForDocument(MWMConfig
       [self addBinding:bind];
     } @catch (NSException *ex) {
       MWMLogger(@"   ERROR %@",[ex name]);
-      NSAlert *alert = [MWMConfig warningAlertWithKeyEquivalents: [NSArray arrayWithObjects:@"Quit", @"Skip", nil]];
-      [alert setMessageText:[ex name]];
-      [alert setInformativeText:[NSString stringWithFormat:@"~/.mwm.yml, binding #%lu: %@", (unsigned long)binding.index + 1, [ex reason]]];
-      if ([alert runModal] == NSAlertFirstButtonReturn) {
+      if ([MWMAlert quitOrSkipAfterProblem:[ex name] reason:[ex reason] context:[NSString stringWithFormat:@"~/.mwm.yml, binding #%lu", (unsigned long)binding.index + 1]]) {
         MWMLogger(@"User selected exit");
         [NSApp terminate:nil];
       }
@@ -310,10 +305,7 @@ static NSDictionary<NSString *, NSString *> *RoleReferencesForDocument(MWMConfig
       line = [self replaceAliases:line];
     } @catch (NSException *ex) {
       MWMLogger(@"   ERROR %@",[ex name]);
-      NSAlert *alert = [MWMConfig warningAlertWithKeyEquivalents: [NSArray arrayWithObjects:@"Quit", @"Skip", nil]];
-      [alert setMessageText:[ex name]];
-      [alert setInformativeText:[ex reason]];
-      if ([alert runModal] == NSAlertFirstButtonReturn) {
+      if ([MWMAlert quitOrSkipAfterProblem:[ex name] reason:[ex reason] context:nil]) {
         MWMLogger(@"User selected exit");
         [NSApp terminate:nil];
       }
@@ -327,10 +319,7 @@ static NSDictionary<NSString *, NSString *> *RoleReferencesForDocument(MWMConfig
       NSString *key = [splitKey count] > 1 ? [splitKey objectAtIndex:0] : [tokens objectAtIndex:1];
       if ([configs objectForKey:key] == nil) {
         MWMLogger(@"   ERROR Unrecognized config '%@'",[tokens objectAtIndex:1]);
-        NSAlert *alert = [MWMConfig warningAlertWithKeyEquivalents: [NSArray arrayWithObjects:@"Quit", @"Skip", nil]];
-        [alert setMessageText:[NSString stringWithFormat:@"Unrecognized Config '%@'",[tokens objectAtIndex:1]]];
-        [alert setInformativeText:line];
-        if ([alert runModal] == NSAlertFirstButtonReturn) {
+        if ([MWMAlert quitOrSkipAfterProblem:@"Unrecognized Config" reason:[NSString stringWithFormat:@"“%@” isn't a setting MWM knows.", [tokens objectAtIndex:1]] context:line]) {
           MWMLogger(@"User selected exit");
           [NSApp terminate:nil];
         }
@@ -354,10 +343,7 @@ static NSDictionary<NSString *, NSString *> *RoleReferencesForDocument(MWMConfig
         [self addBinding:bind];
       } @catch (NSException *ex) {
         MWMLogger(@"   ERROR %@",[ex name]);
-        NSAlert *alert = [MWMConfig warningAlertWithKeyEquivalents: [NSArray arrayWithObjects:@"Quit", @"Skip", nil]];
-        [alert setMessageText:[ex name]];
-        [alert setInformativeText:[ex reason]];
-        if ([alert runModal] == NSAlertFirstButtonReturn) {
+        if ([MWMAlert quitOrSkipAfterProblem:[ex name] reason:[ex reason] context:nil]) {
           MWMLogger(@"User selected exit");
           [NSApp terminate:nil];
         }
@@ -376,10 +362,7 @@ static NSDictionary<NSString *, NSString *> *RoleReferencesForDocument(MWMConfig
         }
       } @catch (NSException *ex) {
         MWMLogger(@"   ERROR %@",[ex name]);
-        NSAlert *alert = [MWMConfig warningAlertWithKeyEquivalents: [NSArray arrayWithObjects:@"Quit", @"Skip", nil]];
-        [alert setMessageText:[ex name]];
-        [alert setInformativeText:[ex reason]];
-        if ([alert runModal] == NSAlertFirstButtonReturn) {
+        if ([MWMAlert quitOrSkipAfterProblem:[ex name] reason:[ex reason] context:nil]) {
           MWMLogger(@"User selected exit");
           [NSApp terminate:nil];
         }
@@ -390,10 +373,7 @@ static NSDictionary<NSString *, NSString *> *RoleReferencesForDocument(MWMConfig
         ScreenState *state = [[ScreenState alloc] initWithString:line];
         if (state == nil) {
           MWMLogger(@"   ERROR Loading default layout");
-          NSAlert *alert = [MWMConfig warningAlertWithKeyEquivalents: [NSArray arrayWithObjects:@"Quit", @"Skip", nil]];
-          [alert setMessageText:@"Error loading default layout"];
-          [alert setInformativeText:line];
-          if ([alert runModal] == NSAlertFirstButtonReturn) {
+          if ([MWMAlert quitOrSkipAfterProblem:@"Error loading default layout" reason:@"A built-in layout couldn't be loaded." context:line]) {
             MWMLogger(@"User selected exit");
             [NSApp terminate:nil];
           }
@@ -403,10 +383,7 @@ static NSDictionary<NSString *, NSString *> *RoleReferencesForDocument(MWMConfig
         }
       } @catch (NSException *ex) {
         MWMLogger(@"   ERROR %@",[ex name]);
-        NSAlert *alert = [MWMConfig warningAlertWithKeyEquivalents: [NSArray arrayWithObjects:@"Quit", @"Skip", nil]];
-        [alert setMessageText:[ex name]];
-        [alert setInformativeText:[ex reason]];
-        if ([alert runModal] == NSAlertFirstButtonReturn) {
+        if ([MWMAlert quitOrSkipAfterProblem:[ex name] reason:[ex reason] context:nil]) {
           MWMLogger(@"User selected exit");
           [NSApp terminate:nil];
         }
@@ -418,10 +395,7 @@ static NSDictionary<NSString *, NSString *> *RoleReferencesForDocument(MWMConfig
         MWMLogger(@"  LoadingA: %@",line);
       } @catch (NSException *ex) {
         MWMLogger(@"   ERROR %@",[ex name]);
-        NSAlert *alert = [MWMConfig warningAlertWithKeyEquivalents: [NSArray arrayWithObjects:@"Quit", @"Skip", nil]];
-        [alert setMessageText:[ex name]];
-        [alert setInformativeText:[ex reason]];
-        if ([alert runModal] == NSAlertFirstButtonReturn) {
+        if ([MWMAlert quitOrSkipAfterProblem:[ex name] reason:[ex reason] context:nil]) {
           MWMLogger(@"User selected exit");
           [NSApp terminate:nil];
         }
@@ -434,10 +408,7 @@ static NSDictionary<NSString *, NSString *> *RoleReferencesForDocument(MWMConfig
           MWMLogger(@"   Could not find file '%@' but that's ok. User specified if_exists.",[tokens objectAtIndex:1]);
         } else {
           MWMLogger(@"   ERROR Sourcing file '%@'",[tokens objectAtIndex:1]);
-          NSAlert *alert = [MWMConfig warningAlertWithKeyEquivalents: [NSArray arrayWithObjects:@"Quit", @"Skip", nil]];
-          [alert setMessageText:[NSString stringWithFormat:@"ERROR Sourcing file '%@'",[tokens objectAtIndex:1]]];
-          [alert setInformativeText:@"I dunno. Figure it out."];
-          if ([alert runModal] == NSAlertFirstButtonReturn) {
+          if ([MWMAlert quitOrSkipAfterProblem:@"Could not read file" reason:[NSString stringWithFormat:@"MWM couldn't read “%@”.", [tokens objectAtIndex:1]] context:line]) {
             MWMLogger(@"User selected exit");
             [NSApp terminate:nil];
           }

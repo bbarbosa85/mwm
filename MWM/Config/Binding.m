@@ -21,6 +21,7 @@
 #import "Binding.h"
 #import "Constants.h"
 #import "MWMConfig.h"
+#import "MWMAlert.h"
 #import "StringTokenizer.h"
 #import "MWMLogger.h"
 #import "Operation.h"
@@ -196,10 +197,7 @@ static NSDictionary *dictionary = nil;
     return [op doOperation];
   } @catch (NSException *ex) {
     MWMLogger(@"   ERROR %@",[ex name]);
-    NSAlert *alert = [MWMConfig warningAlertWithKeyEquivalents: [NSArray arrayWithObjects:@"Quit", @"Skip", nil]];
-    [alert setMessageText:[ex name]];
-    [alert setInformativeText:[ex reason]];
-    if ([alert runModal] == NSAlertFirstButtonReturn) {
+    if ([MWMAlert quitOrSkipAfterProblem:[ex name] reason:[ex reason] context:nil]) {
       MWMLogger(@"User selected exit");
       [NSApp terminate:nil];
     }

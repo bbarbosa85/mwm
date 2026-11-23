@@ -16,6 +16,7 @@
 //  along with this program.  If not, see http://www.gnu.org/licenses
 
 #import <XCTest/XCTest.h>
+#import "MWMDisplays.h"
 #import "ConfigurationSlotsView.h"
 #import "ConfigurationSlotCanvas.h"
 #import "MWMConfigDocument.h"
@@ -27,6 +28,15 @@
 @end
 
 @implementation TestConfigurationSlots
+
+// The screens the pictures were drawn with, whatever is plugged in now.
+- (void)setUp {
+  [MWMDisplays setConnectedOverride:@[[MWMDisplay displayNamed:@"Built-in Retina Display" width:1512 height:982 builtIn:YES x:0 y:0]]];
+}
+
+- (void)tearDown {
+  [MWMDisplays setConnectedOverride:nil];
+}
 
 - (void)slotsViewDidChangeDocument:(ConfigurationSlotsView *)view { self.changes++; }
 

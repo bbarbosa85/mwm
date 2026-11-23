@@ -17,7 +17,7 @@
 #import "MWMStatusMenus.h"
 #import "ConfigurationFormView.h"
 #import "ConfigurationWindowController.h"
-#import "NSAlert+MWM.h"
+#import "MWMAlert.h"
 #import "MWMSnapshots.h"
 
 @interface MWMStatusMenus ()
@@ -93,7 +93,7 @@
 
 // A name and whether to keep it; a message when the name can't be used.
 - (void)savePressed:(id)sender {
-  NSAlert *alert = [NSAlert mwm_alert];
+  MWMAlert *alert = [MWMAlert alert];
   [alert setMessageText:@"Save current windows"];
   [alert setInformativeText:@"A snapshot remembers where every open window is, so you can put them all back later."];
   NSTextField *field = [NSTextField textFieldWithString:@""];
@@ -103,7 +103,6 @@
   [field setStringValue:suggested];
   [field setFrame:NSMakeRect(0, 0, 240, 24)];
   [alert setAccessoryView:field];
-  [alert mwm_widen];
   [alert addButtonWithTitle:@"Save"];
   [alert addButtonWithTitle:@"Cancel"];
   [NSApp activateIgnoringOtherApps:YES];
@@ -112,7 +111,8 @@
   NSString *name = [[field stringValue] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
   NSString *problem = [MWMSnapshots problemWithName:name except:nil];
   if (problem != nil) {
-    NSAlert *failed = [NSAlert mwm_alert];
+    MWMAlert *failed = [MWMAlert alert];
+    [failed setKind:MWMAlertKindWarning];
     [failed setMessageText:problem];
     [failed runModal];
     return;
@@ -126,11 +126,12 @@
 
 - (void)deleteChosen:(NSMenuItem *)item {
   NSString *name = item.representedObject;
-  NSAlert *alert = [NSAlert mwm_alert];
+  MWMAlert *alert = [MWMAlert alert];
+  [alert setKind:MWMAlertKindDanger];
   [alert setMessageText:[NSString stringWithFormat:@"Delete \"%@\"?", name]];
   [alert setInformativeText:@"The saved window arrangement is removed. A shortcut that restores it will do nothing."];
   [alert addButtonWithTitle:@"Cancel"];
-  [alert addButtonWithTitle:@"Delete"];
+  [alert addDestructiveButtonWithTitle:@"Delete"];
   [NSApp activateIgnoringOtherApps:YES];
   if ([alert runModal] == NSAlertFirstButtonReturn) return;
   [MWMSnapshots deleteName:name];

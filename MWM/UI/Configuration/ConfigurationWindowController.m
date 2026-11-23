@@ -16,7 +16,7 @@
 //  along with this program.  If not, see http://www.gnu.org/licenses
 
 #import "ConfigurationWindowController.h"
-#import "NSAlert+MWM.h"
+#import "MWMAlert.h"
 #import "MWMTheme.h"
 #import "ConfigurationFormView.h"
 #import "ConfigurationStatusBar.h"
@@ -292,8 +292,8 @@ typedef NS_ENUM(NSInteger, SaveState) {
 - (void)resolveConflict {
   if (self.resolvingConflict) return;
   self.resolvingConflict = YES;
-  NSAlert *alert = [NSAlert mwm_alert];
-  [alert setAlertStyle:NSAlertStyleWarning];
+  MWMAlert *alert = [MWMAlert alert];
+  [alert setKind:MWMAlertKindWarning];
   [alert setMessageText:[NSString stringWithFormat:@"%@ changed on disk", [self displayPath]]];
   [alert setInformativeText:@"Another app changed the file while it was open here. Keep the changes made here and replace the file, or load the version on disk."];
   [alert addButtonWithTitle:@"Load from disk"];
@@ -425,8 +425,8 @@ typedef NS_ENUM(NSInteger, SaveState) {
 #pragma mark - Apply and close
 
 - (void)showError:(NSString *)message detail:(NSString *)detail {
-  NSAlert *alert = [NSAlert mwm_alert];
-  [alert setAlertStyle:NSAlertStyleWarning];
+  MWMAlert *alert = [MWMAlert alert];
+  [alert setKind:MWMAlertKindWarning];
   [alert setMessageText:message];
   [alert setInformativeText:detail ?: @""];
   [alert beginSheetModalForWindow:[self window] completionHandler:nil];
@@ -443,8 +443,8 @@ typedef NS_ENUM(NSInteger, SaveState) {
   [self validateAndSave];
   if (self.lastResult.errorCount > 0) {
     MWMConfigIssue *first = self.lastResult.issues[0];
-    NSAlert *alert = [NSAlert mwm_alert];
-    [alert setAlertStyle:NSAlertStyleWarning];
+    MWMAlert *alert = [MWMAlert alert];
+    [alert setKind:MWMAlertKindWarning];
     [alert setMessageText:@"Fix the errors before applying"];
     [alert setInformativeText:[NSString stringWithFormat:@"%@\n\nChanges with errors aren't saved, so MWM would restart with the last valid version.",
                                [self messageFor:first]]];
