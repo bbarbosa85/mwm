@@ -33,6 +33,9 @@ static const CGFloat kKeysColumnWidth = 210;
 @property (strong) NSSearchField *search;
 @end
 
+// What a list leaves free at its right so a scroll bar, which is drawn over the content, covers nothing.
+static const CGFloat kScrollerRoom = 16;
+
 @implementation ConfigurationShortcutListView
 
 - (instancetype)initWithFrame:(NSRect)frame {
@@ -69,7 +72,7 @@ static const CGFloat kKeysColumnWidth = 210;
   [left setEdgeInsets:NSEdgeInsetsMake(10, 14, 12, 8)];
   [left setTranslatesAutoresizingMaskIntoConstraints:NO];
   for (NSView *view in @[self.search, filterScroll]) [[view.widthAnchor constraintEqualToAnchor:left.widthAnchor constant:-22] setActive:YES];
-  [[self.filterStack.widthAnchor constraintEqualToAnchor:filterScroll.widthAnchor] setActive:YES];
+  [[self.filterStack.widthAnchor constraintEqualToAnchor:filterScroll.widthAnchor constant:-kScrollerRoom] setActive:YES];
 
   self.countLabel = [NSTextField labelWithString:@""];
   [self.countLabel setFont:[MWMTheme fontSmall]];
@@ -92,7 +95,7 @@ static const CGFloat kKeysColumnWidth = 210;
   [right setEdgeInsets:NSEdgeInsetsMake(10, 16, 12, 20)];
   [right setTranslatesAutoresizingMaskIntoConstraints:NO];
   for (NSView *view in @[top, rowsScroll]) [[view.widthAnchor constraintEqualToAnchor:right.widthAnchor constant:-36] setActive:YES];
-  [[self.rowsStack.widthAnchor constraintEqualToAnchor:rowsScroll.widthAnchor] setActive:YES];
+  [[self.rowsStack.widthAnchor constraintEqualToAnchor:rowsScroll.widthAnchor constant:-kScrollerRoom] setActive:YES];   // the scroller is drawn over the right edge
 
   NSView *line = [MWMComponents separator];
   [self addSubview:left];
