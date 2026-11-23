@@ -16,6 +16,8 @@
 //  along with this program.  If not, see http://www.gnu.org/licenses
 
 #import "MWMAction.h"
+#import "MWMFormula.h"
+#import "PushOperation.h"
 
 static NSString *Trim(NSString *text) {
   return [text stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
@@ -203,6 +205,44 @@ static NSArray<NSString *> *Match(NSString *pattern, NSString *text) {
 @end
 
 @implementation MWMAction (Preview)
+
++ (BOOL)getWindowRect:(CGRect *)rect forActionText:(NSString *)source applies:(BOOL *)applies error:(NSString **)error {
+  NSString *text = Trim(source ?: @"");
+  NSString *moveText = nil;
+  if (error) *error = nil;
+  BOOL isMove = [text hasPrefix:@"move "], isPush = [text hasPrefix:@"push "];
+  if (applies) *applies = isMove || isPush;
+  if (isMove) {
+    moveText = text;
+  } else if (isPush) {
+    NSArray *tokens = [text componentsSeparatedByCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
+    tokens = [tokens filteredArrayUsingPredicate:[NSPredicate predicateWithFormat:@"length > 0"]];
+    NSString *direction = [tokens count] > 1 ? tokens[1] : @"";
+    if ([tokens count] > 4) {
+      if (error) *error = @"A push is push direction [style] [screen]. Leave out the spaces inside a thickness: write screenSizeX/3, not screenSizeX / 3.";
+      return NO;
+    }
+    if (![[self pushDirections] containsObject:direction]) {
+      if (error) *error = [NSString stringWithFormat:@"Push where? Use %@.", [[self pushDirections] componentsJoinedByString:@", "]];
+      return NO;
+    }
+    NSString *style = [tokens count] > 2 ? tokens[2] : @"none";
+    NSDictionary *geometry = [PushOperation geometryForDirection:direction style:style];
+    if (geometry == nil) {
+      if (error) *error = [NSString stringWithFormat:@"“%@” isn't a push style. Use none, center, bar or bar-resize:thickness.", style];
+      return NO;
+    }
+    moveText = [NSString stringWithFormat:@"move %@;%@ %@;%@", geometry[@"x"], geometry[@"y"], geometry[@"width"], geometry[@"height"]];
+  } else {
+    return NO;
+  }
+  CGSize screen = CGSizeMake(1600, 1000);
+  CGRect points = CGRectZero;
+  if (![MWMFormula getRect:&points fromMoveText:moveText screenSize:screen window:[MWMFormula sampleWindowForScreenSize:screen] error:error]) return NO;
+  if (rect) *rect = CGRectMake(points.origin.x / screen.width, points.origin.y / screen.height, points.size.width / screen.width, points.size.height / screen.height);
+  return YES;
+}
+
 
 + (BOOL)previewForPositionText:(NSString *)text rect:(CGRect *)rect {
   NSArray<NSString *> *g = Match(@"^move\\s+(\\S+)\\s+(\\S+)", Trim(text ?: @""));

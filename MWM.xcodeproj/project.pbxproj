@@ -164,6 +164,9 @@
 		B3D087D0160577FB008A7FC6 /* status.pdf in Resources */ = {isa = PBXBuildFile; fileRef = B3D087CF160577FB008A7FC6 /* status.pdf */; };
 		5E1A0C0B2D0000000000C001 /* ConfigurationSlotCard.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D0000000000B001 /* ConfigurationSlotCard.m */; };
 		5E1A0C0B2D0000000000C003 /* ConfigurationFormulaHelp.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D0000000000B003 /* ConfigurationFormulaHelp.m */; };
+		5E1A0C0B2D0000000000F001 /* MWMPushOptions.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D0000000000E001 /* MWMPushOptions.m */; };
+		5E1A0C0B2D0000000000F002 /* TestMWMPushOptions.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D0000000000E002 /* TestMWMPushOptions.m */; };
+		5E1A0C0B2D0000000000F004 /* ConfigurationPushRows.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D0000000000E004 /* ConfigurationPushRows.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -463,6 +466,11 @@
 		5E1A0C0B2D0000000000B001 /* ConfigurationSlotCard.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ConfigurationSlotCard.m; sourceTree = "<group>"; };
 		5E1A0C0B2D0000000000B002 /* ConfigurationFormulaHelp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ConfigurationFormulaHelp.h; sourceTree = "<group>"; };
 		5E1A0C0B2D0000000000B003 /* ConfigurationFormulaHelp.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ConfigurationFormulaHelp.m; sourceTree = "<group>"; };
+		5E1A0C0B2D0000000000E000 /* MWMPushOptions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MWMPushOptions.h; sourceTree = "<group>"; };
+		5E1A0C0B2D0000000000E001 /* MWMPushOptions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MWMPushOptions.m; sourceTree = "<group>"; };
+		5E1A0C0B2D0000000000E002 /* TestMWMPushOptions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TestMWMPushOptions.m; sourceTree = "<group>"; };
+		5E1A0C0B2D0000000000E003 /* ConfigurationPushRows.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ConfigurationPushRows.h; sourceTree = "<group>"; };
+		5E1A0C0B2D0000000000E004 /* ConfigurationPushRows.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ConfigurationPushRows.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -549,6 +557,7 @@
 				5E1A0C0B2D00000000000674 /* TestMWMSlots.m */,
 				5E1A0C0B2D00000000000940 /* TestMWMFormula.m */,
 				5E1A0C0B2D00000000000943 /* TestMWMSlotShape.m */,
+				5E1A0C0B2D0000000000E002 /* TestMWMPushOptions.m */,
 				5E1A0C0B2D00000000000688 /* TestConfigurationSlots.m */,
 				5E1A0C0B2D00000000000708 /* TestMWMShortcutIndex.m */,
 				5E1A0C0B2D00000000000770 /* TestSnapshots.m */,
@@ -876,7 +885,9 @@
 			isa = PBXGroup;
 			children = (
 				5E1A0C0B2D00000000000634 /* ConfigurationActionView.h */,
+				5E1A0C0B2D0000000000E003 /* ConfigurationPushRows.h */,
 				5E1A0C0B2D00000000000636 /* ConfigurationActionView.m */,
+				5E1A0C0B2D0000000000E004 /* ConfigurationPushRows.m */,
 				5E1A0C0B2D00000000000740 /* ConfigurationShortcutEditorView.h */,
 				5E1A0C0B2D00000000000741 /* ConfigurationShortcutEditorView.m */,
 				5E1A0C0B2D00000000000714 /* ConfigurationShortcutListView.h */,
@@ -990,7 +1001,9 @@
 			children = (
 				47C4A2CC1384F26A0066B6DE /* Binding.h */,
 				5E1A0C0B2D00000000000630 /* MWMAction.h */,
+				5E1A0C0B2D0000000000E000 /* MWMPushOptions.h */,
 				5E1A0C0B2D00000000000632 /* MWMAction.m */,
+				5E1A0C0B2D0000000000E001 /* MWMPushOptions.m */,
 				5E1A0C0B2D00000000000700 /* MWMReservedShortcuts.h */,
 				5E1A0C0B2D00000000000702 /* MWMReservedShortcuts.m */,
 				5E1A0C0B2D00000000000619 /* MWMShortcut.h */,
@@ -1115,6 +1128,7 @@
 				5E1A0C0B2D00000000000611 /* MWMYAML.m in Sources */,
 				5E1A0C0B2D00000000000621 /* MWMShortcut.m in Sources */,
 				5E1A0C0B2D00000000000633 /* MWMAction.m in Sources */,
+				5E1A0C0B2D0000000000F001 /* MWMPushOptions.m in Sources */,
 				5E1A0C0B2D00000000000653 /* MWMDisplays.m in Sources */,
 				5E1A0C0B2D00000000000673 /* MWMSlots.m in Sources */,
 				5E1A0C0B2D00000000000932 /* MWMFormula.m in Sources */,
@@ -1127,6 +1141,7 @@
 				5E1A0C0B2D00000000000513 /* ConfigurationStatusBar.m in Sources */,
 				5E1A0C0B2D00000000000625 /* ConfigurationShortcutView.m in Sources */,
 				5E1A0C0B2D00000000000637 /* ConfigurationActionView.m in Sources */,
+				5E1A0C0B2D0000000000F004 /* ConfigurationPushRows.m in Sources */,
 				5E1A0C0B2D00000000000643 /* ConfigurationSettingsView.m in Sources */,
 				5E1A0C0B2D00000000000663 /* ConfigurationBlockView.m in Sources */,
 				5E1A0C0B2D00000000000667 /* ConfigurationDisplaysView.m in Sources */,
@@ -1230,6 +1245,7 @@
 				5E1A0C0B2D00000000000675 /* TestMWMSlots.m in Sources */,
 				5E1A0C0B2D00000000000941 /* TestMWMFormula.m in Sources */,
 				5E1A0C0B2D00000000000944 /* TestMWMSlotShape.m in Sources */,
+				5E1A0C0B2D0000000000F002 /* TestMWMPushOptions.m in Sources */,
 				5E1A0C0B2D00000000000689 /* TestConfigurationSlots.m in Sources */,
 				5E1A0C0B2D00000000000709 /* TestMWMShortcutIndex.m in Sources */,
 				5E1A0C0B2D00000000000771 /* TestSnapshots.m in Sources */,
