@@ -15,7 +15,7 @@
 //  along with this program.  If not, see http://www.gnu.org/licenses
 
 #import "ConfigurationKeyboardMapView.h"
-#import "NSAlert+MWM.h"
+#import "MWMAlert.h"
 #import "MWMTheme.h"
 #import "MWMComponents.h"
 #import "ConfigurationBlockView.h"
@@ -514,11 +514,12 @@ static const CGFloat kGroupsWidth = 188;
 - (void)removePressed:(id)sender {
   if (self.confirmsRemoval) {
     MWMShortcutInfo *info = [self infoForKeyName:self.selectedKeyName ?: @""];
-    NSAlert *alert = [NSAlert mwm_alert];
+    MWMAlert *alert = [MWMAlert alert];
+    [alert setKind:MWMAlertKindDanger];
     [alert setMessageText:[NSString stringWithFormat:@"Remove \"%@\"?", info.title]];
     [alert setInformativeText:@"The shortcut is taken out of your configuration."];
     [alert addButtonWithTitle:@"Cancel"];
-    [alert addButtonWithTitle:@"Remove"];
+    [alert addDestructiveButtonWithTitle:@"Remove"];
     if ([alert runModal] == NSAlertFirstButtonReturn) return;
   }
   [self removeSelected];

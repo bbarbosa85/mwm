@@ -15,7 +15,7 @@
 //  along with this program.  If not, see http://www.gnu.org/licenses
 
 #import "ConfigurationSnapshotsView.h"
-#import "NSAlert+MWM.h"
+#import "MWMAlert.h"
 #import "ConfigurationBlockView.h"
 #import "MWMComponents.h"
 #import "MWMTheme.h"
@@ -371,11 +371,12 @@ static NSImage *IconForApp(NSString *name) {
 
 - (void)deleteNamed:(NSString *)name {
   if (self.confirmsDeleting) {
-    NSAlert *alert = [NSAlert mwm_alert];
+    MWMAlert *alert = [MWMAlert alert];
+    [alert setKind:MWMAlertKindDanger];
     [alert setMessageText:[NSString stringWithFormat:@"Delete \"%@\"?", name]];
     [alert setInformativeText:@"The saved window arrangement is removed. A shortcut that restores it will do nothing."];
     [alert addButtonWithTitle:@"Cancel"];
-    [alert addButtonWithTitle:@"Delete"];
+    [alert addDestructiveButtonWithTitle:@"Delete"];
     if ([alert runModal] == NSAlertFirstButtonReturn) return;
   }
   [MWMSnapshots deleteName:name];
@@ -384,19 +385,19 @@ static NSImage *IconForApp(NSString *name) {
 }
 
 - (void)renameNamed:(NSString *)name {
-  NSAlert *alert = [NSAlert mwm_alert];
+  MWMAlert *alert = [MWMAlert alert];
   [alert setMessageText:@"Rename snapshot"];
   [alert setInformativeText:@"Shortcuts that use the old name need the new one."];
   NSTextField *field = [NSTextField textFieldWithString:name];
   [field setFrame:NSMakeRect(0, 0, 240, 24)];
   [alert setAccessoryView:field];
-  [alert mwm_widen];
   [alert addButtonWithTitle:@"Rename"];
   [alert addButtonWithTitle:@"Cancel"];
   if ([alert runModal] != NSAlertFirstButtonReturn) return;
   NSString *problem = [MWMSnapshots problemWithName:[field stringValue] except:name];
   if (problem != nil) {
-    NSAlert *failed = [NSAlert mwm_alert];
+    MWMAlert *failed = [MWMAlert alert];
+    [failed setKind:MWMAlertKindWarning];
     [failed setMessageText:problem];
     [failed runModal];
     return;

@@ -15,7 +15,7 @@
 //  along with this program.  If not, see http://www.gnu.org/licenses
 
 #import "ConfigurationShortcutEditorView.h"
-#import "NSAlert+MWM.h"
+#import "MWMAlert.h"
 #import "MWMTheme.h"
 #import "MWMComponents.h"
 #import "ConfigurationBlockView.h"
@@ -925,11 +925,12 @@ static NSArray<NSString *> *InstalledApplicationNames(void) {
 
 - (void)backPressed:(id)sender {
   if (self.confirmsDiscard && !self.isNew && [self hasUnsavedChanges]) {
-    NSAlert *alert = [NSAlert mwm_alert];
+    MWMAlert *alert = [MWMAlert alert];
+    [alert setKind:MWMAlertKindConfirm];
     [alert setMessageText:@"Discard your changes?"];
     [alert setInformativeText:@"This shortcut has changes that haven't been saved."];
-    [alert addButtonWithTitle:@"Keep Editing"];
-    [alert addButtonWithTitle:@"Discard"];
+    [alert addButtonWithTitle:@"Keep editing"];
+    [alert addDestructiveButtonWithTitle:@"Discard"];
     if ([alert runModal] == NSAlertFirstButtonReturn) return;
   }
   [self close];

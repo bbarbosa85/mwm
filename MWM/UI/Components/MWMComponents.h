@@ -82,6 +82,8 @@ NS_ASSUME_NONNULL_BEGIN
 + (NSButton *)accentButtonWithTitle:(NSString *)title symbol:(nullable NSString *)symbolName target:(nullable id)target action:(nullable SEL)action;
 + (NSButton *)primaryButtonWithTitle:(NSString *)title symbol:(NSString *)symbolName target:(nullable id)target action:(nullable SEL)action;
 + (NSButton *)primaryButtonWithTitle:(NSString *)title target:(nullable id)target action:(nullable SEL)action;
+// A button for an action that deletes or removes: red with white text.
++ (NSButton *)dangerButtonWithTitle:(NSString *)title target:(nullable id)target action:(nullable SEL)action;
 
 // A flexible space for stack views.
 + (NSView *)spacer;

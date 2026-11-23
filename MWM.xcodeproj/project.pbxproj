@@ -21,7 +21,6 @@
 		5E1A0C0B2D00000000000852 /* MWMStatusMenus.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D00000000000851 /* MWMStatusMenus.m */; };
 		5E1A0C0B2D00000000000842 /* TestDialogs.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D00000000000841 /* TestDialogs.m */; };
 		5E1A0C0B2D00000000000835 /* MWMAboutWindow.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D00000000000834 /* MWMAboutWindow.m */; };
-		5E1A0C0B2D00000000000832 /* NSAlert+MWM.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D00000000000831 /* NSAlert+MWM.m */; };
 		5E1A0C0B2D00000000000822 /* TestConfigurationSnapshots.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D00000000000821 /* TestConfigurationSnapshots.m */; };
 		5E1A0C0B2D00000000000805 /* ConfigurationSnapshotsView.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D00000000000804 /* ConfigurationSnapshotsView.m */; };
 		5E1A0C0B2D00000000000812 /* TestMWMSnapshots.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D00000000000811 /* TestMWMSnapshots.m */; };
@@ -167,6 +166,9 @@
 		5E1A0C0B2D0000000000F001 /* MWMPushOptions.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D0000000000E001 /* MWMPushOptions.m */; };
 		5E1A0C0B2D0000000000F002 /* TestMWMPushOptions.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D0000000000E002 /* TestMWMPushOptions.m */; };
 		5E1A0C0B2D0000000000F004 /* ConfigurationPushRows.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D0000000000E004 /* ConfigurationPushRows.m */; };
+		5E1A0C0B2D0000000000F006 /* MWMAlert.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D0000000000E006 /* MWMAlert.m */; };
+		5E1A0C0B2D0000000000F008 /* MWMUpdateInstaller.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D0000000000E008 /* MWMUpdateInstaller.m */; };
+		5E1A0C0B2D0000000000F009 /* TestMWMUpdateInstaller.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D0000000000E009 /* TestMWMUpdateInstaller.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -213,8 +215,6 @@
 		5E1A0C0B2D00000000000841 /* TestDialogs.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TestDialogs.m; sourceTree = "<group>"; };
 		5E1A0C0B2D00000000000833 /* MWMAboutWindow.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MWMAboutWindow.h; sourceTree = "<group>"; };
 		5E1A0C0B2D00000000000834 /* MWMAboutWindow.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MWMAboutWindow.m; sourceTree = "<group>"; };
-		5E1A0C0B2D00000000000830 /* NSAlert+MWM.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UI/NSAlert+MWM.h"; sourceTree = "<group>"; };
-		5E1A0C0B2D00000000000831 /* NSAlert+MWM.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UI/NSAlert+MWM.m"; sourceTree = "<group>"; };
 		5E1A0C0B2D00000000000821 /* TestConfigurationSnapshots.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TestConfigurationSnapshots.m; sourceTree = "<group>"; };
 		5E1A0C0B2D00000000000803 /* ConfigurationSnapshotsView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ConfigurationSnapshotsView.h; sourceTree = "<group>"; };
 		5E1A0C0B2D00000000000804 /* ConfigurationSnapshotsView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ConfigurationSnapshotsView.m; sourceTree = "<group>"; };
@@ -471,6 +471,11 @@
 		5E1A0C0B2D0000000000E002 /* TestMWMPushOptions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TestMWMPushOptions.m; sourceTree = "<group>"; };
 		5E1A0C0B2D0000000000E003 /* ConfigurationPushRows.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ConfigurationPushRows.h; sourceTree = "<group>"; };
 		5E1A0C0B2D0000000000E004 /* ConfigurationPushRows.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ConfigurationPushRows.m; sourceTree = "<group>"; };
+		5E1A0C0B2D0000000000E005 /* MWMAlert.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MWMAlert.h; sourceTree = "<group>"; };
+		5E1A0C0B2D0000000000E006 /* MWMAlert.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MWMAlert.m; sourceTree = "<group>"; };
+		5E1A0C0B2D0000000000E007 /* MWMUpdateInstaller.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = App/MWMUpdateInstaller.h; sourceTree = "<group>"; };
+		5E1A0C0B2D0000000000E008 /* MWMUpdateInstaller.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = App/MWMUpdateInstaller.m; sourceTree = "<group>"; };
+		5E1A0C0B2D0000000000E009 /* TestMWMUpdateInstaller.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TestMWMUpdateInstaller.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -557,6 +562,7 @@
 				5E1A0C0B2D00000000000674 /* TestMWMSlots.m */,
 				5E1A0C0B2D00000000000940 /* TestMWMFormula.m */,
 				5E1A0C0B2D00000000000943 /* TestMWMSlotShape.m */,
+				5E1A0C0B2D0000000000E009 /* TestMWMUpdateInstaller.m */,
 				5E1A0C0B2D0000000000E002 /* TestMWMPushOptions.m */,
 				5E1A0C0B2D00000000000688 /* TestConfigurationSlots.m */,
 				5E1A0C0B2D00000000000708 /* TestMWMShortcutIndex.m */,
@@ -779,12 +785,12 @@
 				478293E713859BED00452C07 /* Operation */,
 				47C4A29A1384E8890066B6DE /* Supporting Files */,
 				5E1A0C0B2D00000000000750 /* MWMColors.xcassets */,
-				5E1A0C0B2D00000000000830 /* NSAlert+MWM.h */,
-				5E1A0C0B2D00000000000831 /* NSAlert+MWM.m */,
 				47C4A2A51384E8890066B6DE /* MWMAppDelegate.h */,
 				47C4A2A61384E8890066B6DE /* MWMAppDelegate.m */,
 				5E1A0C0B2D00000000000901 /* MWMUpdateChecker.h */,
+				5E1A0C0B2D0000000000E007 /* MWMUpdateInstaller.h */,
 				5E1A0C0B2D00000000000902 /* MWMUpdateChecker.m */,
+				5E1A0C0B2D0000000000E008 /* MWMUpdateInstaller.m */,
 			);
 			path = MWM;
 			sourceTree = "<group>";
@@ -840,7 +846,9 @@
 				5E1A0C0B2D00000000000660 /* ConfigurationBlockView.h */,
 				5E1A0C0B2D00000000000662 /* ConfigurationBlockView.m */,
 				5E1A0C0B2D00000000000763 /* MWMComponents.h */,
+				5E1A0C0B2D0000000000E005 /* MWMAlert.h */,
 				5E1A0C0B2D00000000000764 /* MWMComponents.m */,
+				5E1A0C0B2D0000000000E006 /* MWMAlert.m */,
 				5E1A0C0B2D00000000000766 /* MWMDesignGallery.h */,
 				5E1A0C0B2D00000000000767 /* MWMDesignGallery.m */,
 				5E1A0C0B2D00000000000760 /* MWMTheme.h */,
@@ -1123,6 +1131,7 @@
 				47C4A2A11384E8890066B6DE /* main.m in Sources */,
 				47C4A2A71384E8890066B6DE /* MWMAppDelegate.m in Sources */,
 				5E1A0C0B2D00000000000903 /* MWMUpdateChecker.m in Sources */,
+				5E1A0C0B2D0000000000F008 /* MWMUpdateInstaller.m in Sources */,
 				47C4A2CB1384EA510066B6DE /* MWMConfig.m in Sources */,
 				5E1A0C0B2D00000000000114 /* MWMConfigDocument.m in Sources */,
 				5E1A0C0B2D00000000000611 /* MWMYAML.m in Sources */,
@@ -1155,9 +1164,9 @@
 				5E1A0C0B2D00000000000742 /* ConfigurationShortcutEditorView.m in Sources */,
 				5E1A0C0B2D00000000000762 /* MWMTheme.m in Sources */,
 				5E1A0C0B2D00000000000765 /* MWMComponents.m in Sources */,
+				5E1A0C0B2D0000000000F006 /* MWMAlert.m in Sources */,
 				5E1A0C0B2D00000000000768 /* MWMDesignGallery.m in Sources */,
 				5E1A0C0B2D00000000000805 /* ConfigurationSnapshotsView.m in Sources */,
-				5E1A0C0B2D00000000000832 /* NSAlert+MWM.m in Sources */,
 				5E1A0C0B2D00000000000835 /* MWMAboutWindow.m in Sources */,
 				5E1A0C0B2D00000000000852 /* MWMStatusMenus.m in Sources */,
 				5E1A0C0B2D00000000000721 /* ConfigurationKeyboardView.m in Sources */,
@@ -1245,6 +1254,7 @@
 				5E1A0C0B2D00000000000675 /* TestMWMSlots.m in Sources */,
 				5E1A0C0B2D00000000000941 /* TestMWMFormula.m in Sources */,
 				5E1A0C0B2D00000000000944 /* TestMWMSlotShape.m in Sources */,
+				5E1A0C0B2D0000000000F009 /* TestMWMUpdateInstaller.m in Sources */,
 				5E1A0C0B2D0000000000F002 /* TestMWMPushOptions.m in Sources */,
 				5E1A0C0B2D00000000000689 /* TestConfigurationSlots.m in Sources */,
 				5E1A0C0B2D00000000000709 /* TestMWMShortcutIndex.m in Sources */,
@@ -1368,6 +1378,10 @@
 				GCC_PREFIX_HEADER = "MWM/App/MWM-Prefix.pch";
 				INFOPLIST_FILE = "MWM/App/MWM-Info.plist";
 				INSTALL_PATH = "$(LOCAL_APPS_DIR)";
+				OTHER_LDFLAGS = (
+					"-framework",
+					Security,
+				);
 				MACOSX_DEPLOYMENT_TARGET = 12.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.bbarbosa85.mwm;
 				PRODUCT_NAME = MWM;
@@ -1398,6 +1412,10 @@
 				GCC_PREFIX_HEADER = "MWM/App/MWM-Prefix.pch";
 				INFOPLIST_FILE = "MWM/App/MWM-Info.plist";
 				INSTALL_PATH = "$(LOCAL_APPS_DIR)";
+				OTHER_LDFLAGS = (
+					"-framework",
+					Security,
+				);
 				MACOSX_DEPLOYMENT_TARGET = 12.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.bbarbosa85.mwm;
 				PRODUCT_NAME = MWM;

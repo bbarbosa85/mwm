@@ -11,6 +11,7 @@
 #import "JSController.h"
 #import "MWMLogger.h"
 #import "MWMConfig.h"
+#import "MWMAlert.h"
 
 @implementation JSOperationWrapper
 
@@ -29,10 +30,7 @@
       if ([self op] == nil) { return nil; }
     } @catch (NSException *ex) {
       MWMLogger(@"   ERROR %@",[ex name]);
-      NSAlert *alert = [MWMConfig warningAlertWithKeyEquivalents: [NSArray arrayWithObjects:@"Quit", @"Skip", nil]];
-      [alert setMessageText:[ex name]];
-      [alert setInformativeText:[ex reason]];
-      if ([alert runModal] == NSAlertFirstButtonReturn) {
+      if ([MWMAlert quitOrSkipAfterProblem:[ex name] reason:[ex reason] context:nil]) {
         MWMLogger(@"User selected exit");
         [NSApp terminate:nil];
       }
@@ -50,10 +48,7 @@
       if ([self op] == nil) { return nil; }
     } @catch (NSException *ex) {
       MWMLogger(@"   ERROR %@",[ex name]);
-      NSAlert *alert = [MWMConfig warningAlertWithKeyEquivalents: [NSArray arrayWithObjects:@"Quit", @"Skip", nil]];
-      [alert setMessageText:[ex name]];
-      [alert setInformativeText:[ex reason]];
-      if ([alert runModal] == NSAlertFirstButtonReturn) {
+      if ([MWMAlert quitOrSkipAfterProblem:[ex name] reason:[ex reason] context:nil]) {
         MWMLogger(@"User selected exit");
         [NSApp terminate:nil];
       }
@@ -71,10 +66,7 @@
       if ([self op] == nil) { return nil; }
     } @catch (NSException *ex) {
       MWMLogger(@"   ERROR %@",[ex name]);
-      NSAlert *alert = [MWMConfig warningAlertWithKeyEquivalents: [NSArray arrayWithObjects:@"Quit", @"Skip", nil]];
-      [alert setMessageText:[ex name]];
-      [alert setInformativeText:[ex reason]];
-      if ([alert runModal] == NSAlertFirstButtonReturn) {
+      if ([MWMAlert quitOrSkipAfterProblem:[ex name] reason:[ex reason] context:nil]) {
         MWMLogger(@"User selected exit");
         [NSApp terminate:nil];
       }
@@ -100,10 +92,7 @@
   id unmarshalledOpts = [[JSController getInstance] unmarshall:opts];
   if (![unmarshalledOpts isKindOfClass:[NSDictionary class]]) {
     MWMLogger(@"   ERROR operation.dup parameter must be a hash");
-    NSAlert *alert = [MWMConfig warningAlertWithKeyEquivalents: [NSArray arrayWithObjects:@"Quit", @"Skip", nil]];
-    [alert setMessageText:@"ERROR: invalid dup options"];
-    [alert setInformativeText:@"operation.dup parameter must be a hash"];
-    if ([alert runModal] == NSAlertFirstButtonReturn) {
+    if ([MWMAlert quitOrSkipAfterProblem:@"ERROR: invalid dup options" reason:@"operation.dup parameter must be a hash" context:nil]) {
       MWMLogger(@"User selected exit");
       [NSApp terminate:nil];
     }

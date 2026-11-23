@@ -19,7 +19,7 @@
 //  along with this program.  If not, see http://www.gnu.org/licenses
 
 #import "ConfigurationModifiersView.h"
-#import "NSAlert+MWM.h"
+#import "MWMAlert.h"
 #import "MWMTheme.h"
 #import "MWMComponents.h"
 #import "ConfigurationBlockView.h"
@@ -220,7 +220,7 @@ static const CGFloat kUsedColumn = 150;
   NSUInteger uses = [self usesOfGroupNamed:name];
   if (uses > 0) {
     if (!self.showsAlerts) return;
-    NSAlert *alert = [NSAlert mwm_alert];
+    MWMAlert *alert = [MWMAlert alert];
     [alert setMessageText:[NSString stringWithFormat:@"\"%@\" is in use", name]];
     [alert setInformativeText:[NSString stringWithFormat:@"%lu shortcut%@ use%@ it. Change %@ first, then remove the group.", (unsigned long)uses, uses == 1 ? @"" : @"s", uses == 1 ? @"s" : @"", uses == 1 ? @"it" : @"them"]];
     [alert addButtonWithTitle:@"OK"];
@@ -450,11 +450,12 @@ static NSString *Combo(MWMShortcutInfo *info) {
 
 - (void)backPressed:(id)sender {
   if ([self hasUnsavedChanges] && self.showsAlerts) {
-    NSAlert *alert = [NSAlert mwm_alert];
+    MWMAlert *alert = [MWMAlert alert];
+    [alert setKind:MWMAlertKindConfirm];
     [alert setMessageText:@"Discard your changes?"];
     [alert setInformativeText:@"This group has changes that haven't been saved."];
-    [alert addButtonWithTitle:@"Keep Editing"];
-    [alert addButtonWithTitle:@"Discard"];
+    [alert addButtonWithTitle:@"Keep editing"];
+    [alert addDestructiveButtonWithTitle:@"Discard"];
     if ([alert runModal] == NSAlertFirstButtonReturn) return;
   }
   [self closeEditor];

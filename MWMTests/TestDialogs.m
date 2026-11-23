@@ -18,7 +18,7 @@
 
 #import <XCTest/XCTest.h>
 #import "MWMAboutWindow.h"
-#import "NSAlert+MWM.h"
+#import "MWMAlert.h"
 
 @interface TestDialogs : XCTestCase
 @end
@@ -38,33 +38,50 @@
   return texts;
 }
 
-- (void)testAnAlertIsWideAndUsesMWMsIcon {
-  NSAlert *alert = [NSAlert mwm_alert];
-  [alert setMessageText:@"Your configuration was updated"];
-  [alert setInformativeText:@"~/.mwm.yml now uses the new format: one entry per monitor and slot, and actions written out as fields. Nothing changes in how your shortcuts work."];
-  [alert addButtonWithTitle:@"OK"];
-  [alert layout];
-  XCTAssertGreaterThanOrEqual(NSWidth([[alert window] frame]), 540, @"room for the message without a line break every few words");
-  CGFloat widest = 0;
-  NSMutableArray *queue = [NSMutableArray arrayWithObject:[[alert window] contentView]];
-  while ([queue count] > 0) {
-    NSView *view = [queue lastObject]; [queue removeLastObject];
-    if ([view isKindOfClass:[NSTextField class]] && [[(NSTextField *)view stringValue] hasPrefix:@"~/.mwm.yml"]) widest = NSWidth(view.frame);
-    [queue addObjectsFromArray:[view subviews]];
-  }
-  XCTAssertGreaterThanOrEqual(widest, 400, @"the message wraps at the wider width, not at a narrow column");
-  XCTAssertGreaterThanOrEqual([[alert icon] size].width, 128, @"the bundle's icon, not the system's");
-  NSImage *bundleIcon = [[NSBundle mainBundle] imageForResource:@"icon"];
-  XCTAssertEqualObjects([[alert icon] TIFFRepresentation], [bundleIcon TIFFRepresentation]);
+- (void)testAnAlertHasATileATitleTheSentenceAndButtons {
+  MWMAlert *alert = [MWMAlert alert];
+  [alert setKind:MWMAlertKindConfirm];
+  [alert setMessageText:@"Discard your changes?"];
+  [alert setInformativeText:@"This slot has changes that haven't been saved."];
+  [alert addButtonWithTitle:@"Keep editing"];
+  [alert addDestructiveButtonWithTitle:@"Discard"];
+  NSView *content = [[alert window] contentView];
+  NSArray *texts = [self textsIn:content];
+  XCTAssertTrue([texts containsObject:@"Discard your changes?"]);
+  XCTAssertTrue([texts containsObject:@"This slot has changes that haven't been saved."]);
+  XCTAssertTrue([texts containsObject:@"Keep editing"]);
+  XCTAssertTrue([texts containsObject:@"Discard"]);
+  XCTAssertEqualWithAccuracy(NSWidth([[alert window] frame]), 440, 1);
 }
 
-- (void)testAnAccessoryIsWidenedToo {
-  NSAlert *alert = [NSAlert mwm_alert];
+- (void)testTheFirstButtonIsTheDefaultAndCancelAnswersEscape {
+  MWMAlert *alert = [MWMAlert alert];
+  NSButton *first = [alert addButtonWithTitle:@"Keep editing"];
+  NSButton *cancel = [alert addButtonWithTitle:@"Cancel"];
+  NSButton *last = [alert addDestructiveButtonWithTitle:@"Delete"];
+  XCTAssertEqualObjects(first.keyEquivalent, @"\r");
+  XCTAssertEqualObjects(cancel.keyEquivalent, @"\e");
+  XCTAssertEqualObjects(last.keyEquivalent, @"");
+  XCTAssertEqual(first.tag, NSAlertFirstButtonReturn);
+  XCTAssertEqual(last.tag, NSAlertFirstButtonReturn + 2);
+}
+
+- (void)testAnAlertWithNoButtonsGetsOK {
+  MWMAlert *alert = [MWMAlert alert];
+  [alert setMessageText:@"Done"];
+  XCTAssertTrue([[self textsIn:[[alert window] contentView]] containsObject:@"OK"]);
+}
+
+- (void)testAnAccessoryFillsTheAlertsWidth {
+  MWMAlert *alert = [MWMAlert alert];
   NSTextField *field = [NSTextField textFieldWithString:@"name"];
   [field setFrame:NSMakeRect(0, 0, 240, 24)];
   [alert setAccessoryView:field];
-  [alert mwm_widen];
-  XCTAssertGreaterThanOrEqual(NSWidth(field.frame), MWMAlertWidth);
+  [alert setMessageText:@"Rename"];
+  [alert addButtonWithTitle:@"OK"];
+  NSWindow *window = [alert window];
+  [[window contentView] layoutSubtreeIfNeeded];
+  XCTAssertGreaterThanOrEqual(NSWidth(field.frame), 390);
 }
 
 - (void)testTheAboutWindowShowsEverythingAtOnce {

@@ -49,6 +49,19 @@ static NSString *const kOriginal =
   [self.controller setValue:self.path forKey:@"configPathOverride"];
 }
 
+// The pages are laid out for one width, so the window only changes in height.
+- (void)testTheWindowIsAlwaysTheSameWidth {
+  NSWindow *window = [self.controller window];
+  XCTAssertEqual(window.contentMinSize.width, 1080);
+  XCTAssertEqual(window.contentMaxSize.width, 1080);
+  NSSize wider = [(id<NSWindowDelegate>)self.controller windowWillResize:window toSize:NSMakeSize(1500, 700)];
+  XCTAssertEqual(wider.width, 1080, @"dragging wider stays 1080");
+  XCTAssertEqual(wider.height, 700);
+  NSSize narrower = [(id<NSWindowDelegate>)self.controller windowWillResize:window toSize:NSMakeSize(600, 500)];
+  XCTAssertEqual(narrower.width, 1080, @"and so does dragging narrower");
+  XCTAssertEqual(NSWidth([[window contentView] frame]), 1080, @"the window opens at 1080, whatever width an older version saved");
+}
+
 - (void)load {
   [self.controller performSelector:NSSelectorFromString(@"loadFromDisk")];
 }
