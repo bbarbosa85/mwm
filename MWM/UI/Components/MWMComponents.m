@@ -292,6 +292,39 @@
   return button;
 }
 
++ (NSStackView *)fieldWithCaption:(NSString *)caption control:(NSView *)control {
+  NSTextField *label = [self labelWithText:caption font:[MWMTheme fontCaption] color:[MWMTheme textSecondary]];
+  return [self columnWithViews:@[label, control] spacing:3 insets:NSEdgeInsetsZero];
+}
+
++ (NSStackView *)columnWithViews:(NSArray<NSView *> *)views spacing:(CGFloat)spacing insets:(NSEdgeInsets)insets {
+  NSStackView *stack = [NSStackView stackViewWithViews:views];
+  [stack setOrientation:NSUserInterfaceLayoutOrientationVertical];
+  [stack setAlignment:NSLayoutAttributeLeading];
+  [stack setSpacing:spacing];
+  [stack setEdgeInsets:insets];
+  for (NSView *view in views) [[view.widthAnchor constraintEqualToAnchor:stack.widthAnchor constant:-(insets.left + insets.right)] setActive:YES];
+  return stack;
+}
+
++ (NSStackView *)equalRowWithViews:(NSArray<NSView *> *)views spacing:(CGFloat)spacing {
+  NSStackView *row = [NSStackView stackViewWithViews:views];
+  [row setDistribution:NSStackViewDistributionFillEqually];
+  [row setSpacing:spacing];
+  [row setAlignment:NSLayoutAttributeTop];
+  return row;
+}
+
++ (NSView *)groupBoxWithTitle:(NSString *)title views:(NSArray<NSView *> *)views accessory:(NSView *)accessory {
+  NSTextField *titleLabel = [self labelWithText:title size:12 color:[MWMTheme textPrimary] weight:NSFontWeightMedium];
+  NSView *header = accessory != nil ? [NSStackView stackViewWithViews:@[titleLabel, [self spacer], accessory]] : titleLabel;
+  NSStackView *content = [self columnWithViews:[@[header] arrayByAddingObjectsFromArray:views] spacing:9 insets:NSEdgeInsetsMake(10, 10, 10, 10)];
+  NSView *box = [self card];
+  [box addSubview:content];
+  [self pinView:content toEdgesOf:box insets:NSEdgeInsetsZero];
+  return box;
+}
+
 + (void)pinView:(NSView *)view toEdgesOf:(NSView *)container insets:(NSEdgeInsets)insets {
   [view setTranslatesAutoresizingMaskIntoConstraints:NO];
   [NSLayoutConstraint activateConstraints:@[

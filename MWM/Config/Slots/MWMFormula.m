@@ -139,7 +139,8 @@
 + (NSString *)errorForMoveText:(NSString *)text {
   NSString *error = nil;
   CGSize screen = CGSizeMake(1600, 1000);
-  return [self getRect:NULL fromMoveText:text screenSize:screen window:[self sampleWindowForScreenSize:screen] error:&error] ? nil : error;
+  CGRect rect;
+  return [self getRect:&rect fromMoveText:text screenSize:screen window:[self sampleWindowForScreenSize:screen] error:&error] ? nil : error;
 }
 
 @end

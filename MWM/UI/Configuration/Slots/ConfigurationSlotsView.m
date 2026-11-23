@@ -20,6 +20,8 @@
 #import "MWMTheme.h"
 #import "MWMComponents.h"
 #import "ConfigurationBlockView.h"
+#import "ConfigurationSlotCard.h"
+#import "ConfigurationFormulaHelp.h"
 #import "ConfigurationSlotCanvas.h"
 #import "MWMConfigDocument.h"
 #import "MWMDisplays.h"
@@ -27,130 +29,6 @@
 #import "MWMSlotShape.h"
 #import "MWMFormula.h"
 
-
-#pragma mark - Gallery cards
-
-// A card in the gallery, picture first: a screen with the slot drawn on it, a size badge,
-// a quiet ✕ to remove it, and under it the name and how many shortcuts use it. Clicking
-// opens it. The New Slot card has a dashed edge.
-@interface ConfigurationSlotCard : ConfigurationBlockView
-@property (copy) void (^onOpen)(void);
-@property (copy) void (^onRemove)(void);
-@property (assign) BOOL isNewCard;
-@property (strong) NSView *badgeView;
-- (instancetype)initWithName:(NSString *)name badge:(NSString *)badge usage:(NSString *)usage rect:(CGRect)rect valid:(BOOL)valid;
-- (instancetype)initNewCard;
-@end
-
-@implementation ConfigurationSlotCard
-
-- (instancetype)initWithName:(NSString *)name badge:(NSString *)badge usage:(NSString *)usage rect:(CGRect)rect valid:(BOOL)valid {
-  self = [super initWithFrame:NSZeroRect];
-  if (self) {
-    [self setIdentifier:name];
-    [self setTranslatesAutoresizingMaskIntoConstraints:NO];
-    ConfigurationSlotThumbnail *thumbnail = [[ConfigurationSlotThumbnail alloc] init];
-    thumbnail.rect = rect;
-    thumbnail.valid = valid;
-    [thumbnail setTranslatesAutoresizingMaskIntoConstraints:NO];
-    [[thumbnail.heightAnchor constraintGreaterThanOrEqualToConstant:96] setActive:YES];
-    NSTextField *title = [NSTextField labelWithString:name];
-    [title setFont:[MWMTheme fontBodyStrong]];
-    [title setLineBreakMode:NSLineBreakByTruncatingTail];
-    NSTextField *detail = [NSTextField labelWithString:usage];
-    [detail setFont:[MWMTheme fontCaption]];
-    [detail setTextColor:[MWMTheme textSecondary]];
-    NSView *gap = [MWMComponents spacer];
-    NSStackView *footer = [NSStackView stackViewWithViews:@[title, gap, detail]];
-    [footer setAlignment:NSLayoutAttributeFirstBaseline];
-    [footer setSpacing:8];
-    NSStackView *stack = [NSStackView stackViewWithViews:@[thumbnail, footer]];
-    [stack setOrientation:NSUserInterfaceLayoutOrientationVertical];
-    [stack setAlignment:NSLayoutAttributeLeading];
-    [stack setSpacing:8];
-    [stack setEdgeInsets:NSEdgeInsetsMake(10, 10, 12, 10)];
-    [stack setTranslatesAutoresizingMaskIntoConstraints:NO];
-    [[thumbnail.widthAnchor constraintEqualToAnchor:stack.widthAnchor constant:-20] setActive:YES];
-    [[footer.widthAnchor constraintEqualToAnchor:stack.widthAnchor constant:-20] setActive:YES];
-    [self addSubview:stack];
-
-    // The size, on the picture's top left.
-    NSTextField *size = [NSTextField labelWithString:badge];
-    [size setFont:[NSFont systemFontOfSize:10 weight:NSFontWeightMedium]];
-    [size setTextColor:[MWMTheme textSecondary]];
-    [size setTranslatesAutoresizingMaskIntoConstraints:NO];
-    NSView *badgeView = [[NSView alloc] init];
-    [badgeView setWantsLayer:YES];
-    [[badgeView layer] setCornerRadius:9];
-    [badgeView setTranslatesAutoresizingMaskIntoConstraints:NO];
-    [badgeView addSubview:size];
-    [self addSubview:badgeView];
-
-    NSButton *remove = [NSButton buttonWithImage:[NSImage imageWithSystemSymbolName:@"xmark" accessibilityDescription:@"Remove slot"] target:self action:@selector(removePressed:)];
-    [remove setBordered:NO];
-    [remove setToolTip:@"Remove this slot"];
-    [remove setContentTintColor:[MWMTheme textTertiary]];
-    [remove setTranslatesAutoresizingMaskIntoConstraints:NO];
-    [self addSubview:remove];
-    [NSLayoutConstraint activateConstraints:@[
-      [stack.topAnchor constraintEqualToAnchor:self.topAnchor], [stack.bottomAnchor constraintEqualToAnchor:self.bottomAnchor],
-      [stack.leadingAnchor constraintEqualToAnchor:self.leadingAnchor], [stack.trailingAnchor constraintEqualToAnchor:self.trailingAnchor],
-      [size.leadingAnchor constraintEqualToAnchor:badgeView.leadingAnchor constant:8], [size.trailingAnchor constraintEqualToAnchor:badgeView.trailingAnchor constant:-8],
-      [size.topAnchor constraintEqualToAnchor:badgeView.topAnchor constant:2], [size.bottomAnchor constraintEqualToAnchor:badgeView.bottomAnchor constant:-2],
-      [badgeView.leadingAnchor constraintEqualToAnchor:self.leadingAnchor constant:18], [badgeView.topAnchor constraintEqualToAnchor:self.topAnchor constant:18],
-      [remove.topAnchor constraintEqualToAnchor:self.topAnchor constant:14], [remove.trailingAnchor constraintEqualToAnchor:self.trailingAnchor constant:-14],
-    ]];
-    _badgeView = badgeView;
-  }
-  return self;
-}
-
-- (instancetype)initNewCard {
-  self = [super initWithFrame:NSZeroRect];
-  if (self) {
-    _isNewCard = YES;
-    [self setIdentifier:@"+new"];
-    [self setTranslatesAutoresizingMaskIntoConstraints:NO];
-    NSImageView *plus = [NSImageView imageViewWithImage:[NSImage imageWithSystemSymbolName:@"plus" accessibilityDescription:nil]];
-    [plus setSymbolConfiguration:[NSImageSymbolConfiguration configurationWithPointSize:22 weight:NSFontWeightRegular]];
-    [plus setContentTintColor:[MWMTheme textSecondary]];
-    NSTextField *label = [NSTextField labelWithString:@"New Slot"];
-    [label setTextColor:[MWMTheme textSecondary]];
-    NSStackView *stack = [NSStackView stackViewWithViews:@[plus, label]];
-    [stack setOrientation:NSUserInterfaceLayoutOrientationVertical];
-    [stack setSpacing:4];
-    [stack setTranslatesAutoresizingMaskIntoConstraints:NO];
-    [self addSubview:stack];
-    [NSLayoutConstraint activateConstraints:@[
-      [stack.centerXAnchor constraintEqualToAnchor:self.centerXAnchor], [stack.centerYAnchor constraintEqualToAnchor:self.centerYAnchor],
-      [self.heightAnchor constraintGreaterThanOrEqualToConstant:150],
-    ]];
-  }
-  return self;
-}
-
-- (void)viewDidChangeEffectiveAppearance {
-  [super viewDidChangeEffectiveAppearance];
-  [self.effectiveAppearance performAsCurrentDrawingAppearance:^{
-    [[self.badgeView layer] setBackgroundColor:[[[NSColor windowBackgroundColor] colorWithAlphaComponent:0.9] CGColor]];
-  }];
-}
-
-- (BOOL)acceptsFirstMouse:(NSEvent *)event { return YES; }
-- (void)mouseDown:(NSEvent *)event { if (self.onOpen) self.onOpen(); }
-- (void)removePressed:(id)sender { if (self.onRemove) self.onRemove(); }
-
-- (void)drawRect:(NSRect)dirtyRect {
-  if (!self.isNewCard) return;
-  NSBezierPath *edge = [NSBezierPath bezierPathWithRoundedRect:NSInsetRect([self bounds], 1, 1) xRadius:12 yRadius:12];
-  CGFloat dash[2] = {5, 4};
-  [edge setLineDash:dash count:2 phase:0];
-  [edge setLineWidth:1.5];
-  [[MWMTheme textTertiary] setStroke];
-  [edge stroke];
-}
-
-@end
 
 #pragma mark - Page
 
@@ -206,23 +84,6 @@
 
 #pragma mark - Interface
 
-- (NSTextField *)captionLabel:(NSString *)text {
-  NSTextField *label = [NSTextField labelWithString:text];
-  [label setFont:[MWMTheme fontCaption]];
-  [label setTextColor:[MWMTheme textSecondary]];
-  return label;
-}
-
-// A small caption above a control.
-- (NSStackView *)captioned:(NSView *)control with:(NSString *)caption {
-  NSStackView *stack = [NSStackView stackViewWithViews:@[[self captionLabel:caption], control]];
-  [stack setOrientation:NSUserInterfaceLayoutOrientationVertical];
-  [stack setAlignment:NSLayoutAttributeLeading];
-  [stack setSpacing:3];
-  [[control.widthAnchor constraintEqualToAnchor:stack.widthAnchor] setActive:YES];
-  return stack;
-}
-
 - (NSSegmentedControl *)unitControl:(NSString *)identifier {
   NSSegmentedControl *control = [NSSegmentedControl segmentedControlWithLabels:@[@"%", @"px"] trackingMode:NSSegmentSwitchTrackingSelectOne target:self action:@selector(unitChanged:)];
   [control setIdentifier:identifier];
@@ -243,40 +104,9 @@
   return field;
 }
 
-// A titled box around a few controls, with an optional control at the right of the title.
-- (NSView *)groupTitled:(NSString *)title views:(NSArray<NSView *> *)views accessory:(NSView *)accessory {
-  NSTextField *titleLabel = [MWMComponents labelWithText:title size:12 color:[MWMTheme textPrimary] weight:NSFontWeightMedium];
-  NSView *header = titleLabel;
-  if (accessory != nil) header = [NSStackView stackViewWithViews:@[titleLabel, [MWMComponents spacer], accessory]];
-  NSMutableArray *all = [NSMutableArray arrayWithObject:header];
-  [all addObjectsFromArray:views];
-  NSStackView *content = [NSStackView stackViewWithViews:all];
-  [content setOrientation:NSUserInterfaceLayoutOrientationVertical];
-  [content setAlignment:NSLayoutAttributeLeading];
-  [content setSpacing:9];
-  [content setEdgeInsets:NSEdgeInsetsMake(10, 10, 10, 10)];
-  for (NSView *view in all) [[view.widthAnchor constraintEqualToAnchor:content.widthAnchor constant:-20] setActive:YES];
-  ConfigurationBlockView *box = [[ConfigurationBlockView alloc] init];
-  [self pinView:content toEdgesOf:box];
-  return box;
-}
-
-- (NSStackView *)verticalStack:(NSArray<NSView *> *)views spacing:(CGFloat)spacing {
-  NSStackView *stack = [NSStackView stackViewWithViews:views];
-  [stack setOrientation:NSUserInterfaceLayoutOrientationVertical];
-  [stack setAlignment:NSLayoutAttributeLeading];
-  [stack setSpacing:spacing];
-  for (NSView *view in views) [[view.widthAnchor constraintEqualToAnchor:stack.widthAnchor] setActive:YES];
-  return stack;
-}
-
 - (void)pinView:(NSView *)view toEdgesOf:(NSView *)container {
-  [view setTranslatesAutoresizingMaskIntoConstraints:NO];
   [container addSubview:view];
-  [NSLayoutConstraint activateConstraints:@[
-    [view.topAnchor constraintEqualToAnchor:container.topAnchor], [view.bottomAnchor constraintEqualToAnchor:container.bottomAnchor],
-    [view.leadingAnchor constraintEqualToAnchor:container.leadingAnchor], [view.trailingAnchor constraintEqualToAnchor:container.trailingAnchor],
-  ]];
+  [MWMComponents pinView:view toEdgesOf:container insets:NSEdgeInsetsZero];
 }
 
 - (void)buildInterface {
@@ -304,13 +134,7 @@
   [self.galleryRows setTranslatesAutoresizingMaskIntoConstraints:NO];
   NSScrollView *scroll = [MWMComponents scrollViewWithContent:self.galleryRows];
 
-  NSStackView *page = [NSStackView stackViewWithViews:@[top, scroll]];
-  [page setOrientation:NSUserInterfaceLayoutOrientationVertical];
-  [page setAlignment:NSLayoutAttributeLeading];
-  [page setSpacing:12];
-  [page setEdgeInsets:NSEdgeInsetsMake(8, 20, 16, 20)];
-  [page setTranslatesAutoresizingMaskIntoConstraints:NO];
-  for (NSView *view in @[top, scroll]) [[view.widthAnchor constraintEqualToAnchor:page.widthAnchor constant:-40] setActive:YES];
+  NSStackView *page = [MWMComponents columnWithViews:@[top, scroll] spacing:12 insets:NSEdgeInsetsMake(8, 20, 16, 20)];
   [[self.galleryRows.widthAnchor constraintEqualToAnchor:scroll.widthAnchor] setActive:YES];
   self.galleryPage = [[NSView alloc] init];
   [self pinView:page toEdgesOf:self.galleryPage];
@@ -326,26 +150,22 @@
   self.nameField = [NSTextField textFieldWithString:@""];
   [self.nameField setPlaceholderString:@"Name this slot"];
   [self.nameField setDelegate:self];
-  NSStackView *nameBlock = [self captioned:self.nameField with:@"Name"];
+  NSStackView *nameBlock = [MWMComponents fieldWithCaption:@"Name" control:self.nameField];
   self.valueFields = @[[self valueField:@"x"], [self valueField:@"y"], [self valueField:@"width"], [self valueField:@"height"]];
   NSArray *captions = @[@"x (from left)", @"y (from top)", @"Width", @"Height"];
   NSMutableArray *captioned = [NSMutableArray array];
-  for (NSUInteger i = 0; i < 4; i++) [captioned addObject:[self captioned:self.valueFields[i] with:captions[i]]];
-  NSStackView *positionRow = [NSStackView stackViewWithViews:@[captioned[0], captioned[1]]];
-  NSStackView *sizeRow = [NSStackView stackViewWithViews:@[captioned[2], captioned[3]]];
-  for (NSStackView *row in @[positionRow, sizeRow]) { [row setDistribution:NSStackViewDistributionFillEqually]; [row setSpacing:10]; [row setAlignment:NSLayoutAttributeTop]; }
+  for (NSUInteger i = 0; i < 4; i++) [captioned addObject:[MWMComponents fieldWithCaption:captions[i] control:self.valueFields[i]]];
+  NSStackView *positionRow = [MWMComponents equalRowWithViews:@[captioned[0], captioned[1]] spacing:10];
+  NSStackView *sizeRow = [MWMComponents equalRowWithViews:@[captioned[2], captioned[3]] spacing:10];
   // Units: a size can be a percent of the screen or a number of pixels; a start can be centered.
   self.widthUnit = [self unitControl:@"width-unit"];
   self.heightUnit = [self unitControl:@"height-unit"];
-  NSStackView *unitRow = [NSStackView stackViewWithViews:@[[self captioned:self.widthUnit with:@"Width in"], [self captioned:self.heightUnit with:@"Height in"]]];
+  NSStackView *unitRow = [MWMComponents equalRowWithViews:@[[MWMComponents fieldWithCaption:@"Width in" control:self.widthUnit], [MWMComponents fieldWithCaption:@"Height in" control:self.heightUnit]] spacing:10];
   NSButton *centerX = [NSButton checkboxWithTitle:@"Center across" target:self action:@selector(centeredChanged:)];
   NSButton *centerY = [NSButton checkboxWithTitle:@"Center down" target:self action:@selector(centeredChanged:)];
   [centerX setIdentifier:@"center-x"]; [centerY setIdentifier:@"center-y"];
   self.centerBoxes = @[centerX, centerY];
-  NSStackView *centerRow = [NSStackView stackViewWithViews:@[centerX, centerY]];
-  [centerRow setOrientation:NSUserInterfaceLayoutOrientationVertical];   // side by side they are wider than the card
-  [centerRow setAlignment:NSLayoutAttributeLeading];
-  [centerRow setSpacing:6];
+  NSStackView *centerRow = [MWMComponents columnWithViews:@[centerX, centerY] spacing:6 insets:NSEdgeInsetsZero];   // side by side they are wider than the card
   // Margins: pixels of space left inside the slot's edges.
   NSArray *marginNames = @[@"margin-left", @"margin-top", @"margin-right", @"margin-bottom"];
   NSArray *marginCaptions = @[@"Left", @"Top", @"Right", @"Bottom"];
@@ -354,16 +174,15 @@
     NSTextField *field = [self valueField:marginNames[i]];
     [field setAction:@selector(marginEdited:)];
     [marginFields addObject:field];
-    [marginViews addObject:[self captioned:field with:marginCaptions[i]]];
+    [marginViews addObject:[MWMComponents fieldWithCaption:marginCaptions[i] control:field]];
   }
   self.marginFields = marginFields;
-  NSStackView *marginRow = [NSStackView stackViewWithViews:marginViews];
-  for (NSStackView *row in @[unitRow, marginRow]) { [row setDistribution:NSStackViewDistributionFillEqually]; [row setSpacing:10]; [row setAlignment:NSLayoutAttributeTop]; }
+  NSStackView *marginRow = [MWMComponents equalRowWithViews:marginViews spacing:10];
   // Three boxes, one topic each: where it starts, how big it is, and the space kept free.
-  NSView *positionGroup = [self groupTitled:@"Position" views:@[positionRow, centerRow] accessory:nil];
-  NSView *sizeGroup = [self groupTitled:@"Size" views:@[sizeRow, unitRow] accessory:nil];
-  NSView *marginGroup = [self groupTitled:@"Margins in pixels" views:@[marginRow] accessory:nil];
-  self.fieldsBlock = [self verticalStack:@[positionGroup, sizeGroup, marginGroup] spacing:10];
+  NSView *positionGroup = [MWMComponents groupBoxWithTitle:@"Position" views:@[positionRow, centerRow] accessory:nil];
+  NSView *sizeGroup = [MWMComponents groupBoxWithTitle:@"Size" views:@[sizeRow, unitRow] accessory:nil];
+  NSView *marginGroup = [MWMComponents groupBoxWithTitle:@"Margins in pixels" views:@[marginRow] accessory:nil];
+  self.fieldsBlock = [MWMComponents columnWithViews:@[positionGroup, sizeGroup, marginGroup] spacing:10 insets:NSEdgeInsetsZero];
 
   // A formula written by hand that the fields can't show: its text, edited as text.
   self.formulaField = [NSTextField textFieldWithString:@""];
@@ -384,7 +203,7 @@
   NSTextField *customHelp = [NSTextField wrappingLabelWithString:@"Write move x;y width;height. No spaces inside a number."];
   [customHelp setFont:[MWMTheme fontCaption]];
   [customHelp setTextColor:[MWMTheme textSecondary]];
-  NSView *formulaGroup = [self groupTitled:@"Formula" views:@[self.formulaField, customHelp] accessory:accessories];
+  NSView *formulaGroup = [MWMComponents groupBoxWithTitle:@"Formula" views:@[self.formulaField, customHelp] accessory:accessories];
   // What the formula comes to on the screen being previewed.
   NSMutableArray *results = [NSMutableArray array], *resultViews = [NSMutableArray array];
   NSArray *resultNames = @[@"result-x", @"result-y", @"result-width", @"result-height"], *resultCaptions = @[@"x", @"y", @"Width", @"Height"];
@@ -392,18 +211,17 @@
     NSTextField *value = [NSTextField labelWithString:@""];
     [value setIdentifier:resultNames[i]];
     [results addObject:value];
-    [resultViews addObject:[self captioned:value with:resultCaptions[i]]];
+    [resultViews addObject:[MWMComponents fieldWithCaption:resultCaptions[i] control:value]];
   }
   self.resultFields = results;
-  NSStackView *resultTop = [NSStackView stackViewWithViews:@[resultViews[0], resultViews[1]]];
-  NSStackView *resultBottom = [NSStackView stackViewWithViews:@[resultViews[2], resultViews[3]]];
-  for (NSStackView *row in @[resultTop, resultBottom]) { [row setDistribution:NSStackViewDistributionFillEqually]; [row setSpacing:10]; [row setAlignment:NSLayoutAttributeTop]; }
-  NSView *resultGroup = [self groupTitled:@"On this screen" views:@[resultTop, resultBottom] accessory:nil];
+  NSStackView *resultTop = [MWMComponents equalRowWithViews:@[resultViews[0], resultViews[1]] spacing:10];
+  NSStackView *resultBottom = [MWMComponents equalRowWithViews:@[resultViews[2], resultViews[3]] spacing:10];
+  NSView *resultGroup = [MWMComponents groupBoxWithTitle:@"On this screen" views:@[resultTop, resultBottom] accessory:nil];
   self.checkLabel = [NSTextField wrappingLabelWithString:@""];
   [self.checkLabel setFont:[MWMTheme fontCaption]];
   [self.checkLabel setIdentifier:@"check"];
-  NSView *checksGroup = [self groupTitled:@"Checks" views:@[self.checkLabel] accessory:nil];
-  self.customBlock = [self verticalStack:@[formulaGroup, resultGroup, checksGroup] spacing:10];
+  NSView *checksGroup = [MWMComponents groupBoxWithTitle:@"Checks" views:@[self.checkLabel] accessory:nil];
+  self.customBlock = [MWMComponents columnWithViews:@[formulaGroup, resultGroup, checksGroup] spacing:10 insets:NSEdgeInsetsZero];
   [self.customBlock setHidden:YES];
   self.modeControl = [NSSegmentedControl segmentedControlWithLabels:@[@"Simple", @"Advanced (formula)"] trackingMode:NSSegmentSwitchTrackingSelectOne target:self action:@selector(modeChanged:)];
   [self.modeControl setIdentifier:@"mode"];
@@ -413,15 +231,9 @@
   NSView *cardLine = [MWMComponents separator];
   self.messageLabel = [NSTextField wrappingLabelWithString:@""];
   [self.messageLabel setFont:[MWMTheme fontCaption]];
-  NSStackView *cardContent = [NSStackView stackViewWithViews:@[nameBlock, cardLine, self.modeControl, self.fieldsBlock, self.customBlock, self.messageLabel]];
-  [cardContent setOrientation:NSUserInterfaceLayoutOrientationVertical];
-  [cardContent setAlignment:NSLayoutAttributeLeading];
-  [cardContent setSpacing:14];
-  [cardContent setEdgeInsets:NSEdgeInsetsMake(14, 14, 14, 14)];
+  NSStackView *cardContent = [MWMComponents columnWithViews:@[nameBlock, cardLine, self.modeControl, self.fieldsBlock, self.customBlock, self.messageLabel] spacing:14 insets:NSEdgeInsetsMake(14, 14, 14, 14)];
   [cardContent setTranslatesAutoresizingMaskIntoConstraints:NO];
-  for (NSView *view in @[nameBlock, cardLine, self.modeControl, self.fieldsBlock, self.customBlock, self.messageLabel]) [[view.widthAnchor constraintEqualToAnchor:cardContent.widthAnchor constant:-28] setActive:YES];
-  ConfigurationBlockView *card = [[ConfigurationBlockView alloc] init];
-  [card setTranslatesAutoresizingMaskIntoConstraints:NO];
+  NSView *card = [MWMComponents card];
   [card addSubview:cardContent];
   // The card is exactly as tall as its content, whatever room the page has.
   [cardContent setContentHuggingPriority:NSLayoutPriorityRequired forOrientation:NSLayoutConstraintOrientationVertical];
@@ -447,12 +259,12 @@
   [self.gridControl setSelectedSegment:3];  // quarters
   [self.gridControl setToolTip:@"The grid is made of this many equal parts, and the slot snaps to its lines"];
   NSView *toolbarSpacer = [MWMComponents spacer];
-  NSStackView *toolbarRow = [NSStackView stackViewWithViews:@[[self captionLabel:@"Preview on"], self.screenPopup, toolbarSpacer, [self captionLabel:@"Grid"], self.gridControl]];
+  NSStackView *toolbarRow = [NSStackView stackViewWithViews:@[[MWMComponents secondaryLabel:@"Preview on"], self.screenPopup, toolbarSpacer, [MWMComponents secondaryLabel:@"Grid"], self.gridControl]];
   [toolbarRow setSpacing:8];
   [toolbarRow setAlignment:NSLayoutAttributeCenterY];
   [toolbarRow setEdgeInsets:NSEdgeInsetsMake(6, 10, 6, 10)];
   [toolbarRow setTranslatesAutoresizingMaskIntoConstraints:NO];
-  ConfigurationBlockView *toolbar = [[ConfigurationBlockView alloc] init];
+  NSView *toolbar = [MWMComponents card];
   [toolbar setTranslatesAutoresizingMaskIntoConstraints:NO];
   [toolbar addSubview:toolbarRow];
   [NSLayoutConstraint activateConstraints:@[
@@ -522,6 +334,14 @@
   return size != nil ? [size sizeValue] : CGSizeMake(1600, 900);
 }
 
+// Works a formula out on the preview screen, in pixels, with a sample window for the names that mean the window.
+// Says what is wrong with it when it can't be.
+- (BOOL)evaluateFormula:(NSString *)formula rect:(CGRect *)rect error:(NSString **)error {
+  CGSize screen = [self previewScreenSize];
+  NSString *expanded = [self.document expandAliases:formula];
+  return [MWMFormula getRect:rect fromMoveText:expanded screenSize:screen window:[MWMFormula sampleWindowForScreenSize:screen] error:error];
+}
+
 // The area a stored formula stands for on the preview screen, as fractions of it, when it can be worked out
 // (nothing for a formula with a mistake).
 - (CGRect)fractionRectForFormula:(NSString *)formula {
@@ -529,8 +349,7 @@
   CGSize screen = [self previewScreenSize];
   if (shape != nil) return [shape fractionRectForScreenSize:screen];
   CGRect rect = CGRectZero;
-  NSString *expanded = [self.document expandAliases:formula];
-  if (![MWMFormula getRect:&rect fromMoveText:expanded screenSize:screen window:[MWMFormula sampleWindowForScreenSize:screen] error:nil]) return CGRectNull;
+  if (![self evaluateFormula:formula rect:&rect error:nil]) return CGRectNull;
   return CGRectMake(rect.origin.x / screen.width, rect.origin.y / screen.height, rect.size.width / screen.width, rect.size.height / screen.height);
 }
 
@@ -614,11 +433,9 @@
   if (self.customMode) {
     // A formula left as it was isn't checked again, so its slot can still be renamed.
     if ([[self draftFormula] isEqualToString:self.originalFormulaText ?: @""]) return nil;
-    CGSize screen = [self previewScreenSize];
     CGRect rect;
     NSString *error = nil;
-    NSString *expanded = [self.document expandAliases:[self draftFormula]];
-    if (![MWMFormula getRect:&rect fromMoveText:expanded screenSize:screen window:[MWMFormula sampleWindowForScreenSize:screen] error:&error]) return error ?: @"This isn't a formula MWM can work out.";
+    if (![self evaluateFormula:[self draftFormula] rect:&rect error:&error]) return error ?: @"This isn't a formula MWM can work out.";
     if (rect.size.width <= 0 || rect.size.height <= 0) return @"The slot needs some width and height.";
     return nil;
   }
@@ -830,8 +647,7 @@
   CGSize screen = [self previewScreenSize];
   CGRect rect = CGRectNull;
   NSString *error = nil;
-  NSString *expanded = [self.document expandAliases:[self draftFormula]];
-  BOOL worked = [MWMFormula getRect:&rect fromMoveText:expanded screenSize:screen window:[MWMFormula sampleWindowForScreenSize:screen] error:&error];
+  BOOL worked = [self evaluateFormula:[self draftFormula] rect:&rect error:&error];
   NSArray *values = worked ? @[@(rect.origin.x), @(rect.origin.y), @(rect.size.width), @(rect.size.height)] : nil;
   for (NSUInteger i = 0; i < 4; i++) [self.resultFields[i] setStringValue:values ? [NSString stringWithFormat:@"%ld px", (long)lround([values[i] doubleValue])] : @"–"];
   NSString *text;
@@ -844,49 +660,10 @@
   [self.checkLabel setTextColor:color];
 }
 
-// A list of the names a formula can use, with what each one is and an example.
+// The list of names a formula can use, in a popover from the "?" button.
 - (void)showFormulaHelp:(NSButton *)sender {
   if (self.helpPopover.shown) { [self.helpPopover close]; return; }
-  NSArray *names = @[
-    @[@"screenSizeX, screenSizeY", @"Width and height of the screen"],
-    @[@"screenOriginX, screenOriginY", @"Where the screen starts"],
-    @[@"windowSizeX, windowSizeY", @"Size of the window now"],
-    @[@"windowTopLeftX, windowTopLeftY", @"Where the window is now"],
-    @[@"newWindowSizeX, newWindowSizeY", @"Size the window has after the move"],
-  ];
-  NSMutableArray *rows = [NSMutableArray array];
-  [rows addObject:[MWMComponents labelWithText:@"Names you can use" size:13 color:[MWMTheme textPrimary] weight:NSFontWeightMedium]];
-  for (NSArray *pair in names) {
-    NSTextField *name = [MWMComponents labelWithText:pair[0] font:[MWMTheme fontMono] color:[MWMTheme textPrimary]];
-    NSTextField *what = [MWMComponents labelWithText:pair[1] font:[MWMTheme fontCaption] color:[MWMTheme textSecondary]];
-    NSStackView *row = [NSStackView stackViewWithViews:@[name, what]];
-    [row setOrientation:NSUserInterfaceLayoutOrientationVertical];
-    [row setAlignment:NSLayoutAttributeLeading];
-    [row setSpacing:1];
-    [rows addObject:row];
-  }
-  NSTextField *shape = [NSTextField wrappingLabelWithString:@"A slot is move x;y width;height. Add, subtract, multiply and divide with + - * / and parentheses. Put no spaces inside a number: screenSizeX/3, not screenSizeX / 3."];
-  [shape setFont:[MWMTheme fontCaption]];
-  [shape setTextColor:[MWMTheme textSecondary]];
-  [shape setPreferredMaxLayoutWidth:300];
-  [rows addObject:shape];
-  NSTextField *example = [NSTextField wrappingLabelWithString:@"move screenOriginX;screenOriginY screenSizeX/2;screenSizeY"];
-  [example setFont:[NSFont monospacedSystemFontOfSize:10.5 weight:NSFontWeightRegular]];
-  [example setTextColor:[MWMTheme textPrimary]];
-  [example setPreferredMaxLayoutWidth:300];
-  [rows addObject:example];
-  NSStackView *stack = [NSStackView stackViewWithViews:rows];
-  [stack setOrientation:NSUserInterfaceLayoutOrientationVertical];
-  [stack setAlignment:NSLayoutAttributeLeading];
-  [stack setSpacing:8];
-  [stack setEdgeInsets:NSEdgeInsetsMake(14, 14, 14, 14)];
-  [[stack.widthAnchor constraintEqualToConstant:328] setActive:YES];   // the text wraps inside the padding
-  for (NSView *row in rows) [[row.widthAnchor constraintLessThanOrEqualToConstant:300] setActive:YES];
-  NSViewController *controller = [[NSViewController alloc] init];
-  [controller setView:stack];
-  self.helpPopover = [[NSPopover alloc] init];
-  [self.helpPopover setBehavior:NSPopoverBehaviorTransient];
-  [self.helpPopover setContentViewController:controller];
+  self.helpPopover = [ConfigurationFormulaHelp popover];
   [self.helpPopover showRelativeToRect:[sender bounds] ofView:sender preferredEdge:NSRectEdgeMaxY];
 }
 

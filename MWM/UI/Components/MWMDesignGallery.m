@@ -215,7 +215,12 @@ static NSStackView *HorizontalStack(NSArray<NSView *> *views, CGFloat spacing) {
   MWMSaveBar *saveBar = [MWMSaveBar barWithTarget:nil cancel:nil save:nil];
   [saveBar setDirty:YES canSave:YES];
   [[saveBar.widthAnchor constraintEqualToConstant:520] setActive:YES];
-  return VerticalStack(@[chips, buttons, tileRow, keys, misc, rows, counts, settingsBlock, header, saveBar], MWMSpacingL);
+  // A form: a field with a caption, fields side by side, and a titled box for one topic.
+  NSTextField *width = [NSTextField textFieldWithString:@"50%"], *height = [NSTextField textFieldWithString:@"100%"];
+  NSStackView *sizeRow = [MWMComponents equalRowWithViews:@[[MWMComponents fieldWithCaption:@"Width" control:width], [MWMComponents fieldWithCaption:@"Height" control:height]] spacing:10];
+  NSView *groupBox = [MWMComponents groupBoxWithTitle:@"Size" views:@[sizeRow] accessory:[MWMChipView chipWithText:@"Custom" color:[MWMTheme warning]]];
+  [[groupBox.widthAnchor constraintEqualToConstant:300] setActive:YES];
+  return VerticalStack(@[chips, buttons, tileRow, keys, misc, rows, counts, settingsBlock, header, saveBar, groupBox], MWMSpacingL);
 }
 
 + (NSView *)galleryViewWithWidth:(CGFloat)width {
