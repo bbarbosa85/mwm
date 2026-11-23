@@ -171,6 +171,49 @@ static NSString *const kConfig =
   XCTAssertEqualObjects([self textOf:@"editorTitle" in:page], @"New Slot");
 }
 
+- (void)testANewSlotCanBeSimpleOrAdvanced {
+  MWMConfigDocument *doc;
+  ConfigurationSlotsView *page = [self pageWithConfig:kConfig document:&doc];
+  [page selectSlotNamed:@"centre"];
+  NSSegmentedControl *mode = [page valueForKey:@"modeControl"];
+  [page performSelector:NSSelectorFromString(@"refresh")];
+  XCTAssertTrue([mode isHidden], @"an existing slot opens the way it is written");
+  [page startNewSlot];
+  XCTAssertFalse([mode isHidden]);
+  XCTAssertEqual([mode selectedSegment], 0);
+  XCTAssertFalse([[page valueForKey:@"fieldsBlock"] isHidden]);
+  [mode setSelectedSegment:1];
+  [page performSelector:NSSelectorFromString(@"modeChanged:") withObject:mode];
+  XCTAssertTrue([page customMode]);
+  XCTAssertTrue([[page valueForKey:@"fieldsBlock"] isHidden]);
+  XCTAssertTrue([[page.draftFormulaText description] hasPrefix:@"move "], @"the formula starts from what the fields showed");
+  page.draftFormulaText = @"move screenOriginX;screenOriginY screenSizeX/2;screenSizeY";
+  [mode setSelectedSegment:0];
+  [page performSelector:NSSelectorFromString(@"modeChanged:") withObject:mode];
+  XCTAssertFalse([page customMode]);
+  XCTAssertEqualWithAccuracy(page.draftRect.size.width, 0.5, 0.001, @"a formula the fields can show goes back into them");
+}
+
+- (void)testAdvancedShowsTheFormulaInPixelsAndNamesWhatIsWrong {
+  MWMConfigDocument *doc;
+  ConfigurationSlotsView *page = [self pageWithConfig:kConfig document:&doc];
+  [page startNewSlot];
+  NSSegmentedControl *mode = [page valueForKey:@"modeControl"];
+  [mode setSelectedSegment:1];
+  [page performSelector:NSSelectorFromString(@"modeChanged:") withObject:mode];
+  page.draftFormulaText = @"move screenOriginX;screenOriginY screenSizeX/2;screenSizeY";
+  NSArray *results = [page valueForKey:@"resultFields"];
+  NSTextField *check = [page valueForKey:@"checkLabel"];
+  XCTAssertEqualObjects([results[0] stringValue], @"0 px");
+  XCTAssertTrue([[results[2] stringValue] hasSuffix:@" px"] && ![[results[2] stringValue] isEqualToString:@"0 px"], @"half the screen wide: %@", [results[2] stringValue]);
+  XCTAssertTrue([[check stringValue] hasPrefix:@"No problems"], @"%@", [check stringValue]);
+  page.draftFormulaText = @"move screenOriginX;screenOriginY screenSizeX / 2;screenSizeY";
+  XCTAssertTrue([[check stringValue] containsString:@"spaces"], @"%@", [check stringValue]);
+  XCTAssertEqualObjects([results[2] stringValue], @"–");
+  page.draftFormulaText = @"move screenOriginX;screenOriginY screenSizeX*2;screenSizeY";
+  XCTAssertTrue([[check stringValue] containsString:@"outside"], @"%@", [check stringValue]);
+}
+
 - (void)testTheGridControlSetsTheSnappingGrid {
   MWMConfigDocument *doc;
   ConfigurationSlotsView *page = [self pageWithConfig:kConfig document:&doc];
