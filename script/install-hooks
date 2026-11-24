@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+# Installs a git pre-push hook that runs script/check before code changes are pushed.
+# Pushes that only touch docs or markdown files skip it. To skip once: SKIP_CHECK=1 git push
+set -euo pipefail
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+HOOK="${ROOT}/.git/hooks/pre-push"
+cat > "${HOOK}" <<'HOOK_EOF'
+#!/usr/bin/env bash
+[ -n "${SKIP_CHECK:-}" ] && exit 0
+ROOT="$(git rev-parse --show-toplevel)"
+ZERO="0000000000000000000000000000000000000000"
+while read -r local_ref local_sha remote_ref remote_sha; do
+  [ "${local_sha}" = "${ZERO}" ] && continue            # deleting a branch
+  if [ "${remote_sha}" = "${ZERO}" ]; then base="$(git merge-base "${local_sha}" origin/master 2>/dev/null || true)"; else base="${remote_sha}"; fi
+  if [ -n "${base}" ]; then
+    changed="$(git diff --name-only "${base}" "${local_sha}" | grep -vE '^docs/|\.md$' || true)"
+    [ -z "${changed}" ] && continue                      # only docs or markdown
+  fi
+  echo "pre-push: running script/check (SKIP_CHECK=1 git push to skip)..."
+  "${ROOT}/script/check" || exit 1
+done
+exit 0
+HOOK_EOF
+chmod +x "${HOOK}"
+echo "Installed ${HOOK}"

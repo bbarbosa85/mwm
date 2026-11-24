@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+# Runs what CI runs, on this Mac, so you know before opening a pull request.
+#
+#   script/check            the unit and snapshot tests (about 2 minutes)
+#   script/check --release  also builds the universal Release app, as CI does
+#
+# Exits non-zero if anything fails. The full output is kept in tmp/check.log.
+set -uo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "${ROOT}"
+mkdir -p tmp
+LOG="tmp/check.log"
+
+echo "==> Running the tests..."
+xcodebuild test -project MWM.xcodeproj -scheme MWM -destination 'platform=macOS' > "${LOG}" 2>&1
+STATUS=$?
+grep -E "error:|\) failed" "${LOG}" | cut -c1-240 | head -20
+SUMMARY="$(grep -E "Executed [0-9]+ tests" "${LOG}" | tail -1 | sed -E 's/^[[:space:]]+//')"
+[ -n "${SUMMARY}" ] && echo "${SUMMARY}"
+if [ ${STATUS} -ne 0 ]; then
+  echo "Tests FAILED. Full output: ${LOG}" >&2
+  exit 1
+fi
+
+if [ "${1:-}" = "--release" ]; then
+  echo "==> Building the universal Release app..."
+  xcodebuild -project MWM.xcodeproj -scheme MWM -configuration Release \
+    -destination 'generic/platform=macOS' ONLY_ACTIVE_ARCH=NO \
+    -derivedDataPath tmp/CheckDerivedData build >> "${LOG}" 2>&1 || { echo "Release build FAILED. Full output: ${LOG}" >&2; exit 1; }
+  lipo -archs tmp/CheckDerivedData/Build/Products/Release/MWM.app/Contents/MacOS/MWM
+fi
+
+echo "OK: ready for a pull request."

@@ -1,10 +1,18 @@
 name: Build
 
-# Builds the app and runs the tests on every pull request, and on master.
+# Builds the app and runs the tests on every pull request that changes code, and on master.
+# Locally, script/check runs the same tests before you open a pull request.
 on:
   pull_request:
+    paths-ignore: ['docs/**', '**/*.md']
   push:
     branches: [master]
+    paths-ignore: ['docs/**', '**/*.md']
+
+# A newer push to a pull request cancels the older run. Runs on master are never cancelled.
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   build:
