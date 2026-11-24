@@ -4,11 +4,80 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>MWM features</title>
-<meta name="description" content="Everything MWM does: shortcuts, slots, displays, snapshots, backup and the menu bar, with what's new in each version.">
+<meta name="description" content="Everything MWM does: shortcuts, slots, displays, snapshots and backup.">
 <link rel="icon" href="assets/icon.png">
 <link rel="stylesheet" href="assets/site.css">
+<link rel="stylesheet" href="assets/docs.css">
+<style>
+.intro-card { margin: 32px 0 44px; padding: 32px 36px; background: var(--hero-a); border-radius: 20px; }
+.intro-card h1.page { margin: 0 0 10px; }
+.intro-card h1.page span { color: var(--accent); }
+.intro-card .lead { margin: 0; }
+@media (max-width: 560px) { .intro-card { padding: 24px 22px; } }
+.ic { width: 18px; height: 18px; vertical-align: -3px; margin-right: 8px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+main h2 .ic { width: 26px; height: 26px; vertical-align: -4px; margin-right: 10px; color: var(--accent); }
+.il { margin: 0 0 28px; }
+.il svg { display: block; width: 100%; height: auto; }
+.il .scr { fill: var(--surface-2); stroke: var(--line); stroke-width: 2; }
+.il .win { fill: var(--accent); }
+.il .win2 { fill: var(--accent); opacity: .55; }
+.il .win3 { fill: var(--accent); opacity: .3; }
+.il .key { fill: var(--surface-2); stroke: var(--line); stroke-width: 1.5; }
+.il .lbl { fill: var(--muted); font: 12px -apple-system, BlinkMacSystemFont, sans-serif; text-anchor: middle; }
+.il .kt { fill: var(--fg); font: 600 16px -apple-system, BlinkMacSystemFont, sans-serif; text-anchor: middle; }
+.il .mono { fill: var(--fg); font: 12px ui-monospace, Menlo, monospace; }
+.il .line { fill: var(--muted); opacity: .6; }
+.il .cloud { fill: var(--accent); opacity: .28; }
+.il .dash { stroke: var(--line); stroke-width: 2; stroke-dasharray: 5 6; fill: none; }
+.il .ok { stroke: var(--ok); fill: none; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+.il * { transform-box: fill-box; }
+.k1, .k2, .k3, .k4 { animation: press 6s infinite; }
+.k2 { animation-delay: .3s; } .k3 { animation-delay: .6s; } .k4 { animation-delay: .9s; }
+@keyframes press { 0%, 6% { fill: var(--surface-2); transform: none; } 10%, 20% { fill: var(--accent); transform: translateY(3px); } 28%, 100% { fill: var(--surface-2); transform: none; } }
+.slide { animation: slide 6s infinite; }
+@keyframes slide { 0%, 30% { transform: translateX(100px); } 42%, 85% { transform: translateX(0); } 96%, 100% { transform: translateX(100px); } }
+.hop { animation: hop 7s infinite; }
+@keyframes hop { 0%, 22% { transform: translateX(0); } 40%, 68% { transform: translateX(262px); } 86%, 100% { transform: translateX(0); } }
+.tag1 { animation: tag 8s infinite; } .tag2 { animation: tag 8s infinite; animation-delay: -4s; }
+@keyframes tag { 0%, 8% { opacity: 0; } 14%, 40% { opacity: 1; } 48%, 100% { opacity: 0; } }
+.packet { animation: packet 5s infinite; }
+@keyframes packet { 0% { transform: translateX(0); opacity: 0; } 8% { opacity: 1; } 55% { transform: translateX(190px); opacity: 1; } 62%, 100% { transform: translateX(190px); opacity: 0; } }
+.tick { animation: tick 5s infinite; }
+@keyframes tick { 0%, 58% { opacity: 0; } 66%, 92% { opacity: 1; } 100% { opacity: 0; } }
+.draw { transform-origin: left center; animation: draw 6s infinite; }
+.draw2 { animation-delay: .35s; } .draw3 { animation-delay: .7s; } .draw4 { animation-delay: 1.05s; }
+@keyframes draw { 0% { transform: scaleX(0); } 20%, 88% { transform: scaleX(1); } 100% { transform: scaleX(0); } }
+.pulse { animation: pulse 3s ease-in-out infinite; }
+@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.12); } }
+@media (prefers-reduced-motion: reduce) { .il * { animation: none !important; } .slide { transform: none; } .packet { opacity: 0; } .tick { opacity: 1; } .tag2 { opacity: 0; } .tag1 { opacity: 1; } }
+.fgrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin: 0; }
+.fcard { background: var(--surface); border-radius: 14px; padding: 20px 22px; display: flex; flex-direction: column; gap: 6px; }
+.fcard h3 { margin: 0; font-size: 16px; line-height: 1.3; }
+.fcard p { margin: 0; color: var(--muted); font-size: 15px; line-height: 1.5; }
+.fcard .foot { margin-top: auto; padding-top: 12px; }
+.fcard .how { font-size: 14px; font-weight: 600; white-space: nowrap; margin-left: auto; }
+.fcard kbd { font-size: 12px; }
+.fhead { display: flex; align-items: baseline; gap: 16px; margin: 0 0 6px; }
+.fhead h2 { margin: 0; }
+.fhead a { margin-left: auto; font-size: 14px; font-weight: 600; white-space: nowrap; }
+.doc .intro { margin-bottom: 24px; }
+.doc { padding-bottom: 8px; }
+.doc, .doc:first-of-type { border-top: 0; }
+.doc { margin-top: 104px; padding-top: 0; }
+.more { margin-top: 24px; }
+.doc:first-of-type { margin-top: 0; }
+@media (max-width: 720px) { .fgrid { grid-template-columns: 1fr; } .fhead { flex-direction: column; gap: 4px; } .fhead a { margin-left: 0; } }
+</style>
 </head>
 <body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<symbol id="i-shortcuts" viewBox="0 0 24 24"><rect x="2.5" y="6" width="19" height="12" rx="2.5"/><path d="M6.5 10h.01M10 10h.01M14 10h.01M17.5 10h.01M7.5 14h9"/></symbol>
+<symbol id="i-windows" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M12 4v16M12 12h9"/></symbol>
+<symbol id="i-displays" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="2.5"/><path d="M8 20h8M12 16v4"/></symbol>
+<symbol id="i-snapshots" viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.5"/></symbol>
+<symbol id="i-backup" viewBox="0 0 24 24"><path d="M7 18a4 4 0 0 1-.6-7.95A5.5 5.5 0 0 1 17 8.6 4.7 4.7 0 0 1 17.5 18z"/><path d="M12 15v-5M9.5 12.4 12 10l2.5 2.4"/></symbol>
+<symbol id="i-yours" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></symbol>
+</defs></svg>
 
 <nav>
   <div class="wrap">
@@ -19,91 +88,130 @@
       <a href="docs.html">Docs</a>
       <a href="examples.html">Examples</a>
       <a class="btn primary small cta" href="https://github.com/bbarbosa85/mwm/raw/master/docs/downloads/MWM-1.1.dmg">Download</a>
+      <a class="gh" href="https://github.com/bbarbosa85/mwm" aria-label="MWM on GitHub" title="MWM on GitHub"><svg viewBox="0 0 16 16" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg></a>
     </div>
   </div>
 </nav>
 
-<header class="hero">
-  <div class="wrap">
-    <h1>Everything <span>MWM does.</span></h1>
-    <p class="lead">A short tour of what is in the app, by area. The documentation has the full story for each part.</p>
-    <div class="actions">
-      <a class="btn primary" href="https://github.com/bbarbosa85/mwm/raw/master/docs/downloads/MWM-1.1.dmg">Download for macOS</a>
-      <a class="btn" href="docs.html">Read the documentation</a>
+<div class="docs-wrap">
+  <aside id="toc" aria-label="Contents">
+    <div class="links-list">
+    <h4>Features</h4>
+    <a href="#shortcuts"><svg class="ic" aria-hidden="true"><use href="#i-shortcuts"/></svg>Shortcuts</a>
+    <a href="#windows"><svg class="ic" aria-hidden="true"><use href="#i-windows"/></svg>Moving windows</a>
+    <a href="#displays"><svg class="ic" aria-hidden="true"><use href="#i-displays"/></svg>Displays</a>
+    <a href="#snapshots"><svg class="ic" aria-hidden="true"><use href="#i-snapshots"/></svg>Snapshots</a>
+    <a href="#backup"><svg class="ic" aria-hidden="true"><use href="#i-backup"/></svg>Backup</a>
+    <a href="#yours"><svg class="ic" aria-hidden="true"><use href="#i-yours"/></svg>Yours to keep</a>
     </div>
-    <div class="meta">Version 1.2 · macOS 12 or later · Apple silicon and Intel</div>
-  </div>
-</header>
+  </aside>
 
-<section class="alt" id="new">
-  <div class="wrap">
-    <h2>New in 1.2</h2>
-    <p class="sub">What changed since 1.1.</p>
-    <div class="grid"><div class="card"><div class="ico">☁️</div><h3>Backup</h3><p>Save your shortcuts, slots and snapshots to a private GitHub gist, one backup for each set of displays, and restore any of them. <a href="docs.html#backup">How backup works</a>.</p></div><div class="card"><div class="ico">⬇️</div><h3>Updates in place</h3><p><b>Update now</b> downloads the new version, checks it against its checksum and the app’s signature, then restarts into it. <a href="docs.html#menu-bar">The menu bar</a>.</p></div><div class="card"><div class="ico">🧭</div><h3>A tidier menu bar</h3><p><b>Settings…</b> (it was Configure MWM…), a <b>Backup</b> submenu to restore a backup in one click, and <b>Launch MWM at Login</b> right under your shortcuts.</p></div><div class="card"><div class="ico">💬</div><h3>One look for every alert</h3><p>Confirmations, warnings and results share one design, with clear buttons and a red one for anything that deletes.</p></div><div class="card"><div class="ico">📐</div><h3>A steady window</h3><p>The settings window keeps its width, so pages no longer jump around as you move between them.</p></div></div>
-  </div>
-</section>
-
-<section id="shortcuts">
-  <div class="wrap">
-    <h2>Shortcuts</h2>
-    <p class="sub">Set a key to do something, and see it all at a glance.</p>
-    <div class="grid"><div class="card"><div class="ico">⌨️</div><h3>Keyboard map</h3><p>Every shortcut on a picture of a Mac keyboard, colored by what it does, for each modifier group.</p></div><div class="card"><div class="ico">📋</div><h3>A searchable list</h3><p>Prefer rows? The list shows every shortcut and filters as you type.</p></div><div class="card"><div class="ico">⏺️</div><h3>Record or pick</h3><p>Press the keys to record a shortcut, or click a key on the map.</p></div><div class="card"><div class="ico">⚠️</div><h3>Conflicts flagged</h3><p>Two shortcuts on the same keys, or keys macOS already uses, are flagged before they cause trouble.</p></div><div class="card"><div class="ico">✦</div><h3>Hyper and other groups</h3><p>Name a group of modifiers, like <kbd>⌃</kbd><kbd>⌥</kbd><kbd>⌘</kbd>, and use it for as many shortcuts as you like.</p></div><div class="card"><div class="ico">🎁</div><h3>Good defaults</h3><p>Resize, nudge, focus, and jump to Finder, Safari, Terminal and more work out of the box. <a href="docs.html#defaults">See them</a>.</p></div></div>
-  </div>
-</section>
-
-<section class="alt" id="windows">
-  <div class="wrap">
-    <h2>Moving windows</h2>
-    <p class="sub">Put a window exactly where you want it.</p>
-    <div class="grid"><div class="card"><div class="ico">▦</div><h3>Slots</h3><p>Halves, thirds, quarters, or any area you draw. Nineteen presets are built in.</p></div><div class="card"><div class="ico">✏️</div><h3>Draw, don’t type</h3><p>Drag the edges of a slot on a picture of your screen, or type exact percentages. It snaps to a grid and previews on each connected screen.</p></div><div class="card"><div class="ico">↔️</div><h3>Resize, nudge and push</h3><p>Grow or shrink a window by a step, nudge it, or push it to a screen edge.</p></div><div class="card"><div class="ico">🔎</div><h3>Window hints</h3><p>Show a letter on every window and press it to jump there.</p></div><div class="card"><div class="ico">🎯</div><h3>Focus by direction</h3><p>Move focus to the window on the left, right, above or below.</p></div><div class="card"><div class="ico">🚀</div><h3>Jump to an app</h3><p>One key brings Finder, Safari, Terminal or any app you choose to the front.</p></div></div>
-  </div>
-</section>
-
-<section id="displays">
-  <div class="wrap">
-    <h2>Displays</h2>
-    <p class="sub">Work with more than one screen.</p>
-    <div class="grid"><div class="card"><div class="ico">🖥️</div><h3>Names that stick</h3><p>Give each screen a name. Shortcuts that use it keep working after you unplug and reconnect.</p></div><div class="card"><div class="ico">📤</div><h3>Throw to another screen</h3><p>Send a window to the next screen, or to one by name.</p></div><div class="card"><div class="ico">👁️</div><h3>Preview on any screen</h3><p>Slots are drawn on each of your connected screens while you edit.</p></div></div>
-  </div>
-</section>
-
-<section class="alt" id="snapshots">
-  <div class="wrap">
-    <h2>Snapshots</h2>
-    <p class="sub">Save the whole desktop.</p>
-    <div class="grid"><div class="card"><div class="ico">📸</div><h3>Save and restore</h3><p>Remember where every window is and the screens it was on. Restore it from the window, the menu bar or a shortcut.</p></div><div class="card"><div class="ico">🖼️</div><h3>Live pictures</h3><p>Each card shows the windows with each app’s icon.</p></div><div class="card"><div class="ico">📌</div><h3>Keep after restart</h3><p>Pin a snapshot so it survives MWM restarting.</p></div><div class="card"><div class="ico">🔄</div><h3>Update in place</h3><p>Replace a snapshot with the windows you have now.</p></div></div>
-  </div>
-</section>
-
-<section id="backup">
-  <div class="wrap">
-    <h2>Backup</h2>
-    <p class="sub">Your setup, somewhere safe.</p>
-    <div class="grid"><div class="card"><div class="ico">☁️</div><h3>A private gist</h3><p>Backups go to one private gist on your GitHub account. The token stays in your Keychain.</p></div><div class="card"><div class="ico">🏷️</div><h3>One backup per setup</h3><p>Name each set of displays, like Desk, two monitors. A name that already exists replaces that backup.</p></div><div class="card"><div class="ico">✅</div><h3>Matches your displays</h3><p>The backup that fits the screens you have connected is marked.</p></div><div class="card"><div class="ico">🛟</div><h3>Restore with a safety copy</h3><p>Restoring replaces your shortcuts, slots and snapshots and keeps a copy of your current file next to it.</p></div></div>
-  </div>
-</section>
-
-<section class="alt" id="yours">
-  <div class="wrap">
-    <h2>Yours to keep</h2>
-    <p class="sub">Plain, private and open.</p>
-    <div class="grid"><div class="card"><div class="ico">📄</div><h3>One readable file</h3><p>Everything lives in <code>~/.mwm.yml</code>. Edit it in the app or in any editor.</p></div><div class="card"><div class="ico">🔒</div><h3>Nothing runs from it</h3><p>The file is plain data. MWM never runs code from it.</p></div><div class="card"><div class="ico">📥</div><h3>Comes from Slate</h3><p>Slate and Slate YAML settings are converted on first launch. <a href="docs.html#migration">Moving from Slate</a>.</p></div><div class="card"><div class="ico">🌐</div><h3>Quiet on the network</h3><p>MWM only talks to GitHub for new versions and for your own backup, and you can turn the update check off. Open source under GPLv3.</p></div></div>
-  </div>
-</section>
-
-<section class="download">
-  <div class="wrap">
-    <div class="dl-box">
-      <img src="assets/icon.png" alt="" width="72" height="72">
-      <h2 style="margin-top:10px">Try MWM</h2>
-      <p class="sub" style="margin-bottom:0">Free. Open the disk image and drag MWM to Applications.</p>
-      <div class="actions">
-        <a class="btn primary" href="https://github.com/bbarbosa85/mwm/raw/master/docs/downloads/MWM-1.1.dmg">Download .dmg</a>
-        <a class="btn" href="docs.html#quick-start">Get started</a>
-      </div>
+  <main>
+    <div class="intro-card">
+      <h1 class="page"><span>Features</span></h1>
+      <p class="lead">Find what you want to do, see it, then open the docs for the steps.</p>
     </div>
-  </div>
-</section>
+
+    <section class="doc" id="shortcuts">
+      <div class="fhead"><h2><svg class="ic" aria-hidden="true"><use href="#i-shortcuts"/></svg>Shortcuts</h2></div>
+      <p class="intro">Set a key to do something, and see it all at a glance.</p>
+      <div class="il"><svg viewBox="0 0 560 160" role="img" aria-label="Pressing a shortcut moves a window to the left half of the screen"><g>
+<rect class="key k1" x="40" y="55" width="52" height="52" rx="10"/><text class="kt" x="66" y="87">⌃</text>
+<rect class="key k2" x="102" y="55" width="52" height="52" rx="10"/><text class="kt" x="128" y="87">⌥</text>
+<rect class="key k3" x="164" y="55" width="52" height="52" rx="10"/><text class="kt" x="190" y="87">⌘</text>
+<rect class="key k4" x="226" y="55" width="52" height="52" rx="10"/><text class="kt" x="252" y="87">←</text></g>
+<rect class="scr" x="320" y="20" width="210" height="120" rx="10"/><rect class="win slide" x="326" y="28" width="98" height="104" rx="6"/></svg></div>
+      <div class="fgrid">
+        <div class="fcard"><h3>See every shortcut at a glance</h3><p>A keyboard map, colored by what each key does, for each modifier group.</p></div>
+        <div class="fcard"><h3>Find one fast</h3><p>A searchable list that filters as you type.</p></div>
+        <div class="fcard"><h3>Add a shortcut by pressing it</h3><p>Record the keys, or click a key on the map.</p></div>
+        <div class="fcard"><h3>Know when two shortcuts clash</h3><p>Two shortcuts on the same keys, or keys macOS already uses, are flagged before they cause trouble.</p></div>
+        <div class="fcard"><h3>Use one key group for everything</h3><p>Name a group of modifiers and use it for as many shortcuts as you like.</p><div class="foot"><kbd>⌃</kbd><kbd>⌥</kbd><kbd>⌘</kbd></div></div>
+        <div class="fcard"><h3>Start with good defaults</h3><p>Resize, nudge, focus, and jump to Finder, Safari or Terminal work out of the box.</p></div>
+        </div>
+      <div class="more"><a class="btn small" href="docs.html#first-shortcut">Read the docs</a></div>
+    </section>
+
+    <section class="doc" id="windows">
+      <div class="fhead"><h2><svg class="ic" aria-hidden="true"><use href="#i-windows"/></svg>Moving windows</h2></div>
+      <p class="intro">Put a window exactly where you want it.</p>
+      <div class="il"><svg viewBox="0 0 560 160" role="img" aria-label="A window snapping to different slots: left half, right half, center, a quarter"><rect class="scr" x="130" y="20" width="300" height="120" rx="10"/>
+<rect class="win" x="136" y="28" width="144" height="104" rx="6"><animate attributeName="x" values="136;136;284;284;196;196;136;136" dur="10s" repeatCount="indefinite"/><animate attributeName="y" values="28;28;28;28;28;28;28;28" dur="10s" repeatCount="indefinite"/><animate attributeName="width" values="144;144;144;144;168;168;144;144" dur="10s" repeatCount="indefinite"/><animate attributeName="height" values="104;104;104;104;104;104;50;50" dur="10s" repeatCount="indefinite"/></rect></svg></div>
+      <div class="fgrid">
+        <div class="fcard"><h3>Put a window in part of the screen</h3><p>Halves, thirds, quarters, or any area you draw. Nineteen presets are built in.</p><div class="foot"><kbd>⌃</kbd><kbd>⌥</kbd><kbd>⌘</kbd><kbd>←</kbd></div></div>
+        <div class="fcard"><h3>Draw an area instead of typing numbers</h3><p>Drag the edges of a slot on a picture of your screen. It snaps to a grid.</p></div>
+        <div class="fcard"><h3>Grow, shrink or nudge</h3><p>By a step, or push a window to a screen edge.</p><div class="foot"><kbd>⌥</kbd><kbd>↑</kbd></div></div>
+        <div class="fcard"><h3>Jump to any window with a letter</h3><p>Window hints show a letter on every window.</p><div class="foot"><kbd>⌘</kbd><kbd>esc</kbd></div></div>
+        <div class="fcard"><h3>Move focus by direction</h3><p>To the window on the left, right, above or below.</p><div class="foot"><kbd>⌘</kbd><kbd>←</kbd></div></div>
+        <div class="fcard"><h3>Jump to an app</h3><p>One key brings Finder, Safari, Terminal or any app you choose to the front.</p></div>
+        </div>
+      <div class="more"><a class="btn small" href="docs.html#move-windows">Read the docs</a></div>
+    </section>
+
+    <section class="doc" id="displays">
+      <div class="fhead"><h2><svg class="ic" aria-hidden="true"><use href="#i-displays"/></svg>Displays</h2></div>
+      <p class="intro">Work with more than one screen.</p>
+      <div class="il"><svg viewBox="0 0 560 160" role="img" aria-label="A window moving from the laptop to an external display"><rect class="scr" x="70" y="22" width="160" height="96" rx="8"/><rect class="scr" x="50" y="124" width="200" height="7" rx="3.5"/><text class="lbl" x="150" y="152">laptop</text>
+<rect class="scr" x="320" y="12" width="190" height="112" rx="8"/><rect class="scr" x="402" y="126" width="26" height="12" rx="2"/><text class="lbl" x="415" y="154">Studio Display</text>
+<rect class="win hop" x="92" y="38" width="64" height="64" rx="6"/></svg></div>
+      <div class="fgrid">
+        <div class="fcard"><h3>Name your screens</h3><p>Names stick, even after you unplug and reconnect.</p></div>
+        <div class="fcard"><h3>Send a window to another screen</h3><p>To the next screen, or to one by name.</p></div>
+        <div class="fcard"><h3>Preview slots on any screen</h3><p>Slots are drawn on each of your connected screens while you edit.</p></div>
+        </div>
+      <div class="more"><a class="btn small" href="docs.html#screens">Read the docs</a></div>
+    </section>
+
+    <section class="doc" id="snapshots">
+      <div class="fhead"><h2><svg class="ic" aria-hidden="true"><use href="#i-snapshots"/></svg>Snapshots</h2></div>
+      <p class="intro">Save the whole desktop.</p>
+      <div class="il"><svg viewBox="0 0 560 160" role="img" aria-label="A snapshot brings every window back to where it was"><rect class="scr" x="170" y="14" width="220" height="116" rx="10"/>
+<rect class="win" x="176" y="22" width="102" height="100" rx="5"><animate attributeName="width" values="102;102;208;208;102" dur="8s" repeatCount="indefinite"/><animate attributeName="height" values="100;100;48;48;100" dur="8s" repeatCount="indefinite"/></rect>
+<rect class="win2" x="282" y="22" width="102" height="48" rx="5"><animate attributeName="x" values="282;282;176;176;282" dur="8s" repeatCount="indefinite"/><animate attributeName="y" values="22;22;74;74;22" dur="8s" repeatCount="indefinite"/></rect>
+<rect class="win3" x="282" y="74" width="102" height="48" rx="5"/>
+<text class="lbl tag1" x="280" y="152">work</text><text class="lbl tag2" x="280" y="152">couch</text></svg></div>
+      <div class="fgrid">
+        <div class="fcard"><h3>Get my whole desktop back</h3><p>Restore it from the window, the menu bar or a shortcut.</p></div>
+        <div class="fcard"><h3>See what is in each snapshot</h3><p>Live pictures of the windows, with each app’s icon.</p></div>
+        <div class="fcard"><h3>Keep one after MWM restarts</h3><p>Pin a snapshot so it survives a restart.</p></div>
+        <div class="fcard"><h3>Update one with today’s windows</h3><p>Replace a snapshot with the windows you have now.</p></div>
+        </div>
+      <div class="more"><a class="btn small" href="docs.html#snapshots">Read the docs</a></div>
+    </section>
+
+    <section class="doc" id="backup">
+      <div class="fhead"><h2><svg class="ic" aria-hidden="true"><use href="#i-backup"/></svg>Backup</h2></div>
+      <p class="intro">Your setup, somewhere safe.</p>
+      <div class="il"><svg viewBox="0 0 560 160" role="img" aria-label="Your setup travels from your computer to a private gist"><rect class="scr" x="60" y="30" width="130" height="86" rx="8"/><rect class="win" x="70" y="40" width="48" height="66" rx="5"/><rect class="win2" x="124" y="40" width="58" height="30" rx="5"/><rect class="win3" x="124" y="76" width="58" height="30" rx="5"/>
+<path class="dash" d="M205 73H395"/><rect class="win packet" x="200" y="62" width="16" height="22" rx="4"/>
+<path class="cloud" transform="translate(397 33) scale(5.5)" d="M7 18a4 4 0 0 1-.6-7.95A5.5 5.5 0 0 1 17 8.6 4.7 4.7 0 0 1 17.5 18z"/><path class="ok tick" d="M440 75l8 8 16-17"/>
+<text class="lbl" x="125" y="140">this computer</text><text class="lbl" x="452" y="140">private gist</text></svg></div>
+      <div class="fgrid">
+        <div class="fcard"><h3>Keep my setup in a private gist</h3><p>Backups go to one private gist on your GitHub account. The token stays in your Keychain.</p></div>
+        <div class="fcard"><h3>One backup for each set of displays</h3><p>Name each setup, like Desk, two monitors. The same name replaces that backup.</p></div>
+        <div class="fcard"><h3>See which backup fits my screens</h3><p>The backup that matches your connected displays is marked.</p></div>
+        <div class="fcard"><h3>Restore with a safety copy</h3><p>Your current file is kept next to it, so nothing is lost.</p></div>
+        </div>
+      <div class="more"><a class="btn small" href="docs.html#backup">Read the docs</a></div>
+    </section>
+
+    <section class="doc" id="yours">
+      <div class="fhead"><h2><svg class="ic" aria-hidden="true"><use href="#i-yours"/></svg>Yours to keep</h2></div>
+      <p class="intro">Plain, private and open.</p>
+      <div class="il"><svg viewBox="0 0 560 160" role="img" aria-label="Your settings are one plain text file, kept private"><rect class="scr" x="170" y="16" width="170" height="128" rx="10"/><text class="mono" x="186" y="42">~/.mwm.yml</text>
+<rect class="line draw" x="186" y="58" width="120" height="7" rx="3.5"/><rect class="line draw draw2" x="186" y="76" width="90" height="7" rx="3.5"/><rect class="line draw draw3" x="186" y="94" width="130" height="7" rx="3.5"/><rect class="line draw draw4" x="186" y="112" width="70" height="7" rx="3.5"/>
+<svg x="364" y="52" width="56" height="56" viewBox="0 0 24 24" class="pulse" style="fill:none;stroke:var(--accent);stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round"><use href="#i-yours"/></svg></svg></div>
+      <div class="fgrid">
+        <div class="fcard"><h3>Read and edit one plain file</h3><p>Everything lives in ~/.mwm.yml. Edit it in the app or in any editor.</p></div>
+        <div class="fcard"><h3>Nothing runs from it</h3><p>The file is plain data. MWM never runs code from it.</p></div>
+        <div class="fcard"><h3>Bring my Slate settings</h3><p>Slate and Slate YAML settings are converted on first launch.</p></div>
+        <div class="fcard"><h3>Stay quiet on the network</h3><p>MWM talks to GitHub only for new versions and your own backup, and you can turn the update check off.</p></div>
+        </div>
+      <div class="more"><a class="btn small" href="docs.html#config-file">Read the docs</a></div>
+    </section>
+
+  </main>
+</div>
 
 <footer>
   <div class="wrap">
@@ -111,6 +219,24 @@
     <span class="links"><a href="docs.html">Docs</a><a href="features.html">Features</a><a href="examples.html">Examples</a><a href="https://github.com/bbarbosa85/mwm">GitHub</a><a href="https://github.com/bbarbosa85/mwm/graphs/contributors">Contributors</a></span>
   </div>
 </footer>
-
+<script>
+(function () {
+  var links = {};
+  document.querySelectorAll('#toc a').forEach(function (a) { links[a.getAttribute('href').slice(1)] = a; });
+  var sections = document.querySelectorAll('main section.doc');
+  if (!('IntersectionObserver' in window)) return;
+  var observer = new IntersectionObserver(function (entries) {
+    entries.forEach(function (en) {
+      if (!en.isIntersecting || !links[en.target.id]) return;
+      Object.keys(links).forEach(function (k) { links[k].classList.remove('on'); });
+      links[en.target.id].classList.add('on');
+    });
+  }, { rootMargin: '-20% 0px -70% 0px' });
+  sections.forEach(function (s) { observer.observe(s); });
+})();
+</script>
+<script>
+if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) document.querySelectorAll('.il svg').forEach(function (v) { if (v.pauseAnimations) v.pauseAnimations(); });
+</script>
 </body>
 </html>
