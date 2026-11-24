@@ -17,9 +17,11 @@
   .how li::before { content: counter(q); width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; font-size: 13px; color: #fff; background: #1f5bff; }
   .how li p { margin: 0; } .how li .sub { color: var(--muted); font-size: 15px; margin-top: 4px; }
   .how pre { margin: 8px 0 0; }
-  .ex { display: grid; grid-template-columns: 300px 1fr; gap: 28px; background: var(--surface); border-radius: 14px; padding: 24px; margin-top: 104px; align-items: start; }
+  .ex { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 20px 28px; background: var(--surface); border-radius: 14px; padding: 24px; margin-top: 104px; align-items: start; }
   .ex .art { background: var(--surface-2); border-radius: 14px; padding: 18px; color: var(--fg); }
   .ex .art svg { display: block; width: 100%; height: auto; }
+  .ex .body { min-width: 0; }
+  .ex > details { grid-column: 1 / -1; }
   .ex h2 { margin: 0 0 2px; font-size: 24px; letter-spacing: -.015em; }
   .ex .who { margin: 0 0 14px; color: var(--accent); font-size: 14px; font-weight: 600; }
   .does { list-style: none; padding: 0; margin: 0 0 14px; display: grid; gap: 8px; }
@@ -29,8 +31,8 @@
   .acts { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 6px; }
   .ex details { background: transparent; border: 0; padding: 0; margin: 0; }
   .ex summary { font-weight: 500; color: var(--muted); padding: 8px 0; }
-  .ex pre { max-height: 380px; overflow: auto; margin: 4px 0 0; }
-  @media (max-width: 820px) { .ex { grid-template-columns: 1fr; } .ex .art { max-width: 360px; } .does li { grid-template-columns: 1fr; gap: 3px; } }
+  .ex pre { max-height: 420px; overflow: auto; margin: 4px 0 0; }
+  @media (max-width: 820px) { .ex { grid-template-columns: minmax(0, 1fr); } .ex .art { max-width: 360px; } .does li { grid-template-columns: 1fr; gap: 3px; } }
 </style>
 </head>
 <body>
@@ -89,7 +91,8 @@ mv ~/Downloads/starter.mwm.yml ~/.mwm.yml</code></pre>
           <a class="btn primary small" href="examples/starter.mwm.yml" download>Download</a>
           <button class="btn small" type="button" data-copy="starter.mwm.yml">Copy the file</button>
         </div>
-        <details><summary>See the file</summary><pre id="pre-starter.mwm.yml"><code># Example: a small starter. Halves and full screen on hyper + arrows, thirds on hyper + 1 2 3,
+      </div>
+      <details><summary>See the file</summary><pre id="pre-starter.mwm.yml"><code># Example: a small starter. Halves and full screen on hyper + arrows, thirds on hyper + 1 2 3,
 # a few app shortcuts, window hints, and one snapshot you can save and restore.
 # hyper = ctrl + alt + cmd. Save this file as ~/.mwm.yml, or open it in Settings.
 
@@ -167,7 +170,6 @@ bindings:
     action: {type: restore-snapshot, name: work}
     note: Put the windows back
 </code></pre></details>
-      </div>
     </article>
     <article class="ex" id="ultrawide">
       <div class="art"><svg viewBox="0 0 420 112" role="img" aria-hidden="true"><rect x="1" y="1" width="418" height="110" rx="9" fill="#33318f" stroke="rgba(255,255,255,.3)" stroke-width="2"/><rect x="1" y="1" width="418" height="9" rx="4.5" fill="rgba(0,0,0,.3)"/><rect x="6.0" y="12.0" width="135.7" height="91.0" rx="4" fill="#ffffff"/><rect x="144.7" y="12.0" width="131.6" height="91.0" rx="4" fill="#ffd21f"/><rect x="279.4" y="12.0" width="131.6" height="91.0" rx="4" fill="#ff5a5f"/></svg></div>
@@ -180,7 +182,8 @@ bindings:
           <a class="btn primary small" href="examples/ultrawide.mwm.yml" download>Download</a>
           <button class="btn small" type="button" data-copy="ultrawide.mwm.yml">Copy the file</button>
         </div>
-        <details><summary>See the file</summary><pre id="pre-ultrawide.mwm.yml"><code># Example: one ultrawide monitor (5120x1440). Thirds, two thirds, a centered column and quarters,
+      </div>
+      <details><summary>See the file</summary><pre id="pre-ultrawide.mwm.yml"><code># Example: one ultrawide monitor (5120x1440). Thirds, two thirds, a centered column and quarters,
 # on hyper + the number row. hyper = ctrl + alt + cmd.
 # Percentages are of the screen, so this works on any wide monitor.
 
@@ -267,7 +270,6 @@ bindings:
     action: {type: hint}
     note: Press a letter to jump to that window
 </code></pre></details>
-      </div>
     </article>
     <article class="ex" id="two-displays">
       <div class="art"><svg viewBox="0 0 300 150" role="img" aria-hidden="true"><rect x="5" y="29" width="108" height="82" rx="9" fill="#33318f" stroke="rgba(255,255,255,.3)" stroke-width="2"/><rect x="5" y="29" width="108" height="9" rx="4.5" fill="rgba(0,0,0,.3)"/><rect x="10.0" y="40.0" width="46.0" height="63.0" rx="4" fill="#ffffff"/><rect x="59.0" y="40.0" width="46.0" height="63.0" rx="4" fill="#ffd21f"/><rect x="125" y="11" width="168" height="108" rx="9" fill="#33318f" stroke="rgba(255,255,255,.3)" stroke-width="2"/><rect x="125" y="11" width="168" height="9" rx="4.5" fill="rgba(0,0,0,.3)"/><rect x="130.0" y="22.0" width="76.0" height="89.0" rx="4" fill="#ff5a5f"/><rect x="209.0" y="22.0" width="76.0" height="89.0" rx="4" fill="#7fb0ff"/><text x="59" y="20" text-anchor="middle" font-size="13" font-weight="700" fill="currentColor" font-family="-apple-system, sans-serif">laptop</text><text x="209" y="136" text-anchor="middle" font-size="13" font-weight="700" fill="currentColor" font-family="-apple-system, sans-serif">desk</text></svg></div>
@@ -280,7 +282,8 @@ bindings:
           <a class="btn primary small" href="examples/two-displays.mwm.yml" download>Download</a>
           <button class="btn small" type="button" data-copy="two-displays.mwm.yml">Copy the file</button>
         </div>
-        <details><summary>See the file</summary><pre id="pre-two-displays.mwm.yml"><code># Example: a laptop and an external display. Name each screen, then send windows to it by name.
+      </div>
+      <details><summary>See the file</summary><pre id="pre-two-displays.mwm.yml"><code># Example: a laptop and an external display. Name each screen, then send windows to it by name.
 # hyper + 1 / 2 puts a window full screen on the laptop / the external display,
 # hyper + arrows split the external display, hyper + tab throws a window to the other screen.
 # Change &quot;Studio Display&quot; to your display&#x27;s model (Settings &gt; Displays shows it).
@@ -353,7 +356,6 @@ bindings:
     action: {type: restore-snapshot, name: desk-setup}
     note: Put it back after plugging in
 </code></pre></details>
-      </div>
     </article>
     <article class="ex" id="apps-and-snapshots">
       <div class="art"><svg viewBox="0 0 240 126" role="img" aria-hidden="true"><rect x="12" y="14" width="48" height="48" rx="12" fill="#1f5bff"/><text x="36" y="46" text-anchor="middle" font-size="22" font-weight="800" fill="#fff" font-family="-apple-system, sans-serif">F</text><rect x="68" y="14" width="48" height="48" rx="12" fill="#1e7bf0"/><text x="92" y="46" text-anchor="middle" font-size="22" font-weight="800" fill="#fff" font-family="-apple-system, sans-serif">S</text><rect x="124" y="14" width="48" height="48" rx="12" fill="#ff5a5f"/><text x="148" y="46" text-anchor="middle" font-size="22" font-weight="800" fill="#fff" font-family="-apple-system, sans-serif">C</text><rect x="180" y="14" width="48" height="48" rx="12" fill="#4a4d5c"/><text x="204" y="46" text-anchor="middle" font-size="22" font-weight="800" fill="#fff" font-family="-apple-system, sans-serif">T</text><rect x="12" y="70" width="48" height="48" rx="12" fill="#ffd21f"/><text x="36" y="102" text-anchor="middle" font-size="22" font-weight="800" fill="#222" font-family="-apple-system, sans-serif">N</text><rect x="68" y="70" width="48" height="48" rx="12" fill="#28a745"/><text x="92" y="102" text-anchor="middle" font-size="22" font-weight="800" fill="#fff" font-family="-apple-system, sans-serif">M</text><rect x="124" y="70" width="48" height="48" rx="12" fill="#e0457b"/><text x="148" y="102" text-anchor="middle" font-size="22" font-weight="800" fill="#fff" font-family="-apple-system, sans-serif">A</text><rect x="180" y="70" width="48" height="48" rx="12" fill="#6b3fd1"/><text x="204" y="102" text-anchor="middle" font-size="22" font-weight="800" fill="#fff" font-family="-apple-system, sans-serif">K</text></svg></div>
@@ -366,7 +368,8 @@ bindings:
           <a class="btn primary small" href="examples/apps-and-snapshots.mwm.yml" download>Download</a>
           <button class="btn small" type="button" data-copy="apps-and-snapshots.mwm.yml">Copy the file</button>
         </div>
-        <details><summary>See the file</summary><pre id="pre-apps-and-snapshots.mwm.yml"><code># Example: jump between apps and switch whole desktops.
+      </div>
+      <details><summary>See the file</summary><pre id="pre-apps-and-snapshots.mwm.yml"><code># Example: jump between apps and switch whole desktops.
 # alt + shift + a letter focuses an app. hyper + a letter restores a snapshot, and
 # hyper + shift + the same letter saves it (ctrl + alt + cmd + shift).
 # Arrange your windows, press the save shortcut once, and restore it any time.
@@ -458,7 +461,6 @@ bindings:
     action: {type: save-snapshot, name: focus, keep: true}
     note: Save &quot;focus&quot;
 </code></pre></details>
-      </div>
     </article>
     <article class="ex" id="daily-driver">
       <div class="art"><svg viewBox="0 0 420 120" role="img" aria-hidden="true"><rect x="5" y="7" width="298" height="82" rx="9" fill="#33318f" stroke="rgba(255,255,255,.3)" stroke-width="2"/><rect x="5" y="7" width="298" height="9" rx="4.5" fill="rgba(0,0,0,.3)"/><rect x="10.0" y="18.0" width="69.0" height="63.0" rx="4" fill="#ffffff"/><rect x="82.0" y="18.0" width="141.0" height="63.0" rx="4" fill="#ffd21f"/><rect x="226.0" y="18.0" width="69.0" height="63.0" rx="4" fill="#ff5a5f"/><rect x="319" y="25" width="94" height="64" rx="9" fill="#33318f" stroke="rgba(255,255,255,.3)" stroke-width="2"/><rect x="319" y="25" width="94" height="9" rx="4.5" fill="rgba(0,0,0,.3)"/><rect x="324.0" y="36.0" width="81.0" height="45.0" rx="4" fill="#7fb0ff"/></svg></div>
@@ -471,7 +473,8 @@ bindings:
           <a class="btn primary small" href="examples/daily-driver.mwm.yml" download>Download</a>
           <button class="btn small" type="button" data-copy="daily-driver.mwm.yml">Copy the file</button>
         </div>
-        <details><summary>See the file</summary><pre id="pre-daily-driver.mwm.yml"><code># Example: the author&#x27;s daily setup. A MacBook with a 5120x1440 ultrawide, hyper = ctrl + alt + cmd.
+      </div>
+      <details><summary>See the file</summary><pre id="pre-daily-driver.mwm.yml"><code># Example: the author&#x27;s daily setup. A MacBook with a 5120x1440 ultrawide, hyper = ctrl + alt + cmd.
 # Halves, thirds and quarters on the number row and keypad, app shortcuts on alt + shift,
 # window hints on cmd + shift + H. Change the app names and screens to your own, then save this
 # file as ~/.mwm.yml (or open it in Settings).
@@ -790,7 +793,6 @@ bindings:
     enabled: false
     note: Push
 </code></pre></details>
-      </div>
     </article>
 </main>
 </div>
