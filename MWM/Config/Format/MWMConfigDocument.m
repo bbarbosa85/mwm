@@ -27,7 +27,7 @@ NSString *const MWMConfigDocumentErrorBindingIndexKey = @"MWMConfigDocumentError
 NSString *const MWMConfigDocumentErrorEntryNameKey = @"MWMConfigDocumentErrorEntryName";
 
 static NSString *const kHeader =
-  @"# MWM configuration, managed by the configuration window (Configure MWM...).\n"
+  @"# MWM configuration, managed by the configuration window (Settings...).\n"
   @"# The window rewrites this file when you change something there, so comments\n"
   @"# added here aren't kept. In free text, ${name} refers to an entry in modifiers,\n"
   @"# monitors, slots or aliases.\n";

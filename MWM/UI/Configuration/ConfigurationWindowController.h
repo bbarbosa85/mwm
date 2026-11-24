@@ -2,7 +2,7 @@
 //  ConfigurationWindowController.h
 //  Slate
 //
-//  The "Configure MWM…" window: a form for ~/.mwm.yml. Every change is
+//  The "Settings…" window: a form for ~/.mwm.yml. Every change is
 //  validated and, when it has no errors, saved right away. Apply restarts
 //  MWM to load the file.
 //

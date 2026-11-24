@@ -33,7 +33,8 @@ flowchart TD
 The central hub of Slate during runtime is [`MWMAppDelegate`](file:///Users/brunobarbosa/Projetos/mwm/mwm/MWM/MWMAppDelegate.m).
 
 ### Key Responsibilities:
-1. **Status Item & Menu Management**: Runs MWM as a status-bar accessory application (`NSStatusItem`). The status menu offers "About MWM", "Configure MWM…", "Reload Configuration", "Launch MWM at Login" and "Quit MWM". Menus are built in code by `MWMAppDelegate` (there's no main nib); the app menus (MWM, Edit, Window) only show while an MWM window is in front.
+1. **Status Item & Menu Management**: Runs MWM as a status-bar accessory application (`NSStatusItem`). The status menu offers "Snapshots", "Keyboard Shortcuts", "Launch MWM at Login", "Settings…", "Backup" (restore a backup, Manage Backups…), "Reload Configuration", "About MWM", "Check for Updates…" and "Quit MWM". Menus are built in code by `MWMAppDelegate` (there's no main nib); the app menus (MWM, Edit, Window) only show while an MWM window is in front.
+   - **Backup**: `MWMBackup` is one named environment (the configuration text, the snapshots and the displays they were saved with, as a JSON file). `MWMGist` stores one file per environment in a single private GitHub gist ("MWM backup") through an injectable transport, with the token in the Keychain. The Backup page is `ConfigurationBackupView`; the Backup menu is built by `MWMStatusMenus`.
 2. **Configuration Loading**: Dispatches config loading to `[MWMConfig getInstance]`, handling fallback to the embedded `default.slate` if neither `~/.slate` nor `~/.slate.js` exists.
 3. **Global HotKey Registration**: Uses the Carbon Event Manager (`RegisterEventHotKey`, `InstallEventHandler`) to bind global keystrokes system-wide.
 4. **Modal HotKey Management**:

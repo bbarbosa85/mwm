@@ -1,7 +1,7 @@
 # Example: a laptop and an external display. Name each screen, then send windows to it by name.
 # hyper + 1 / 2 puts a window full screen on the laptop / the external display,
 # hyper + arrows split the external display, hyper + tab throws a window to the other screen.
-# Change "Studio Display" to your display's model (Configure MWM > Displays shows it).
+# Change "Studio Display" to your display's model (Settings > Displays shows it).
 # A screen that isn't connected falls back to the screen you're on.
 
 version: 2

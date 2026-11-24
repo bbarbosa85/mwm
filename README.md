@@ -41,7 +41,7 @@ Just run this in your terminal:
 
 ## Configuring Slate ##
 
-**NEW:** MWM is now configured with a "~/.mwm.yml" file, which you can edit from **Configure MWM…** in the status menu. It's plain data, so nothing in it ever runs. On startup MWM converts an existing ".slate", ".slate.js" or ".slate.yml" into it; JavaScript configurations are no longer loaded. See [docs/configuration-yaml.md](docs/configuration-yaml.md).
+**NEW:** MWM is now configured with a "~/.mwm.yml" file, which you can edit from **Settings…** in the status menu. It's plain data, so nothing in it ever runs. On startup MWM converts an existing ".slate", ".slate.js" or ".slate.yml" into it; JavaScript configurations are no longer loaded. See [docs/configuration-yaml.md](docs/configuration-yaml.md).
 
 Slate is configured using a ".slate" file in the current user's home directory. Configuration is loaded upon running Slate. You can also re-load the config using the "Load Config" menu option on the status menu (use this at your own risk. It is better to simply restart Slate).
 

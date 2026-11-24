@@ -23,7 +23,7 @@ Welcome to the internal and technical documentation for **Slate**, a highly cust
 
 3. **[Configuration File (`.mwm.yml`)](configuration-yaml.md)**
    - The YAML format Slate loads, and the supported YAML subset.
-   - The Configure MWM… window: saving as you go, validation, Apply.
+   - The Settings… window: saving as you go, validation, Apply.
    - Migration from `.slate` and `.slate.js`.
 
 4. **[JavaScript Scripting Engine (`.slate.js`, no longer loaded)](configuration-javascript.md)**
