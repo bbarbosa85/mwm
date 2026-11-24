@@ -30,6 +30,10 @@ NS_ASSUME_NONNULL_BEGIN
 - (NSMenu *)snapshotsMenu;
 - (NSMenu *)keyboardMenu;
 - (NSMenu *)pagesMenu;
+// "Restore Configuration": the backups in the gist (newest first), or a message when there are none.
+- (NSMenu *)restoreMenu;
+// Fills the restore menu from these backups (the menu asks GitHub when it opens; tests call this).
+- (void)showBackups:(NSArray *)environments inMenu:(NSMenu *)menu;
 
 // Asks for a name and saves the open windows (tests call this without the dialog).
 - (void)saveSnapshotNamed:(NSString *)name keep:(BOOL)keep;

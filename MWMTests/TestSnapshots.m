@@ -39,6 +39,10 @@
 #import "ConfigurationModifiersView.h"
 #import "ConfigurationShortcutEditorView.h"
 #import "MWMDesignGallery.h"
+#import "ConfigurationBackupView.h"
+#import "MWMGist.h"
+#import "MWMDisplays.h"
+#import "TestFakeGitHub.h"
 #import "MWMConfigDocument.h"
 
 static NSString *const kConfig =
@@ -249,6 +253,46 @@ static NSString *const kConfig =
     [slots selectSlotNamed:@"half"];
     [self checkView:slots size:NSMakeSize(1000, 640) name:@"slots-editor" dark:[dark boolValue]];
   }
+}
+
+- (void)testTheBackupPageLooksTheSame {
+  [MWMGist useMemoryStorage:YES];
+  [MWMGist setToken:@"ghp_test"];
+  TestFakeGitHub *github = [[TestFakeGitHub alloc] init];
+  [github install];
+  MWMDisplay *odyssey = [MWMDisplay displayNamed:@"Samsung Odyssey G9" width:5120 height:1440 builtIn:NO x:0 y:0];
+  MWMDisplay *builtIn = [MWMDisplay displayNamed:@"Built-in" width:3024 height:1964 builtIn:YES x:-3024 y:0];
+  [MWMDisplays setConnectedOverride:@[odyssey, builtIn]];
+  NSString *text = [kConfig stringByReplacingOccurrencesOfString:@"positions:" withString:@"slots:"];
+  NSArray *saved = @[@[@"Desk, two monitors", @[odyssey, builtIn], @1762948800], @[@"Laptop only", @[builtIn], @1761998400]];
+  for (NSArray *item in saved) {
+    XCTestExpectation *done = [self expectationWithDescription:@"save"];
+    MWMBackupEnvironment *environment = [MWMBackupEnvironment environmentNamed:item[0] configText:kConfig snapshots:@{@"work": @{@"name": @"work"}, @"couch": @{@"name": @"couch"}} displays:item[1] date:[NSDate dateWithTimeIntervalSince1970:[item[2] doubleValue]]];
+    [MWMGist saveEnvironment:environment completion:^(NSString *problem) { [done fulfill]; }];
+    [self waitForExpectations:@[done] timeout:5];
+  }
+  (void)text;
+  NSMutableDictionary *lists = [NSMutableDictionary dictionary];
+  for (NSString *name in @[@"work", @"couch"]) lists[name] = [[SnapshotList alloc] initWithName:name saveToDisk:YES isStack:NO];
+  [MWMSnapshots setListsOverride:lists];
+  ConfigurationBackupView *page = [[ConfigurationBackupView alloc] initWithFrame:NSMakeRect(0, 0, 840, 720)];
+  page.document = [MWMConfigDocument documentFromString:kConfig error:nil];
+  XCTestExpectation *loaded = [self expectationWithDescription:@"refresh"];
+  [page refresh:^{ [loaded fulfill]; }];
+  [self waitForExpectations:@[loaded] timeout:5];
+  for (NSNumber *dark in @[@NO, @YES]) [self checkView:page size:NSMakeSize(840, 720) name:@"backup" dark:[dark boolValue]];
+  [MWMSnapshots setListsOverride:nil];
+  [MWMDisplays setConnectedOverride:nil];
+  [MWMGist setTransport:nil];
+  [MWMGist useMemoryStorage:NO];
+}
+
+- (void)testTheBackupConnectPageLooksTheSame {
+  [MWMGist useMemoryStorage:YES];
+  ConfigurationBackupView *page = [[ConfigurationBackupView alloc] initWithFrame:NSMakeRect(0, 0, 840, 640)];
+  page.document = [MWMConfigDocument documentFromString:kConfig error:nil];
+  for (NSNumber *dark in @[@NO, @YES]) [self checkView:page size:NSMakeSize(840, 640) name:@"backup-connect" dark:[dark boolValue]];
+  [MWMGist useMemoryStorage:NO];
 }
 
 - (void)testTheSettingsPagesLookTheSame {

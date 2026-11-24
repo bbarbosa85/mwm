@@ -41,6 +41,7 @@ typedef NS_ENUM(NSInteger, ConfigurationFormSection) {
   ConfigurationFormSectionKeyboard,
   ConfigurationFormSectionAdvanced,
   ConfigurationFormSectionSnapshots,
+  ConfigurationFormSectionBackup,
   ConfigurationFormSectionCount,
 };
 
@@ -59,6 +60,8 @@ typedef NS_ENUM(NSInteger, ConfigurationFormSection) {
 // Launch at login isn't in the file, so the app answers for it.
 - (BOOL)formViewLaunchesAtLogin:(ConfigurationFormView *)formView;
 - (void)formView:(ConfigurationFormView *)formView setLaunchesAtLogin:(BOOL)launches;
+// The Backup page restores a configuration: put this text in the file and show it. Answers whether that worked.
+- (BOOL)formView:(ConfigurationFormView *)formView restoreConfigText:(NSString *)text;
 @end
 
 @interface ConfigurationFormView : NSView <NSTableViewDataSource, NSTableViewDelegate>

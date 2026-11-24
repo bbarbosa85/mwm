@@ -77,6 +77,10 @@ extern NSString *const MWMSnapshotsDidChangeNotification;
 + (void)deleteName:(NSString *)name;
 + (void)setKeepAfterRestart:(BOOL)keep forName:(NSString *)name;
 
+// Every snapshot as plain data (for a backup), and a replacement of all of them from such data.
++ (NSDictionary *)exportAll;
++ (void)importAll:(NSDictionary *)data;
+
 // Tests work on their own lists, and nothing is written to disk or moved on screen.
 + (void)setListsOverride:(nullable NSMutableDictionary<NSString *, SnapshotList *> *)lists;
 

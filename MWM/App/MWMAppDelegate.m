@@ -492,16 +492,18 @@ OSStatus OnModifiersChangedEvent(EventHandlerCallRef nextHandler, EventRef theEv
   [self addSubmenu:[menus snapshotsMenu] title:@"Snapshots" symbol:@"camera" to:menu];
   [self addSubmenu:[menus keyboardMenu] title:@"Keyboard Shortcuts" symbol:@"keyboard" to:menu];
   [menu addItem:[NSMenuItem separatorItem]];
-  [self setSymbol:@"gearshape" on:[self addItem:@"Configure MWM…" action:@selector(configureMWM) key:@"," to:menu]];
-  NSMenuItem *gallery = [self addItem:@"Design System…" action:@selector(showDesignGallery) key:@"," to:menu];   // shown while Option is held
-  [gallery setKeyEquivalentModifierMask:NSEventModifierFlagCommand | NSEventModifierFlagOption];
-  [gallery setAlternate:YES];
-  NSMenuItem *reload = [self addItem:@"Reload Configuration" action:@selector(relaunch) key:@"" to:menu];
-  [reload setToolTip:@"Restart MWM to load the configuration file again"];
-  [self setSymbol:@"arrow.clockwise" on:reload];
   launchOnLoginItem = [self addItem:@"Launch MWM at Login" action:@selector(updateLaunchState) key:@"" to:menu];
   [self setSymbol:@"power" on:launchOnLoginItem];
   [self setLaunchOnLoginItemStatus];
+  [menu addItem:[NSMenuItem separatorItem]];
+  [self setSymbol:@"gearshape" on:[self addItem:@"Settings…" action:@selector(configureMWM) key:@"," to:menu]];
+  NSMenuItem *gallery = [self addItem:@"Design System…" action:@selector(showDesignGallery) key:@"," to:menu];   // shown while Option is held
+  [gallery setKeyEquivalentModifierMask:NSEventModifierFlagCommand | NSEventModifierFlagOption];
+  [gallery setAlternate:YES];
+  [self addSubmenu:[menus restoreMenu] title:@"Backup" symbol:@"clock.arrow.circlepath" to:menu];
+  NSMenuItem *reload = [self addItem:@"Reload Configuration" action:@selector(relaunch) key:@"" to:menu];
+  [reload setToolTip:@"Restart MWM to load the configuration file again"];
+  [self setSymbol:@"arrow.clockwise" on:reload];
   [menu addItem:[NSMenuItem separatorItem]];
   [self setSymbol:@"info.circle" on:[self addItem:@"About MWM" action:@selector(aboutWindow) key:@"" to:menu]];
   [self setSymbol:@"arrow.down.circle" on:[self addItem:@"Check for Updates…" action:@selector(checkForUpdates:) key:@"" to:menu]];
@@ -518,7 +520,7 @@ OSStatus OnModifiersChangedEvent(EventHandlerCallRef nextHandler, EventRef theEv
   NSMenu *app = [[NSMenu alloc] initWithTitle:@"MWM"];
   [self addItem:@"About MWM" action:@selector(aboutWindow) key:@"" to:app];
   [app addItem:[NSMenuItem separatorItem]];
-  [self addItem:@"Configure MWM…" action:@selector(configureMWM) key:@"," to:app];
+  [self addItem:@"Settings…" action:@selector(configureMWM) key:@"," to:app];
   [app addItem:[NSMenuItem separatorItem]];
   [app addItemWithTitle:@"Hide MWM" action:@selector(hide:) keyEquivalent:@"h"];
   [[app addItemWithTitle:@"Hide Others" action:@selector(hideOtherApplications:) keyEquivalent:@"h"]

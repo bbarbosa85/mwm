@@ -294,6 +294,17 @@ static const CGFloat kWindowWidth = 1080;
   return YES;
 }
 
+// A backup is restored: its configuration replaces the file (the old one is kept as a copy) and is shown again.
+- (BOOL)formView:(ConfigurationFormView *)formView restoreConfigText:(NSString *)text {
+  return [self restoreConfigText:text];
+}
+
+- (BOOL)restoreConfigText:(NSString *)text {
+  if (![self writeText:text]) return NO;
+  [self loadFromDisk];
+  return YES;
+}
+
 - (BOOL)changedOnDisk {
   NSDate *current = [self modificationDateOnDisk];
   if (current == nil && self.savedModificationDate == nil) return NO;
