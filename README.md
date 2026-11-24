@@ -1,8 +1,10 @@
 # About MWM #
 
+**[Website](https://bbarbosa85.github.io/mwm/)** · **[Download](https://bbarbosa85.github.io/mwm/#download)** · **[Features](https://bbarbosa85.github.io/mwm/features.html)** · **[Documentation](https://bbarbosa85.github.io/mwm/docs.html)** · **[Examples](https://bbarbosa85.github.io/mwm/examples.html)** · **[Releases](https://github.com/bbarbosa85/mwm/releases)** · **[Report an issue](https://github.com/bbarbosa85/mwm/issues/new)**
+
 MWM (Mac Window Manager) is a fork of [Slate](https://github.com/jigish/slate) by Jigish Patel, and is released under the same license. It is a window management application similar to Divvy and SizeUp (except better and free!). Originally written to replace them due to some limitations in how each work, it attempts to overcome them by simply being extremely configurable. As a result, it may be a bit daunting to get configured, but once it is done, the benefit is huge.
 
-Slate currently works on Mac OS X 10.6 and above
+MWM works on macOS 12 and above.
 
 ## Summary of Features ##
 
@@ -20,24 +22,19 @@ Slate currently works on Mac OS X 10.6 and above
 
 Big thanks to [philc](https://github.com/philc) for the Window Hints idea (and initial implementation) as well as plenty of other suggestions and improvement ideas.
 
-# Using Slate #
+# Using MWM #
 
-## Installing Slate ##
+## Installing MWM ##
 
-**NEW Installation Instructions**
+Download MWM from the [website](https://bbarbosa85.github.io/mwm/#download), open the `.dmg` and drag **MWM** to **Applications**. It runs in the menu bar and needs macOS 12 or later. The app is signed but not notarized, so macOS asks you to confirm the first launch; the [quick start](https://bbarbosa85.github.io/mwm/docs.html#quick-start) shows how.
 
-**Note:** You must turn on the Accessibility API by checking System Preferences > Universal Access > Enable access for assistive devices
+**Note:** MWM needs Accessibility access to move other apps' windows: turn it on under System Settings > Privacy & Security > Accessibility.
 
-### Direct Download ###
+Once it is installed, **Check for Updates…** in the menu bar installs new versions for you. Other places to start:
 
-* [`.dmg`](http://slate.ninjamonkeysoftware.com/Slate.dmg)
-* [`.tar.gz`](http://slate.ninjamonkeysoftware.com/versions/slate-latest.tar.gz)
-
-### Terminal ###
-
-Just run this in your terminal:
-
-    cd /Applications && curl http://www.ninjamonkeysoftware.com/slate/versions/slate-latest.tar.gz | tar -xz
+* [Features](https://bbarbosa85.github.io/mwm/features.html): what MWM does, by area
+* [Documentation](https://bbarbosa85.github.io/mwm/docs.html): how to use each feature
+* [Examples](https://bbarbosa85.github.io/mwm/examples.html): ready-made settings files to download
 
 ## Configuring Slate ##
 
