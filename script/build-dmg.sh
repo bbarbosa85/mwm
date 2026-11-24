@@ -77,7 +77,7 @@ mkdir -p "${DOWNLOADS}"
 cp "${DMG_PATH}" "${ZIP_PATH}" "${DOWNLOADS}/"
 cp "${OUTPUT_DIR}/SHA256SUMS.txt" "${DOWNLOADS}/SHA256SUMS.txt"
 # ...and the page's download links are pointed at them.
-for page in index.html docs.html; do
+for page in index.html docs.html features.html examples.html; do
   sed -i '' -E "s#downloads/MWM[-0-9.]*\.(dmg|zip)#downloads/MWM-${VERSION}.\1#g" "$(dirname "$0")/../docs/${page}"
 done
 

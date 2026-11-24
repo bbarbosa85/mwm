@@ -16,7 +16,7 @@
 
    The build uses its own install folder (`/tmp/MWMRelease.dst`), so it never replaces the
    development build the tests and `script/screens` use. The files in `build/` are not committed;
-   the script also copies the three files to `docs/downloads/`, which is committed, and points the download links in `docs/index.html` and `docs/docs.html` at the new file names.
+   the script also copies the three files to `docs/downloads/`, which is committed, and points the download links on the site pages (home, docs, features, examples) at the new file names.
 
 3. Commit `docs/downloads/` in a pull request. Once merged, GitHub Pages serves the files, and the
    product page (`docs/index.html`) links to `docs/downloads/MWM-<version>.dmg` and `.zip` on `master` (`github.com/bbarbosa85/mwm/raw/master/docs/downloads/...`). Each release adds about 3.5 MB to the repository's history.

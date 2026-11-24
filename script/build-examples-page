@@ -8,7 +8,10 @@ import html, os, zipfile
 
 root = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "docs")
 ex = os.path.join(root, "examples")
-DMG = "https://github.com/bbarbosa85/mwm/raw/master/docs/downloads/MWM.dmg"
+import subprocess
+_VERSION = subprocess.check_output(["/usr/libexec/PlistBuddy", "-c", "Print :CFBundleShortVersionString",
+                                    os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "MWM", "App", "MWM-Info.plist")], text=True).strip()
+DMG = f"https://github.com/bbarbosa85/mwm/raw/master/docs/downloads/MWM-{_VERSION}.dmg"
 BLUE, SUN, CORAL, WHITE = "#1f5bff", "#ffd21f", "#ff5a5f", "#ffffff"
 
 
