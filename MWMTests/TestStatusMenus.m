@@ -18,6 +18,7 @@
 
 #import <XCTest/XCTest.h>
 #import "MWMStatusMenus.h"
+#import "MWMBackup.h"
 #import "MWMSnapshots.h"
 #import "Snapshot.h"
 #import "SnapshotList.h"
@@ -84,8 +85,21 @@
 
 - (void)testThePagesMenuHasEveryPageOfTheWindow {
   NSMenu *menu = [[MWMStatusMenus shared] pagesMenu];
-  XCTAssertEqualObjects([self titles:menu], (@[@"Keyboard", @"Modifiers", @"-", @"Displays", @"Slots", @"Snapshots", @"-", @"General", @"Advanced", @"Other Aliases"]));
+  XCTAssertEqualObjects([self titles:menu], (@[@"Keyboard", @"Modifiers", @"-", @"Displays", @"Slots", @"Snapshots", @"-", @"General", @"Advanced", @"Other Aliases", @"Backup"]));
   XCTAssertEqualObjects([self titles:[[MWMStatusMenus shared] keyboardMenu]], (@[@"Keyboard Map", @"List of Shortcuts", @"-", @"New Shortcut…", @"Modifier Groups"]));
+}
+
+- (void)testTheRestoreMenuListsBackupsOrSaysThereAreNone {
+  MWMStatusMenus *menus = [MWMStatusMenus shared];
+  NSMenu *menu = [[NSMenu alloc] initWithTitle:@"Restore Configuration"];
+  [menus showBackups:@[] inMenu:menu];
+  XCTAssertEqualObjects([self titles:menu], (@[@"No backups configured", @"-", @"Manage Backups…"]));
+  XCTAssertFalse([[menu itemAtIndex:0] isEnabled]);
+  MWMBackupEnvironment *desk = [MWMBackupEnvironment environmentNamed:@"Desk" configText:@"" snapshots:@{} displays:@[] date:[NSDate date]];
+  MWMBackupEnvironment *laptop = [MWMBackupEnvironment environmentNamed:@"Laptop" configText:@"" snapshots:@{} displays:@[] date:[NSDate date]];
+  [menus showBackups:@[desk, laptop] inMenu:menu];
+  XCTAssertEqualObjects([self titles:menu], (@[@"Desk", @"Laptop", @"-", @"Manage Backups…"]));
+  XCTAssertTrue([[menu itemAtIndex:0] isEnabled]);
 }
 
 - (void)testTheStatusMenuPutsTheCapabilitiesFirst {
@@ -94,12 +108,18 @@
   XCTAssertTrue([delegate respondsToSelector:build]);
   NSMenu *menu = [delegate performSelector:build];
   NSArray *titles = [self titles:menu];
-  NSUInteger snapshots = [titles indexOfObject:@"Snapshots"], keyboard = [titles indexOfObject:@"Keyboard Shortcuts"], configure = [titles indexOfObject:@"Configure MWM…"];
+  NSUInteger snapshots = [titles indexOfObject:@"Snapshots"], keyboard = [titles indexOfObject:@"Keyboard Shortcuts"], configure = [titles indexOfObject:@"Settings…"];
   NSUInteger reload = [titles indexOfObject:@"Reload Configuration"], login = [titles indexOfObject:@"Launch MWM at Login"], about = [titles indexOfObject:@"About MWM"];
   XCTAssertEqual(snapshots, 0u, @"%@", titles);
-  XCTAssertTrue(snapshots < keyboard && keyboard < configure && configure < reload && reload < login && login < about, @"%@", titles);
+  XCTAssertTrue(snapshots < keyboard && keyboard < login && login < configure && reload < about, @"%@", titles);
+  XCTAssertEqualObjects([titles objectAtIndex:login - 1], @"-");
+  XCTAssertEqualObjects([titles objectAtIndex:login + 1], @"-");
   XCTAssertNotNil([[menu itemWithTitle:@"Snapshots"] submenu]);
   XCTAssertNotNil([[menu itemWithTitle:@"Keyboard Shortcuts"] submenu]);
+  NSUInteger restore = [titles indexOfObject:@"Backup"];
+  XCTAssertTrue(configure < restore && restore < reload, @"%@", titles);
+  XCTAssertNotNil([[menu itemWithTitle:@"Backup"] submenu]);
+  XCTAssertEqualObjects([titles objectAtIndex:reload + 1], @"-", @"%@", titles);
   XCTAssertEqual([titles indexOfObject:@"Backup…"], (NSUInteger)NSNotFound);
   XCTAssertEqual([titles indexOfObject:@"Open Page"], (NSUInteger)NSNotFound);
   NSUInteger updates = [titles indexOfObject:@"Check for Updates…"];

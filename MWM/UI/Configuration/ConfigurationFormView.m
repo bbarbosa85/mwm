@@ -31,6 +31,7 @@
 #import "ConfigurationPresetsView.h"
 #import "ConfigurationKeyboardView.h"
 #import "ConfigurationSnapshotsView.h"
+#import "ConfigurationBackupView.h"
 #import "MWMSnapshots.h"
 #import "MWMShortcutIndex.h"
 #import "MWMSlots.h"
@@ -61,6 +62,8 @@ static SectionInfo InfoFor(ConfigurationFormSection section) {
       return (SectionInfo){@"Advanced", @"slider.horizontal.3", @"Key repeat, how percentages are measured, and other settings."};
     case ConfigurationFormSectionSnapshots:
       return (SectionInfo){@"Snapshots", @"camera", @"Saved window arrangements."};
+    case ConfigurationFormSectionBackup:
+      return (SectionInfo){@"Backup", @"icloud.and.arrow.up", @"Keep your configuration and snapshots in a private GitHub gist, one backup for each set of displays."};
     case ConfigurationFormSectionGeneral:
       return (SectionInfo){@"General", @"gearshape", @"Everyday settings. Anything not listed uses MWM's default."};
     case ConfigurationFormSectionModifiers:
@@ -101,6 +104,7 @@ static NSArray<NSDictionary *> *NavRows(void) {
       @{@"section": @(ConfigurationFormSectionGeneral)},
       @{@"section": @(ConfigurationFormSectionAdvanced)},
       @{@"section": @(ConfigurationFormSectionAliases)},
+      @{@"section": @(ConfigurationFormSectionBackup)},
     ];
   });
   return rows;
@@ -153,7 +157,7 @@ static NSString *DisplayValue(id value) {
   return [value description] ?: @"";
 }
 
-@interface ConfigurationFormView () <ConfigurationShortcutViewDelegate, ConfigurationActionViewDelegate, ConfigurationSettingsViewDelegate, ConfigurationDisplaysViewDelegate, ConfigurationSlotsViewDelegate, ConfigurationModifiersViewDelegate, ConfigurationKeyboardViewDelegate, ConfigurationSnapshotsViewDelegate>
+@interface ConfigurationFormView () <ConfigurationShortcutViewDelegate, ConfigurationActionViewDelegate, ConfigurationSettingsViewDelegate, ConfigurationDisplaysViewDelegate, ConfigurationSlotsViewDelegate, ConfigurationModifiersViewDelegate, ConfigurationKeyboardViewDelegate, ConfigurationSnapshotsViewDelegate, ConfigurationBackupViewDelegate>
 @property (strong) NSTableView *sidebar;
 @property (strong) NSView *detail;
 @property (strong) NSTextField *titleLabel;
@@ -167,6 +171,7 @@ static NSString *DisplayValue(id value) {
 @property (strong) ConfigurationSettingsView *settingsView;
 @property (strong) ConfigurationDisplaysView *displaysView;
 @property (strong) ConfigurationSnapshotsView *snapshotsView;
+@property (strong) ConfigurationBackupView *backupView;
 @property (strong) ConfigurationSlotsView *slotsView;
 @property (strong) ConfigurationModifiersView *modifiersView;
 @property (strong) NSLayoutConstraint *modifiersTopBelowHeader;
@@ -321,12 +326,17 @@ static NSString *DisplayValue(id value) {
   [self.snapshotsView setDelegate:self];
   [self.snapshotsView setHidden:YES];
 
+  self.backupView = [[ConfigurationBackupView alloc] init];
+  [self.backupView setTranslatesAutoresizingMaskIntoConstraints:NO];
+  [self.backupView setDelegate:self];
+  [self.backupView setHidden:YES];
+
   self.settingsView = [[ConfigurationSettingsView alloc] init];
   [self.settingsView setTranslatesAutoresizingMaskIntoConstraints:NO];
   [self.settingsView setDelegate:self];
   [self.settingsView setHidden:YES];
 
-  for (NSView *view in @[self.titleLabel, self.infoLabel, self.addButton, self.removeButton, self.filterBar, self.tableScroll, self.settingsView, self.modifiersView, self.displaysView, self.snapshotsView, self.slotsView, self.presetsView, self.slotsSwitcher, self.keyboardView, self.keyboardSwitcher, self.conflictsButton]) {
+  for (NSView *view in @[self.titleLabel, self.infoLabel, self.addButton, self.removeButton, self.filterBar, self.tableScroll, self.settingsView, self.modifiersView, self.displaysView, self.snapshotsView, self.backupView, self.slotsView, self.presetsView, self.slotsSwitcher, self.keyboardView, self.keyboardSwitcher, self.conflictsButton]) {
     [self.detail addSubview:view];
   }
 
@@ -415,6 +425,10 @@ static NSString *DisplayValue(id value) {
     [self.snapshotsView.bottomAnchor constraintEqualToAnchor:self.detail.bottomAnchor],
     [self.snapshotsView.leadingAnchor constraintEqualToAnchor:self.detail.leadingAnchor],
     [self.snapshotsView.trailingAnchor constraintEqualToAnchor:self.detail.trailingAnchor],
+    [self.backupView.topAnchor constraintEqualToAnchor:self.infoLabel.bottomAnchor constant:6],
+    [self.backupView.bottomAnchor constraintEqualToAnchor:self.detail.bottomAnchor],
+    [self.backupView.leadingAnchor constraintEqualToAnchor:self.detail.leadingAnchor],
+    [self.backupView.trailingAnchor constraintEqualToAnchor:self.detail.trailingAnchor],
     [self.settingsView.topAnchor constraintEqualToAnchor:self.infoLabel.bottomAnchor constant:6],
     [self.settingsView.bottomAnchor constraintEqualToAnchor:self.detail.bottomAnchor],
     [self.settingsView.leadingAnchor constraintEqualToAnchor:self.detail.leadingAnchor],
@@ -562,9 +576,12 @@ static NSString *DisplayValue(id value) {
   BOOL keyboard = section == ConfigurationFormSectionKeyboard;
   BOOL snapshots = section == ConfigurationFormSectionSnapshots;
   BOOL modifiers = section == ConfigurationFormSectionModifiers;
-  [self.addButton setHidden:cards || displays || slots || keyboard || snapshots || modifiers];
-  [self.removeButton setHidden:cards || displays || slots || keyboard || snapshots || modifiers];
-  [self.tableScroll setHidden:cards || displays || slots || keyboard || snapshots || modifiers];
+  BOOL backup = section == ConfigurationFormSectionBackup;
+  [self.addButton setHidden:cards || displays || slots || keyboard || snapshots || modifiers || backup];
+  [self.removeButton setHidden:cards || displays || slots || keyboard || snapshots || modifiers || backup];
+  [self.tableScroll setHidden:cards || displays || slots || keyboard || snapshots || modifiers || backup];
+  [self.backupView setHidden:!backup];
+  self.backupView.document = backup ? self.document : nil;
   [self.modifiersView setHidden:!modifiers];
   self.modifiersView.document = modifiers ? self.document : nil;
   [self.snapshotsView setHidden:!snapshots];
@@ -784,6 +801,14 @@ static NSString *DisplayValue(id value) {
 
 // Snapshots live outside the configuration file; only the sidebar count follows them.
 - (void)snapshotsViewDidChange:(ConfigurationSnapshotsView *)view {
+  [self reloadSidebarKeepingSelection];
+}
+
+- (BOOL)backupView:(ConfigurationBackupView *)view restoreConfigText:(NSString *)text {
+  return [self.delegate respondsToSelector:@selector(formView:restoreConfigText:)] && [self.delegate formView:self restoreConfigText:text];
+}
+
+- (void)backupViewDidRestoreSnapshots:(ConfigurationBackupView *)view {
   [self reloadSidebarKeepingSelection];
 }
 

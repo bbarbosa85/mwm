@@ -226,4 +226,22 @@ static MWMSnapshotInfo *gCurrentOverride;
   [self persist];
 }
 
++ (NSDictionary *)exportAll {
+  NSMutableDictionary *data = [NSMutableDictionary dictionary];
+  NSDictionary *lists = [self lists];
+  for (NSString *name in lists) data[name] = [lists[name] toDictionary];
+  return data;
+}
+
++ (void)importAll:(NSDictionary *)data {
+  NSMutableDictionary *lists = [self lists];
+  [lists removeAllObjects];
+  for (NSString *name in data) {
+    if (![data[name] isKindOfClass:[NSDictionary class]] || ![data[name][@"name"] isKindOfClass:[NSString class]]) continue;
+    SnapshotList *list = [SnapshotList snapshotListFromDictionary:data[name]];
+    if (list != nil) lists[list.name ?: name] = list;
+  }
+  [self persist];
+}
+
 @end

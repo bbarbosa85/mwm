@@ -18,10 +18,15 @@
 #import "ConfigurationFormView.h"
 #import "ConfigurationWindowController.h"
 #import "MWMAlert.h"
+#import "MWMBackup.h"
+#import "MWMConfigDocument.h"
+#import "MWMGist.h"
 #import "MWMSnapshots.h"
 
 @interface MWMStatusMenus ()
 @property (strong) NSMenu *snapshots;
+@property (strong) NSMenu *restore;
+@property (copy) NSArray<MWMBackupEnvironment *> *backups;
 @end
 
 @implementation MWMStatusMenus
@@ -52,6 +57,7 @@
 
 - (void)menuNeedsUpdate:(NSMenu *)menu {
   if (menu == self.snapshots) [self fillSnapshotsMenu:menu];
+  if (menu == self.restore) [self updateRestoreMenu];
 }
 
 - (void)fillSnapshotsMenu:(NSMenu *)menu {
@@ -139,6 +145,80 @@
 
 - (void)manageSnapshots:(id)sender { [[ConfigurationWindowController sharedController] showConfigurationSection:ConfigurationFormSectionSnapshots]; }
 
+#pragma mark - Restore configuration
+
+- (NSMenu *)restoreMenu {
+  if (self.restore == nil) {
+    self.restore = [[NSMenu alloc] initWithTitle:@"Restore Configuration"];
+    [self.restore setDelegate:self];
+    [self showBackups:@[] inMenu:self.restore];
+  }
+  return self.restore;
+}
+
+// Shows what was last heard from GitHub right away, then asks again (when there's a token).
+- (void)updateRestoreMenu {
+  [self showBackups:self.backups ?: @[] inMenu:self.restore];
+  if ([MWMGist token] == nil) return;
+  [MWMGist listEnvironments:^(NSArray<MWMBackupEnvironment *> *environments, NSString *problem) {
+    if (problem != nil) return;
+    self.backups = environments;
+    [self showBackups:environments inMenu:self.restore];
+  }];
+}
+
+- (void)showBackups:(NSArray<MWMBackupEnvironment *> *)environments inMenu:(NSMenu *)menu {
+  [menu removeAllItems];
+  NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
+  [formatter setDateStyle:NSDateFormatterMediumStyle];
+  [formatter setTimeStyle:NSDateFormatterNoStyle];
+  for (MWMBackupEnvironment *environment in environments) {
+    NSMenuItem *item = [self item:environment.name action:@selector(restoreBackupChosen:) in:menu];
+    [item setRepresentedObject:environment.name];
+    [item setToolTip:[NSString stringWithFormat:@"Saved %@", [formatter stringFromDate:environment.savedAt]]];
+  }
+  if ([environments count] == 0) {
+    NSMenuItem *none = [menu addItemWithTitle:@"No backups configured" action:nil keyEquivalent:@""];
+    [none setEnabled:NO];
+  }
+  [menu addItem:[NSMenuItem separatorItem]];
+  [self item:@"Manage Backups…" action:@selector(manageBackups:) in:menu];
+}
+
+- (void)restoreBackupChosen:(NSMenuItem *)item {
+  NSString *name = item.representedObject;
+  MWMBackupEnvironment *environment = nil;
+  for (MWMBackupEnvironment *candidate in self.backups) if ([candidate.name isEqualToString:name]) environment = candidate;
+  if (environment == nil) return;
+  [NSApp activateIgnoringOtherApps:YES];
+  if ([MWMConfigDocument documentFromString:environment.configText lenient:YES error:nil] == nil) {
+    MWMAlert *failed = [MWMAlert alert];
+    [failed setKind:MWMAlertKindWarning];
+    [failed setMessageText:@"Can't restore"];
+    [failed setInformativeText:@"The configuration in this backup can't be read."];
+    [failed runModal];
+    return;
+  }
+  MWMAlert *alert = [MWMAlert alert];
+  [alert setKind:MWMAlertKindConfirm];
+  [alert setMessageText:[NSString stringWithFormat:@"Restore \"%@\"?", name]];
+  [alert setInformativeText:@"Replaces your shortcuts, slots and snapshots with this backup. A copy of your current configuration is kept next to it first."];
+  [alert addButtonWithTitle:@"Restore"];
+  [alert addButtonWithTitle:@"Cancel"];
+  if ([alert runModal] != NSAlertFirstButtonReturn) return;
+  ConfigurationWindowController *controller = [ConfigurationWindowController sharedController];
+  if (![controller restoreConfigText:environment.configText]) return;
+  [MWMSnapshots importAll:environment.snapshots];
+  [controller showConfigurationSection:ConfigurationFormSectionBackup];
+  MWMAlert *done = [MWMAlert alert];
+  [done setKind:MWMAlertKindSuccess];
+  [done setMessageText:[NSString stringWithFormat:@"Restored \"%@\"", name]];
+  [done setInformativeText:@"Choose Apply to start using it."];
+  [done runModal];
+}
+
+- (void)manageBackups:(id)sender { [[ConfigurationWindowController sharedController] showConfigurationSection:ConfigurationFormSectionBackup]; }
+
 #pragma mark - Keyboard shortcuts
 
 - (NSMenu *)keyboardMenu {
@@ -162,7 +242,7 @@
   NSMenu *menu = [[NSMenu alloc] initWithTitle:@"Open Page"];
   NSArray *groups = @[@[@[@"Keyboard", @(ConfigurationFormSectionKeyboard)], @[@"Modifiers", @(ConfigurationFormSectionModifiers)]],
                       @[@[@"Displays", @(ConfigurationFormSectionMonitors)], @[@"Slots", @(ConfigurationFormSectionPositions)], @[@"Snapshots", @(ConfigurationFormSectionSnapshots)]],
-                      @[@[@"General", @(ConfigurationFormSectionGeneral)], @[@"Advanced", @(ConfigurationFormSectionAdvanced)], @[@"Other Aliases", @(ConfigurationFormSectionAliases)]]];
+                      @[@[@"General", @(ConfigurationFormSectionGeneral)], @[@"Advanced", @(ConfigurationFormSectionAdvanced)], @[@"Other Aliases", @(ConfigurationFormSectionAliases)], @[@"Backup", @(ConfigurationFormSectionBackup)]]];
   for (NSUInteger i = 0; i < [groups count]; i++) {
     if (i > 0) [menu addItem:[NSMenuItem separatorItem]];
     for (NSArray *page in groups[i]) {
