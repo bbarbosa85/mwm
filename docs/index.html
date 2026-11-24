@@ -16,6 +16,7 @@
     <a class="brand" href="index.html"><img src="assets/icon.png" alt="">MWM</a>
     <div class="links">
       <a href="index.html#top">Overview</a>
+      <a href="features.html">Features</a>
       <a href="docs.html">Docs</a>
       <a href="examples.html">Examples</a>
       <a class="btn primary small cta" href="https://github.com/bbarbosa85/mwm/raw/master/docs/downloads/MWM-1.1.dmg">Download</a>
@@ -31,7 +32,7 @@
       <a class="btn primary" href="https://github.com/bbarbosa85/mwm/raw/master/docs/downloads/MWM-1.1.dmg">Download for macOS</a>
       <a class="btn" href="#how">How it works</a>
     </div>
-    <div class="meta">Version 1.0 · macOS 12 or later · Apple silicon and Intel · free and open source</div>
+    <div class="meta">Version 1.2 · macOS 12 or later · Apple silicon and Intel · free and open source</div>
     <div class="demo" id="demo"></div>
   </div>
 </header>
@@ -47,9 +48,12 @@
       <div class="card"><div class="ico">▦</div><h3>Slots</h3><p>Name any area of the screen (halves, thirds, quarters or your own) and move a window there with one key.</p></div>
       <div class="card"><div class="ico">🖥️</div><h3>Many displays</h3><p>Give each screen a name that sticks, and send windows to the right one even after you unplug and reconnect.</p></div>
       <div class="card"><div class="ico">📸</div><h3>Snapshots</h3><p>Save where every window is, then bring the whole desktop back with a click or a shortcut.</p></div>
-      <div class="card"><div class="ico">🧭</div><h3>Menu bar control</h3><p>Save and restore snapshots, open any page and reach your shortcuts without opening a window.</p></div>
+      <div class="card"><div class="ico">🧭</div><h3>Menu bar control</h3><p>Save and restore snapshots, restore a backup, open any page and reach your shortcuts without opening a window.</p></div>
+      <div class="card"><div class="ico">☁️</div><h3>Backup</h3><p>Keep your shortcuts, slots and snapshots in a private GitHub gist, one backup for each set of displays, and bring any of them back.</p></div>
+      <div class="card"><div class="ico">⬇️</div><h3>Updates in place</h3><p>MWM tells you when a new version is out and can install it for you, after checking the download.</p></div>
       <div class="card"><div class="ico">🔒</div><h3>Yours to keep</h3><p>One readable file, <code>~/.mwm.yml</code>. No accounts, and nothing runs from it. MWM only looks at GitHub for new versions, and you can turn that off. Open source under GPLv3.</p></div>
     </div>
+    <p style="text-align:center;margin-top:26px"><a class="btn" href="features.html">See every feature</a></p>
   </div>
 </section>
 
@@ -119,7 +123,25 @@
   </div>
 </section>
 
-<section class="alt" id="how">
+<section class="alt">
+  <div class="wrap">
+    <div class="split flip">
+      <div class="text">
+        <h3>Back up your setup</h3>
+        <p>Keep your shortcuts, slots and snapshots in a private GitHub gist. Save one backup for each set of displays, such as the desk with two monitors or the laptop on its own, and bring any of them back when you need it.</p>
+        <ul>
+          <li>The backup that matches your connected displays is marked.</li>
+          <li>Restoring keeps a copy of your current file next to it.</li>
+          <li>Your token stays in your Keychain.</li>
+        </ul>
+      </div>
+      <div class="window"><div class="bar"><i></i><i></i><i></i><span>Backup</span></div>
+        <picture><source srcset="assets/backup-dark.png" media="(prefers-color-scheme: dark)"><img src="assets/backup-light.png" alt="The Backup page: this computer's setup and the backups saved in your gist" loading="lazy"></picture></div>
+    </div>
+  </div>
+</section>
+
+<section id="how">
   <div class="wrap">
     <h2>Up and running in minutes</h2>
     <p class="sub">The short version. The <a href="docs.html#quick-start">quick start</a> has every step.</p>
@@ -134,7 +156,7 @@
       </div></li>
       <li><div>
         <h3>Add a shortcut</h3>
-        <p>Choose <b>Configure MWM…</b> from the menu bar, pick a key on the keyboard map and say what it does. Or start from an <a href="examples.html">example configuration</a>.</p>
+        <p>Choose <b>Settings…</b> from the menu bar, pick a key on the keyboard map and say what it does. Or start from an <a href="examples.html">example configuration</a>.</p>
       </div></li>
     </ol>
     <p style="text-align:center;margin-top:26px"><a class="btn primary" href="docs.html">Read the documentation</a> <a class="btn" href="examples.html">Browse examples</a></p>

@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MWM features</title>
+<meta name="description" content="Everything MWM does: shortcuts, slots, displays, snapshots, backup and the menu bar, with what's new in each version.">
+<link rel="icon" href="assets/icon.png">
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <a class="brand" href="index.html"><img src="assets/icon.png" alt="">MWM</a>
+    <div class="links">
+      <a href="index.html#top">Overview</a>
+      <a href="features.html" style="color:var(--fg)">Features</a>
+      <a href="docs.html">Docs</a>
+      <a href="examples.html">Examples</a>
+      <a class="btn primary small cta" href="https://github.com/bbarbosa85/mwm/raw/master/docs/downloads/MWM-1.1.dmg">Download</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap">
+    <h1>Everything <span>MWM does.</span></h1>
+    <p class="lead">A short tour of what is in the app, by area. The documentation has the full story for each part.</p>
+    <div class="actions">
+      <a class="btn primary" href="https://github.com/bbarbosa85/mwm/raw/master/docs/downloads/MWM-1.1.dmg">Download for macOS</a>
+      <a class="btn" href="docs.html">Read the documentation</a>
+    </div>
+    <div class="meta">Version 1.2 · macOS 12 or later · Apple silicon and Intel</div>
+  </div>
+</header>
+
+<section class="alt" id="new">
+  <div class="wrap">
+    <h2>New in 1.2</h2>
+    <p class="sub">What changed since 1.1.</p>
+    <div class="grid"><div class="card"><div class="ico">☁️</div><h3>Backup</h3><p>Save your shortcuts, slots and snapshots to a private GitHub gist, one backup for each set of displays, and restore any of them. <a href="docs.html#backup">How backup works</a>.</p></div><div class="card"><div class="ico">⬇️</div><h3>Updates in place</h3><p><b>Update now</b> downloads the new version, checks it against its checksum and the app’s signature, then restarts into it. <a href="docs.html#menu-bar">The menu bar</a>.</p></div><div class="card"><div class="ico">🧭</div><h3>A tidier menu bar</h3><p><b>Settings…</b> (it was Configure MWM…), a <b>Backup</b> submenu to restore a backup in one click, and <b>Launch MWM at Login</b> right under your shortcuts.</p></div><div class="card"><div class="ico">💬</div><h3>One look for every alert</h3><p>Confirmations, warnings and results share one design, with clear buttons and a red one for anything that deletes.</p></div><div class="card"><div class="ico">📐</div><h3>A steady window</h3><p>The settings window keeps its width, so pages no longer jump around as you move between them.</p></div></div>
+  </div>
+</section>
+
+<section id="shortcuts">
+  <div class="wrap">
+    <h2>Shortcuts</h2>
+    <p class="sub">Set a key to do something, and see it all at a glance.</p>
+    <div class="grid"><div class="card"><div class="ico">⌨️</div><h3>Keyboard map</h3><p>Every shortcut on a picture of a Mac keyboard, colored by what it does, for each modifier group.</p></div><div class="card"><div class="ico">📋</div><h3>A searchable list</h3><p>Prefer rows? The list shows every shortcut and filters as you type.</p></div><div class="card"><div class="ico">⏺️</div><h3>Record or pick</h3><p>Press the keys to record a shortcut, or click a key on the map.</p></div><div class="card"><div class="ico">⚠️</div><h3>Conflicts flagged</h3><p>Two shortcuts on the same keys, or keys macOS already uses, are flagged before they cause trouble.</p></div><div class="card"><div class="ico">✦</div><h3>Hyper and other groups</h3><p>Name a group of modifiers, like <kbd>⌃</kbd><kbd>⌥</kbd><kbd>⌘</kbd>, and use it for as many shortcuts as you like.</p></div><div class="card"><div class="ico">🎁</div><h3>Good defaults</h3><p>Resize, nudge, focus, and jump to Finder, Safari, Terminal and more work out of the box. <a href="docs.html#defaults">See them</a>.</p></div></div>
+  </div>
+</section>
+
+<section class="alt" id="windows">
+  <div class="wrap">
+    <h2>Moving windows</h2>
+    <p class="sub">Put a window exactly where you want it.</p>
+    <div class="grid"><div class="card"><div class="ico">▦</div><h3>Slots</h3><p>Halves, thirds, quarters, or any area you draw. Nineteen presets are built in.</p></div><div class="card"><div class="ico">✏️</div><h3>Draw, don’t type</h3><p>Drag the edges of a slot on a picture of your screen, or type exact percentages. It snaps to a grid and previews on each connected screen.</p></div><div class="card"><div class="ico">↔️</div><h3>Resize, nudge and push</h3><p>Grow or shrink a window by a step, nudge it, or push it to a screen edge.</p></div><div class="card"><div class="ico">🔎</div><h3>Window hints</h3><p>Show a letter on every window and press it to jump there.</p></div><div class="card"><div class="ico">🎯</div><h3>Focus by direction</h3><p>Move focus to the window on the left, right, above or below.</p></div><div class="card"><div class="ico">🚀</div><h3>Jump to an app</h3><p>One key brings Finder, Safari, Terminal or any app you choose to the front.</p></div></div>
+  </div>
+</section>
+
+<section id="displays">
+  <div class="wrap">
+    <h2>Displays</h2>
+    <p class="sub">Work with more than one screen.</p>
+    <div class="grid"><div class="card"><div class="ico">🖥️</div><h3>Names that stick</h3><p>Give each screen a name. Shortcuts that use it keep working after you unplug and reconnect.</p></div><div class="card"><div class="ico">📤</div><h3>Throw to another screen</h3><p>Send a window to the next screen, or to one by name.</p></div><div class="card"><div class="ico">👁️</div><h3>Preview on any screen</h3><p>Slots are drawn on each of your connected screens while you edit.</p></div></div>
+  </div>
+</section>
+
+<section class="alt" id="snapshots">
+  <div class="wrap">
+    <h2>Snapshots</h2>
+    <p class="sub">Save the whole desktop.</p>
+    <div class="grid"><div class="card"><div class="ico">📸</div><h3>Save and restore</h3><p>Remember where every window is and the screens it was on. Restore it from the window, the menu bar or a shortcut.</p></div><div class="card"><div class="ico">🖼️</div><h3>Live pictures</h3><p>Each card shows the windows with each app’s icon.</p></div><div class="card"><div class="ico">📌</div><h3>Keep after restart</h3><p>Pin a snapshot so it survives MWM restarting.</p></div><div class="card"><div class="ico">🔄</div><h3>Update in place</h3><p>Replace a snapshot with the windows you have now.</p></div></div>
+  </div>
+</section>
+
+<section id="backup">
+  <div class="wrap">
+    <h2>Backup</h2>
+    <p class="sub">Your setup, somewhere safe.</p>
+    <div class="grid"><div class="card"><div class="ico">☁️</div><h3>A private gist</h3><p>Backups go to one private gist on your GitHub account. The token stays in your Keychain.</p></div><div class="card"><div class="ico">🏷️</div><h3>One backup per setup</h3><p>Name each set of displays, like Desk, two monitors. A name that already exists replaces that backup.</p></div><div class="card"><div class="ico">✅</div><h3>Matches your displays</h3><p>The backup that fits the screens you have connected is marked.</p></div><div class="card"><div class="ico">🛟</div><h3>Restore with a safety copy</h3><p>Restoring replaces your shortcuts, slots and snapshots and keeps a copy of your current file next to it.</p></div></div>
+  </div>
+</section>
+
+<section class="alt" id="yours">
+  <div class="wrap">
+    <h2>Yours to keep</h2>
+    <p class="sub">Plain, private and open.</p>
+    <div class="grid"><div class="card"><div class="ico">📄</div><h3>One readable file</h3><p>Everything lives in <code>~/.mwm.yml</code>. Edit it in the app or in any editor.</p></div><div class="card"><div class="ico">🔒</div><h3>Nothing runs from it</h3><p>The file is plain data. MWM never runs code from it.</p></div><div class="card"><div class="ico">📥</div><h3>Comes from Slate</h3><p>Slate and Slate YAML settings are converted on first launch. <a href="docs.html#migration">Moving from Slate</a>.</p></div><div class="card"><div class="ico">🌐</div><h3>Quiet on the network</h3><p>MWM only talks to GitHub for new versions and for your own backup, and you can turn the update check off. Open source under GPLv3.</p></div></div>
+  </div>
+</section>
+
+<section class="download">
+  <div class="wrap">
+    <div class="dl-box">
+      <img src="assets/icon.png" alt="" width="72" height="72">
+      <h2 style="margin-top:10px">Try MWM</h2>
+      <p class="sub" style="margin-bottom:0">Free. Open the disk image and drag MWM to Applications.</p>
+      <div class="actions">
+        <a class="btn primary" href="https://github.com/bbarbosa85/mwm/raw/master/docs/downloads/MWM-1.1.dmg">Download .dmg</a>
+        <a class="btn" href="docs.html#quick-start">Get started</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <span>MWM is free software under the GPLv3. A fork of <a href="https://github.com/jigish/slate">Slate</a> by Jigish Patel and contributors.</span>
+    <span class="links"><a href="docs.html">Docs</a><a href="features.html">Features</a><a href="examples.html">Examples</a><a href="https://github.com/bbarbosa85/mwm">GitHub</a><a href="https://github.com/bbarbosa85/mwm/graphs/contributors">Contributors</a></span>
+  </div>
+</footer>
+
+</body>
+</html>

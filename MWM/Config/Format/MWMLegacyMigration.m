@@ -501,7 +501,7 @@ static id NilIfNull(id value) {
   BOOL moved = [[NSFileManager defaultManager] moveItemAtPath:jsPath toPath:backup error:&moveError];
   MWMLogger(@"~/.slate.js not converted (%@); moved: %d", [reason localizedDescription], moved);
   [self showAlert:@"MWM no longer runs ~/.slate.js"
-           detail:[NSString stringWithFormat:@"%@\n\n%@ Recreate what you need in Configure MWM…, which saves to ~/.mwm.yml.",
+           detail:[NSString stringWithFormat:@"%@\n\n%@ Recreate what you need in Settings…, which saves to ~/.mwm.yml.",
                    [reason localizedDescription],
                    moved ? [NSString stringWithFormat:@"It was renamed to %@.", [backup stringByAbbreviatingWithTildeInPath]]
                          : @"It's left in place but isn't loaded."]];

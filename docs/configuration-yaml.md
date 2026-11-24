@@ -1,6 +1,6 @@
 # Configuration File (`~/.mwm.yml`)
 
-MWM (Mac Window Manager, a fork of [Slate](https://github.com/jigish/slate)) reads its configuration from `~/.mwm.yml`. The file is plain data: MWM parses it and registers what it describes, and nothing in it is ever run. **Configure MWM…** (⌘,) in the status menu edits it as a form.
+MWM (Mac Window Manager, a fork of [Slate](https://github.com/jigish/slate)) reads its configuration from `~/.mwm.yml`. The file is plain data: MWM parses it and registers what it describes, and nothing in it is ever run. **Settings…** (⌘,) in the status menu edits it as a form.
 
 MWM no longer runs JavaScript configurations. On startup it converts `~/.slate`, `~/.slate.js` and `~/.mwm.yml` into `~/.mwm.yml` (see [Migration](#migration)). A legacy `~/.slate` that hasn't been migrated yet still loads, because its format is data too.
 
