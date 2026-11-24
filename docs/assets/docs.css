@@ -3,7 +3,7 @@
 nav .wrap { max-width: 1200px; }
 .docs-wrap { display: grid; grid-template-columns: 272px minmax(0, 1fr); gap: 48px; max-width: 1200px; margin: 0 auto; padding: 0 24px; }
 aside { position: sticky; top: 56px; align-self: start; max-height: calc(100vh - 56px); overflow-y: auto; padding: 18px 16px 40px 0; font-size: 14px; }
-aside h4 { margin: 20px 0 6px; padding-left: 10px; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
+aside h4 { margin: 20px 0 6px; padding-left: 10px; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--accent-2); }
 aside a { display: block; padding: 4px 10px; border-radius: 8px; color: var(--muted); }
 aside a:hover { color: var(--fg); background: var(--surface-2); text-decoration: none; }
 aside a.on { color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); }
@@ -29,11 +29,10 @@ h1.page { font-size: clamp(32px, 4.4vw, 46px); letter-spacing: -.025em; margin: 
 
 .doc { padding: 0 0 8px; margin-top: 104px; scroll-margin-top: 90px; }
 .doc:first-of-type { margin-top: 0; }
-.intro-card { margin: 32px 0 44px; padding: 32px 36px; background: var(--hero-a); border-radius: 20px; }
+.intro-card { margin: 36px 0 48px; padding: 0; }
 .intro-card h1.page { margin: 0 0 10px; }
-.intro-card h1.page span { color: var(--accent); }
+.intro-card h1.page span { color: inherit; }
 .intro-card .lead { margin: 0; }
-@media (max-width: 560px) { .intro-card { padding: 24px 22px; } }
 .doc h2 { font-size: 30px; letter-spacing: -.02em; margin: 0 0 8px; line-height: 1.15; }
 .doc h3 { font-size: 18px; margin: 26px 0 6px; }
 .doc .intro { font-size: 18px; color: var(--muted); margin: 0 0 20px; max-width: 720px; }
