@@ -21,7 +21,8 @@
   .ex .art { background: var(--surface-2); border-radius: 14px; padding: 18px; color: var(--fg); }
   .ex .art svg { display: block; width: 100%; height: auto; }
   .ex .body { min-width: 0; }
-  .ex > details { grid-column: 1 / -1; }
+  .ex > details, .ex > .head { grid-column: 1 / -1; }
+  .ex .head .who { margin: 0; }
   .ex h2 { margin: 0 0 2px; font-size: 24px; letter-spacing: -.015em; }
   .ex .who { margin: 0 0 14px; color: var(--accent); font-size: 14px; font-weight: 600; }
   .does { list-style: none; padding: 0; margin: 0 0 14px; display: grid; gap: 8px; }
@@ -81,10 +82,12 @@ mv ~/Downloads/starter.mwm.yml ~/.mwm.yml</code></pre>
   </div>
   
     <article class="ex" id="starter">
-      <div class="art"><svg viewBox="0 0 240 150" role="img" aria-hidden="true"><rect x="1" y="1" width="238" height="148" rx="9" fill="#33318f" stroke="rgba(255,255,255,.3)" stroke-width="2"/><rect x="1" y="1" width="238" height="9" rx="4.5" fill="rgba(0,0,0,.3)"/><rect x="6.0" y="12.0" width="111.0" height="129.0" rx="4" fill="#ffffff"/><rect x="120.0" y="12.0" width="111.0" height="63.0" rx="4" fill="#ffd21f"/><rect x="120.0" y="78.0" width="111.0" height="63.0" rx="4" fill="#ff5a5f"/></svg></div>
-      <div class="body">
+      <div class="head">
         <h2>Starter</h2>
         <p class="who">Anyone new to MWM · 12 shortcuts</p>
+      </div>
+      <div class="art"><svg viewBox="0 0 240 150" role="img" aria-hidden="true"><rect x="1" y="1" width="238" height="148" rx="9" fill="#33318f" stroke="rgba(255,255,255,.3)" stroke-width="2"/><rect x="1" y="1" width="238" height="9" rx="4.5" fill="rgba(0,0,0,.3)"/><rect x="6.0" y="12.0" width="111.0" height="129.0" rx="4" fill="#ffffff"/><rect x="120.0" y="12.0" width="111.0" height="63.0" rx="4" fill="#ffd21f"/><rect x="120.0" y="78.0" width="111.0" height="63.0" rx="4" fill="#ff5a5f"/></svg></div>
+      <div class="body">
         <ul class="does"><li><span class="k">⌃⌥⌘ ← →</span><span>Left half, right half</span></li><li><span class="k">⌃⌥⌘ ↑</span><span>Full screen</span></li><li><span class="k">⌃⌥⌘ 1 2 3</span><span>Left, middle and right third</span></li><li><span class="k">⌥⇧ F S T</span><span>Jump to Finder, Safari, Terminal</span></li><li><span class="k">⌘⇧ H</span><span>Show a letter on every window, to jump to it</span></li><li><span class="k">⌃⌥⌘ S · W</span><span>Save your desktop as &quot;work&quot;, and bring it back</span></li></ul>
         <p class="change"><b>Before you use it:</b> Change Finder, Safari and Terminal to the apps you use.</p>
         <div class="acts">
@@ -172,10 +175,12 @@ bindings:
 </code></pre></details>
     </article>
     <article class="ex" id="ultrawide">
-      <div class="art"><svg viewBox="0 0 420 112" role="img" aria-hidden="true"><rect x="1" y="1" width="418" height="110" rx="9" fill="#33318f" stroke="rgba(255,255,255,.3)" stroke-width="2"/><rect x="1" y="1" width="418" height="9" rx="4.5" fill="rgba(0,0,0,.3)"/><rect x="6.0" y="12.0" width="135.7" height="91.0" rx="4" fill="#ffffff"/><rect x="144.7" y="12.0" width="131.6" height="91.0" rx="4" fill="#ffd21f"/><rect x="279.4" y="12.0" width="131.6" height="91.0" rx="4" fill="#ff5a5f"/></svg></div>
-      <div class="body">
+      <div class="head">
         <h2>Ultrawide</h2>
         <p class="who">One very wide monitor · 13 shortcuts</p>
+      </div>
+      <div class="art"><svg viewBox="0 0 420 112" role="img" aria-hidden="true"><rect x="1" y="1" width="418" height="110" rx="9" fill="#33318f" stroke="rgba(255,255,255,.3)" stroke-width="2"/><rect x="1" y="1" width="418" height="9" rx="4.5" fill="rgba(0,0,0,.3)"/><rect x="6.0" y="12.0" width="135.7" height="91.0" rx="4" fill="#ffffff"/><rect x="144.7" y="12.0" width="131.6" height="91.0" rx="4" fill="#ffd21f"/><rect x="279.4" y="12.0" width="131.6" height="91.0" rx="4" fill="#ff5a5f"/></svg></div>
+      <div class="body">
         <ul class="does"><li><span class="k">⌃⌥⌘ 1 2 3</span><span>Left, middle and right third</span></li><li><span class="k">⌃⌥⌘ 4 · 6</span><span>Left two thirds, right two thirds</span></li><li><span class="k">⌃⌥⌘ 5</span><span>Centered, two thirds wide</span></li><li><span class="k">⌃⌥⌘ 9</span><span>A narrow column in the middle, for reading</span></li><li><span class="k">⌃⌥⌘ 0</span><span>Full screen</span></li><li><span class="k">⇧⌃⌥⌘ 1 2 3 4</span><span>The four quarters</span></li><li><span class="k">⌘⇧ H</span><span>Window hints</span></li></ul>
         <p class="change"><b>Before you use it:</b> Nothing needed. It works on any screen, but shines on wide ones.</p>
         <div class="acts">
@@ -272,10 +277,12 @@ bindings:
 </code></pre></details>
     </article>
     <article class="ex" id="two-displays">
-      <div class="art"><svg viewBox="0 0 300 150" role="img" aria-hidden="true"><rect x="5" y="29" width="108" height="82" rx="9" fill="#33318f" stroke="rgba(255,255,255,.3)" stroke-width="2"/><rect x="5" y="29" width="108" height="9" rx="4.5" fill="rgba(0,0,0,.3)"/><rect x="10.0" y="40.0" width="46.0" height="63.0" rx="4" fill="#ffffff"/><rect x="59.0" y="40.0" width="46.0" height="63.0" rx="4" fill="#ffd21f"/><rect x="125" y="11" width="168" height="108" rx="9" fill="#33318f" stroke="rgba(255,255,255,.3)" stroke-width="2"/><rect x="125" y="11" width="168" height="9" rx="4.5" fill="rgba(0,0,0,.3)"/><rect x="130.0" y="22.0" width="76.0" height="89.0" rx="4" fill="#ff5a5f"/><rect x="209.0" y="22.0" width="76.0" height="89.0" rx="4" fill="#7fb0ff"/><text x="59" y="20" text-anchor="middle" font-size="13" font-weight="700" fill="currentColor" font-family="-apple-system, sans-serif">laptop</text><text x="209" y="136" text-anchor="middle" font-size="13" font-weight="700" fill="currentColor" font-family="-apple-system, sans-serif">desk</text></svg></div>
-      <div class="body">
+      <div class="head">
         <h2>Laptop and external display</h2>
         <p class="who">Two screens · 11 shortcuts</p>
+      </div>
+      <div class="art"><svg viewBox="0 0 300 150" role="img" aria-hidden="true"><rect x="5" y="29" width="108" height="82" rx="9" fill="#33318f" stroke="rgba(255,255,255,.3)" stroke-width="2"/><rect x="5" y="29" width="108" height="9" rx="4.5" fill="rgba(0,0,0,.3)"/><rect x="10.0" y="40.0" width="46.0" height="63.0" rx="4" fill="#ffffff"/><rect x="59.0" y="40.0" width="46.0" height="63.0" rx="4" fill="#ffd21f"/><rect x="125" y="11" width="168" height="108" rx="9" fill="#33318f" stroke="rgba(255,255,255,.3)" stroke-width="2"/><rect x="125" y="11" width="168" height="9" rx="4.5" fill="rgba(0,0,0,.3)"/><rect x="130.0" y="22.0" width="76.0" height="89.0" rx="4" fill="#ff5a5f"/><rect x="209.0" y="22.0" width="76.0" height="89.0" rx="4" fill="#7fb0ff"/><text x="59" y="20" text-anchor="middle" font-size="13" font-weight="700" fill="currentColor" font-family="-apple-system, sans-serif">laptop</text><text x="209" y="136" text-anchor="middle" font-size="13" font-weight="700" fill="currentColor" font-family="-apple-system, sans-serif">desk</text></svg></div>
+      <div class="body">
         <ul class="does"><li><span class="k">⌃⌥⌘ 1 · 2</span><span>Fill the laptop, or fill the desk screen</span></li><li><span class="k">⌃⌥⌘ Tab</span><span>Send the window to the other screen</span></li><li><span class="k">⌃⌥⌘ arrows</span><span>Halves of the desk screen</span></li><li><span class="k">⇧⌃⌥⌘ ← →</span><span>Halves of the laptop screen</span></li><li><span class="k">⌃⌥⌘ D · R</span><span>Save your desk setup, and bring it back after plugging in</span></li></ul>
         <p class="change"><b>Before you use it:</b> Name your two screens in <b>Displays</b>, or change <code>Studio Display</code> in the file to your monitor's name.</p>
         <div class="acts">
@@ -358,10 +365,12 @@ bindings:
 </code></pre></details>
     </article>
     <article class="ex" id="apps-and-snapshots">
-      <div class="art"><svg viewBox="0 0 240 126" role="img" aria-hidden="true"><rect x="12" y="14" width="48" height="48" rx="12" fill="#1f5bff"/><text x="36" y="46" text-anchor="middle" font-size="22" font-weight="800" fill="#fff" font-family="-apple-system, sans-serif">F</text><rect x="68" y="14" width="48" height="48" rx="12" fill="#1e7bf0"/><text x="92" y="46" text-anchor="middle" font-size="22" font-weight="800" fill="#fff" font-family="-apple-system, sans-serif">S</text><rect x="124" y="14" width="48" height="48" rx="12" fill="#ff5a5f"/><text x="148" y="46" text-anchor="middle" font-size="22" font-weight="800" fill="#fff" font-family="-apple-system, sans-serif">C</text><rect x="180" y="14" width="48" height="48" rx="12" fill="#4a4d5c"/><text x="204" y="46" text-anchor="middle" font-size="22" font-weight="800" fill="#fff" font-family="-apple-system, sans-serif">T</text><rect x="12" y="70" width="48" height="48" rx="12" fill="#ffd21f"/><text x="36" y="102" text-anchor="middle" font-size="22" font-weight="800" fill="#222" font-family="-apple-system, sans-serif">N</text><rect x="68" y="70" width="48" height="48" rx="12" fill="#28a745"/><text x="92" y="102" text-anchor="middle" font-size="22" font-weight="800" fill="#fff" font-family="-apple-system, sans-serif">M</text><rect x="124" y="70" width="48" height="48" rx="12" fill="#e0457b"/><text x="148" y="102" text-anchor="middle" font-size="22" font-weight="800" fill="#fff" font-family="-apple-system, sans-serif">A</text><rect x="180" y="70" width="48" height="48" rx="12" fill="#6b3fd1"/><text x="204" y="102" text-anchor="middle" font-size="22" font-weight="800" fill="#fff" font-family="-apple-system, sans-serif">K</text></svg></div>
-      <div class="body">
+      <div class="head">
         <h2>Apps and snapshots</h2>
         <p class="who">Switching between apps and layouts · 16 shortcuts</p>
+      </div>
+      <div class="art"><svg viewBox="0 0 240 126" role="img" aria-hidden="true"><rect x="12" y="14" width="48" height="48" rx="12" fill="#1f5bff"/><text x="36" y="46" text-anchor="middle" font-size="22" font-weight="800" fill="#fff" font-family="-apple-system, sans-serif">F</text><rect x="68" y="14" width="48" height="48" rx="12" fill="#1e7bf0"/><text x="92" y="46" text-anchor="middle" font-size="22" font-weight="800" fill="#fff" font-family="-apple-system, sans-serif">S</text><rect x="124" y="14" width="48" height="48" rx="12" fill="#ff5a5f"/><text x="148" y="46" text-anchor="middle" font-size="22" font-weight="800" fill="#fff" font-family="-apple-system, sans-serif">C</text><rect x="180" y="14" width="48" height="48" rx="12" fill="#4a4d5c"/><text x="204" y="46" text-anchor="middle" font-size="22" font-weight="800" fill="#fff" font-family="-apple-system, sans-serif">T</text><rect x="12" y="70" width="48" height="48" rx="12" fill="#ffd21f"/><text x="36" y="102" text-anchor="middle" font-size="22" font-weight="800" fill="#222" font-family="-apple-system, sans-serif">N</text><rect x="68" y="70" width="48" height="48" rx="12" fill="#28a745"/><text x="92" y="102" text-anchor="middle" font-size="22" font-weight="800" fill="#fff" font-family="-apple-system, sans-serif">M</text><rect x="124" y="70" width="48" height="48" rx="12" fill="#e0457b"/><text x="148" y="102" text-anchor="middle" font-size="22" font-weight="800" fill="#fff" font-family="-apple-system, sans-serif">A</text><rect x="180" y="70" width="48" height="48" rx="12" fill="#6b3fd1"/><text x="204" y="102" text-anchor="middle" font-size="22" font-weight="800" fill="#fff" font-family="-apple-system, sans-serif">K</text></svg></div>
+      <div class="body">
         <ul class="does"><li><span class="k">⌥⇧ + a letter</span><span>Jump to Finder, Safari, Chrome, Terminal, Notes, Mail, Calendar, Spotify, VS Code or Slack</span></li><li><span class="k">⌃⌥⌘ W · M · F</span><span>Bring back your &quot;work&quot;, &quot;meeting&quot; or &quot;focus&quot; desktop</span></li><li><span class="k">⇧⌃⌥⌘ W · M · F</span><span>Save the desktop you have now as work, meeting or focus</span></li></ul>
         <p class="change"><b>Before you use it:</b> Change the ten app names to your own. Snapshots start empty: arrange your windows, then press the save shortcut.</p>
         <div class="acts">
@@ -463,10 +472,12 @@ bindings:
 </code></pre></details>
     </article>
     <article class="ex" id="daily-driver">
-      <div class="art"><svg viewBox="0 0 420 120" role="img" aria-hidden="true"><rect x="5" y="7" width="298" height="82" rx="9" fill="#33318f" stroke="rgba(255,255,255,.3)" stroke-width="2"/><rect x="5" y="7" width="298" height="9" rx="4.5" fill="rgba(0,0,0,.3)"/><rect x="10.0" y="18.0" width="69.0" height="63.0" rx="4" fill="#ffffff"/><rect x="82.0" y="18.0" width="141.0" height="63.0" rx="4" fill="#ffd21f"/><rect x="226.0" y="18.0" width="69.0" height="63.0" rx="4" fill="#ff5a5f"/><rect x="319" y="25" width="94" height="64" rx="9" fill="#33318f" stroke="rgba(255,255,255,.3)" stroke-width="2"/><rect x="319" y="25" width="94" height="9" rx="4.5" fill="rgba(0,0,0,.3)"/><rect x="324.0" y="36.0" width="81.0" height="45.0" rx="4" fill="#7fb0ff"/></svg></div>
-      <div class="body">
+      <div class="head">
         <h2>The author&#x27;s daily setup</h2>
         <p class="who">A real, lived-in setup · 55 shortcuts</p>
+      </div>
+      <div class="art"><svg viewBox="0 0 420 120" role="img" aria-hidden="true"><rect x="5" y="7" width="298" height="82" rx="9" fill="#33318f" stroke="rgba(255,255,255,.3)" stroke-width="2"/><rect x="5" y="7" width="298" height="9" rx="4.5" fill="rgba(0,0,0,.3)"/><rect x="10.0" y="18.0" width="69.0" height="63.0" rx="4" fill="#ffffff"/><rect x="82.0" y="18.0" width="141.0" height="63.0" rx="4" fill="#ffd21f"/><rect x="226.0" y="18.0" width="69.0" height="63.0" rx="4" fill="#ff5a5f"/><rect x="319" y="25" width="94" height="64" rx="9" fill="#33318f" stroke="rgba(255,255,255,.3)" stroke-width="2"/><rect x="319" y="25" width="94" height="9" rx="4.5" fill="rgba(0,0,0,.3)"/><rect x="324.0" y="36.0" width="81.0" height="45.0" rx="4" fill="#7fb0ff"/></svg></div>
+      <div class="body">
         <ul class="does"><li><span class="k">⌃⌥⌘ number row and keypad</span><span>Halves, thirds and quarters, on either screen</span></li><li><span class="k">⌥⇧ + a letter</span><span>Jump to the apps the author uses every day</span></li><li><span class="k">⌘⇧ H</span><span>Window hints</span></li><li><span class="k">⌃⌥⌘ and ⇧⌃⌥⌘</span><span>Save and restore snapshots</span></li><li><span class="k">Lots of shortcuts</span><span>The most complete example. A good one to read through and borrow from.</span></li></ul>
         <p class="change"><b>Before you use it:</b> Rename the apps and screens to yours. It uses a MacBook and a 5120×1440 ultrawide.</p>
         <div class="acts">

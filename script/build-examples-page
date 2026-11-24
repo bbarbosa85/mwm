@@ -85,10 +85,12 @@ def card(name, title, who, picture, change, rows):
     items = "".join(f'<li><span class="k">{html.escape(k)}</span><span>{html.escape(v)}</span></li>' for k, v in rows)
     return f"""
     <article class="ex" id="{name.split('.')[0]}">
-      <div class="art">{picture}</div>
-      <div class="body">
+      <div class="head">
         <h2>{html.escape(title)}</h2>
         <p class="who">{html.escape(who)} · {n} shortcuts</p>
+      </div>
+      <div class="art">{picture}</div>
+      <div class="body">
         <ul class="does">{items}</ul>
         <p class="change"><b>Before you use it:</b> {change}</p>
         <div class="acts">
@@ -123,7 +125,8 @@ page = f"""<!doctype html>
   .ex .art {{ background: var(--surface-2); border-radius: 14px; padding: 18px; color: var(--fg); }}
   .ex .art svg {{ display: block; width: 100%; height: auto; }}
   .ex .body {{ min-width: 0; }}
-  .ex > details {{ grid-column: 1 / -1; }}
+  .ex > details, .ex > .head {{ grid-column: 1 / -1; }}
+  .ex .head .who {{ margin: 0; }}
   .ex h2 {{ margin: 0 0 2px; font-size: 24px; letter-spacing: -.015em; }}
   .ex .who {{ margin: 0 0 14px; color: var(--accent); font-size: 14px; font-weight: 600; }}
   .does {{ list-style: none; padding: 0; margin: 0 0 14px; display: grid; gap: 8px; }}
