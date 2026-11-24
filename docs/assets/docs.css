@@ -3,7 +3,7 @@
 nav .wrap { max-width: 1200px; }
 .docs-wrap { display: grid; grid-template-columns: 272px minmax(0, 1fr); gap: 48px; max-width: 1200px; margin: 0 auto; padding: 0 24px; }
 aside { position: sticky; top: 56px; align-self: start; max-height: calc(100vh - 56px); overflow-y: auto; padding: 18px 16px 40px 0; font-size: 14px; }
-aside h4 { margin: 20px 0 6px; padding-left: 10px; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+aside h4 { margin: 20px 0 6px; padding-left: 10px; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
 aside a { display: block; padding: 4px 10px; border-radius: 8px; color: var(--muted); }
 aside a:hover { color: var(--fg); background: var(--surface-2); text-decoration: none; }
 aside a.on { color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); }
