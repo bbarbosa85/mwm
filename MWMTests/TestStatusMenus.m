@@ -19,6 +19,7 @@
 #import <XCTest/XCTest.h>
 #import "MWMStatusMenus.h"
 #import "MWMBackup.h"
+#import "MWMConfigurations.h"
 #import "MWMSnapshots.h"
 #import "Snapshot.h"
 #import "SnapshotList.h"
@@ -85,8 +86,19 @@
 
 - (void)testThePagesMenuHasEveryPageOfTheWindow {
   NSMenu *menu = [[MWMStatusMenus shared] pagesMenu];
-  XCTAssertEqualObjects([self titles:menu], (@[@"Keyboard", @"Modifiers", @"-", @"Displays", @"Slots", @"Snapshots", @"-", @"General", @"Advanced", @"Other Aliases", @"Backup"]));
+  XCTAssertEqualObjects([self titles:menu], (@[@"Keyboard", @"Modifiers", @"-", @"Displays", @"Slots", @"Snapshots", @"-", @"General", @"Advanced", @"Other Aliases", @"Configurations", @"Backup"]));
   XCTAssertEqualObjects([self titles:[[MWMStatusMenus shared] keyboardMenu]], (@[@"Keyboard Map", @"List of Shortcuts", @"-", @"New Shortcut…", @"Modifier Groups"]));
+}
+
+- (void)testTheConfigurationsMenuChecksTheActiveOne {
+  NSMenu *menu = [[NSMenu alloc] initWithTitle:@"Configurations"];
+  [[MWMStatusMenus shared] showConfigurations:@[@"default", @"desk"] active:@"desk" inMenu:menu];
+  XCTAssertEqualObjects([self titles:menu], (@[@"default", @"desk", @"-", @"Manage Configurations…"]));
+  XCTAssertEqual([[menu itemAtIndex:0] state], NSControlStateValueOff);
+  XCTAssertEqual([[menu itemAtIndex:1] state], NSControlStateValueOn);
+  [[MWMStatusMenus shared] showConfigurations:@[] active:@"default" inMenu:menu];
+  XCTAssertEqualObjects([self titles:menu], (@[@"No configurations yet", @"-", @"Manage Configurations…"]));
+  XCTAssertFalse([[menu itemAtIndex:0] isEnabled]);
 }
 
 - (void)testTheRestoreMenuListsBackupsOrSaysThereAreNone {
@@ -116,8 +128,9 @@
   XCTAssertEqualObjects([titles objectAtIndex:login + 1], @"-");
   XCTAssertNotNil([[menu itemWithTitle:@"Snapshots"] submenu]);
   XCTAssertNotNil([[menu itemWithTitle:@"Keyboard Shortcuts"] submenu]);
-  NSUInteger restore = [titles indexOfObject:@"Backup"];
-  XCTAssertTrue(configure < restore && restore < reload, @"%@", titles);
+  NSUInteger restore = [titles indexOfObject:@"Backup"], configurations = [titles indexOfObject:@"Configurations"];
+  XCTAssertTrue(configure < configurations && configurations < restore && restore < reload, @"%@", titles);
+  XCTAssertNotNil([[menu itemWithTitle:@"Configurations"] submenu]);
   XCTAssertNotNil([[menu itemWithTitle:@"Backup"] submenu]);
   XCTAssertEqualObjects([titles objectAtIndex:reload + 1], @"-", @"%@", titles);
   XCTAssertEqual([titles indexOfObject:@"Backup…"], (NSUInteger)NSNotFound);

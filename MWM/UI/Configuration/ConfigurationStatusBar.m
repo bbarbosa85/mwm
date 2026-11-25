@@ -24,6 +24,7 @@ static const CGFloat kBarHeight = 44;
 @interface ConfigurationStatusBar ()
 @property (strong) NSImageView *savedIcon;
 @property (strong) NSTextField *savedLabel;
+@property (strong) NSTextField *pathLabel;
 @property (strong, readwrite) NSButton *statusButton;
 @property (strong, readwrite) NSButton *saveButton;
 @end
@@ -53,6 +54,7 @@ static const CGFloat kBarHeight = 44;
     [self.savedIcon setTranslatesAutoresizingMaskIntoConstraints:NO];
     self.savedLabel = [self label];
     NSTextField *pathLabel = [self label];
+    self.pathLabel = pathLabel;
     [pathLabel setStringValue:[path stringByAbbreviatingWithTildeInPath]];
     [pathLabel setTextColor:[MWMTheme textSecondary]];
 
@@ -68,11 +70,11 @@ static const CGFloat kBarHeight = 44;
     [self.saveButton setTranslatesAutoresizingMaskIntoConstraints:NO];
     [self.saveButton setKeyEquivalent:@"s"];
     [self.saveButton setKeyEquivalentModifierMask:NSEventModifierFlagCommand];
-    [self.saveButton setToolTip:@"Save ~/.mwm.yml without restarting MWM (⌘S)"];
+    [self.saveButton setToolTip:@"Save the configuration without restarting MWM (⌘S)"];
     NSButton *apply = [NSButton buttonWithTitle:@"Apply and Restart" target:target action:@selector(apply:)];
     [apply setTranslatesAutoresizingMaskIntoConstraints:NO];
     [apply setBezelColor:[MWMTheme accent]];
-    [apply setToolTip:@"Close and restart MWM to apply ~/.mwm.yml"];
+    [apply setToolTip:@"Close and restart MWM to apply the configuration"];
     NSButton *close = [NSButton buttonWithTitle:@"Close" target:target action:@selector(closeWindow:)];
     [close setTranslatesAutoresizingMaskIntoConstraints:NO];
     [close setKeyEquivalent:@"w"];
@@ -112,6 +114,10 @@ static const CGFloat kBarHeight = 44;
     ]];
   }
   return self;
+}
+
+- (void)setPath:(NSString *)path {
+  [self.pathLabel setStringValue:[path stringByAbbreviatingWithTildeInPath]];
 }
 
 - (void)setSaved:(BOOL)saved enabled:(BOOL)enabled {

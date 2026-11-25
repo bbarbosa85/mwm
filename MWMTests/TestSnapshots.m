@@ -40,6 +40,8 @@
 #import "ConfigurationShortcutEditorView.h"
 #import "MWMDesignGallery.h"
 #import "ConfigurationBackupView.h"
+#import "ConfigurationConfigurationsView.h"
+#import "MWMConfigurations.h"
 #import "MWMGist.h"
 #import "MWMDisplays.h"
 #import "TestFakeGitHub.h"
@@ -285,6 +287,20 @@ static NSString *const kConfig =
   [MWMDisplays setConnectedOverride:nil];
   [MWMGist setTransport:nil];
   [MWMGist useMemoryStorage:NO];
+}
+
+- (void)testTheConfigurationsPageLooksTheSame {
+  NSString *home = [NSTemporaryDirectory() stringByAppendingPathComponent:[[NSUUID UUID] UUIDString]];
+  [[NSFileManager defaultManager] createDirectoryAtPath:home withIntermediateDirectories:YES attributes:nil error:nil];
+  [MWMConfigurations setHomeDirectory:home];
+  for (NSArray *item in @[@[@"default", @1762948800], @[@"Desk, two monitors", @1762603200], @[@"Laptop only", @1761998400]]) {
+    [MWMConfigurations createNamed:item[0] text:@"version: 2\n" error:nil];
+    [[NSFileManager defaultManager] setAttributes:@{NSFileModificationDate: [NSDate dateWithTimeIntervalSince1970:[item[1] doubleValue]]} ofItemAtPath:[MWMConfigurations pathForName:item[0]] error:nil];
+  }
+  ConfigurationConfigurationsView *page = [[ConfigurationConfigurationsView alloc] initWithFrame:NSMakeRect(0, 0, 840, 640)];
+  for (NSNumber *dark in @[@NO, @YES]) [self checkView:page size:NSMakeSize(840, 640) name:@"configurations" dark:[dark boolValue]];
+  [MWMConfigurations setHomeDirectory:nil];
+  [[NSFileManager defaultManager] removeItemAtPath:home error:nil];
 }
 
 - (void)testTheBackupConnectPageLooksTheSame {

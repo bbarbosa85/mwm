@@ -93,7 +93,7 @@ typedef NS_ENUM(NSInteger, MWMBindingCategory) {
 @property (strong) NSMutableArray<MWMConfigEntry *> *aliases;
 @property (strong) NSMutableArray<MWMBindingEntry *> *bindings;
 
-// ~/.mwm.yml, tilde expanded.
+// The active configuration's file (~/.mwm/<name>.mwm.yaml), tilde expanded.
 // The format version of the file this was read from: 1 for the original layout, 2 for the
 // object-per-monitor/slot/action layout. The window always writes 2.
 @property (readonly) NSInteger sourceVersion;

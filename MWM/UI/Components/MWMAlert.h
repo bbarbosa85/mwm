@@ -34,7 +34,7 @@ typedef NS_ENUM(NSInteger, MWMAlertKind) {
 // default (on the right, answering Return) and returns NSAlertFirstButtonReturn, the next one the second.
 @interface MWMAlert : NSObject
 @property (assign) MWMAlertKind kind;
-// The app's icon centered above centered text, as in the About window, instead of the tile for the kind.
+// The app's icon centered above the text (left-aligned), instead of the tile for the kind.
 @property (assign) BOOL showsAppIcon;
 @property (copy, nullable) NSString *messageText;
 @property (copy, nullable) NSString *informativeText;

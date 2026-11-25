@@ -175,6 +175,11 @@
 		5E1A0C0B2D0000000000F016 /* TestMWMBackup.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D0000000000E016 /* TestMWMBackup.m */; };
 		5E1A0C0B2D0000000000F017 /* TestConfigurationBackup.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D0000000000E017 /* TestConfigurationBackup.m */; };
 		5E1A0C0B2D0000000000F018 /* TestFakeGitHub.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D0000000000E018 /* TestFakeGitHub.m */; };
+		5E1A0C0B2D0000000000F021 /* MWMConfigurations.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D0000000000E021 /* MWMConfigurations.m */; };
+		5E1A0C0B2D0000000000F022 /* TestMWMConfigurations.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D0000000000E022 /* TestMWMConfigurations.m */; };
+		5E1A0C0B2D0000000000F023 /* TestFirstRunImport.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D0000000000E023 /* TestFirstRunImport.m */; };
+		5E1A0C0B2D0000000000F025 /* ConfigurationConfigurationsView.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D0000000000E025 /* ConfigurationConfigurationsView.m */; };
+		5E1A0C0B2D0000000000F026 /* TestConfigurationConfigurations.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E1A0C0B2D0000000000E026 /* TestConfigurationConfigurations.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -492,6 +497,13 @@
 		5E1A0C0B2D0000000000E017 /* TestConfigurationBackup.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TestConfigurationBackup.m; sourceTree = "<group>"; };
 		5E1A0C0B2D0000000000E018 /* TestFakeGitHub.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TestFakeGitHub.m; sourceTree = "<group>"; };
 		5E1A0C0B2D0000000000E019 /* TestFakeGitHub.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TestFakeGitHub.h; sourceTree = "<group>"; };
+		5E1A0C0B2D0000000000E020 /* MWMConfigurations.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Config/MWMConfigurations.h; sourceTree = "<group>"; };
+		5E1A0C0B2D0000000000E021 /* MWMConfigurations.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Config/MWMConfigurations.m; sourceTree = "<group>"; };
+		5E1A0C0B2D0000000000E022 /* TestMWMConfigurations.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TestMWMConfigurations.m; sourceTree = "<group>"; };
+		5E1A0C0B2D0000000000E023 /* TestFirstRunImport.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TestFirstRunImport.m; sourceTree = "<group>"; };
+		5E1A0C0B2D0000000000E024 /* ConfigurationConfigurationsView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ConfigurationConfigurationsView.h; sourceTree = "<group>"; };
+		5E1A0C0B2D0000000000E025 /* ConfigurationConfigurationsView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ConfigurationConfigurationsView.m; sourceTree = "<group>"; };
+		5E1A0C0B2D0000000000E026 /* TestConfigurationConfigurations.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TestConfigurationConfigurations.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -594,7 +606,10 @@
 				5E1A0C0B2D0000000000E019 /* TestFakeGitHub.h */,
 				5E1A0C0B2D0000000000E018 /* TestFakeGitHub.m */,
 				5E1A0C0B2D0000000000E017 /* TestConfigurationBackup.m */,
+				5E1A0C0B2D0000000000E026 /* TestConfigurationConfigurations.m */,
 				5E1A0C0B2D0000000000E016 /* TestMWMBackup.m */,
+				5E1A0C0B2D0000000000E023 /* TestFirstRunImport.m */,
+				5E1A0C0B2D0000000000E022 /* TestMWMConfigurations.m */,
 				5E1A0C0B2D00000000000791 /* TestMWMConfigFormat.m */,
 				5E1A0C0B2D00000000000722 /* TestConfigurationKeyboard.m */,
 				5E1A0C0B2D00000000000213 /* TestMWMLegacyMigration.m */,
@@ -654,9 +669,11 @@
 				5E1A0C0B2D00000000000800 /* MWMSnapshots.h */,
 				5E1A0C0B2D0000000000E012 /* MWMGist.h */,
 				5E1A0C0B2D0000000000E010 /* MWMBackup.h */,
+				5E1A0C0B2D0000000000E020 /* MWMConfigurations.h */,
 				5E1A0C0B2D00000000000801 /* MWMSnapshots.m */,
 				5E1A0C0B2D0000000000E013 /* MWMGist.m */,
 				5E1A0C0B2D0000000000E011 /* MWMBackup.m */,
+				5E1A0C0B2D0000000000E021 /* MWMConfigurations.m */,
 				3B42D72D13A831E6009103A0 /* ApplicationOptions.h */,
 				3B42D72E13A831E6009103A0 /* ApplicationOptions.m */,
 				3BDDA17B14FDA50C00829D2A /* Snapshot.h */,
@@ -909,8 +926,10 @@
 				5E1A0C0B2D00000000000642 /* ConfigurationSettingsView.m */,
 				5E1A0C0B2D00000000000803 /* ConfigurationSnapshotsView.h */,
 				5E1A0C0B2D0000000000E014 /* ConfigurationBackupView.h */,
+				5E1A0C0B2D0000000000E024 /* ConfigurationConfigurationsView.h */,
 				5E1A0C0B2D00000000000804 /* ConfigurationSnapshotsView.m */,
 				5E1A0C0B2D0000000000E015 /* ConfigurationBackupView.m */,
+				5E1A0C0B2D0000000000E025 /* ConfigurationConfigurationsView.m */,
 			);
 			path = Pages;
 			sourceTree = "<group>";
@@ -1174,6 +1193,7 @@
 				5E1A0C0B2D00000000000802 /* MWMSnapshots.m in Sources */,
 				5E1A0C0B2D0000000000F013 /* MWMGist.m in Sources */,
 				5E1A0C0B2D0000000000F011 /* MWMBackup.m in Sources */,
+				5E1A0C0B2D0000000000F021 /* MWMConfigurations.m in Sources */,
 				5E1A0C0B2D00000000000212 /* MWMLegacyMigration.m in Sources */,
 				5E1A0C0B2D00000000000513 /* ConfigurationStatusBar.m in Sources */,
 				5E1A0C0B2D00000000000625 /* ConfigurationShortcutView.m in Sources */,
@@ -1196,6 +1216,7 @@
 				5E1A0C0B2D00000000000768 /* MWMDesignGallery.m in Sources */,
 				5E1A0C0B2D00000000000805 /* ConfigurationSnapshotsView.m in Sources */,
 				5E1A0C0B2D0000000000F015 /* ConfigurationBackupView.m in Sources */,
+				5E1A0C0B2D0000000000F025 /* ConfigurationConfigurationsView.m in Sources */,
 				5E1A0C0B2D00000000000835 /* MWMAboutWindow.m in Sources */,
 				5E1A0C0B2D00000000000852 /* MWMStatusMenus.m in Sources */,
 				5E1A0C0B2D00000000000721 /* ConfigurationKeyboardView.m in Sources */,
@@ -1298,7 +1319,10 @@
 				5E1A0C0B2D00000000000812 /* TestMWMSnapshots.m in Sources */,
 				5E1A0C0B2D0000000000F018 /* TestFakeGitHub.m in Sources */,
 				5E1A0C0B2D0000000000F017 /* TestConfigurationBackup.m in Sources */,
+				5E1A0C0B2D0000000000F026 /* TestConfigurationConfigurations.m in Sources */,
 				5E1A0C0B2D0000000000F016 /* TestMWMBackup.m in Sources */,
+				5E1A0C0B2D0000000000F023 /* TestFirstRunImport.m in Sources */,
+				5E1A0C0B2D0000000000F022 /* TestMWMConfigurations.m in Sources */,
 				5E1A0C0B2D00000000000792 /* TestMWMConfigFormat.m in Sources */,
 				5E1A0C0B2D00000000000723 /* TestConfigurationKeyboard.m in Sources */,
 				5E1A0C0B2D00000000000214 /* TestMWMLegacyMigration.m in Sources */,

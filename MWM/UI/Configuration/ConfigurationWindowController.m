@@ -16,6 +16,7 @@
 //  along with this program.  If not, see http://www.gnu.org/licenses
 
 #import "ConfigurationWindowController.h"
+#import "MWMConfigurations.h"
 #import "MWMAlert.h"
 #import "MWMTheme.h"
 #import "ConfigurationFormView.h"
@@ -170,6 +171,7 @@ static const CGFloat kWindowWidth = 1080;
 }
 
 - (void)loadFromDisk {
+  [self.bar setPath:[self displayPath]];
   NSError *error = nil;
   NSString *text = [NSString stringWithContentsOfFile:[self configPath] encoding:NSUTF8StringEncoding error:&error];
   self.savedText = text;
@@ -292,6 +294,36 @@ static const CGFloat kWindowWidth = 1080;
   self.savedModificationDate = [self modificationDateOnDisk];
   [self updateSaveState:SaveStateSaved];
   return YES;
+}
+
+// The Configurations page: switching saves what's open, makes the other configuration active and
+// restarts MWM, the way Apply does.
+- (void)formView:(ConfigurationFormView *)formView switchToConfigurationNamed:(NSString *)name {
+  [self switchToConfigurationNamed:name];
+}
+
+- (void)switchToConfigurationNamed:(NSString *)name {
+  [[self window] makeFirstResponder:nil];
+  if (self.formView.document != nil) {
+    [self validateAndSave];
+    if (self.lastResult.errorCount > 0 || self.resolvingConflict) {
+      MWMAlert *alert = [MWMAlert alert];
+      [alert setKind:MWMAlertKindWarning];
+      [alert setMessageText:@"Fix the errors before switching"];
+      [alert setInformativeText:[NSString stringWithFormat:@"%@ has errors, which aren't saved. Fix them, or switch after you've saved a version that works.", [self displayPath]]];
+      [alert addButtonWithTitle:@"OK"];
+      [alert beginSheetModalForWindow:[self window] completionHandler:nil];
+      return;
+    }
+  }
+  [MWMConfigurations setActiveName:name];
+  [[self window] close];
+  [(MWMAppDelegate *)[NSApp delegate] relaunch];
+}
+
+// The active configuration's file has a new name: show it again from there.
+- (void)formViewDidRenameActiveConfiguration:(ConfigurationFormView *)formView {
+  [self loadFromDisk];
 }
 
 // A backup is restored: its configuration replaces the file (the old one is kept as a copy) and is shown again.

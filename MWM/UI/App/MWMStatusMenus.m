@@ -19,6 +19,7 @@
 #import "ConfigurationWindowController.h"
 #import "MWMAlert.h"
 #import "MWMBackup.h"
+#import "MWMConfigurations.h"
 #import "MWMConfigDocument.h"
 #import "MWMGist.h"
 #import "MWMSnapshots.h"
@@ -26,6 +27,7 @@
 @interface MWMStatusMenus ()
 @property (strong) NSMenu *snapshots;
 @property (strong) NSMenu *restore;
+@property (strong) NSMenu *configurations;
 @property (copy) NSArray<MWMBackupEnvironment *> *backups;
 @end
 
@@ -58,6 +60,7 @@
 - (void)menuNeedsUpdate:(NSMenu *)menu {
   if (menu == self.snapshots) [self fillSnapshotsMenu:menu];
   if (menu == self.restore) [self updateRestoreMenu];
+  if (menu == self.configurations) [self showConfigurations:[MWMConfigurations names] active:[MWMConfigurations activeName] inMenu:menu];
 }
 
 - (void)fillSnapshotsMenu:(NSMenu *)menu {
@@ -144,6 +147,40 @@
 }
 
 - (void)manageSnapshots:(id)sender { [[ConfigurationWindowController sharedController] showConfigurationSection:ConfigurationFormSectionSnapshots]; }
+
+#pragma mark - Configurations
+
+- (NSMenu *)configurationsMenu {
+  if (self.configurations == nil) {
+    self.configurations = [[NSMenu alloc] initWithTitle:@"Configurations"];
+    [self.configurations setDelegate:self];
+    [self showConfigurations:[MWMConfigurations names] active:[MWMConfigurations activeName] inMenu:self.configurations];
+  }
+  return self.configurations;
+}
+
+- (void)showConfigurations:(NSArray<NSString *> *)names active:(NSString *)active inMenu:(NSMenu *)menu {
+  [menu removeAllItems];
+  for (NSString *name in names) {
+    NSMenuItem *item = [self item:name action:@selector(configurationChosen:) in:menu];
+    [item setRepresentedObject:name];
+    [item setState:[name caseInsensitiveCompare:active] == NSOrderedSame ? NSControlStateValueOn : NSControlStateValueOff];
+  }
+  if ([names count] == 0) {
+    NSMenuItem *none = [menu addItemWithTitle:@"No configurations yet" action:nil keyEquivalent:@""];
+    [none setEnabled:NO];
+  }
+  [menu addItem:[NSMenuItem separatorItem]];
+  [self item:@"Manage Configurations…" action:@selector(manageConfigurations:) in:menu];
+}
+
+- (void)configurationChosen:(NSMenuItem *)item {
+  NSString *name = item.representedObject;
+  if ([name caseInsensitiveCompare:[MWMConfigurations activeName]] == NSOrderedSame) return;
+  [[ConfigurationWindowController sharedController] switchToConfigurationNamed:name];
+}
+
+- (void)manageConfigurations:(id)sender { [[ConfigurationWindowController sharedController] showConfigurationSection:ConfigurationFormSectionConfigurations]; }
 
 #pragma mark - Restore configuration
 
@@ -242,7 +279,7 @@
   NSMenu *menu = [[NSMenu alloc] initWithTitle:@"Open Page"];
   NSArray *groups = @[@[@[@"Keyboard", @(ConfigurationFormSectionKeyboard)], @[@"Modifiers", @(ConfigurationFormSectionModifiers)]],
                       @[@[@"Displays", @(ConfigurationFormSectionMonitors)], @[@"Slots", @(ConfigurationFormSectionPositions)], @[@"Snapshots", @(ConfigurationFormSectionSnapshots)]],
-                      @[@[@"General", @(ConfigurationFormSectionGeneral)], @[@"Advanced", @(ConfigurationFormSectionAdvanced)], @[@"Other Aliases", @(ConfigurationFormSectionAliases)], @[@"Backup", @(ConfigurationFormSectionBackup)]]];
+                      @[@[@"General", @(ConfigurationFormSectionGeneral)], @[@"Advanced", @(ConfigurationFormSectionAdvanced)], @[@"Other Aliases", @(ConfigurationFormSectionAliases)], @[@"Configurations", @(ConfigurationFormSectionConfigurations)], @[@"Backup", @(ConfigurationFormSectionBackup)]]];
   for (NSUInteger i = 0; i < [groups count]; i++) {
     if (i > 0) [menu addItem:[NSMenuItem separatorItem]];
     for (NSArray *page in groups[i]) {

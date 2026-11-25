@@ -500,6 +500,7 @@ OSStatus OnModifiersChangedEvent(EventHandlerCallRef nextHandler, EventRef theEv
   NSMenuItem *gallery = [self addItem:@"Design System…" action:@selector(showDesignGallery) key:@"," to:menu];   // shown while Option is held
   [gallery setKeyEquivalentModifierMask:NSEventModifierFlagCommand | NSEventModifierFlagOption];
   [gallery setAlternate:YES];
+  [self addSubmenu:[menus configurationsMenu] title:@"Configurations" symbol:@"square.stack.3d.up" to:menu];
   [self addSubmenu:[menus restoreMenu] title:@"Backup" symbol:@"clock.arrow.circlepath" to:menu];
   NSMenuItem *reload = [self addItem:@"Reload Configuration" action:@selector(relaunch) key:@"" to:menu];
   [reload setToolTip:@"Restart MWM to load the configuration file again"];
@@ -600,6 +601,7 @@ OSStatus OnModifiersChangedEvent(EventHandlerCallRef nextHandler, EventRef theEv
   if (!isTrusted) {
     MWMLogger(@"Accessibility permission not yet granted; system authorization prompt requested.");
     MWMAlert *alert = [MWMAlert alert];
+    [alert setShowsAppIcon:YES];
     [alert setMessageText:@"MWM needs Accessibility permission"];
     [alert setInformativeText:@"MWM moves and resizes windows through macOS Accessibility. Turn it on for MWM in System Settings.\n\nIf MWM is already listed after an update, remove it with the − button and add it again."];
     [alert setKind:MWMAlertKindWarning];

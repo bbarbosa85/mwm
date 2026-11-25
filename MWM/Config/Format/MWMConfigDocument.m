@@ -16,6 +16,7 @@
 //  along with this program.  If not, see http://www.gnu.org/licenses
 
 #import "MWMConfigDocument.h"
+#import "MWMConfigurations.h"
 #import "MWMDisplays.h"
 #import "MWMConfigFormat.h"
 #import "MWMSlots.h"
@@ -168,7 +169,7 @@ static BOOL SameOptional(id a, id b) {
 }
 
 + (NSString *)defaultPath {
-  return [@"~/.mwm.yml" stringByExpandingTildeInPath];
+  return [MWMConfigurations activePath];
 }
 
 #pragma mark - Reading
