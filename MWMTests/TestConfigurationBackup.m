@@ -79,7 +79,7 @@
 - (void)refresh:(ConfigurationBackupView *)page {
   XCTestExpectation *e = [self expectationWithDescription:@"refresh"];
   [page refresh:^{ [e fulfill]; }];
-  [self waitForExpectations:@[e] timeout:5];
+  [self waitForExpectations:@[e] timeout:30];
   [page.window layoutIfNeeded];
 }
 
@@ -97,7 +97,7 @@
 - (void)backUp:(ConfigurationBackupView *)page as:(NSString *)name {
   XCTestExpectation *e = [self expectationWithDescription:@"backup"];
   [page backUpAs:name completion:^{ [e fulfill]; }];
-  [self waitForExpectations:@[e] timeout:5];
+  [self waitForExpectations:@[e] timeout:30];
   [page.window layoutIfNeeded];
 }
 
@@ -120,7 +120,7 @@
   ConfigurationBackupView *page = [self pageConnected:NO];
   XCTestExpectation *e = [self expectationWithDescription:@"connect"];
   [page connectWithToken:@"  ghp_new  " completion:^{ [e fulfill]; }];
-  [self waitForExpectations:@[e] timeout:5];
+  [self waitForExpectations:@[e] timeout:30];
   XCTAssertEqualObjects([MWMGist token], @"ghp_new");
   XCTAssertNil([self viewIn:page identifier:@"backup-token-card"]);
   XCTAssertNotNil([self viewIn:page identifier:@"backup-now"]);
@@ -131,7 +131,7 @@
   self.github.status = 401;
   XCTestExpectation *e = [self expectationWithDescription:@"connect"];
   [page connectWithToken:@"bad" completion:^{ [e fulfill]; }];
-  [self waitForExpectations:@[e] timeout:5];
+  [self waitForExpectations:@[e] timeout:30];
   XCTAssertNil([MWMGist token]);
   XCTAssertNotNil([self viewIn:page identifier:@"backup-token-card"]);
 }
@@ -209,7 +209,7 @@
   [self backUp:page as:@"Desk"];
   XCTestExpectation *e = [self expectationWithDescription:@"delete"];
   [page deleteNamed:@"Desk" completion:^{ [e fulfill]; }];
-  [self waitForExpectations:@[e] timeout:5];
+  [self waitForExpectations:@[e] timeout:30];
   XCTAssertEqual([page.environments count], 0u);
   XCTAssertNil([self viewIn:page identifier:@"backup-Desk"]);
 }

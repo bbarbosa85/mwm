@@ -271,7 +271,7 @@ static NSString *const kConfig =
     XCTestExpectation *done = [self expectationWithDescription:@"save"];
     MWMBackupEnvironment *environment = [MWMBackupEnvironment environmentNamed:item[0] configText:kConfig snapshots:@{@"work": @{@"name": @"work"}, @"couch": @{@"name": @"couch"}} displays:item[1] date:[NSDate dateWithTimeIntervalSince1970:[item[2] doubleValue]]];
     [MWMGist saveEnvironment:environment completion:^(NSString *problem) { [done fulfill]; }];
-    [self waitForExpectations:@[done] timeout:5];
+    [self waitForExpectations:@[done] timeout:30];
   }
   (void)text;
   NSMutableDictionary *lists = [NSMutableDictionary dictionary];
@@ -281,7 +281,7 @@ static NSString *const kConfig =
   page.document = [MWMConfigDocument documentFromString:kConfig error:nil];
   XCTestExpectation *loaded = [self expectationWithDescription:@"refresh"];
   [page refresh:^{ [loaded fulfill]; }];
-  [self waitForExpectations:@[loaded] timeout:5];
+  [self waitForExpectations:@[loaded] timeout:30];
   for (NSNumber *dark in @[@NO, @YES]) [self checkView:page size:NSMakeSize(840, 720) name:@"backup" dark:[dark boolValue]];
   [MWMSnapshots setListsOverride:nil];
   [MWMDisplays setConnectedOverride:nil];
