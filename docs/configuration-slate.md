@@ -1,6 +1,8 @@
 # Classic Configuration Guide (`.slate`)
 
-Slate is configured using a plain-text configuration file located at `~/.slate`. If no `~/.slate` or `~/.slate.js` is found upon launch, Slate loads its built-in fallback configuration ([`MWM/default.slate`](file:///Users/brunobarbosa/Projetos/mwm/mwm/MWM/default.slate)).
+> **MWM no longer loads `~/.slate` directly.** It keeps its settings as [profiles](configuration-yaml.md) and imports a `.slate` once, without changing it. This guide is the reference for the classic directive syntax: the expressions, operations and keys below are the same ones profiles use in `custom` actions and formulas, and what the import converts.
+
+Slate is configured using a plain-text configuration file located at `~/.slate`. If no `~/.slate` or `~/.slate.js` is found, the built-in fallback configuration is [`default.slate`](../MWM/Config/default.slate).
 
 ---
 
@@ -180,3 +182,118 @@ config nudgePercentOf screenSize
 | `gridCellBackgroundColor` | `100;106;116;0.8`| Color of unselected grid cells |
 | `gridCellSelectedColor`| `50;53;58;0.8` | Color of cells inside mouse drag selection |
 
+---
+
+## 6. Allowed Keys
+
+**Note:** If you bind any binding to cmd-tab or cmd-shift-tab, Slate will completely disable the default Mac OS X Application switcher!
+
+    '
+    ,
+    -
+    .
+    /
+    0
+    1
+    2
+    3
+    4
+    5
+    6
+    7
+    8
+    9
+    ;
+    =
+    `
+    a
+    b
+    backslash
+    c
+    caps
+    d
+    delete
+    down
+    e
+    end
+    esc
+    f
+    f1
+    f10
+    f11
+    f12
+    f13
+    f14
+    f15
+    f16
+    f17
+    f18
+    f19
+    f2
+    f20
+    f3
+    f4
+    f5
+    f6
+    f7
+    f8
+    f9
+    g
+    h
+    help
+    home
+    i
+    j
+    k
+    l
+    left
+    m
+    mute
+    n
+    o
+    p
+    pad*
+    pad+
+    pad-
+    pad.
+    pad/
+    pad0
+    pad1
+    pad2
+    pad3
+    pad4
+    pad5
+    pad6
+    pad7
+    pad8
+    pad9
+    pad=
+    padClear
+    padEnter
+    pageDown
+    pageUp
+    q
+    r
+    return
+    right
+    s
+    space
+    t
+    tab
+    u
+    up
+    v
+    w
+    x
+    y
+    z
+    [
+    ]
+
+---
+
+## 7. Useful Links
+
+- [kvs](https://github.com/kvs) made a [Sublime Text 2](http://www.sublimetext.com/2) preference for `.slate` files: [ST2Slate](https://github.com/kvs/ST2Slate).
+- [trishume](https://github.com/trishume) wrote a getting-started guide: [Using Slate](http://thume.ca/howto/2012/11/19/using-slate/).
+- Jigish Patel's own Slate config: [dotfiles](https://github.com/jigish/dotfiles/blob/master/slate).

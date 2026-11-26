@@ -70,13 +70,12 @@
     <h2>How to use an example</h2>
     <ol>
       <li><div><p><b>Download it</b> with the button on a card below.</p></div></li>
-      <li><div><p><b>Save it as <code>~/.mwm.yml</code></b>, in your home folder. This replaces your current settings, so make a copy first if you have any.</p>
-        <p class="sub">Easiest way, in Terminal (use the file name you downloaded):</p>
-<pre><code>cp ~/.mwm.yml ~/.mwm.yml.backup    # only if you already have one
-mv ~/Downloads/starter.mwm.yml ~/.mwm.yml</code></pre>
-        <p class="sub">Or in Finder: <b>Go → Go to Folder…</b>, type <code>~</code>, and drag the file in. Files that start with a dot are hidden; <kbd>⌘</kbd><kbd>⇧</kbd><kbd>.</kbd> shows them.</p></div></li>
-      <li><div><p><b>Open MWM and press Apply and Restart.</b> Choose <b>Settings…</b> from the menu bar, then <b>Apply and Restart</b>. Now change the app and screen names to yours, right in the app.</p>
-        <p class="sub">More help in the <a href="docs.html#first-shortcut">documentation</a>.</p></div></li>
+      <li><div><p><b>Add it as a profile.</b> Open <b>Settings</b>, choose <b>Manage profiles</b> at the bottom of the sidebar, then <b>Add profile</b>, <b>From a file</b>, and pick the file you downloaded. It's copied into <code>~/.mwm</code> next to your own profiles, so nothing you have is replaced.</p>
+        <p class="sub">Or in Terminal (use the file name you downloaded):</p>
+<pre><code>mkdir -p ~/.mwm
+mv ~/Downloads/starter.mwm.yml ~/.mwm/starter.mwm.yaml</code></pre></div></li>
+      <li><div><p><b>Use it.</b> Choose it from the profile button in the bottom bar of Settings (or <b>Use</b> on its card), or under <b>Profiles</b> in the menu bar, then press <b>Apply and Restart</b>. Then change the app and screen names to yours, right in the app.</p>
+        <p class="sub">More help in the <a href="docs.html#profiles">documentation</a>.</p></div></li>
     </ol>
     <p style="margin:16px 0 0"><a class="btn small" href="examples/mwm-examples.zip" download>Download all 5 as a zip</a></p>
   </div>
@@ -97,7 +96,7 @@ mv ~/Downloads/starter.mwm.yml ~/.mwm.yml</code></pre>
       </div>
       <details><summary>See the file</summary><pre id="pre-starter.mwm.yml"><code># Example: a small starter. Halves and full screen on hyper + arrows, thirds on hyper + 1 2 3,
 # a few app shortcuts, window hints, and one snapshot you can save and restore.
-# hyper = ctrl + alt + cmd. Save this file as ~/.mwm.yml, or open it in Settings.
+# hyper = ctrl + alt + cmd. Add it in Settings &gt; Manage profiles &gt; Add profile &gt; From a file, or put it in ~/.mwm.
 
 version: 2
 
@@ -487,8 +486,8 @@ bindings:
       </div>
       <details><summary>See the file</summary><pre id="pre-daily-driver.mwm.yml"><code># Example: the author&#x27;s daily setup. A MacBook with a 5120x1440 ultrawide, hyper = ctrl + alt + cmd.
 # Halves, thirds and quarters on the number row and keypad, app shortcuts on alt + shift,
-# window hints on cmd + shift + H. Change the app names and screens to your own, then save this
-# file as ~/.mwm.yml (or open it in Settings).
+# window hints on cmd + shift + H. Change the app names and screens to your own. Add it in
+# Settings &gt; Manage profiles &gt; Add profile &gt; From a file, or put it in ~/.mwm.
 #
 # MWM configuration, managed by the configuration window (Settings...).
 # The window rewrites this file when you change something there, so comments

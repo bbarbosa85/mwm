@@ -98,7 +98,7 @@ Because the signature then names the bundle identifier and your certificate inst
 
 ## 5. Building and Packaging with the Certificate
 
-The release script [`script/build-dmg.sh`](file:///Users/brunobarbosa/Projetos/mwm/mwm/script/build-dmg.sh) automatically inspects your keychain:
+The release script [`script/build-dmg.sh`](../script/build-dmg.sh) automatically inspects your keychain:
 1. It uses the identity in the `SIGN_IDENTITY` environment variable if set.
 2. Otherwise it looks for `"Apple Development"`.
 3. If none is found, it falls back to ad-hoc signing (`-`).

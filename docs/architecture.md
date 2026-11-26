@@ -30,11 +30,12 @@ flowchart TD
 
 ## 1. Application Lifecycle & Delegate (`MWMAppDelegate`)
 
-The central hub of Slate during runtime is [`MWMAppDelegate`](file:///Users/brunobarbosa/Projetos/mwm/mwm/MWM/MWMAppDelegate.m).
+The central hub of Slate during runtime is [`MWMAppDelegate`](../MWM/App/MWMAppDelegate.m).
 
 ### Key Responsibilities:
-1. **Status Item & Menu Management**: Runs MWM as a status-bar accessory application (`NSStatusItem`). The status menu offers "Snapshots", "Keyboard Shortcuts", "Launch MWM at Login", "Settings…", "Backup" (restore a backup, Manage Backups…), "Reload Configuration", "About MWM", "Check for Updates…" and "Quit MWM". Menus are built in code by `MWMAppDelegate` (there's no main nib); the app menus (MWM, Edit, Window) only show while an MWM window is in front.
-   - **Backup**: `MWMBackup` is one named environment (the configuration text, the snapshots and the displays they were saved with, as a JSON file). `MWMGist` stores one file per environment in a single private GitHub gist ("MWM backup") through an injectable transport, with the token in the Keychain. The Backup page is `ConfigurationBackupView`; the Backup menu is built by `MWMStatusMenus`.
+1. **Status Item & Menu Management**: Runs MWM as a status-bar accessory application (`NSStatusItem`). The status menu follows the Settings sidebar: "Keyboard", "Snapshots", "Profiles" (switch), "Backup" (Sync Now, Backup Settings…), "Reload Configuration", "Launch MWM at Login", "Settings…", "About MWM", "Check for Updates…" and "Quit MWM". Menus are built in code by `MWMAppDelegate` (there's no main nib); the app menus (MWM, Edit, Window) only show while an MWM window is in front.
+   - **Settings window**: built from the design system in `UI/Components` (`MWMTheme`, `MWMComponents`) and described in [The Settings window](settings-window.md); its content is a fixed 1080 pt wide, so no page can change the window's width.
+   - **Profiles and backup**: `MWMProfiles` keeps one file per profile in `~/.mwm` and the name of the active one. `MWMSyncPlan` decides what a sync does (send, receive, flag a deletion) and `MWMSync` runs it against one private GitHub gist through `MWMGist` (injectable transport, token in the Keychain). The Backup page is `ConfigurationBackupView`; the menus are built by `MWMStatusMenus`, and `MWMSyncPresenter` shows the result.
 2. **Configuration Loading**: Dispatches config loading to `[MWMConfig getInstance]`, handling fallback to the embedded `default.slate` if neither `~/.slate` nor `~/.slate.js` exists.
 3. **Global HotKey Registration**: Uses the Carbon Event Manager (`RegisterEventHotKey`, `InstallEventHandler`) to bind global keystrokes system-wide.
 4. **Modal HotKey Management**:
@@ -85,11 +86,11 @@ macOS features two conflicting coordinate systems:
    - Y coordinates increase **downwards**.
 
 ### Coordinate Normalization
-[`ScreenWrapper`](file:///Users/brunobarbosa/Projetos/mwm/mwm/MWM/ScreenWrapper.m) normalizes all screen bounds to accessibility window coordinates:
+[`ScreenWrapper`](../MWM/Core/ScreenWrapper.m) normalizes all screen bounds to accessibility window coordinates:
 
 $$\text{windowY} = \text{primaryScreenHeight} - (\text{screenOriginY} + \text{screenHeight})$$
 
-[`MathUtils flipYCoordinateOfRect:withReference:`](file:///Users/brunobarbosa/Projetos/mwm/mwm/MWM/MathUtils.m) executes this inversion cleanly across arbitrary displays.
+[`MathUtils flipYCoordinateOfRect:withReference:`](../MWM/Utilities/MathUtils.m) executes this inversion cleanly across arbitrary displays.
 
 ### Display Ordering & Identification
 Displays can be targeted using multiple conventions:
@@ -113,7 +114,7 @@ When `kCGDisplayDesktopShapeChangedFlag` fires, Slate:
 
 ## 4. Running Application & Window Tracking (`RunningApplications`)
 
-[`RunningApplications`](file:///Users/brunobarbosa/Projetos/mwm/mwm/MWM/RunningApplications.m) acts as a live registry for all running macOS applications and their open windows.
+[`RunningApplications`](../MWM/Core/RunningApplications.m) acts as a live registry for all running macOS applications and their open windows.
 
 ### Mechanism:
 - Subscribes to `NSWorkspace` notifications:

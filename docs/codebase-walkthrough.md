@@ -1,101 +1,69 @@
 # Codebase Walkthrough & Internals
 
-This document provides a component-by-component, file-by-file guide to the Slate codebase.
+A guide to where things live. Sources are under `MWM/`, tests under `MWMTests/`, scripts under `script/`, the website and docs under `docs/`. MWM is Objective-C (AppKit), with no storyboards: windows and menus are built in code.
 
 ---
 
-## 1. File & Component Manifest
+## 1. Source layout (`MWM/`)
 
-### Core Application
-- **[`MWM/main.m`](file:///Users/brunobarbosa/Projetos/mwm/mwm/MWM/main.m)**: Process entry point; invokes `NSApplicationMain`.
-- **[`MWM/MWMAppDelegate.{h,m}`](file:///Users/brunobarbosa/Projetos/mwm/mwm/MWM/MWMAppDelegate.m)**: App delegate; coordinates status bar item, hotkey registration, Quartz event taps, modal input handling, login items, and the status and app menus (built in code).
-- **[`MWM/MWMConfig.{h,m}`](file:///Users/brunobarbosa/Projetos/mwm/mwm/MWM/MWMConfig.m)**: Configuration engine; parses `.slate` directives, aliases, and layouts; manages snapshot persistence.
-- **[`MWM/Constants.{h,m}`](file:///Users/brunobarbosa/Projetos/mwm/mwm/MWM/Constants.m)**: Central definitions of all string constants, config keys, default values, and token identifiers.
-- **[`MWM/MWMLogger.h`](file:///Users/brunobarbosa/Projetos/mwm/mwm/MWM/MWMLogger.h)**: Logging macro abstractions (`MWMLogger`).
-- **[`MWM/NSFileManager+ApplicationSupport.{h,m}`](file:///Users/brunobarbosa/Projetos/mwm/mwm/MWM/NSFileManager+ApplicationSupport.m)**: Category to resolve and ensure `~/Library/Application Support/Slate`.
+### `App/`: the application
+- [`main.m`](../MWM/App/main.m), [`MWMAppDelegate.{h,m}`](../MWM/App/MWMAppDelegate.m): entry point and app delegate. Owns the status item and its menu (built in code, in the order of the Settings sidebar), hotkey registration, Quartz event taps, modal input, login item, and the app menus.
+- [`MWMUpdateChecker`](../MWM/App/MWMUpdateChecker.m), [`MWMUpdateInstaller`](../MWM/App/MWMUpdateInstaller.m): looks for a newer release on GitHub, and downloads, checks and installs it.
 
-### Window & Screen Abstraction
-- **[`MWM/AccessibilityWrapper.{h,m}`](file:///Users/brunobarbosa/Projetos/mwm/mwm/MWM/AccessibilityWrapper.m)**: Core wrapper around macOS Accessibility APIs (`AXUIElementRef`, `AXObserverRef`). Reads and writes window positions and sizes, inspects roles, brings windows to front, and conducts hit-testing.
-- **[`MWM/ScreenWrapper.{h,m}`](file:///Users/brunobarbosa/Projetos/mwm/mwm/MWM/ScreenWrapper.m)**: Manages multi-monitor geometries, coordinate system flipping (Cocoa bottom-left to AX top-left), and monitor resolution/direction matching.
-- **[`MWM/RunningApplications.{h,m}`](file:///Users/brunobarbosa/Projetos/mwm/mwm/MWM/RunningApplications.m)**: Live registry of active applications and their open windows via `NSWorkspace` notifications and `AXObserver` callbacks.
-- **[`MWM/WindowState.{h,m}`](file:///Users/brunobarbosa/Projetos/mwm/mwm/MWM/WindowState.m)**: Value object encapsulating snapshot state (PID, position, size) of a window.
-- **[`MWM/ScreenState.{h,m}`](file:///Users/brunobarbosa/Projetos/mwm/mwm/MWM/ScreenState.m)**: Encapsulates monitor layout rules and resolution match conditions.
+### `Config/`: what MWM loads and keeps
+- [`MWMConfig`](../MWM/Config/MWMConfig.m): turns the active profile into bindings, layouts and settings that the operations use. [`Binding`](../MWM/Config/Binding.m), [`Layout`](../MWM/Config/Layout.m), [`ApplicationOptions`](../MWM/Config/ApplicationOptions.m) and [`Constants`](../MWM/Config/Constants.m) are the parts it builds from.
+- **`Format/`**: the profile file. `MWMYAML` (the supported YAML subset), `MWMConfigFormat` (version 2 and the older layout), `MWMConfigDocument` (the editable model the Settings window works on), `MWMConfigValidator` (errors and warnings, never runs anything) and `MWMLegacyMigration` (`~/.mwm.yml`, `.slate`, `.slate.js`, `.slate.yml`).
+- **`Shortcuts/`**: `MWMAction` (an action's kinds and fields, and its text), `MWMPushOptions`, `MWMShortcut`, `MWMShortcutIndex` (every shortcut with its group, kind and conflicts) and `MWMReservedShortcuts` (keys macOS keeps).
+- **`Slots/`**: `MWMSlots` (presets and geometry), `MWMSlotShape` (a slot as fields) and `MWMFormula` (checking and evaluating a slot formula).
+- [`MWMDisplays`](../MWM/Config/MWMDisplays.m): connected screens and screen "roles" (a name that survives docking).
+- [`MWMProfiles`](../MWM/Config/MWMProfiles.m): the files in `~/.mwm`, the active one, and the `MWM_HOME` override used by development builds and tests.
+- [`MWMSnapshots`](../MWM/Config/MWMSnapshots.m): saved window arrangements.
+- [`MWMSync`](../MWM/Config/MWMSync.m), [`MWMSyncPlan`](../MWM/Config/MWMSyncPlan.m), [`MWMGist`](../MWM/Config/MWMGist.m): backup. `MWMSyncPlan` is the pure rule set (send, receive, flag a deletion), `MWMSync` runs it, `MWMGist` talks to GitHub (injectable transport, token in the Keychain).
 
-### Operation Hierarchy
-- **[`MWM/Operation.{h,m}`](file:///Users/brunobarbosa/Projetos/mwm/mwm/MWM/Operation.m)**: Abstract base class providing lifecycle hooks (`initOptions:`, `evalOptions:`, `doOperation`, `testOperation`).
-- **[`MWM/MoveOperation.{h,m}`](file:///Users/brunobarbosa/Projetos/mwm/mwm/MWM/MoveOperation.m)**: Core position & size mutator.
-- **[`MWM/PushOperation.{h,m}`](file:///Users/brunobarbosa/Projetos/mwm/mwm/MWM/PushOperation.m)**: Edge push with optional bar and center styles.
-- **[`MWM/ResizeOperation.{h,m}`](file:///Users/brunobarbosa/Projetos/mwm/mwm/MWM/ResizeOperation.m)**: Relative resizing with corner anchoring.
-- **[`MWM/NudgeOperation.{h,m}`](file:///Users/brunobarbosa/Projetos/mwm/mwm/MWM/NudgeOperation.m)**: Offset translation.
-- **[`MWM/CornerOperation.{h,m}`](file:///Users/brunobarbosa/Projetos/mwm/mwm/MWM/CornerOperation.m)**: Snap-to-corner positioning.
-- **[`MWM/ThrowOperation.{h,m}`](file:///Users/brunobarbosa/Projetos/mwm/mwm/MWM/ThrowOperation.m)**: Monitor-to-monitor window movement.
-- **[`MWM/FocusOperation.{h,m}`](file:///Users/brunobarbosa/Projetos/mwm/mwm/MWM/FocusOperation.m)**: Geometric directional focus (`left`, `right`, `above`, `below`, `behind`).
-- **[`MWM/LayoutOperation.{h,m}`](file:///Users/brunobarbosa/Projetos/mwm/mwm/MWM/LayoutOperation.m)** & **[`MWM/Layout.{h,m}`](file:///Users/brunobarbosa/Projetos/mwm/mwm/MWM/Layout.m)**: Multi-app layout engine with regex title matching and window sequencing.
-- **[`MWM/ChainOperation.{h,m}`](file:///Users/brunobarbosa/Projetos/mwm/mwm/MWM/ChainOperation.m)**: Successive operation cycling.
-- **[`MWM/SequenceOperation.{h,m}`](file:///Users/brunobarbosa/Projetos/mwm/mwm/MWM/SequenceOperation.m)**: Compound multi-operation execution.
-- **[`MWM/GridOperation.{h,m}`](file:///Users/brunobarbosa/Projetos/mwm/mwm/MWM/GridOperation.m)**: Interactive grid invoker.
-- **[`MWM/HintOperation.{h,m}`](file:///Users/brunobarbosa/Projetos/mwm/mwm/MWM/HintOperation.m)**: Window hint overlay controller.
-- **[`MWM/SwitchOperation.{h,m}`](file:///Users/brunobarbosa/Projetos/mwm/mwm/MWM/SwitchOperation.m)**: Application switcher controller.
-- **[`MWM/SnapshotOperation.{h,m}`](file:///Users/brunobarbosa/Projetos/mwm/mwm/MWM/SnapshotOperation.m)**, **[`MWM/ActivateSnapshotOperation.{h,m}`](file:///Users/brunobarbosa/Projetos/mwm/mwm/MWM/ActivateSnapshotOperation.m)**, **[`MWM/DeleteSnapshotOperation.{h,m}`](file:///Users/brunobarbosa/Projetos/mwm/mwm/MWM/DeleteSnapshotOperation.m)**: Snapshot capture and restore.
-- **[`MWM/Snapshot.{h,m}`](file:///Users/brunobarbosa/Projetos/mwm/mwm/MWM/Snapshot.m)**, **[`MWM/SnapshotList.{h,m}`](file:///Users/brunobarbosa/Projetos/mwm/mwm/MWM/SnapshotList.m)**, **[`MWM/WindowSnapshot.{h,m}`](file:///Users/brunobarbosa/Projetos/mwm/mwm/MWM/WindowSnapshot.m)**: Snapshot data models.
-- **[`MWM/UndoOperation.{h,m}`](file:///Users/brunobarbosa/Projetos/mwm/mwm/MWM/UndoOperation.m)**: Undo stack pop and execution.
-- **[`MWM/ShellOperation.{h,m}`](file:///Users/brunobarbosa/Projetos/mwm/mwm/MWM/ShellOperation.m)**: `/bin/sh` process execution.
-- **[`MWM/VisibilityOperation.{h,m}`](file:///Users/brunobarbosa/Projetos/mwm/mwm/MWM/VisibilityOperation.m)**: App hide/show/toggle.
-- **[`MWM/RelaunchOperation.{h,m}`](file:///Users/brunobarbosa/Projetos/mwm/mwm/MWM/RelaunchOperation.m)**: Restart application.
-- **[`MWM/JSOperation.{h,m}`](file:///Users/brunobarbosa/Projetos/mwm/mwm/MWM/JSOperation.m)**: JavaScript callback invoker as an operation.
+### `Core/`: windows and screens
+- [`AccessibilityWrapper`](../MWM/Core/AccessibilityWrapper.m) (Accessibility API), [`ScreenWrapper`](../MWM/Core/ScreenWrapper.m) (monitors and the two coordinate systems), [`RunningApplications`](../MWM/Core/RunningApplications.m) (live apps and windows), `WindowState`, `ScreenState`, and the snapshot model (`Snapshot`, `SnapshotList`, `WindowSnapshot`).
 
-### JavaScript Scripting Engine
-- **[`MWM/JSController.{h,m}`](file:///Users/brunobarbosa/Projetos/mwm/mwm/MWM/JSController.m)**: Bridge between Objective-C and JavaScriptCore via `WebView`.
-- **[`MWM/initialize.js`](file:///Users/brunobarbosa/Projetos/mwm/mwm/MWM/initialize.js)**: Sets up `window.slate` / `window.S`.
-- **[`MWM/utils.js`](file:///Users/brunobarbosa/Projetos/mwm/mwm/MWM/utils.js)** & **[`MWM/underscore.js`](file:///Users/brunobarbosa/Projetos/mwm/mwm/MWM/underscore.js)**: JS helper functions.
-- **[`MWM/JSWindowWrapper.{h,m}`](file:///Users/brunobarbosa/Projetos/mwm/mwm/MWM/JSWindowWrapper.m)**: Window object exposed to JS.
-- **[`MWM/JSApplicationWrapper.{h,m}`](file:///Users/brunobarbosa/Projetos/mwm/mwm/MWM/JSApplicationWrapper.m)**: Application object exposed to JS.
-- **[`MWM/JSScreenWrapper.{h,m}`](file:///Users/brunobarbosa/Projetos/mwm/mwm/MWM/JSScreenWrapper.m)**: Screen object exposed to JS.
-- **[`MWM/JSInfoWrapper.{h,m}`](file:///Users/brunobarbosa/Projetos/mwm/mwm/MWM/JSInfoWrapper.m)**: Global helper methods on `slate`.
-- **[`MWM/JSOperationWrapper.{h,m}`](file:///Users/brunobarbosa/Projetos/mwm/mwm/MWM/JSOperationWrapper.m)**: Operation object returned in JS.
-- **[`MWM/JSWrapperUtils.{h,m}`](file:///Users/brunobarbosa/Projetos/mwm/mwm/MWM/JSWrapperUtils.m)**: Type conversion utilities between Obj-C and WebScript objects.
-- **[`MWM/slate-mock.js`](file:///Users/brunobarbosa/Projetos/mwm/mwm/MWM/slate-mock.js)** & **[`MWM/slate-test.html`](file:///Users/brunobarbosa/Projetos/mwm/mwm/MWM/slate-test.html)**: Test harness for JS configs in a standard browser.
+### `Operations/`: what a shortcut runs
+One class per operation, on the base class [`Operation`](../MWM/Operations/Operation.m): `Move`, `Push`, `Resize`, `Nudge`, `Corner`, `Throw`, `Focus`, `Layout`, `Chain`, `Sequence`, `Grid`, `Hint`, `Switch`, `Snapshot`, `ActivateSnapshot`, `DeleteSnapshot`, `Undo`, `Shell`, `Visibility` and `Relaunch`. See the [Operations Reference](operations-reference.md).
 
-### UI & Overlays
-- **[`MWM/GridWindow.{h,m}`](file:///Users/brunobarbosa/Projetos/mwm/mwm/MWM/GridWindow.m)**, **[`MWM/GridView.{h,m}`](file:///Users/brunobarbosa/Projetos/mwm/mwm/MWM/GridView.m)**, **[`MWM/GridCellView.{h,m}`](file:///Users/brunobarbosa/Projetos/mwm/mwm/MWM/GridCellView.m)**: Visual interactive grid overlay.
-- **[`MWM/HintWindow.{h,m}`](file:///Users/brunobarbosa/Projetos/mwm/mwm/MWM/HintWindow.m)**, **[`MWM/HintView.{h,m}`](file:///Users/brunobarbosa/Projetos/mwm/mwm/MWM/HintView.m)**: Window hint badges.
-- **[`MWM/SwitchWindow.{h,m}`](file:///Users/brunobarbosa/Projetos/mwm/mwm/MWM/SwitchWindow.m)**, **[`MWM/SwitchView.{h,m}`](file:///Users/brunobarbosa/Projetos/mwm/mwm/MWM/SwitchView.m)**, **[`MWM/SwitchAppView.{h,m}`](file:///Users/brunobarbosa/Projetos/mwm/mwm/MWM/SwitchAppView.m)**, **[`MWM/SwitchAppQuittingOverlayView.{h,m}`](file:///Users/brunobarbosa/Projetos/mwm/mwm/MWM/SwitchAppQuittingOverlayView.m)**: App switcher HUD.
+### `Scripting/`
+The JavaScript bridge from the Slate days (`JSController` and the `JS*Wrapper` classes). MWM no longer loads JavaScript configurations; see [Scripting](configuration-javascript.md).
 
-### Parser & Utilities
-- **[`MWM/StringTokenizer.{h,m}`](file:///Users/brunobarbosa/Projetos/mwm/mwm/MWM/StringTokenizer.m)**: Command and expression tokenizer respecting quotes and delimiters.
-- **[`MWM/MathUtils.{h,m}`](file:///Users/brunobarbosa/Projetos/mwm/mwm/MWM/MathUtils.m)**: Geometry math, rectangle intersections, and coordinate inversion.
-- **[`MWM/ExpressionPoint.{h,m}`](file:///Users/brunobarbosa/Projetos/mwm/mwm/MWM/ExpressionPoint.m)**: Mathematical expression evaluation via `NSExpression`.
-- **[`MWM/Binding.{h,m}`](file:///Users/brunobarbosa/Projetos/mwm/mwm/MWM/Binding.m)**: Keystroke-to-operation map; translates key strings to keycodes and modifiers.
-- **[`MWM/ApplicationOptions.{h,m}`](file:///Users/brunobarbosa/Projetos/mwm/mwm/MWM/ApplicationOptions.m)**: Model for layout matching options (`mainFirst`, `repeat`, etc.).
-- **[`MWM/NSString+Levenshtein.{h,m}`](file:///Users/brunobarbosa/Projetos/mwm/mwm/MWM/NSString+Levenshtein.m)**: Dynamic programming Levenshtein string distance for window title matching.
-- **[`MWM/NSString+Indicies.{h,m}`](file:///Users/brunobarbosa/Projetos/mwm/mwm/MWM/NSString+Indicies.m)**: Character indexing helpers.
-- **[`MWM/JSONKit/JSONKit.{h,m}`](file:///Users/brunobarbosa/Projetos/mwm/mwm/MWM/JSONKit/JSONKit.m)**: Fast embedded JSON parser and serializer.
-- Keyboard Plist Mappings:
-  - [`MWM/ASCIIToCode.plist`](file:///Users/brunobarbosa/Projetos/mwm/mwm/MWM/ASCIIToCode.plist): Standard QWERTY keycode mapping.
-  - [`MWM/ASCIIToCode_Dvorak.plist`](file:///Users/brunobarbosa/Projetos/mwm/mwm/MWM/ASCIIToCode_Dvorak.plist): Dvorak layout mapping.
-  - [`MWM/ASCIIToCode_Colemak.plist`](file:///Users/brunobarbosa/Projetos/mwm/mwm/MWM/ASCIIToCode_Colemak.plist): Colemak layout mapping.
-  - [`MWM/ASCIIToCode_Azerty.plist`](file:///Users/brunobarbosa/Projetos/mwm/mwm/MWM/ASCIIToCode_Azerty.plist): AZERTY layout mapping.
+### `UI/`
+- **`App/`**: `MWMStatusMenus` (the Snapshots, Keyboard, Profiles and Backup submenus) and `MWMAboutWindow`.
+- **`Components/`**: the design system. `MWMTheme` (colors, spacing, type, radii), `MWMComponents` (cards, list cards, name fields, option cards, save bar, chips, buttons), `MWMAlert`, `MWMSyncPresenter` and `MWMDesignGallery` (the "Design System…" window).
+- **`Configuration/`**: the Settings window. `ConfigurationWindowController` (the window, the editing-versus-running profile, Apply), `ConfigurationFormView` (the sidebar and the pages), `ConfigurationStatusBar` and `ConfigurationProfileBar` (the bottom bar). Pages live in `Keyboard/` (map, list, modifiers, key caps), `Shortcuts/` (the shortcut editor, its push rows and action views), `Slots/` (gallery, editor, canvas, formula help) and `Pages/` (settings, displays, snapshots, backup, profiles). See [The Settings window](settings-window.md).
+- **`Overlays/`**: the grid, window hints and application switcher windows. See [UI Components & Overlays](ui-and-overlays.md).
+
+### `Utilities/`
+`StringTokenizer`, `MathUtils`, `ExpressionPoint` (formulas via `NSExpression`), `ShellUtils`, `NSString+Levenshtein`, `NSString+Indicies`, `NSFileManager+ApplicationSupport`.
+
+### `Resources/`
+The app icon (`icon.icns`), the keyboard layout plists (`ASCIIToCode*.plist` for QWERTY, Dvorak, Colemak and AZERTY), and `default.slate`.
 
 ---
 
-## 2. Unit Testing Suite (`MWMTests`)
+## 2. Tests (`MWMTests/`)
 
-Located in [`MWMTests/`](file:///Users/brunobarbosa/Projetos/mwm/mwm/MWMTests), testing key utility engines using OCUnit:
-- **`TestStringTokenizer.m`**: Verifies whitespace splitting, single/double quote handling, pipe-delimiters, and max-token limits.
-- **`TestMathUtils.m`**: Tests rectangle intersection sizing, scaling factor multiplications, coordinate flipping across multiple monitor geometries.
-- **`TestExpressionPoint.m`**: Tests math formula evaluation, variable substitution (`screenSizeX`, `windowTopLeftY`), math functions (`min`, `max`, `sum`, `floor`).
-- **`TestNSString+Levenshtein.m`**: Validates edit distance calculations for fuzzy window title matching.
-- **`TestNSString+Indicies.m`**: Tests character index search functions.
-- **`TestShellUtils.m`**: Tests argument escaping and process execution logic.
+XCTest, run inside the app. `script/check` builds and runs everything the way CI does (about a minute); `script/check --release` also builds the universal Release app.
+
+- **Logic**: formats, validation, migration, sync, slots, shortcuts, formulas, displays, snapshots, the gist client (against a fake GitHub in `TestFakeGitHub`), and the parsers and utilities.
+- **Windows and pages**: the Settings window is tested through real views (profiles, bindings, slots, modifiers, autosave, the bottom bar and every page's width). Tests use temporary home folders (`MWMProfiles setHomeDirectory:`), never your files, and don't save the window's position.
+- **Screenshots**: `TestSnapshots` draws the pages in light and dark and compares them with `MWMTests/Snapshots/*.png`. After a deliberate UI change, record the new images:
+
+  ```bash
+  TEST_RUNNER_MWM_RECORD_SNAPSHOTS=1 xcodebuild test -project MWM.xcodeproj -scheme MWM \
+    -destination 'platform=macOS' -only-testing:MWMTests/TestSnapshots
+  ```
+
+  `script/screens` draws every page to PNGs and opens them in one page, to look at a change without relaunching the app.
 
 ---
 
-## 3. Build & Packaging Automation
+## 3. Scripts and releases
 
-- **[`script/slate.rb`](file:///Users/brunobarbosa/Projetos/mwm/mwm/script/slate.rb)**: Ruby release orchestration script:
-  - Tasks:
-    - `gen`: Generates release builds.
-    - `pub`: Publishes updates to the web server and appcast XML feed.
-    - `dmg`: Bundles the application into `MWM.dmg` using `create-dmg` with custom background image (`build/dmg_background.png`) and application icon (`MWM/Resources/icon.icns`).
-- **Updates**: there's no automatic updater; new versions are installed from a DMG.
-
+- `script/check`: the tests (above). `script/install-hooks` installs a pre-push hook that runs it.
+- `script/build-dmg.sh`: builds the universal app, signs it and writes `MWM-<version>.dmg` and `.zip`. See [Releasing](releasing.md).
+- `script/build-examples-page`: regenerates `docs/examples.html` and the examples zip from `docs/examples/*.mwm.yml`.
+- `script/generate-icons.swift`, `script/create-dmg`: the icon set and the disk image.
+- Updates: **Check for Updates…** finds a newer GitHub release and installs it. See [Roadmap](roadmap.md) for notarization.

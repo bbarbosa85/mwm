@@ -1,6 +1,6 @@
 # Example: a small starter. Halves and full screen on hyper + arrows, thirds on hyper + 1 2 3,
 # a few app shortcuts, window hints, and one snapshot you can save and restore.
-# hyper = ctrl + alt + cmd. Save this file as ~/.mwm.yml, or open it in Settings.
+# hyper = ctrl + alt + cmd. Add it in Settings > Manage profiles > Add profile > From a file, or put it in ~/.mwm.
 
 version: 2
 

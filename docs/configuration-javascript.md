@@ -1,6 +1,6 @@
 # JavaScript Scripting Guide (`.slate.js`)
 
-> **MWM no longer loads `~/.slate.js`.** Configurations are data only, in [`~/.mwm.yml`](configuration-yaml.md); on startup MWM converts a `~/.slate.js` written by the earlier configuration window into it. This guide describes the JavaScript runtime, which is still part of the codebase but isn't reachable from a configuration file.
+> **MWM no longer loads `~/.slate.js`.** Configurations are data only, in [`~/.mwm`](configuration-yaml.md); on startup MWM converts a `~/.slate.js` written by the earlier configuration window into it. This guide describes the JavaScript runtime, which is still part of the codebase but isn't reachable from a configuration file.
 
 Slate's JavaScript runtime (`~/.slate.js`) offered programmatic scripting, dynamic calculation, conditional layouts, and event-driven automation.
 
@@ -8,7 +8,7 @@ Slate's JavaScript runtime (`~/.slate.js`) offered programmatic scripting, dynam
 
 ## 1. Runtime Architecture
 
-Slate embeds WebKit's JavaScript engine through a headless `WebView` managed by [`JSController`](file:///Users/brunobarbosa/Projetos/mwm/mwm/MWM/JSController.m).
+Slate embeds WebKit's JavaScript engine through a headless `WebView` managed by [`JSController`](../MWM/Scripting/JSController.m).
 
 ```mermaid
 flowchart LR
@@ -19,10 +19,10 @@ flowchart LR
 ```
 
 When initializing, Slate loads:
-1. **[`underscore.js`](file:///Users/brunobarbosa/Projetos/mwm/mwm/MWM/underscore.js)**: Full Underscore.js utility library (`_`).
-2. **[`utils.js`](file:///Users/brunobarbosa/Projetos/mwm/mwm/MWM/utils.js)**: Helper functions for type checking and array/dictionary conversion.
+1. **[`underscore.js`](../MWM/Scripting/underscore.js)**: Full Underscore.js utility library (`_`).
+2. **[`utils.js`](../MWM/Scripting/utils.js)**: Helper functions for type checking and array/dictionary conversion.
 3. **`Scripting/managed-config.js`**: Resolves the managed `config` object used by `slate.applyConfig` (see section 6).
-4. **[`initialize.js`](file:///Users/brunobarbosa/Projetos/mwm/mwm/MWM/initialize.js)**: Creates the global `slate` (and shorthand `S`) object, binds methods, and connects callbacks.
+4. **[`initialize.js`](../MWM/Scripting/initialize.js)**: Creates the global `slate` (and shorthand `S`) object, binds methods, and connects callbacks.
 
 ---
 

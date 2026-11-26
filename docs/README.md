@@ -1,6 +1,6 @@
-# Slate Documentation
+# MWM Documentation
 
-Welcome to the internal and technical documentation for **Slate**, a highly customizable, programmable window management application for macOS (OS X 10.6+) written in Objective-C with JavaScript scripting support.
+Documentation for **MWM** (Mac Window Manager), a fork of [Slate](https://github.com/jigish/slate): a keyboard-driven window manager for macOS 12 and later, written in Objective-C. For how to use it, start with the [website docs](https://bbarbosa85.github.io/mwm/docs.html); these files are the reference and the internals.
 
 ---
 
@@ -21,10 +21,16 @@ Welcome to the internal and technical documentation for **Slate**, a highly cust
    - Application-specific configurations.
    - Complete global configuration options table with default values.
 
-3. **[Configuration File (`.mwm.yml`)](configuration-yaml.md)**
-   - The YAML format Slate loads, and the supported YAML subset.
-   - The Settings… window: saving as you go, validation, Apply.
+3. **[Profiles (`~/.mwm`)](configuration-yaml.md)**
+   - The YAML format MWM loads, and the supported YAML subset.
+   - Several profiles in `~/.mwm`, switching between them, and syncing them with a private gist.
    - Migration from `.slate` and `.slate.js`.
+
+   **[The Settings window](settings-window.md)**
+   - The sidebar (Keyboard, Screens, Options, Other), the bottom bar and applying a profile.
+   - Bindings: the keyboard map, the list, and the shortcut page with its action cards.
+   - Slots: the drag editor, grid, position, size and margins, and formulas.
+   - Displays, Options, Snapshots, Backup, Profiles, and the design system.
 
 4. **[JavaScript Scripting Engine (`.slate.js`, no longer loaded)](configuration-javascript.md)**
    - WebKit JavaScript runtime integration (`JSController`, WebScript bridge).
@@ -51,7 +57,7 @@ Welcome to the internal and technical documentation for **Slate**, a highly cust
    - String tokenization (`StringTokenizer`), Levenshtein distance (`NSString+Levenshtein`), math utilities (`MathUtils`).
    - Keyboard layout plists (QWERTY, Dvorak, Colemak, AZERTY).
    - Unit test suite (`MWMTests`).
-   - Build system, release pipeline (`slate.rb`), and DMG staging.
+   - Build system, release pipeline (`script/build-dmg.sh`), and DMG staging.
 
 8. **[macOS Permissions & Code Signing Guide](permissions-and-codesigning.md)**
    - macOS TCC (Transparency, Consent, and Control) security model for accessibility.
@@ -66,12 +72,12 @@ Welcome to the internal and technical documentation for **Slate**, a highly cust
 
 | Directory / File | Description |
 | :--- | :--- |
-| `MWM/` | Main Objective-C source files, UI views, operation classes, JS bridge, and assets. |
-| `MWMTests/` | Unit tests for tokenizer, math parser, expressions, Levenshtein, and string helpers. |
+| `MWM/` | The app: `App`, `Config`, `Core`, `Operations`, `Scripting`, `UI` and `Utilities` (see the walkthrough). |
+| `MWMTests/` | XCTest unit, window and screenshot tests; `script/check` runs them all. |
 | `script/build-dmg.sh` | Modern native packaging script to build Release DMG disk images. |
 | `script/` | Build scripts and release automation helpers. |
 | `MWM.xcodeproj` | Xcode project defining `MWM`, `MWMTests`, and Release/Debug build targets. |
-| `docs/` | Comprehensive technical architecture, configuration, operation, and permission documentation. |
+| `docs/` | These guides, and the website (`index.html`, `docs.html`, `features.html`, `examples.html`). |
 | `README.md` | User-facing usage instructions and quick configuration guide. |
 | `VERSION` | Current release number (1.0.25) and detailed release notes. |
 
