@@ -6,11 +6,10 @@
    script/check --release
    ```
 
-   `script/check` runs the same tests as CI on this Mac (about 2 minutes), and `--release` also builds the
-   universal app. Run it before opening any pull request that changes code. `script/install-hooks` installs
-   a git pre-push hook that does it for you (docs-only pushes skip it; `SKIP_CHECK=1 git push` skips it once).
-   CI on GitHub runs the same tests but waits for a macOS runner, which can take a long time; it ignores
-   changes that only touch `docs/` or markdown files.
+   `script/check` runs the tests on this Mac (about a minute), and `--release` also builds the universal app.
+   Run it before opening any pull request that changes code. `script/install-hooks` installs a git pre-push
+   hook that does it for you (docs-only pushes skip it; `SKIP_CHECK=1 git push` skips it once). There is no CI
+   on GitHub: waiting for a macOS runner took too long, so the local check is the gate.
 
 2. Build the release. This makes a universal app (Apple silicon and Intel), signs it with your
    "Apple Development" certificate, and writes `build/MWM-<version>.dmg`, `build/MWM-<version>.zip` and

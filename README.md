@@ -42,7 +42,7 @@ The full index is in [docs/README.md](docs/README.md).
 
 ## Building ##
 
-Open `MWM.xcodeproj` in Xcode, or run `script/check` to build and run the tests the way CI does (about a minute). See [docs/releasing.md](docs/releasing.md) for releases.
+Open `MWM.xcodeproj` in Xcode, or run `script/check` to build and run the tests (about a minute). The tests run on your Mac only; there is no CI on GitHub. See [docs/releasing.md](docs/releasing.md) for releases.
 
 ## Credits and contact ##
 

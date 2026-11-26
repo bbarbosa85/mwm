@@ -45,7 +45,7 @@ The app icon (`icon.icns`), the keyboard layout plists (`ASCIIToCode*.plist` for
 
 ## 2. Tests (`MWMTests/`)
 
-XCTest, run inside the app. `script/check` builds and runs everything the way CI does (about a minute); `script/check --release` also builds the universal Release app.
+XCTest, run inside the app. `script/check` builds and runs everything (about a minute); it is the only check, since nothing runs on GitHub; `script/check --release` also builds the universal Release app.
 
 - **Logic**: formats, validation, migration, sync, slots, shortcuts, formulas, displays, snapshots, the gist client (against a fake GitHub in `TestFakeGitHub`), and the parsers and utilities.
 - **Windows and pages**: the Settings window is tested through real views (profiles, bindings, slots, modifiers, autosave, the bottom bar and every page's width). Tests use temporary home folders (`MWMProfiles setHomeDirectory:`), never your files, and don't save the window's position.
