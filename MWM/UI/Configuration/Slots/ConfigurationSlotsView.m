@@ -60,7 +60,7 @@
 @property (readwrite) BOOL customMode;
 @property (strong) NSSegmentedControl *widthUnit;
 @property (strong) NSSegmentedControl *heightUnit;
-@property (strong) NSArray<NSButton *> *centerBoxes;
+@property (strong) NSArray<NSControl *> *centerBoxes;   // the two "center" switches
 @property (strong) NSArray<NSTextField *> *marginFields;
 @property (strong) NSStackView *fieldsBlock;
 @property (strong) NSStackView *customBlock;
@@ -68,9 +68,12 @@
 @property (strong) NSTextField *checkLabel;
 @property (strong) MWMChipView *customChip;
 @property (strong) NSPopover *helpPopover;
+@property (strong) NSView *modeBlock;   // the Mode caption and its control
 @property (strong) NSSegmentedControl *modeControl;   // Simple / Advanced, for a slot that is being created
 @property (strong) NSTextField *formulaField;
 @end
+
+static const CGFloat kTitleColumnWidth = 230;   // the same as the General settings
 
 @implementation ConfigurationSlotsView
 
@@ -102,6 +105,22 @@
   [field setContentCompressionResistancePriority:NSLayoutPriorityDefaultLow forOrientation:NSLayoutConstraintOrientationHorizontal];
   [[field.widthAnchor constraintGreaterThanOrEqualToConstant:30] setActive:YES];
   return field;
+}
+
+// Controls in a row, centered on the line.
+- (NSStackView *)controlsRow:(NSArray<NSView *> *)views {
+  NSStackView *row = [NSStackView stackViewWithViews:views];
+  [row setSpacing:MWMSpacingL];
+  [row setAlignment:NSLayoutAttributeCenterY];
+  return row;
+}
+
+// Cards side by side, the same width, as tall as the tallest.
+- (NSStackView *)cardsRowWithViews:(NSArray<NSView *> *)cards {
+  NSStackView *row = [MWMComponents equalRowWithViews:cards spacing:MWMSpacingM];
+  [row setAlignment:NSLayoutAttributeTop];
+  for (NSView *card in cards) [[card.heightAnchor constraintEqualToAnchor:row.heightAnchor] setActive:YES];
+  return row;
 }
 
 - (void)pinView:(NSView *)view toEdgesOf:(NSView *)container {
@@ -140,32 +159,33 @@
   [self pinView:page toEdgesOf:self.galleryPage];
 }
 
-// The editor: a header with the back button and the title, a card with the form on the
-// left, the canvas and its view toolbar on the right, and under a line the save bar.
+// The editor: a header with the back button and the title, then (scrolling) the name and mode,
+// the canvas, the preview and grid, and the lists of fields; under a line the save bar.
 - (void)buildEditorPage {
   MWMSublevelHeader *header = [MWMSublevelHeader headerWithBackTitle:@"Slots" title:@"Editing Slot" target:self action:@selector(backPressed:)];
   self.editorTitle = header.titleLabel;
 
-  // Left: the form card.
-  self.nameField = [NSTextField textFieldWithString:@""];
-  [self.nameField setPlaceholderString:@"Name this slot"];
+  // The form.
+  MWMNameField *slotNameField = [MWMNameField nameFieldWithPlaceholder:@"Name this slot" identifier:nil compact:NO];
+  self.nameField = slotNameField;
   [self.nameField setDelegate:self];
-  NSStackView *nameBlock = [MWMComponents fieldWithCaption:@"Name" control:self.nameField];
+  NSStackView *nameBlock = [MWMComponents nameBlockWithField:slotNameField width:0];
   self.valueFields = @[[self valueField:@"x"], [self valueField:@"y"], [self valueField:@"width"], [self valueField:@"height"]];
   NSArray *captions = @[@"x (from left)", @"y (from top)", @"Width", @"Height"];
   NSMutableArray *captioned = [NSMutableArray array];
   for (NSUInteger i = 0; i < 4; i++) [captioned addObject:[MWMComponents fieldWithCaption:captions[i] control:self.valueFields[i]]];
-  NSStackView *positionRow = [MWMComponents equalRowWithViews:@[captioned[0], captioned[1]] spacing:10];
-  NSStackView *sizeRow = [MWMComponents equalRowWithViews:@[captioned[2], captioned[3]] spacing:10];
   // Units: a size can be a percent of the screen or a number of pixels; a start can be centered.
   self.widthUnit = [self unitControl:@"width-unit"];
   self.heightUnit = [self unitControl:@"height-unit"];
-  NSStackView *unitRow = [MWMComponents equalRowWithViews:@[[MWMComponents fieldWithCaption:@"Width in" control:self.widthUnit], [MWMComponents fieldWithCaption:@"Height in" control:self.heightUnit]] spacing:10];
-  NSButton *centerX = [NSButton checkboxWithTitle:@"Center across" target:self action:@selector(centeredChanged:)];
-  NSButton *centerY = [NSButton checkboxWithTitle:@"Center down" target:self action:@selector(centeredChanged:)];
+  NSSwitch *centerX = [[NSSwitch alloc] init], *centerY = [[NSSwitch alloc] init];
+  for (NSSwitch *toggle in @[centerX, centerY]) {
+    [toggle setControlSize:NSControlSizeSmall];
+    [toggle setTarget:self];
+    [toggle setAction:@selector(centeredChanged:)];
+  }
   [centerX setIdentifier:@"center-x"]; [centerY setIdentifier:@"center-y"];
   self.centerBoxes = @[centerX, centerY];
-  NSStackView *centerRow = [MWMComponents columnWithViews:@[centerX, centerY] spacing:6 insets:NSEdgeInsetsZero];   // side by side they are wider than the card
+  for (NSTextField *field in self.valueFields) [[field.widthAnchor constraintEqualToConstant:96] setActive:YES];
   // Margins: pixels of space left inside the slot's edges.
   NSArray *marginNames = @[@"margin-left", @"margin-top", @"margin-right", @"margin-bottom"];
   NSArray *marginCaptions = @[@"Left", @"Top", @"Right", @"Bottom"];
@@ -173,16 +193,24 @@
   for (NSUInteger i = 0; i < 4; i++) {
     NSTextField *field = [self valueField:marginNames[i]];
     [field setAction:@selector(marginEdited:)];
+    [[field.widthAnchor constraintEqualToConstant:64] setActive:YES];
     [marginFields addObject:field];
     [marginViews addObject:[MWMComponents fieldWithCaption:marginCaptions[i] control:field]];
   }
   self.marginFields = marginFields;
-  NSStackView *marginRow = [MWMComponents equalRowWithViews:marginViews spacing:10];
-  // Three boxes, one topic each: where it starts, how big it is, and the space kept free.
-  NSView *positionGroup = [MWMComponents groupBoxWithTitle:@"Position" views:@[positionRow, centerRow] accessory:nil];
-  NSView *sizeGroup = [MWMComponents groupBoxWithTitle:@"Size" views:@[sizeRow, unitRow] accessory:nil];
-  NSView *marginGroup = [MWMComponents groupBoxWithTitle:@"Margins in pixels" views:@[marginRow] accessory:nil];
-  self.fieldsBlock = [MWMComponents columnWithViews:@[positionGroup, sizeGroup, marginGroup] spacing:10 insets:NSEdgeInsetsZero];
+  NSStackView *marginControls = [NSStackView stackViewWithViews:marginViews];
+  [marginControls setSpacing:MWMSpacingM];
+  [marginControls setAlignment:NSLayoutAttributeBottom];
+  // One block per topic, like the General settings: an icon with the topic on the left, a row for each value on the right.
+  NSView *positionBlock = [MWMComponents settingsBlockWithSymbol:@"scope" title:@"Position" subtitle:@"Where the slot starts" rows:@[
+    [MWMComponents controlRowWithTitle:@"Distance from left" subtitle:@"x, from the screen's left edge" control:[self controlsRow:@[[MWMComponents secondaryLabel:@"Center across"], centerX, self.valueFields[0]]]],
+    [MWMComponents controlRowWithTitle:@"Distance from top" subtitle:@"y, from the screen's top edge" control:[self controlsRow:@[[MWMComponents secondaryLabel:@"Center down"], centerY, self.valueFields[1]]]]] titleColumnWidth:kTitleColumnWidth];
+  NSView *sizeBlock = [MWMComponents settingsBlockWithSymbol:@"arrow.up.left.and.arrow.down.right" title:@"Size" subtitle:@"How big the slot is" rows:@[
+    [MWMComponents controlRowWithTitle:@"Width" subtitle:nil control:[self controlsRow:@[self.valueFields[2], self.widthUnit]]],
+    [MWMComponents controlRowWithTitle:@"Height" subtitle:nil control:[self controlsRow:@[self.valueFields[3], self.heightUnit]]]] titleColumnWidth:kTitleColumnWidth];
+  NSView *marginBlock = [MWMComponents settingsBlockWithSymbol:@"square.dashed" title:@"Margins" subtitle:@"Space kept free, in pixels" rows:@[
+    [MWMComponents controlRowWithTitle:@"Edges" subtitle:nil control:marginControls]] titleColumnWidth:kTitleColumnWidth];
+  self.fieldsBlock = [MWMComponents columnWithViews:@[positionBlock, sizeBlock, marginBlock] spacing:MWMSpacingM insets:NSEdgeInsetsZero];
 
   // A formula written by hand that the fields can't show: its text, edited as text.
   self.formulaField = [NSTextField textFieldWithString:@""];
@@ -199,7 +227,7 @@
   [helpButton setTitle:@""];
   [helpButton setToolTip:@"Names you can use in a formula"];
   NSStackView *accessories = [NSStackView stackViewWithViews:@[self.customChip, helpButton]];
-  [accessories setSpacing:6];
+  [accessories setSpacing:MWMSpacingS];
   NSTextField *customHelp = [NSTextField wrappingLabelWithString:@"Write move x;y width;height. No spaces inside a number."];
   [customHelp setFont:[MWMTheme fontCaption]];
   [customHelp setTextColor:[MWMTheme textSecondary]];
@@ -214,97 +242,76 @@
     [resultViews addObject:[MWMComponents fieldWithCaption:resultCaptions[i] control:value]];
   }
   self.resultFields = results;
-  NSStackView *resultTop = [MWMComponents equalRowWithViews:@[resultViews[0], resultViews[1]] spacing:10];
-  NSStackView *resultBottom = [MWMComponents equalRowWithViews:@[resultViews[2], resultViews[3]] spacing:10];
+  NSStackView *resultTop = [MWMComponents equalRowWithViews:@[resultViews[0], resultViews[1]] spacing:MWMSpacingS];
+  NSStackView *resultBottom = [MWMComponents equalRowWithViews:@[resultViews[2], resultViews[3]] spacing:MWMSpacingS];
   NSView *resultGroup = [MWMComponents groupBoxWithTitle:@"On this screen" views:@[resultTop, resultBottom] accessory:nil];
   self.checkLabel = [NSTextField wrappingLabelWithString:@""];
   [self.checkLabel setFont:[MWMTheme fontCaption]];
   [self.checkLabel setIdentifier:@"check"];
   NSView *checksGroup = [MWMComponents groupBoxWithTitle:@"Checks" views:@[self.checkLabel] accessory:nil];
-  self.customBlock = [MWMComponents columnWithViews:@[formulaGroup, resultGroup, checksGroup] spacing:10 insets:NSEdgeInsetsZero];
+  self.customBlock = [MWMComponents columnWithViews:@[formulaGroup, [self cardsRowWithViews:@[resultGroup, checksGroup]]] spacing:MWMSpacingM insets:NSEdgeInsetsZero];   // the formula takes a row of its own
   [self.customBlock setHidden:YES];
-  self.modeControl = [NSSegmentedControl segmentedControlWithLabels:@[@"Simple", @"Advanced (formula)"] trackingMode:NSSegmentSwitchTrackingSelectOne target:self action:@selector(modeChanged:)];
+  self.modeControl = [NSSegmentedControl segmentedControlWithLabels:@[@"Simple", @"Advanced"] trackingMode:NSSegmentSwitchTrackingSelectOne target:self action:@selector(modeChanged:)];
   [self.modeControl setIdentifier:@"mode"];
   [self.modeControl setSelectedSegment:0];
   [self.modeControl setSegmentDistribution:NSSegmentDistributionFillEqually];
   [self.modeControl setToolTip:@"Simple: fields for position, size and margins. Advanced: write the formula yourself."];
-  NSView *cardLine = [MWMComponents separator];
-  self.messageLabel = [NSTextField wrappingLabelWithString:@""];
-  [self.messageLabel setFont:[MWMTheme fontCaption]];
-  NSStackView *cardContent = [MWMComponents columnWithViews:@[nameBlock, cardLine, self.modeControl, self.fieldsBlock, self.customBlock, self.messageLabel] spacing:14 insets:NSEdgeInsetsMake(14, 14, 14, 14)];
-  [cardContent setTranslatesAutoresizingMaskIntoConstraints:NO];
-  NSView *card = [MWMComponents card];
-  [card addSubview:cardContent];
-  // The card is exactly as tall as its content, whatever room the page has.
-  [cardContent setContentHuggingPriority:NSLayoutPriorityRequired forOrientation:NSLayoutConstraintOrientationVertical];
-  [NSLayoutConstraint activateConstraints:@[
-    [cardContent.topAnchor constraintEqualToAnchor:card.topAnchor],
-    [cardContent.leadingAnchor constraintEqualToAnchor:card.leadingAnchor], [cardContent.trailingAnchor constraintEqualToAnchor:card.trailingAnchor],
-    [card.heightAnchor constraintEqualToAnchor:cardContent.heightAnchor],
-    [card.widthAnchor constraintEqualToConstant:300],
-  ]];
+  self.modeBlock = [MWMComponents fieldWithCaption:@"Mode" control:self.modeControl];
+  [[self.modeBlock.widthAnchor constraintEqualToConstant:240] setActive:YES];
 
-  // Right: the canvas, and under it one line for the preview screen and the grid.
   self.canvas = [[ConfigurationSlotCanvas alloc] init];
   [self.canvas setDelegate:self];
   [self.canvas setTranslatesAutoresizingMaskIntoConstraints:NO];
-  [self.canvas setContentHuggingPriority:1 forOrientation:NSLayoutConstraintOrientationHorizontal];
+  [[self.canvas.heightAnchor constraintLessThanOrEqualToConstant:240] setActive:YES];   // a tall screen shows smaller, not taller
 
   self.screenPopup = [[NSPopUpButton alloc] initWithFrame:NSZeroRect pullsDown:NO];
   [self.screenPopup setControlSize:NSControlSizeSmall];
+  [[self.screenPopup cell] setLineBreakMode:NSLineBreakByTruncatingTail];
+  [self.screenPopup setContentCompressionResistancePriority:NSLayoutPriorityDefaultLow forOrientation:NSLayoutConstraintOrientationHorizontal];
   [self.screenPopup setTarget:self];
   [self.screenPopup setAction:@selector(screenChanged:)];
   self.gridControl = [NSSegmentedControl segmentedControlWithLabels:@[@"Off", @"2", @"3", @"4", @"6", @"8", @"12"] trackingMode:NSSegmentSwitchTrackingSelectOne target:self action:@selector(gridChanged:)];
   [self.gridControl setControlSize:NSControlSizeSmall];
   [self.gridControl setSelectedSegment:3];  // quarters
   [self.gridControl setToolTip:@"The grid is made of this many equal parts, and the slot snaps to its lines"];
-  NSView *toolbarSpacer = [MWMComponents spacer];
-  NSStackView *toolbarRow = [NSStackView stackViewWithViews:@[[MWMComponents secondaryLabel:@"Preview on"], self.screenPopup, toolbarSpacer, [MWMComponents secondaryLabel:@"Grid"], self.gridControl]];
-  [toolbarRow setSpacing:8];
-  [toolbarRow setAlignment:NSLayoutAttributeCenterY];
-  [toolbarRow setEdgeInsets:NSEdgeInsetsMake(6, 10, 6, 10)];
-  [toolbarRow setTranslatesAutoresizingMaskIntoConstraints:NO];
-  NSView *toolbar = [MWMComponents card];
-  [toolbar setTranslatesAutoresizingMaskIntoConstraints:NO];
-  [toolbar addSubview:toolbarRow];
-  [NSLayoutConstraint activateConstraints:@[
-    [toolbarRow.topAnchor constraintEqualToAnchor:toolbar.topAnchor], [toolbarRow.bottomAnchor constraintEqualToAnchor:toolbar.bottomAnchor],
-    [toolbarRow.leadingAnchor constraintEqualToAnchor:toolbar.leadingAnchor], [toolbarRow.trailingAnchor constraintEqualToAnchor:toolbar.trailingAnchor],
-  ]];
-  NSStackView *canvasColumn = [NSStackView stackViewWithViews:@[self.canvas, toolbar]];
-  [canvasColumn setOrientation:NSUserInterfaceLayoutOrientationVertical];
-  [canvasColumn setAlignment:NSLayoutAttributeLeading];
-  [canvasColumn setSpacing:8];
-  for (NSView *view in @[self.canvas, toolbar]) [[view.widthAnchor constraintEqualToAnchor:canvasColumn.widthAnchor] setActive:YES];
+  [self.gridControl setContentCompressionResistancePriority:NSLayoutPriorityRequired forOrientation:NSLayoutConstraintOrientationHorizontal];
+  NSView *screenCard = [MWMComponents listCardWithRows:@[[MWMComponents controlRowWithTitle:@"Preview on" subtitle:nil control:self.screenPopup]]];
+  NSView *gridCard = [MWMComponents listCardWithRows:@[[MWMComponents controlRowWithTitle:@"Grid" subtitle:nil control:self.gridControl]]];
+  [screenCard setIdentifier:@"slot-screen-card"];
+  [gridCard setIdentifier:@"slot-grid-card"];
+  NSStackView *toolbarRow = [MWMComponents equalRowWithViews:@[screenCard, gridCard] spacing:MWMSpacingM];
+  [toolbarRow setAlignment:NSLayoutAttributeTop];
+  for (NSView *card in @[screenCard, gridCard]) [[card.heightAnchor constraintEqualToAnchor:toolbarRow.heightAnchor] setActive:YES];
 
-  // The card keeps the height of its content, at the top; the space below it stays empty.
-  NSView *cardHolder = [[NSView alloc] init];
-  [cardHolder setTranslatesAutoresizingMaskIntoConstraints:NO];
-  [cardHolder addSubview:card];
-  [NSLayoutConstraint activateConstraints:@[
-    [card.topAnchor constraintEqualToAnchor:cardHolder.topAnchor], [card.leadingAnchor constraintEqualToAnchor:cardHolder.leadingAnchor],
-    [card.trailingAnchor constraintEqualToAnchor:cardHolder.trailingAnchor],
-    [cardHolder.widthAnchor constraintEqualToConstant:300],
-  ]];
-  NSStackView *columns = [NSStackView stackViewWithViews:@[cardHolder, canvasColumn]];
-  [columns setSpacing:16];
-  [columns setAlignment:NSLayoutAttributeTop];
-  // Both columns start at the top and take the height their content needs.
-  [[cardHolder.topAnchor constraintEqualToAnchor:columns.topAnchor] setActive:YES];
-  [[canvasColumn.topAnchor constraintEqualToAnchor:columns.topAnchor] setActive:YES];
-  [columns setEdgeInsets:NSEdgeInsetsMake(8, 20, 16, 20)];
-  [columns setContentHuggingPriority:1 forOrientation:NSLayoutConstraintOrientationVertical];
+  // Top: the name, and the mode on the right. Both start at the top.
+  [[nameBlock.widthAnchor constraintEqualToConstant:340] setActive:YES];
+  NSStackView *topRow = [NSStackView stackViewWithViews:@[nameBlock, [MWMComponents spacer], self.modeBlock]];
+  [topRow setSpacing:MWMSpacingL];
+  [topRow setAlignment:NSLayoutAttributeTop];
+
+  NSTextField *hint = [NSTextField wrappingLabelWithString:@"Drag the slot to move it, or drag a handle to resize it. Hold ⇧ to keep its proportions."];
+  [hint setAlignment:NSTextAlignmentCenter];
+  [hint setFont:[MWMTheme fontCaption]];
+  [hint setTextColor:[MWMTheme textSecondary]];
+  [hint setIdentifier:@"slot-canvas-hint"];
+  [self.canvas setToolTip:@"Hold ⌥ to move or resize off the grid"];
+  NSStackView *canvasBlock = [MWMComponents columnWithViews:@[self.canvas, hint] spacing:MWMSpacingS insets:NSEdgeInsetsZero];
+
+  // Top to bottom: name and mode, the canvas with its hint, the preview and grid, the lists of fields, and a line on the state of the slot.
+  NSStackView *columns = [MWMComponents columnWithViews:@[topRow, canvasBlock, toolbarRow, self.fieldsBlock, self.customBlock] spacing:MWMSpacingL insets:NSEdgeInsetsMake(MWMSpacingS, MWMSpacingXL, MWMSpacingL, MWMSpacingXL)];
+  NSScrollView *scroll = [MWMComponents scrollViewWithContent:columns];   // scrolls when the window is short
 
   // The save bar, under a line: whether there is anything to save, then Save and Cancel.
   MWMSaveBar *saveBar = [MWMSaveBar barWithTarget:self cancel:@selector(cancelPressed:) save:@selector(savePressed:)];
   self.saveBar = saveBar;
   self.changesChip = saveBar.chip;
+  self.messageLabel = saveBar.messageLabel;   // the state of the slot, to the left of Save
   self.cancelButton = saveBar.cancelButton;
   self.saveButton = saveBar.saveButton;
 
   // Laid out with constraints: the columns take whatever height is left between the header and the save bar.
   self.editorPage = [[NSView alloc] init];
-  for (NSView *view in @[header, columns, saveBar]) {
+  for (NSView *view in @[header, scroll, saveBar]) {
     [view setTranslatesAutoresizingMaskIntoConstraints:NO];
     [self.editorPage addSubview:view];
     [[view.leadingAnchor constraintEqualToAnchor:self.editorPage.leadingAnchor] setActive:YES];
@@ -312,11 +319,12 @@
   }
   [NSLayoutConstraint activateConstraints:@[
     [header.topAnchor constraintEqualToAnchor:self.editorPage.topAnchor],
-    [columns.topAnchor constraintEqualToAnchor:header.bottomAnchor],
-    [columns.bottomAnchor constraintEqualToAnchor:saveBar.topAnchor],
+    [scroll.topAnchor constraintEqualToAnchor:header.bottomAnchor],
+    [scroll.bottomAnchor constraintEqualToAnchor:saveBar.topAnchor],
     [saveBar.bottomAnchor constraintEqualToAnchor:self.editorPage.bottomAnchor],
   ]];
 }
+
 
 #pragma mark - Model
 
@@ -577,9 +585,13 @@
     [self.screenPopup addItemWithTitle:[NSString stringWithFormat:@"%@ · %@", display.builtIn ? @"Built-in" : display.name, [display sizeText]]];
     [[self.screenPopup lastItem] setRepresentedObject:@{@"aspect": @((CGFloat)display.width / MAX(display.height, 1)), @"size": [NSValue valueWithSize:NSMakeSize(display.width, display.height)]}];
   }
-  if ([self.screenPopup numberOfItems] == 0) {
-    [self.screenPopup addItemWithTitle:@"16:9 screen"];
-    [[self.screenPopup lastItem] setRepresentedObject:@{@"aspect": @(16.0 / 9.0), @"size": [NSValue valueWithSize:NSMakeSize(1600, 900)]}];
+  // Other screens to try the slot on, for when the one you want isn't connected.
+  if ([self.screenPopup numberOfItems] > 0) [[self.screenPopup menu] addItem:[NSMenuItem separatorItem]];
+  NSArray *others = @[@[@"16:9", @1920, @1080], @[@"16:10", @1440, @900], @[@"21:9", @3440, @1440], @[@"32:9", @5120, @1440], @[@"4:3", @1024, @768]];
+  for (NSArray *other in others) {
+    CGFloat width = [other[1] doubleValue], height = [other[2] doubleValue];
+    [self.screenPopup addItemWithTitle:[NSString stringWithFormat:@"%@ · %.0fx%.0f", other[0], width, height]];
+    [[self.screenPopup lastItem] setRepresentedObject:@{@"aspect": @(width / height), @"size": [NSValue valueWithSize:NSMakeSize(width, height)]}];
   }
   [self screenChanged:self.screenPopup];
 }
@@ -590,6 +602,7 @@
   // The canvas is as tall as the screen it shows (plus the ruler), not as tall as the window.
   if (self.canvasHeight != nil) self.canvasHeight.active = NO;
   self.canvasHeight = [self.canvas.heightAnchor constraintEqualToAnchor:self.canvas.widthAnchor multiplier:1 / MAX(self.canvas.aspect, 0.2) constant:36];
+  [self.canvasHeight setPriority:400];   // below the window's own size, so it never narrows the window
   self.canvasHeight.active = YES;
 }
 
@@ -616,7 +629,7 @@
   NSString *problem = [self problem];
   [self.saveBar setDirty:dirty canSave:problem == nil];
   if (has && [self.nameField currentEditor] == nil && ![[self.nameField stringValue] isEqualToString:self.draftName ?: @""]) [self.nameField setStringValue:self.draftName ?: @""];
-  [self.modeControl setHidden:!self.selectedIsNew];   // an existing slot opens the way it is written
+  [self.modeBlock setHidden:!self.selectedIsNew];   // an existing slot opens the way it is written
   [self.modeControl setSelectedSegment:self.customMode ? 1 : 0];
   [self.fieldsBlock setHidden:self.customMode];
   [self.customBlock setHidden:!self.customMode];
@@ -682,7 +695,7 @@
     set(size, axis.sizeInPixels ? [self numberText:axis.sizePixels] : [self percentText:axis.sizeFraction]);
     NSSegmentedControl *unit = i == 0 ? self.widthUnit : self.heightUnit;
     [unit setSelectedSegment:axis.sizeInPixels ? 1 : 0];
-    [self.centerBoxes[i] setState:axis.centered ? NSControlStateValueOn : NSControlStateValueOff];
+    [(id)self.centerBoxes[i] setState:axis.centered ? NSControlStateValueOn : NSControlStateValueOff];
   }
   NSArray *margins = @[@(shape.horizontal.marginStart), @(shape.vertical.marginStart), @(shape.horizontal.marginEnd), @(shape.vertical.marginEnd)];
   for (NSUInteger i = 0; i < 4; i++) set(self.marginFields[i], [self numberText:[margins[i] integerValue]]);
@@ -749,10 +762,10 @@
   [self refresh];
 }
 
-- (void)centeredChanged:(NSButton *)box {
+- (void)centeredChanged:(NSControl *)box {
   if (self.draftShape == nil) return;
   MWMSlotAxis *axis = [[box identifier] isEqualToString:@"center-x"] ? self.draftShape.horizontal : self.draftShape.vertical;
-  axis.centered = [box state] == NSControlStateValueOn;
+  axis.centered = [(id)box state] == NSControlStateValueOn;
   [self refresh];
 }
 

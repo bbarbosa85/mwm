@@ -59,8 +59,8 @@ NS_ASSUME_NONNULL_BEGIN
 // ~/.mwm/default.mwm.yaml, and converts any Slate files into a configuration ("default", or "slate-import"
 // next to a moved ~/.mwm.yml). The Slate files are only read: never renamed, moved or loaded again.
 // Answers nil when there's nothing to do; else a summary (moved, importedName, slateFiles, slateProblem,
-// warnings, error) for the alert. Uses MWMConfigurations' home folder.
-+ (nullable NSDictionary *)importFirstRunConfigurations;
+// warnings, error) for the alert. Uses MWMProfiles' home folder.
++ (nullable NSDictionary *)importFirstRunProfiles;
 
 // Startup entry point: the step above, then an alert saying what happened.
 + (void)runStartupMigration;

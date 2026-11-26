@@ -1,8 +1,8 @@
 //
-//  TestConfigurationBackup.m
+//  TestProfileBackup.m
 //
-//  The Backup page: connecting a token, backing up (a name that exists replaces), restoring and deleting.
-//
+//  The Backup page: connecting with a token, the sync card and the list of where each profile stands.
+//  Every test uses a temporary home folder and a fake GitHub, and asks nothing.
 //
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -19,49 +19,42 @@
 #import <XCTest/XCTest.h>
 #import <objc/runtime.h>
 #import "ConfigurationBackupView.h"
-#import "MWMConfigDocument.h"
-#import "MWMDisplays.h"
+#import "MWMProfiles.h"
 #import "MWMGist.h"
 #import "MWMSnapshots.h"
-#import "SnapshotList.h"
+#import "MWMSync.h"
 #import "TestFakeGitHub.h"
 
-@interface TestConfigurationBackup : XCTestCase <ConfigurationBackupViewDelegate>
+@interface TestProfileBackup : XCTestCase <ConfigurationBackupViewDelegate>
 @property (strong) TestFakeGitHub *github;
-@property (strong) NSMutableDictionary *lists;
-@property (copy) NSString *restoredText;
-@property (assign) NSUInteger snapshotRestores;
-@property (assign) BOOL restoreWorks;
+@property (copy) NSString *home;
+@property (assign) NSUInteger filesChanged;
 @end
 
-@implementation TestConfigurationBackup
+@implementation TestProfileBackup
 
-- (BOOL)backupView:(ConfigurationBackupView *)view restoreConfigText:(NSString *)text { self.restoredText = text; return self.restoreWorks; }
-- (void)backupViewDidRestoreSnapshots:(ConfigurationBackupView *)view { self.snapshotRestores++; }
-
-- (NSArray<MWMDisplay *> *)desk {
-  return @[[MWMDisplay displayNamed:@"Samsung Odyssey G9" width:5120 height:1440 builtIn:NO x:0 y:0], [MWMDisplay displayNamed:@"Built-in" width:3024 height:1964 builtIn:YES x:-3024 y:0]];
-}
+- (void)backupViewDidChangeFiles:(ConfigurationBackupView *)view { self.filesChanged++; }
 
 - (void)setUp {
+  self.home = [NSTemporaryDirectory() stringByAppendingPathComponent:[[NSUUID UUID] UUIDString]];
+  [[NSFileManager defaultManager] createDirectoryAtPath:self.home withIntermediateDirectories:YES attributes:nil error:nil];
+  [MWMProfiles setHomeDirectory:self.home];
   [MWMGist useMemoryStorage:YES];
   self.github = [[TestFakeGitHub alloc] init];
   [self.github install];
-  self.lists = [NSMutableDictionary dictionary];
-  self.lists[@"coding"] = [[SnapshotList alloc] initWithName:@"coding" saveToDisk:YES isStack:NO];
-  [MWMSnapshots setListsOverride:self.lists];
-  [MWMDisplays setConnectedOverride:[self desk]];
-  self.restoreWorks = YES;
-  self.restoredText = nil;
-  self.snapshotRestores = 0;
+  [MWMSnapshots setListsOverride:[NSMutableDictionary dictionary]];
+  self.filesChanged = 0;
 }
 
 - (void)tearDown {
   [MWMGist setTransport:nil];
   [MWMGist useMemoryStorage:NO];
   [MWMSnapshots setListsOverride:nil];
-  [MWMDisplays setConnectedOverride:nil];
+  [MWMProfiles setHomeDirectory:nil];
+  [[NSFileManager defaultManager] removeItemAtPath:self.home error:nil];
 }
+
+- (void)make:(NSString *)name text:(NSString *)text { [MWMProfiles createNamed:name text:text error:nil]; }
 
 - (ConfigurationBackupView *)pageConnected:(BOOL)connected {
   if (connected) [MWMGist setToken:@"ghp_test"];
@@ -70,7 +63,6 @@
   [window setContentView:page];
   page.delegate = self;
   page.interactive = NO;
-  page.document = [[MWMConfigDocument alloc] init];
   objc_setAssociatedObject(page, "window", window, OBJC_ASSOCIATION_RETAIN);
   [self refresh:page];
   return page;
@@ -94,145 +86,111 @@
   return nil;
 }
 
-- (void)backUp:(ConfigurationBackupView *)page as:(NSString *)name {
-  XCTestExpectation *e = [self expectationWithDescription:@"backup"];
-  [page backUpAs:name completion:^{ [e fulfill]; }];
+- (void)sync:(ConfigurationBackupView *)page {
+  XCTestExpectation *e = [self expectationWithDescription:@"sync"];
+  [page syncWithCompletion:^{ [e fulfill]; }];
   [self waitForExpectations:@[e] timeout:30];
   [page.window layoutIfNeeded];
 }
 
-- (void)testWithoutATokenOnlyTheTokenCardShows {
+#pragma mark - Connecting
+
+- (void)testWithoutATokenOnlyTheStepsShow {
   ConfigurationBackupView *page = [self pageConnected:NO];
   XCTAssertNotNil([self viewIn:page identifier:@"backup-token-card"]);
-  XCTAssertNil([self viewIn:page identifier:@"backup-now"]);
-}
-
-- (void)testTheTokenCardGivesThreeStepsAndALinkToGitHub {
-  ConfigurationBackupView *page = [self pageConnected:NO];
-  for (NSString *step in @[@"backup-step-1", @"backup-step-2", @"backup-step-3"]) XCTAssertNotNil([self viewIn:page identifier:step], @"%@", step);
+  XCTAssertNotNil([self viewIn:page identifier:@"backup-step-1"]);
   XCTAssertNotNil([self viewIn:page identifier:@"backup-create-token"]);
-  XCTAssertNotNil([self viewIn:page identifier:@"backup-keychain-note"]);
-  XCTAssertNotNil([self viewIn:page identifier:@"backup-token"]);
   XCTAssertNotNil([self viewIn:page identifier:@"backup-connect"]);
+  XCTAssertNil([self viewIn:page identifier:@"backup-sync"]);
 }
 
-- (void)testConnectingKeepsTheTokenAndShowsThePage {
+- (void)testAGoodTokenIsKeptAndShowsTheSyncCard {
   ConfigurationBackupView *page = [self pageConnected:NO];
   XCTestExpectation *e = [self expectationWithDescription:@"connect"];
-  [page connectWithToken:@"  ghp_new  " completion:^{ [e fulfill]; }];
+  [page connectWithToken:@"  ghp_good \n" completion:^{ [e fulfill]; }];
   [self waitForExpectations:@[e] timeout:30];
-  XCTAssertEqualObjects([MWMGist token], @"ghp_new");
+  [page.window layoutIfNeeded];
+  XCTAssertEqualObjects([MWMGist token], @"ghp_good");
+  XCTAssertNotNil([self viewIn:page identifier:@"backup-sync"]);
   XCTAssertNil([self viewIn:page identifier:@"backup-token-card"]);
-  XCTAssertNotNil([self viewIn:page identifier:@"backup-now"]);
 }
 
 - (void)testATokenGitHubRefusesIsNotKept {
   ConfigurationBackupView *page = [self pageConnected:NO];
   self.github.status = 401;
   XCTestExpectation *e = [self expectationWithDescription:@"connect"];
-  [page connectWithToken:@"bad" completion:^{ [e fulfill]; }];
+  [page connectWithToken:@"ghp_bad" completion:^{ [e fulfill]; }];
   [self waitForExpectations:@[e] timeout:30];
   XCTAssertNil([MWMGist token]);
   XCTAssertNotNil([self viewIn:page identifier:@"backup-token-card"]);
 }
 
-- (void)testThisComputerListsItsDisplaysAndCounts {
+- (void)testChangeTokenShowsTheStepsAgain {
   ConfigurationBackupView *page = [self pageConnected:YES];
-  NSView *facts = [self viewIn:page identifier:@"backup-now-facts"];
-  XCTAssertNotNil(facts);
-  NSView *counts = [self viewIn:facts identifier:@"backup-counts"];
-  NSMutableArray *texts = [NSMutableArray array];
-  NSMutableArray *queue = [NSMutableArray arrayWithObject:facts];
-  while ([queue count] > 0) {
-    NSView *view = [queue lastObject];
-    [queue removeLastObject];
-    if ([view isKindOfClass:[NSTextField class]]) [texts addObject:[(NSTextField *)view stringValue]];
-    [queue addObjectsFromArray:[view subviews]];
-  }
-  XCTAssertNotNil(counts);
-  XCTAssertTrue([texts containsObject:@"Samsung Odyssey G9 (5120 × 1440)"] || [[texts componentsJoinedByString:@"|"] containsString:@"Samsung Odyssey G9"]);
-  XCTAssertTrue([texts containsObject:@"0 shortcuts"]);
-  XCTAssertTrue([texts containsObject:@"0 modifiers"]);
-  XCTAssertTrue([texts containsObject:@"1 snapshot"]);
+  XCTAssertNil([self viewIn:page identifier:@"backup-token-card"]);
+  [(NSButton *)[self viewIn:page identifier:@"backup-change-token"] performClick:nil];
+  XCTAssertNotNil([self viewIn:page identifier:@"backup-token-card"]);
 }
 
-- (void)testBackingUpMakesACardThatMatchesTheDisplays {
+#pragma mark - The list
+
+- (void)testWithNothingToSyncItSaysSo {
   ConfigurationBackupView *page = [self pageConnected:YES];
+  XCTAssertNotNil([self viewIn:page identifier:@"backup-sync"]);
   XCTAssertNotNil([self viewIn:page identifier:@"backup-empty"]);
-  [self backUp:page as:@"Desk, two monitors"];
-  XCTAssertEqual([page.environments count], 1u);
-  XCTAssertNotNil([self viewIn:page identifier:@"backup-Desk, two monitors"]);
-  XCTAssertNotNil([self viewIn:page identifier:@"backup-matches"]);
-  XCTAssertNil([self viewIn:page identifier:@"backup-empty"]);
 }
 
-- (void)testAnotherSetOfDisplaysDoesNotMatch {
+- (void)testEachProfileIsARowWithItsStatus {
+  [self make:@"default" text:@"version: 2\n"];
+  [self make:@"desk" text:@"version: 2\n# desk\n"];
+  [self.github addBackupGistWithFiles:@{@"default.mwm.yaml": @"version: 2\n", @"laptop.mwm.yaml": @"x\n"}];
   ConfigurationBackupView *page = [self pageConnected:YES];
-  [self backUp:page as:@"Desk"];
-  [MWMDisplays setConnectedOverride:@[[self desk][1]]];
-  [self refresh:page];
-  XCTAssertNil([self viewIn:page identifier:@"backup-matches"]);
+  for (NSString *name in @[@"default", @"desk", @"laptop"]) XCTAssertNotNil([self viewIn:page identifier:[@"backup-item-" stringByAppendingString:name]], @"%@", name);
+  XCTAssertEqual([page.items count], 3u);
+  XCTAssertNil(page.problem);
+  XCTAssertNotNil([self viewIn:page identifier:@"backup-status-default"], @"the chip");
 }
 
-- (void)testTheSameNameReplacesTheBackup {
+- (void)testNothingIsOfferedPerConfiguration {
+  [self make:@"default" text:@"version: 2\n"];
   ConfigurationBackupView *page = [self pageConnected:YES];
-  [self backUp:page as:@"Desk"];
-  [self backUp:page as:@" Desk "];
-  XCTAssertEqual([page.environments count], 1u);
-  [self backUp:page as:@"Laptop"];
-  XCTAssertEqual([page.environments count], 2u);
+  for (NSString *identifier in @[@"backup-name", @"backup-save", @"restore-default", @"delete-default"]) XCTAssertNil([self viewIn:page identifier:identifier], @"%@", identifier);
 }
 
-- (void)testRestoringHandsTheConfigurationBackAndBringsTheSnapshots {
+#pragma mark - Syncing
+
+- (void)testSyncNowSendsAndTheListFollows {
+  [self make:@"default" text:@"version: 2\n"];
+  [self make:@"desk" text:@"version: 2\n# desk\n"];
   ConfigurationBackupView *page = [self pageConnected:YES];
-  [self backUp:page as:@"Desk"];
-  [self.lists removeAllObjects];
-  [page restoreNamed:@"Desk"];
-  XCTAssertNotNil(self.restoredText);
-  XCTAssertEqualObjects(self.restoredText, [page.document stringRepresentation]);
-  XCTAssertNotNil(self.lists[@"coding"]);
-  XCTAssertEqual(self.snapshotRestores, 1u);
+  [self sync:page];
+  XCTAssertEqual(page.lastReport.sent, 2u);
+  XCTAssertNil(page.lastReport.problem);
+  XCTAssertNotNil([self.github backupFiles][@"desk.mwm.yaml"]);
+  for (MWMSyncItem *item in page.items) XCTAssertEqual(item.status, MWMSyncStatusSynced);
+  XCTAssertEqual(self.filesChanged, 0u, @"nothing came in");
 }
 
-- (void)testSnapshotsStayWhenTheConfigurationCantBeRestored {
+- (void)testReceivingTellsTheWindow {
+  [self.github addBackupGistWithFiles:@{@"laptop.mwm.yaml": @"x\n"}];
   ConfigurationBackupView *page = [self pageConnected:YES];
-  [self backUp:page as:@"Desk"];
-  [self.lists removeAllObjects];
-  self.restoreWorks = NO;
-  [page restoreNamed:@"Desk"];
-  XCTAssertEqual([self.lists count], 0u);
-  XCTAssertEqual(self.snapshotRestores, 0u);
+  [self sync:page];
+  XCTAssertEqual(page.lastReport.received, 1u);
+  XCTAssertEqual(self.filesChanged, 1u);
+  XCTAssertEqualObjects([MWMProfiles names], (@[@"laptop"]));
 }
 
-- (void)testDeletingRemovesTheCard {
-  ConfigurationBackupView *page = [self pageConnected:YES];
-  [self backUp:page as:@"Desk"];
-  XCTestExpectation *e = [self expectationWithDescription:@"delete"];
-  [page deleteNamed:@"Desk" completion:^{ [e fulfill]; }];
-  [self waitForExpectations:@[e] timeout:30];
-  XCTAssertEqual([page.environments count], 0u);
-  XCTAssertNil([self viewIn:page identifier:@"backup-Desk"]);
-}
-
-- (void)testAProblemIsShownWithTryAgain {
-  ConfigurationBackupView *page = [self pageConnected:YES];
+- (void)testAProblemShowsInWordsWithTryAgain {
+  [self make:@"default" text:@"version: 2\n"];
   self.github.status = 500;
-  [self refresh:page];
-  XCTAssertNotNil(page.problem);
+  ConfigurationBackupView *page = [self pageConnected:YES];
+  XCTAssertTrue([page.problem containsString:@"500"], @"%@", page.problem);
   XCTAssertNotNil([self viewIn:page identifier:@"backup-problem"]);
   XCTAssertNotNil([self viewIn:page identifier:@"backup-retry"]);
   self.github.status = 200;
+  [(NSButton *)[self viewIn:page identifier:@"backup-retry"] performClick:nil];
   [self refresh:page];
   XCTAssertNil(page.problem);
-}
-
-- (void)testBackUpWaitsForAName {
-  ConfigurationBackupView *page = [self pageConnected:YES];
-  NSButton *save = (NSButton *)[self viewIn:page identifier:@"backup-save"];
-  XCTAssertTrue([save isEnabled]);
-  [page.nameField setStringValue:@"  "];
-  [[NSNotificationCenter defaultCenter] postNotificationName:NSControlTextDidChangeNotification object:page.nameField];
-  XCTAssertFalse([save isEnabled]);
 }
 
 @end

@@ -70,6 +70,7 @@
 - (IBAction)updateLaunchState;
 - (IBAction)relaunch;
 - (IBAction)configureMWM;
+- (IBAction)showGeneralSettings;
 - (IBAction)aboutWindow;
 - (void)loadConfig;
 - (void)registerHotKeys;

@@ -34,6 +34,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 // The file shown next to the saved state (the active configuration).
 - (void)setPath:(NSString *)path;
+// Puts a view (the profile button) at the left of the bar.
+- (void)installProfileView:(NSView *)view;
 
 // The validity status, for positioning the issue list under it.
 @property (readonly) NSButton *statusButton;

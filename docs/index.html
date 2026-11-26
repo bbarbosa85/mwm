@@ -10,6 +10,16 @@
 <link rel="stylesheet" href="assets/demo.css">
 </head>
 <body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<symbol id="i-keyboard" viewBox="0 0 24 24"><rect x="2.5" y="6" width="19" height="12" rx="2.5"/><path d="M6.5 10h.01M10 10h.01M14 10h.01M17.5 10h.01M7.5 14h9"/></symbol>
+<symbol id="i-slots" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M12 4v16M12 12h9"/></symbol>
+<symbol id="i-display" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="2.5"/><path d="M8 20h8M12 16v4"/></symbol>
+<symbol id="i-snapshot" viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.5"/></symbol>
+<symbol id="i-menubar" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M3 9h18M16.5 6.5h.01M13.5 6.5h.01"/></symbol>
+<symbol id="i-backup" viewBox="0 0 24 24"><path d="M7 18a4 4 0 0 1-.6-7.95A5.5 5.5 0 0 1 17 8.6 4.7 4.7 0 0 1 17.5 18z"/><path d="M12 15v-5M9.5 12.4 12 10l2.5 2.4"/></symbol>
+<symbol id="i-update" viewBox="0 0 24 24"><path d="M12 4v10M8 10.5l4 4 4-4M5 19h14"/></symbol>
+<symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></symbol>
+</defs></svg>
 
 <nav>
   <div class="wrap">
@@ -44,15 +54,15 @@
       <h2>Built for people who live on the keyboard</h2>
       <p class="sub">Set it up once in a friendly window. After that, MWM stays in your menu bar and out of your way.</p>
     </div>
-    <div class="grid">
-      <div class="card"><div class="ico">⌨️</div><h3>A keyboard map</h3><p>See every shortcut on a Mac keyboard. Keys are colored by what they do, and conflicts and keys macOS keeps are flagged.</p></div>
-      <div class="card"><div class="ico">▦</div><h3>Slots</h3><p>Name any area of the screen (halves, thirds, quarters or your own) and move a window there with one key.</p></div>
-      <div class="card"><div class="ico">🖥️</div><h3>Many displays</h3><p>Give each screen a name that sticks, and send windows to the right one even after you unplug and reconnect.</p></div>
-      <div class="card"><div class="ico">📸</div><h3>Snapshots</h3><p>Save where every window is, then bring the whole desktop back with a click or a shortcut.</p></div>
-      <div class="card"><div class="ico">🧭</div><h3>Menu bar control</h3><p>Save and restore snapshots, restore a backup, open any page and reach your shortcuts without opening a window.</p></div>
-      <div class="card"><div class="ico">☁️</div><h3>Backup</h3><p>Keep your shortcuts, slots and snapshots in a private GitHub gist, one backup for each set of displays, and bring any of them back.</p></div>
-      <div class="card"><div class="ico">⬇️</div><h3>Updates in place</h3><p>MWM tells you when a new version is out and can install it for you, after checking the download.</p></div>
-      <div class="card"><div class="ico">🔒</div><h3>Yours to keep</h3><p>One readable file, <code>~/.mwm.yml</code>. No accounts, and nothing runs from it. MWM only looks at GitHub for new versions, and you can turn that off. Open source under GPLv3.</p></div>
+    <div class="grid two">
+      <div class="card"><div class="ico"><svg aria-hidden="true"><use href="#i-keyboard"/></svg></div><h3>A keyboard map</h3><p>See every shortcut on a Mac keyboard. Keys are colored by what they do, and conflicts and keys macOS keeps are flagged.</p></div>
+      <div class="card"><div class="ico"><svg aria-hidden="true"><use href="#i-slots"/></svg></div><h3>Slots</h3><p>Name any area of the screen (halves, thirds, quarters or your own) and move a window there with one key.</p></div>
+      <div class="card"><div class="ico"><svg aria-hidden="true"><use href="#i-display"/></svg></div><h3>Many displays</h3><p>Give each screen a name that sticks, and send windows to the right one even after you unplug and reconnect.</p></div>
+      <div class="card"><div class="ico"><svg aria-hidden="true"><use href="#i-snapshot"/></svg></div><h3>Snapshots</h3><p>Save where every window is, then bring the whole desktop back with a click or a shortcut.</p></div>
+      <div class="card"><div class="ico"><svg aria-hidden="true"><use href="#i-menubar"/></svg></div><h3>Menu bar control</h3><p>Save and restore snapshots, restore a backup, open any page and reach your shortcuts without opening a window.</p></div>
+      <div class="card"><div class="ico"><svg aria-hidden="true"><use href="#i-backup"/></svg></div><h3>Profiles and backup</h3><p>Keep a profile for each desk and switch between them. Sync them, and your snapshots, with a private GitHub gist to use them on another computer.</p></div>
+      <div class="card"><div class="ico"><svg aria-hidden="true"><use href="#i-update"/></svg></div><h3>Updates in place</h3><p>MWM tells you when a new version is out and can install it for you, after checking the download.</p></div>
+      <div class="card"><div class="ico"><svg aria-hidden="true"><use href="#i-lock"/></svg></div><h3>Yours to keep</h3><p>Plain readable files in <code>~/.mwm</code>. No accounts, and nothing runs from it. MWM only looks at GitHub for new versions, and you can turn that off. Open source under GPLv3.</p></div>
     </div>
     <p style="text-align:center;margin-top:26px"><a class="btn" href="features.html">See every feature</a></p>
   </div>
@@ -128,12 +138,12 @@
   <div class="wrap">
     <div class="split flip">
       <div class="text">
-        <h3>Back up your setup</h3>
-        <p>Keep your shortcuts, slots and snapshots in a private GitHub gist. Save one backup for each set of displays, such as the desk with two monitors or the laptop on its own, and bring any of them back when you need it.</p>
+        <h3>Back up and sync your setup</h3>
+        <p>Keep every profile, such as the desk with two monitors or the laptop on its own, and your snapshots in a private GitHub gist. One button sends what changed here and brings back what changed there.</p>
         <ul>
-          <li>The backup that matches your connected displays is marked.</li>
-          <li>Restoring keeps a copy of your current file next to it.</li>
-          <li>Your token stays in your Keychain.</li>
+          <li>A list shows where each profile stands.</li>
+          <li>The newer one wins, and the other is kept as a copy.</li>
+          <li>Nothing is deleted unless you say so. Your token stays in your Keychain.</li>
         </ul>
       </div>
       <div class="window"><div class="bar"><i></i><i></i><i></i><span>Backup</span></div>
@@ -157,7 +167,7 @@
       </div></li>
       <li><div>
         <h3>Add a shortcut</h3>
-        <p>Choose <b>Settings…</b> from the menu bar, pick a key on the keyboard map and say what it does. Or start from an <a href="examples.html">example configuration</a>.</p>
+        <p>Choose <b>Settings…</b> from the menu bar, open <b>Bindings</b>, press <b>New Shortcut</b>, record the keys and say what it does. Or start from an <a href="examples.html">example configuration</a>.</p>
       </div></li>
     </ol>
     <p style="text-align:center;margin-top:26px"><a class="btn primary" href="docs.html">Read the documentation</a> <a class="btn" href="examples.html">Browse examples</a></p>
@@ -177,7 +187,7 @@
         <tr><td><kbd>⌥</kbd><kbd>⇧</kbd> + <kbd>F</kbd> <kbd>S</kbd> <kbd>T</kbd> <kbd>N</kbd> <kbd>M</kbd> <kbd>C</kbd></td><td>Jump to Finder, Safari, Terminal, Notes, Mail or Calendar</td></tr>
       </tbody>
     </table>
-    <p style="color:var(--muted);margin:14px 0 0;font-size:15px">See <a href="docs.html#defaults">all the defaults</a>. Your own shortcuts live in <code>~/.mwm.yml</code>, described in the <a href="docs.html#config-file">documentation</a>.</p>
+    <p style="color:var(--muted);margin:14px 0 0;font-size:15px">See <a href="docs.html#defaults">all the defaults</a>. Your own shortcuts live in <code>~/.mwm</code>, described in the <a href="docs.html#config-file">documentation</a>.</p>
   </div>
 </section>
 
@@ -207,9 +217,9 @@
     <p class="sub">The things people ask first. More in the <a href="docs.html#troubleshooting">documentation</a>.</p>
     <details><summary>Windows don't move. What's wrong?</summary><p>Almost always Accessibility. See <a href="docs.html#troubleshooting">troubleshooting</a>.</p></details>
     <details><summary>Why does macOS warn me when I open it?</summary><p>MWM is signed but not yet notarized by Apple, which needs a paid developer membership. The <a href="docs.html#quick-start">quick start</a> shows how to open it once; macOS remembers your choice.</p></details>
-    <details><summary>Where are my settings stored?</summary><p>In one plain-text file, <code>~/.mwm.yml</code>, which never leaves your Mac. See <a href="docs.html#config-file">the configuration file</a>.</p></details>
+    <details><summary>Where are my settings stored?</summary><p>In plain-text files in <code>~/.mwm</code>, one for each profile. They stay on your Mac unless you sync them with your own private gist. See <a href="docs.html#config-file">the configuration file</a>.</p></details>
     <details><summary>I used Slate before. Will my settings come along?</summary><p>Yes, with one exception: JavaScript configurations can't be converted. See <a href="docs.html#migration">moving from Slate</a>.</p></details>
-    <details><summary>How do I start it at login, or remove it?</summary><p>Turn on <b>Launch MWM at Login</b> in the menu bar menu. To remove it, quit MWM, drag it from Applications to the Trash and delete <code>~/.mwm.yml</code> if you want your settings gone too.</p></details>
+    <details><summary>How do I start it at login, or remove it?</summary><p>Turn on <b>Launch MWM at Login</b> in the menu bar menu. To remove it, quit MWM, drag it from Applications to the Trash and delete the <code>~/.mwm</code> folder if you want your settings gone too.</p></details>
   </div>
 </section>
 

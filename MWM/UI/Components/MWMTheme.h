@@ -61,6 +61,7 @@ extern const CGFloat MWMOpacityOutline;    // 0.55: outline of a tinted key
 + (NSColor *)feature;          // hints, grid, switcher
 + (NSColor *)warning;          // conflicts, unsaved changes
 + (NSColor *)reserved;         // keys macOS keeps
++ (NSColor *)groupColor;       // the selected modifier group: its card, its pill and its keys on the keyboard
 + (NSColor *)danger;
 
 // A color laid over the surface at one of the opacities above.

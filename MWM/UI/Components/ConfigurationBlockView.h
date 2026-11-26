@@ -36,6 +36,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property (copy, nullable) void (^onClick)(void);
 @property (assign, nonatomic) BOOL selected;
 @property (assign) CGFloat cornerRadius;
+// The tint when selected (the accent color when nil).
+@property (strong, nullable, nonatomic) NSColor *selectedColor;
 @end
 
 // A screen with a slot drawn on it (fractions of the screen, origin at the top left).

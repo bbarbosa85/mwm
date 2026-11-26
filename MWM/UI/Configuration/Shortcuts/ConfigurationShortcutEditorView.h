@@ -31,6 +31,11 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)shortcutEditorViewDidSave:(ConfigurationShortcutEditorView *)view;
 // The editor was left (saved or not); show the page again.
 - (void)shortcutEditorViewDidClose:(ConfigurationShortcutEditorView *)view;
+@optional
+// The user chose "Manage displays…" from a screen list; the editor has been left.
+- (void)shortcutEditorViewWantsDisplays:(ConfigurationShortcutEditorView *)view;
+// The same for "Manage slots…" in the slot list.
+- (void)shortcutEditorViewWantsSlots:(ConfigurationShortcutEditorView *)view;
 @end
 
 @interface ConfigurationShortcutEditorView : NSView

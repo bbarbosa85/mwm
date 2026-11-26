@@ -16,11 +16,12 @@
 //  along with this program.  If not, see http://www.gnu.org/licenses
 
 #import "ConfigurationWindowController.h"
-#import "MWMConfigurations.h"
+#import "MWMProfiles.h"
 #import "MWMAlert.h"
 #import "MWMTheme.h"
 #import "ConfigurationFormView.h"
 #import "ConfigurationStatusBar.h"
+#import "ConfigurationProfileBar.h"
 #import "MWMAppDelegate.h"
 #import "MWMConfigDocument.h"
 #import "MWMConfigValidator.h"
@@ -34,8 +35,15 @@ typedef NS_ENUM(NSInteger, SaveState) {
   SaveStateUnreadable,  // the file on disk can't be shown as a form
 };
 
-@interface ConfigurationWindowController () <ConfigurationFormViewDelegate>
+@interface ConfigurationWindowController () <ConfigurationFormViewDelegate, ConfigurationProfileBarDelegate>
 @property (strong) ConfigurationFormView *formView;
+@property (assign) CGFloat liveResizeOriginX;   // where the window's left edge was when a resize began
+@property (strong) ConfigurationProfileBar *profileBar;
+// The profile the window edits when it isn't the running one (nil: the running one). It becomes the running
+// profile only when Apply and Restart is pressed.
+@property (copy, nullable) NSString *editingProfile;
+// Tests stub this so applying doesn't restart the app.
+@property (copy, nullable) void (^relaunchHandler)(void);
 @property (strong) ConfigurationStatusBar *bar;
 @property (strong) NSLayoutConstraint *formBottomAboveBar;
 @property (strong) NSLayoutConstraint *formBottomAtWindow;
@@ -75,14 +83,15 @@ static const CGFloat kWindowWidth = 1080;
                                                      defer:YES];
   self = [super initWithWindow:window];
   if (self) {
-    [window setTitle:@"MWM configuration"];
+    [window setTitle:@"MWM Settings"];
     // The window is always 1080 wide, and only its height changes.
     [window setContentMinSize:NSMakeSize(kWindowWidth, 520)];
     [window setContentMaxSize:NSMakeSize(kWindowWidth, CGFLOAT_MAX)];
     [window setReleasedWhenClosed:NO];
     [window setDelegate:self];
     [window center];
-    [window setFrameAutosaveName:@"MWMConfiguration2"];
+    // Tests run inside this app and use the same preferences: they must not save where their windows were.
+    if (NSClassFromString(@"XCTestCase") == nil) [window setFrameAutosaveName:@"MWMConfiguration2"];
     [window setContentSize:NSMakeSize(kWindowWidth, NSHeight([[window contentView] frame]))];   // a width saved by an earlier version
     [self buildInterface];
   }
@@ -94,14 +103,32 @@ static const CGFloat kWindowWidth = 1080;
   return NSMakeSize([sender frameRectForContentRect:NSMakeRect(0, 0, kWindowWidth, 0)].size.width, frameSize.height);
 }
 
+// The width is fixed, so a corner or edge drag must not slide the window sideways.
+- (void)windowWillStartLiveResize:(NSNotification *)notification { self.liveResizeOriginX = NSMinX(self.window.frame); }
+
+- (void)windowDidResize:(NSNotification *)notification {
+  NSRect frame = self.window.frame;
+  if (self.window.inLiveResize && fabs(NSMinX(frame) - self.liveResizeOriginX) > 0.5) {
+    frame.origin.x = self.liveResizeOriginX;
+    [self.window setFrame:frame display:YES];
+  }
+}
+
 - (void)buildInterface {
   NSView *content = [[self window] contentView];
   self.formView = [[ConfigurationFormView alloc] initWithFrame:NSZeroRect];
   [self.formView setTranslatesAutoresizingMaskIntoConstraints:NO];
   [self.formView setDelegate:self];
+  self.profileBar = [[ConfigurationProfileBar alloc] init];
+  [self.profileBar setDelegate:self];
   self.bar = [[ConfigurationStatusBar alloc] initWithTarget:self path:[[self configPath] stringByAbbreviatingWithTildeInPath]];
+  [self.bar installProfileView:self.profileBar];   // the profile button, at the left of the bottom bar
   [content addSubview:self.formView];
   [content addSubview:self.bar];
+  // The window is as wide as every page is laid out for, whatever a page would fit in.
+  NSLayoutConstraint *width = [content.widthAnchor constraintEqualToConstant:kWindowWidth];
+  width.priority = NSLayoutPriorityRequired;
+  width.active = YES;
   // The form ends at the bottom bar, or at the window's edge while a sublevel page hides the bar.
   self.formBottomAboveBar = [self.formView.bottomAnchor constraintEqualToAnchor:self.bar.topAnchor];
   self.formBottomAtWindow = [self.formView.bottomAnchor constraintEqualToAnchor:content.bottomAnchor];
@@ -114,6 +141,7 @@ static const CGFloat kWindowWidth = 1080;
     [self.bar.trailingAnchor constraintEqualToAnchor:content.trailingAnchor],
     [self.bar.bottomAnchor constraintEqualToAnchor:content.bottomAnchor],
   ]];
+  [self refreshProfileBar];
 }
 
 #pragma mark - Showing and loading
@@ -126,7 +154,7 @@ static const CGFloat kWindowWidth = 1080;
 }
 
 - (void)showConfiguration {
-  if (![[self window] isVisible]) [self loadFromDisk];
+  if (![[self window] isVisible]) { self.editingProfile = nil; [self loadFromDisk]; }
   [self useRegularActivationPolicy:YES];
   [NSApp activateIgnoringOtherApps:YES];
   [self showWindow:self];
@@ -149,8 +177,24 @@ static const CGFloat kWindowWidth = 1080;
   [self.formView beginNewShortcut];
 }
 
+// The profile the window shows: the running one unless another was chosen and not applied yet.
+- (NSString *)profileBeingEdited {
+  NSString *name = self.editingProfile;
+  return name != nil && [MWMProfiles existsNamed:name] ? name : [MWMProfiles activeName];
+}
+
+- (BOOL)choiceIsPending {
+  return [[self profileBeingEdited] caseInsensitiveCompare:[MWMProfiles activeName]] != NSOrderedSame;
+}
+
+- (void)refreshProfileBar {
+  NSString *editing = [self profileBeingEdited];
+  [self.profileBar setEditing:editing running:[MWMProfiles activeName]];
+  [self.formView setEditingProfile:editing];
+}
+
 - (NSString *)configPath {
-  return self.configPathOverride ?: [MWMConfigDocument defaultPath];
+  return self.configPathOverride ?: [MWMProfiles pathForName:[self profileBeingEdited]];
 }
 
 - (NSString *)displayPath {
@@ -172,6 +216,7 @@ static const CGFloat kWindowWidth = 1080;
 
 - (void)loadFromDisk {
   [self.bar setPath:[self displayPath]];
+  [self refreshProfileBar];
   NSError *error = nil;
   NSString *text = [NSString stringWithContentsOfFile:[self configPath] encoding:NSUTF8StringEncoding error:&error];
   self.savedText = text;
@@ -296,46 +341,47 @@ static const CGFloat kWindowWidth = 1080;
   return YES;
 }
 
-// The Configurations page: switching saves what's open, makes the other configuration active and
-// restarts MWM, the way Apply does.
-- (void)formView:(ConfigurationFormView *)formView switchToConfigurationNamed:(NSString *)name {
-  [self switchToConfigurationNamed:name];
-}
+#pragma mark - Choosing a profile
 
-- (void)switchToConfigurationNamed:(NSString *)name {
+// Choosing a profile (the bar's dropdown, the Profiles page, the menu bar) only changes what the window edits:
+// MWM switches to it when Apply and Restart is pressed.
+- (void)formView:(ConfigurationFormView *)formView useProfileNamed:(NSString *)name { [self selectProfileNamed:name]; }
+- (void)profileBar:(ConfigurationProfileBar *)bar didChooseProfileNamed:(NSString *)name { [self selectProfileNamed:name]; }
+- (void)profileBarWantsManage:(ConfigurationProfileBar *)bar { self.formView.selectedSection = ConfigurationFormSectionProfiles; }
+
+- (void)selectProfileNamed:(NSString *)name {
+  if ([name caseInsensitiveCompare:[self profileBeingEdited]] == NSOrderedSame) return;
   [[self window] makeFirstResponder:nil];
   if (self.formView.document != nil) {
     [self validateAndSave];
     if (self.lastResult.errorCount > 0 || self.resolvingConflict) {
       MWMAlert *alert = [MWMAlert alert];
       [alert setKind:MWMAlertKindWarning];
-      [alert setMessageText:@"Fix the errors before switching"];
-      [alert setInformativeText:[NSString stringWithFormat:@"%@ has errors, which aren't saved. Fix them, or switch after you've saved a version that works.", [self displayPath]]];
+      [alert setMessageText:@"Fix the errors before changing profile"];
+      [alert setInformativeText:[NSString stringWithFormat:@"%@ has errors, which aren't saved. Fix them, or change profile after you've saved a version that works.", [self displayPath]]];
       [alert addButtonWithTitle:@"OK"];
       [alert beginSheetModalForWindow:[self window] completionHandler:nil];
       return;
     }
   }
-  [MWMConfigurations setActiveName:name];
-  [[self window] close];
-  [(MWMAppDelegate *)[NSApp delegate] relaunch];
-}
-
-// The active configuration's file has a new name: show it again from there.
-- (void)formViewDidRenameActiveConfiguration:(ConfigurationFormView *)formView {
+  self.editingProfile = [name caseInsensitiveCompare:[MWMProfiles activeName]] == NSOrderedSame ? nil : name;
   [self loadFromDisk];
 }
 
-// A backup is restored: its configuration replaces the file (the old one is kept as a copy) and is shown again.
-- (BOOL)formView:(ConfigurationFormView *)formView restoreConfigText:(NSString *)text {
-  return [self restoreConfigText:text];
+- (void)showSettingsOnProfileNamed:(NSString *)name {
+  [self showConfiguration];
+  [self selectProfileNamed:name];
 }
 
-- (BOOL)restoreConfigText:(NSString *)text {
-  if (![self writeText:text]) return NO;
+// A profile was renamed: follow it if it's the one open.
+- (void)formView:(ConfigurationFormView *)formView didRenameProfileNamed:(NSString *)name to:(NSString *)newName {
+  if (self.editingProfile != nil && [self.editingProfile caseInsensitiveCompare:name] == NSOrderedSame) self.editingProfile = newName;
   [self loadFromDisk];
-  return YES;
 }
+
+// A sync received files or cleared some: show the open configuration again from disk.
+- (void)formViewDidChangeFilesBySync:(ConfigurationFormView *)formView { [self reloadAfterSync]; }
+- (void)reloadAfterSync { [self loadFromDisk]; }
 
 - (BOOL)changedOnDisk {
   NSDate *current = [self modificationDateOnDisk];
@@ -486,7 +532,7 @@ static const CGFloat kWindowWidth = 1080;
   [alert beginSheetModalForWindow:[self window] completionHandler:nil];
 }
 
-// Saves, closes the window, and restarts MWM so it loads ~/.mwm.yml.
+// Saves, makes the profile being edited the running one, closes the window, and restarts MWM so it loads it.
 - (IBAction)apply:(NSButton *)sender {
   [[self window] makeFirstResponder:nil];  // commit a cell being edited
   if (self.formView.document == nil) {
@@ -513,12 +559,38 @@ static const CGFloat kWindowWidth = 1080;
   // Applying the untouched defaults creates ~/.mwm.yml from them.
   if (self.savedText == nil && ![self writeText:[self currentText]]) return;
   if (![[self currentText] isEqualToString:self.baselineText]) return;
+  if ([self choiceIsPending]) [MWMProfiles setActiveName:[self profileBeingEdited]];
+  self.editingProfile = nil;
+  [self refreshProfileBar];
   [[self window] close];
-  [(MWMAppDelegate *)[NSApp delegate] relaunch];
+  if (self.relaunchHandler != nil) self.relaunchHandler(); else [(MWMAppDelegate *)[NSApp delegate] relaunch];
 }
 
 - (IBAction)closeWindow:(NSButton *)sender {
   [[self window] performClose:sender];
+}
+
+// A profile was chosen and not applied: ask what to do before the window goes.
+- (BOOL)windowShouldClose:(NSWindow *)sender {
+  if (![self choiceIsPending] || [[self window] attachedSheet] != nil) return YES;
+  NSString *name = [self profileBeingEdited];
+  MWMAlert *alert = [MWMAlert alert];
+  [alert setKind:MWMAlertKindConfirm];
+  [alert setMessageText:[NSString stringWithFormat:@"Use “%@” now?", name]];
+  [alert setInformativeText:[NSString stringWithFormat:@"MWM is running “%@”. Apply and Restart makes “%@” the profile MWM uses. Your changes to it are already saved.", [MWMProfiles activeName], name]];
+  [alert addButtonWithTitle:@"Apply and Restart"];
+  [alert addButtonWithTitle:@"Discard choice"];
+  [alert addButtonWithTitle:@"Cancel"];
+  [alert beginSheetModalForWindow:[self window] completionHandler:^(NSModalResponse response) {
+    if (response == NSAlertFirstButtonReturn) {
+      [self apply:nil];
+    } else if (response == NSAlertSecondButtonReturn) {
+      self.editingProfile = nil;
+      [self refreshProfileBar];
+      [[self window] close];
+    }
+  }];
+  return NO;
 }
 
 - (void)windowWillClose:(NSNotification *)notification {

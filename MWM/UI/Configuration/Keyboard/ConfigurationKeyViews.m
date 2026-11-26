@@ -43,7 +43,7 @@
 - (void)viewDidChangeEffectiveAppearance {
   [super viewDidChangeEffectiveAppearance];
   [self.effectiveAppearance performAsCurrentDrawingAppearance:^{
-    [[self layer] setBackgroundColor:[[(self.tint ?: [MWMTheme accent]) colorWithAlphaComponent:0.16] CGColor]];
+    [[self layer] setBackgroundColor:[[(self.tint ?: [MWMTheme groupColor]) colorWithAlphaComponent:0.16] CGColor]];
   }];
 }
 - (void)viewDidMoveToWindow { [super viewDidMoveToWindow]; [self viewDidChangeEffectiveAppearance]; }
@@ -104,7 +104,7 @@
 + (NSView *)pillWithText:(NSString *)text tint:(NSColor *)tint {
   NSTextField *label = [NSTextField labelWithString:text];
   [label setFont:[MWMTheme fontCaptionStrong]];
-  [label setTextColor:tint ?: [MWMTheme accent]];
+  [label setTextColor:tint ?: [MWMTheme groupColor]];
   [label setTranslatesAutoresizingMaskIntoConstraints:NO];
   ConfigurationPillView *pill = [[ConfigurationPillView alloc] init];
   pill.tint = tint;

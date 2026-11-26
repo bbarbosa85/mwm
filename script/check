@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# Runs what CI runs, on this Mac, so you know before opening a pull request.
+# Runs the tests on this Mac. There is no CI on GitHub: this is the check, so run it before opening a pull request.
 #
 #   script/check            the unit and snapshot tests (about 2 minutes)
-#   script/check --release  also builds the universal Release app, as CI does
+#   script/check --release  also builds the universal Release app
 #
 # Exits non-zero if anything fails. The full output is kept in tmp/check.log.
 set -uo pipefail

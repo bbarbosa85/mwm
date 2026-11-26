@@ -27,15 +27,58 @@
 #import "MWMShortcutIndex.h"
 #import "MWMSnapshots.h"
 #import "MWMSlots.h"
+#import "MWMDisplays.h"
 #import "MWMPushOptions.h"
 #import "ConfigurationPushRows.h"
 #import "ConfigurationFormulaHelp.h"
 
-// What the shortcut can do, in the order the list shows them.
-static NSArray<NSNumber *> *KindsInOrder(void) {
-  return @[@(MWMActionKindFocusApp), @(MWMActionKindMove), @(MWMActionKindFocusDirection), @(MWMActionKindResize), @(MWMActionKindNudge),
-           @(MWMActionKindPush), @(MWMActionKindThrow), @(MWMActionKindSnapshot), @(MWMActionKindRestoreSnapshot), @(MWMActionKindHint), @(MWMActionKindGrid), @(MWMActionKindSwitch),
-           @(MWMActionKindRelaunch), @(MWMActionKindCustom)];
+// The four things most shortcuts do get a card of their own; the rest are under "More actions".
+static NSArray<NSNumber *> *PrimaryKinds(void) {
+  return @[@(MWMActionKindFocusApp), @(MWMActionKindMove), @(MWMActionKindThrow), @(MWMActionKindPush)];
+}
+
+static NSArray<NSNumber *> *MoreKinds(void) {
+  return @[@(MWMActionKindFocusDirection), @(MWMActionKindResize), @(MWMActionKindNudge), @(MWMActionKindSnapshot), @(MWMActionKindRestoreSnapshot),
+           @(MWMActionKindHint), @(MWMActionKindGrid), @(MWMActionKindSwitch), @(MWMActionKindRelaunch), @(MWMActionKindCustom)];
+}
+
+// What an action does, in a line, and the symbol that stands for it.
+static NSString *SummaryForKind(MWMActionKind kind) {
+  switch (kind) {
+    case MWMActionKindFocusApp: return @"Bring a running app to the front.";
+    case MWMActionKindMove: return @"Put the window in a named area of the screen.";
+    case MWMActionKindThrow: return @"Send the window to another display.";
+    case MWMActionKindPush: return @"Stick the window to a screen edge, keeping a thickness.";
+    case MWMActionKindFocusDirection: return @"Focus the window next to this one.";
+    case MWMActionKindResize: return @"Grow or shrink the window by a step.";
+    case MWMActionKindNudge: return @"Move the window by a step.";
+    case MWMActionKindSnapshot: return @"Remember where every window is.";
+    case MWMActionKindRestoreSnapshot: return @"Put every window back where it was saved.";
+    case MWMActionKindHint: return @"Show a letter on each window to jump to it.";
+    case MWMActionKindGrid: return @"Pick a window position from a grid.";
+    case MWMActionKindSwitch: return @"Switch between windows.";
+    case MWMActionKindRelaunch: return @"Restart MWM.";
+    case MWMActionKindCustom: return @"Write the action yourself.";
+  }
+}
+
+static NSString *SymbolForKind(MWMActionKind kind) {
+  switch (kind) {
+    case MWMActionKindFocusApp: return @"macwindow";
+    case MWMActionKindMove: return @"rectangle.split.3x1";
+    case MWMActionKindThrow: return @"display.2";
+    case MWMActionKindPush: return @"arrow.right.to.line";
+    case MWMActionKindFocusDirection: return @"scope";
+    case MWMActionKindResize: return @"arrow.up.left.and.arrow.down.right";
+    case MWMActionKindNudge: return @"arrow.up.and.down.and.arrow.left.and.right";
+    case MWMActionKindSnapshot: return @"camera";
+    case MWMActionKindRestoreSnapshot: return @"arrow.counterclockwise";
+    case MWMActionKindHint: return @"textformat.abc";
+    case MWMActionKindGrid: return @"square.grid.3x3";
+    case MWMActionKindSwitch: return @"rectangle.stack";
+    case MWMActionKindRelaunch: return @"arrow.clockwise";
+    case MWMActionKindCustom: return @"chevron.left.forwardslash.chevron.right";
+  }
 }
 
 static NSArray<NSString *> *InstalledApplicationNames(void) {
@@ -59,9 +102,10 @@ static NSArray<NSString *> *InstalledApplicationNames(void) {
 
 @property (strong) NSView *editorPage;
 @property (strong) NSTextField *titleLabel;
-@property (strong) NSSearchField *kindSearch;
 @property (strong) NSStackView *kindStack;
-@property (strong) NSStackView *formStack;
+@property (assign) BOOL moreExpanded;   // the list under "More actions" is open
+@property (strong) NSStackView *keysStack;   // the keys, in a card of their own
+@property (strong) NSStackView *formStack;   // the action's settings, in another
 @property (strong) MWMSaveBar *saveBar;
 @property (strong) NSView *pickerPage;
 @property (strong) ConfigurationKeyboardMapView *picker;
@@ -98,48 +142,49 @@ static NSArray<NSString *> *InstalledApplicationNames(void) {
   return [MWMComponents labelWithText:text font:[NSFont systemFontOfSize:size weight:weight] color:color];
 }
 
+- (NSStackView *)settingsStack {
+  NSStackView *stack = [NSStackView stackViewWithViews:@[]];
+  [stack setOrientation:NSUserInterfaceLayoutOrientationVertical];
+  [stack setAlignment:NSLayoutAttributeLeading];
+  [stack setSpacing:0];
+  [stack setTranslatesAutoresizingMaskIntoConstraints:NO];
+  return stack;
+}
+
+// A card as tall as the rows in it.
+- (NSView *)cardAround:(NSStackView *)stack {
+  ConfigurationBlockView *card = [[ConfigurationBlockView alloc] init];
+  [card setTranslatesAutoresizingMaskIntoConstraints:NO];
+  [card addSubview:stack];
+  [NSLayoutConstraint activateConstraints:@[
+    [stack.topAnchor constraintEqualToAnchor:card.topAnchor], [stack.bottomAnchor constraintEqualToAnchor:card.bottomAnchor],
+    [stack.leadingAnchor constraintEqualToAnchor:card.leadingAnchor], [stack.trailingAnchor constraintEqualToAnchor:card.trailingAnchor],
+  ]];
+  return card;
+}
+
 - (void)buildInterface {
-  MWMSublevelHeader *header = [MWMSublevelHeader headerWithBackTitle:@"Keyboard" title:@"New Shortcut" target:self action:@selector(backPressed:)];
+  MWMSublevelHeader *header = [MWMSublevelHeader headerWithBackTitle:@"Bindings" title:@"New Shortcut" target:self action:@selector(backPressed:)];
   self.titleLabel = header.titleLabel;
 
-  // Left: what the shortcut does.
-  self.kindSearch = [[NSSearchField alloc] init];
-  [self.kindSearch setPlaceholderString:@"Filter"];
-  [self.kindSearch setDelegate:self];
-  [self.kindSearch setIdentifier:@"kind-search"];
-  [self.kindSearch setTranslatesAutoresizingMaskIntoConstraints:NO];
+  // Left: what the shortcut does, as cards.
   self.kindStack = [NSStackView stackViewWithViews:@[]];
   [self.kindStack setOrientation:NSUserInterfaceLayoutOrientationVertical];
   [self.kindStack setAlignment:NSLayoutAttributeLeading];
-  [self.kindStack setSpacing:2];
-  NSView *spacer = [[NSView alloc] init];
-  [spacer setContentHuggingPriority:1 forOrientation:NSLayoutConstraintOrientationVertical];
-  NSStackView *left = [NSStackView stackViewWithViews:@[self.kindSearch, self.kindStack, spacer]];
-  [left setOrientation:NSUserInterfaceLayoutOrientationVertical];
-  [left setAlignment:NSLayoutAttributeLeading];
-  [left setSpacing:10];
-  [left setTranslatesAutoresizingMaskIntoConstraints:NO];
-  [[self.kindSearch.widthAnchor constraintEqualToAnchor:left.widthAnchor] setActive:YES];
-  [[self.kindStack.widthAnchor constraintEqualToAnchor:left.widthAnchor] setActive:YES];
+  [self.kindStack setSpacing:MWMSpacingS];
+  NSScrollView *left = [MWMComponents scrollViewWithContent:self.kindStack trailingRoom:MWMSpacingS];   // scrolls when "More actions" is open
 
-  // Right: the settings, as rows in a card.
-  self.formStack = [NSStackView stackViewWithViews:@[]];
-  [self.formStack setOrientation:NSUserInterfaceLayoutOrientationVertical];
-  [self.formStack setAlignment:NSLayoutAttributeLeading];
-  [self.formStack setSpacing:0];
-  [self.formStack setTranslatesAutoresizingMaskIntoConstraints:NO];
-  ConfigurationBlockView *card = [[ConfigurationBlockView alloc] init];
-  [card setTranslatesAutoresizingMaskIntoConstraints:NO];
-  [card addSubview:self.formStack];
-  [NSLayoutConstraint activateConstraints:@[
-    [self.formStack.topAnchor constraintEqualToAnchor:card.topAnchor], [self.formStack.bottomAnchor constraintEqualToAnchor:card.bottomAnchor],
-    [self.formStack.leadingAnchor constraintEqualToAnchor:card.leadingAnchor], [self.formStack.trailingAnchor constraintEqualToAnchor:card.trailingAnchor],
-  ]];
+  // Right: the keys, then the action's settings, each in a card.
+  self.keysStack = [self settingsStack];
+  self.formStack = [self settingsStack];
+  NSView *keysCard = [self cardAround:self.keysStack];
+  NSView *formCard = [self cardAround:self.formStack];
+  NSStackView *cards = [MWMComponents columnWithViews:@[keysCard, formCard] spacing:MWMSpacingM insets:NSEdgeInsetsZero];
   NSView *cardHolder = [[NSView alloc] init];
   [cardHolder setTranslatesAutoresizingMaskIntoConstraints:NO];
-  [cardHolder addSubview:card];
+  [cardHolder addSubview:cards];
   [NSLayoutConstraint activateConstraints:@[
-    [card.topAnchor constraintEqualToAnchor:cardHolder.topAnchor], [card.leadingAnchor constraintEqualToAnchor:cardHolder.leadingAnchor], [card.trailingAnchor constraintEqualToAnchor:cardHolder.trailingAnchor],
+    [cards.topAnchor constraintEqualToAnchor:cardHolder.topAnchor], [cards.leadingAnchor constraintEqualToAnchor:cardHolder.leadingAnchor], [cards.trailingAnchor constraintEqualToAnchor:cardHolder.trailingAnchor],
   ]];
 
   MWMSaveBar *saveBar = [MWMSaveBar barWithTarget:self cancel:@selector(cancelPressed:) save:@selector(savePressed:)];
@@ -158,7 +203,7 @@ static NSArray<NSString *> *InstalledApplicationNames(void) {
   [NSLayoutConstraint activateConstraints:@[
     [header.topAnchor constraintEqualToAnchor:self.editorPage.topAnchor],
     [left.topAnchor constraintEqualToAnchor:header.bottomAnchor constant:MWMSpacingS], [left.leadingAnchor constraintEqualToAnchor:self.editorPage.leadingAnchor constant:MWMSpacingXL],
-    [left.widthAnchor constraintEqualToConstant:210], [left.bottomAnchor constraintEqualToAnchor:saveBar.topAnchor constant:-MWMSpacingL],
+    [left.widthAnchor constraintEqualToConstant:280], [left.bottomAnchor constraintEqualToAnchor:saveBar.topAnchor constant:-MWMSpacingL],
     [cardHolder.topAnchor constraintEqualToAnchor:header.bottomAnchor constant:MWMSpacingS], [cardHolder.leadingAnchor constraintEqualToAnchor:left.trailingAnchor constant:MWMSpacingXL],
     [cardHolder.trailingAnchor constraintEqualToAnchor:self.editorPage.trailingAnchor constant:-MWMSpacingXL], [cardHolder.bottomAnchor constraintEqualToAnchor:saveBar.topAnchor constant:-MWMSpacingL],
     [saveBar.bottomAnchor constraintEqualToAnchor:self.editorPage.bottomAnchor],
@@ -248,7 +293,6 @@ static NSArray<NSString *> *InstalledApplicationNames(void) {
 - (void)showEditor {
   self.slotQuery = @"";
   self.slotFilter = 0;
-  [self.kindSearch setStringValue:@""];
   [self.pickerPage setHidden:YES];
   [self.editorPage setHidden:NO];
 }
@@ -329,15 +373,46 @@ static NSArray<NSString *> *InstalledApplicationNames(void) {
     [self.kindStack removeArrangedSubview:view];
     [view removeFromSuperview];
   }
-  NSString *query = [[self.kindSearch stringValue] lowercaseString];
   __weak ConfigurationShortcutEditorView *weakSelf = self;
-  for (NSNumber *number in KindsInOrder()) {
+  MWMActionKind current = self.draftAction.kind;
+  // The four main actions, and the chosen one too when it is a lesser action, so the card says what the shortcut does.
+  NSMutableArray<NSNumber *> *cards = [PrimaryKinds() mutableCopy];
+  if (![cards containsObject:@(current)]) [cards addObject:@(current)];
+  for (NSNumber *number in cards) {
     MWMActionKind kind = (MWMActionKind)[number integerValue];
-    NSString *title = [MWMAction titleForKind:kind];
-    if ([query length] > 0 && ![[title lowercaseString] containsString:query]) continue;
-    BOOL selected = kind == self.draftAction.kind;
-    NSTextField *label = [self labelWithText:title size:13 color:selected ? [MWMTheme accent] : [MWMTheme textPrimary] weight:selected ? NSFontWeightMedium : NSFontWeightRegular];
-    NSView *row = [MWMComponents selectableRowWithContent:label insets:NSEdgeInsetsMake(8, 12, 8, 8) selected:selected onClick:^{ [weakSelf selectKind:kind]; }];
+    BOOL selected = kind == current;
+    NSImageView *icon = [NSImageView imageViewWithImage:[NSImage imageWithSystemSymbolName:SymbolForKind(kind) accessibilityDescription:nil]];
+    [icon setSymbolConfiguration:[NSImageSymbolConfiguration configurationWithPointSize:18 weight:NSFontWeightRegular]];
+    [icon setContentTintColor:selected ? [MWMTheme accent] : [MWMTheme textSecondary]];
+    [icon setContentHuggingPriority:NSLayoutPriorityRequired forOrientation:NSLayoutConstraintOrientationHorizontal];
+    [[icon.widthAnchor constraintEqualToConstant:24] setActive:YES];
+    NSTextField *title = [self labelWithText:[MWMAction titleForKind:kind] size:13 color:selected ? [MWMTheme accent] : [MWMTheme textPrimary] weight:NSFontWeightMedium];
+    NSTextField *summary = [MWMComponents wrappingLabelWithText:SummaryForKind(kind) size:11 color:[MWMTheme textSecondary] weight:NSFontWeightRegular];
+    NSStackView *text = [MWMComponents columnWithViews:@[title, summary] spacing:2 insets:NSEdgeInsetsZero];
+    NSStackView *content = [NSStackView stackViewWithViews:@[icon, text]];
+    [content setSpacing:MWMSpacingM];
+    [content setAlignment:NSLayoutAttributeTop];
+    [summary setPreferredMaxLayoutWidth:190];   // wraps at the card's width, not the width of the longest word
+    [[text.widthAnchor constraintEqualToAnchor:content.widthAnchor constant:-(24 + MWMSpacingM)] setActive:YES];
+    NSView *row = [MWMComponents selectableRowWithContent:content insets:NSEdgeInsetsMake(MWMSpacingM, MWMSpacingM, MWMSpacingM, MWMSpacingM) selected:selected onClick:^{ [weakSelf selectKind:kind]; }];
+    [row setIdentifier:[NSString stringWithFormat:@"kind-%ld", (long)kind]];
+    [self.kindStack addArrangedSubview:row];
+    [[row.widthAnchor constraintEqualToAnchor:self.kindStack.widthAnchor] setActive:YES];
+  }
+  // The rest, one line each, under a row that opens them.
+  NSImageView *chevron = [NSImageView imageViewWithImage:[NSImage imageWithSystemSymbolName:self.moreExpanded ? @"chevron.up" : @"chevron.down" accessibilityDescription:nil]];
+  [chevron setContentTintColor:[MWMTheme textSecondary]];
+  NSStackView *moreLine = [NSStackView stackViewWithViews:@[[self labelWithText:@"More actions" size:13 color:[MWMTheme textSecondary] weight:NSFontWeightRegular], [MWMComponents spacer], chevron]];
+  NSView *more = [MWMComponents selectableRowWithContent:moreLine insets:NSEdgeInsetsMake(MWMSpacingM, MWMSpacingM, MWMSpacingM, MWMSpacingM) selected:NO onClick:^{ weakSelf.moreExpanded = !weakSelf.moreExpanded; [weakSelf rebuildKinds]; }];
+  [more setIdentifier:@"kind-more"];
+  [self.kindStack addArrangedSubview:more];
+  [[more.widthAnchor constraintEqualToAnchor:self.kindStack.widthAnchor] setActive:YES];
+  if (!self.moreExpanded) return;
+  for (NSNumber *number in MoreKinds()) {
+    MWMActionKind kind = (MWMActionKind)[number integerValue];
+    if (kind == current) continue;
+    NSTextField *label = [self labelWithText:[MWMAction titleForKind:kind] size:13 color:[MWMTheme textPrimary] weight:NSFontWeightRegular];
+    NSView *row = [MWMComponents selectableRowWithContent:label insets:NSEdgeInsetsMake(MWMSpacingS, MWMSpacingM, MWMSpacingS, MWMSpacingM) selected:NO onClick:^{ [weakSelf selectKind:kind]; }];
     [row setIdentifier:[NSString stringWithFormat:@"kind-%ld", (long)kind]];
     [self.kindStack addArrangedSubview:row];
     [[row.widthAnchor constraintEqualToAnchor:self.kindStack.widthAnchor] setActive:YES];
@@ -345,8 +420,7 @@ static NSArray<NSString *> *InstalledApplicationNames(void) {
 }
 
 - (void)controlTextDidChange:(NSNotification *)note {
-  if (note.object == self.kindSearch) [self rebuildKinds];
-  else if ([[note.object identifier] isEqualToString:@"slot-search"]) {
+  if ([[note.object identifier] isEqualToString:@"slot-search"]) {
     self.slotQuery = [note.object stringValue];
     [self rebuildSlotList];
   }
@@ -355,10 +429,14 @@ static NSArray<NSString *> *InstalledApplicationNames(void) {
 #pragma mark - Form rows
 
 - (void)addRowWithLabel:(NSString *)label content:(NSArray<NSView *> *)views identifier:(NSString *)identifier {
-  if ([[self.formStack arrangedSubviews] count] > 0) {
+  [self addRowWithLabel:label content:views identifier:identifier toStack:self.formStack];
+}
+
+- (void)addRowWithLabel:(NSString *)label content:(NSArray<NSView *> *)views identifier:(NSString *)identifier toStack:(NSStackView *)stack {
+  if ([[stack arrangedSubviews] count] > 0) {
     NSView *line = [MWMComponents separator];
-    [self.formStack addArrangedSubview:line];
-    [[line.widthAnchor constraintEqualToAnchor:self.formStack.widthAnchor] setActive:YES];
+    [stack addArrangedSubview:line];
+    [[line.widthAnchor constraintEqualToAnchor:stack.widthAnchor] setActive:YES];
   }
   NSTextField *name = [self labelWithText:label size:12 color:[MWMTheme textSecondary] weight:NSFontWeightRegular];
   [name setTranslatesAutoresizingMaskIntoConstraints:NO];
@@ -374,11 +452,16 @@ static NSArray<NSString *> *InstalledApplicationNames(void) {
   [NSLayoutConstraint activateConstraints:@[
     [row.heightAnchor constraintGreaterThanOrEqualToConstant:52],
     [name.leadingAnchor constraintEqualToAnchor:row.leadingAnchor constant:16], [name.widthAnchor constraintEqualToConstant:110], [name.topAnchor constraintEqualToAnchor:row.topAnchor constant:17],
-    [content.leadingAnchor constraintEqualToAnchor:name.trailingAnchor constant:8], [content.trailingAnchor constraintLessThanOrEqualToAnchor:row.trailingAnchor constant:-16],
+    [content.leadingAnchor constraintGreaterThanOrEqualToAnchor:name.trailingAnchor constant:8], [content.trailingAnchor constraintEqualToAnchor:row.trailingAnchor constant:-16],
     [content.topAnchor constraintEqualToAnchor:row.topAnchor constant:10], [content.bottomAnchor constraintEqualToAnchor:row.bottomAnchor constant:-10],
   ]];
-  [self.formStack addArrangedSubview:row];
-  [[row.widthAnchor constraintEqualToAnchor:self.formStack.widthAnchor] setActive:YES];
+  // The inputs sit at the right of the row; a list takes all the room the label leaves.
+  if ([identifier isEqualToString:@"row-slot"]) {
+    [[content.leadingAnchor constraintEqualToAnchor:name.trailingAnchor constant:8] setActive:YES];
+    [[[views firstObject].widthAnchor constraintEqualToAnchor:content.widthAnchor] setActive:YES];
+  }
+  [stack addArrangedSubview:row];
+  [[row.widthAnchor constraintEqualToAnchor:stack.widthAnchor] setActive:YES];
 }
 
 - (NSPopUpButton *)popupWithTitles:(NSArray<NSString *> *)titles values:(NSArray<NSString *> *)values selected:(NSString *)selected placeholder:(NSString *)placeholder action:(SEL)action {
@@ -415,10 +498,74 @@ static NSArray<NSString *> *InstalledApplicationNames(void) {
   return field;
 }
 
+// Every name used for something in the document, so a new screen name is free.
+- (BOOL)nameIsTaken:(NSString *)name {
+  for (NSArray *section in @[self.document.modifiers, self.document.monitors, self.document.positions, self.document.aliases]) {
+    for (MWMConfigEntry *entry in section) if ([entry.name isEqualToString:name]) return YES;
+  }
+  return NO;
+}
+
+// The screens a shortcut can name: the ones named on the Displays page, then every connected display that has no name
+// yet (it gets one when the shortcut is saved). Each is {title, name, role}, with a role only for a screen not named yet.
+- (NSArray<NSDictionary *> *)screenOptions {
+  NSMutableArray *options = [NSMutableArray array];
+  NSMutableSet *namedRoles = [NSMutableSet set];
+  NSPredicate *resolution = [NSPredicate predicateWithFormat:@"SELF MATCHES %@", @"[0-9]+x[0-9]+"];
+  for (MWMConfigEntry *entry in self.document.monitors) {
+    NSString *value = [[entry.value description] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
+    if ([resolution evaluateWithObject:value]) continue;
+    [options addObject:@{@"title": entry.name, @"name": entry.name}];
+    [namedRoles addObject:value];
+  }
+  NSArray<MWMDisplay *> *connected = [MWMDisplays connected];
+  NSMutableSet *proposed = [NSMutableSet set];
+  for (MWMDisplay *display in connected) {
+    NSString *role = [MWMDisplays roleForDisplay:display in:connected];
+    if ([namedRoles containsObject:role]) continue;
+    NSString *base = [MWMDisplays suggestedNameForDisplay:display in:connected], *name = base;
+    for (NSUInteger i = 2; [self nameIsTaken:name] || [proposed containsObject:name]; i++) name = [NSString stringWithFormat:@"%@-%lu", base, (unsigned long)i];
+    [proposed addObject:name];
+    [options addObject:@{@"title": [NSString stringWithFormat:@"%@ · %@ (new)", display.name, [display sizeText]], @"name": name, @"role": role}];
+  }
+  return options;
+}
+
 - (NSArray<NSString *> *)screenNames {
-  NSMutableArray *names = [NSMutableArray array];
-  for (MWMConfigEntry *entry in self.document.monitors) if (![[entry.value description] containsString:@"x"]) [names addObject:entry.name];
-  return names;
+  return [[self screenOptions] valueForKey:@"name"];
+}
+
+// Gives a connected display the name a shortcut picked for it, so the shortcut has something to point at.
+- (void)nameScreensUsedByAction {
+  MWMAction *m = self.draftAction;
+  for (NSDictionary *option in [self screenOptions]) {
+    NSString *role = option[@"role"], *name = option[@"name"];
+    if (role == nil) continue;
+    NSString *wrapped = [NSString stringWithFormat:@"${%@}", name];
+    BOOL used = [m.a containsString:wrapped] || [m.b containsString:wrapped] || [m.b isEqualToString:name];
+    if (used) [self.document.monitors addObject:[MWMConfigEntry entryWithName:name value:role]];
+  }
+}
+
+// The screens as a popup lists them: what to write for each, and a way to the Displays page.
+- (void)addScreenTitles:(NSMutableArray *)titles values:(NSMutableArray *)values wrapped:(BOOL)wrapped {
+  for (NSDictionary *option in [self screenOptions]) {
+    [titles addObject:option[@"title"]];
+    [values addObject:wrapped ? [NSString stringWithFormat:@"${%@}", option[@"name"]] : option[@"name"]];
+  }
+}
+
+- (void)addManageDisplaysItemTo:(NSPopUpButton *)popup {
+  [[popup menu] addItem:[NSMenuItem separatorItem]];
+  [popup addItemWithTitle:@"Manage displays…"];
+  [[popup lastItem] setRepresentedObject:[ConfigurationPushRows manageDisplaysMarker]];
+}
+
+// Leaves the editor for the Displays page, asking first when there is something to lose.
+- (void)manageDisplays {
+  if (![self leaveConfirmed]) { [self refresh]; return; }
+  [self close];
+  if ([self.delegate respondsToSelector:@selector(shortcutEditorViewWantsDisplays:)]) [self.delegate shortcutEditorViewWantsDisplays:self];
 }
 
 - (NSArray<NSString *> *)slotNames {
@@ -439,22 +586,25 @@ static NSArray<NSString *> *InstalledApplicationNames(void) {
 }
 
 - (void)rebuildForm {
-  for (NSView *view in [[self.formStack arrangedSubviews] copy]) {
-    [self.formStack removeArrangedSubview:view];
-    [view removeFromSuperview];
+  for (NSStackView *stack in @[self.formStack, self.keysStack]) {
+    for (NSView *view in [[stack arrangedSubviews] copy]) {
+      [stack removeArrangedSubview:view];
+      [view removeFromSuperview];
+    }
   }
   MWMAction *m = self.draftAction;
   switch (m.kind) {
     case MWMActionKindMove: {
       [self addRowWithLabel:@"Slot" content:@[[self slotPicker]] identifier:@"row-slot"];
       NSMutableArray *titles = [NSMutableArray arrayWithObject:@"Current screen"], *values = [NSMutableArray arrayWithObject:@""];
-      for (NSString *name in [self screenNames]) { [titles addObject:name]; [values addObject:name]; }
-      [self addRowWithLabel:@"On screen" content:@[[self popupWithTitles:titles values:values selected:m.b placeholder:nil action:@selector(secondChanged:)]] identifier:@"row-screen"];
+      [self addScreenTitles:titles values:values wrapped:NO];
+      NSPopUpButton *screenPopup = [self popupWithTitles:titles values:values selected:m.b placeholder:nil action:@selector(secondChanged:)];
+      [self addManageDisplaysItemTo:screenPopup];
+      [self addRowWithLabel:@"On screen" content:@[screenPopup] identifier:@"row-screen"];
       break;
     }
     case MWMActionKindFocusApp: {
-      NSArray *apps = InstalledApplicationNames();
-      [self addRowWithLabel:@"Application" content:@[[self popupWithTitles:apps values:apps selected:m.a placeholder:@"Choose an application" action:@selector(firstChanged:)]] identifier:@"row-app"];
+      [self addRowWithLabel:@"Application" content:@[[self applicationCombo:m.a]] identifier:@"row-app"];
       break;
     }
     case MWMActionKindFocusDirection:
@@ -462,9 +612,11 @@ static NSArray<NSString *> *InstalledApplicationNames(void) {
       break;
     case MWMActionKindThrow: {
       NSMutableArray *titles = [NSMutableArray arrayWithObjects:@"next", @"previous", nil], *values = [titles mutableCopy];
-      for (NSString *name in [self screenNames]) { [titles addObject:name]; [values addObject:[NSString stringWithFormat:@"${%@}", name]]; }
-      [self addRowWithLabel:@"To screen" content:@[[self popupWithTitles:titles values:values selected:m.a placeholder:nil action:@selector(firstChanged:)]] identifier:@"row-throw"];
-      [self addRowWithLabel:@"Style" content:@[[self fieldWithText:m.b placeholder:@"resize" width:200 action:@selector(secondChanged:) identifier:@"field-b"]] identifier:@"row-style"];
+      [self addScreenTitles:titles values:values wrapped:YES];
+      NSPopUpButton *screenPopup = [self popupWithTitles:titles values:values selected:m.a placeholder:nil action:@selector(firstChanged:)];
+      [self addManageDisplaysItemTo:screenPopup];
+      [self addRowWithLabel:@"To screen" content:@[screenPopup] identifier:@"row-throw"];
+      [self addThrowStyleRows];
       break;
     }
     case MWMActionKindNudge:
@@ -504,6 +656,64 @@ static NSArray<NSString *> *InstalledApplicationNames(void) {
   [self addKeysRow];
 }
 
+// How the window is sized on the screen it is thrown to: filling it, as it was, or a size written out.
+- (void)addThrowStyleRows {
+  NSString *style = self.draftAction.b ?: @"";
+  NSInteger chosen = [style isEqualToString:@"resize"] ? 0 : [style hasPrefix:@"resize:"] ? 2 : 1;
+  __weak ConfigurationShortcutEditorView *weakSelf = self;
+  MWMOptionCards *cards = [MWMOptionCards cardsWithTitles:@[@"Fill the screen", @"Keep its size", @"Custom size"] symbols:@[@"rectangle.fill", @"rectangle", @"rectangle.dashed"] selectedIndex:chosen onChange:^(NSInteger index) {
+    NSString *current = weakSelf.draftAction.b ?: @"";
+    weakSelf.draftAction.b = index == 0 ? @"resize" : index == 1 ? @"noresize" : ([current hasPrefix:@"resize:"] ? current : @"resize:screenSizeX/2;screenSizeY");
+    dispatch_async(dispatch_get_main_queue(), ^{ [weakSelf refresh]; });
+  }];
+  [cards setIdentifier:@"throw-style"];
+  [self addRowWithLabel:@"Window size" content:@[cards] identifier:@"row-style"];
+  if (chosen != 2) return;
+  NSArray<NSString *> *parts = [[style substringFromIndex:[@"resize:" length]] componentsSeparatedByString:@";"];
+  NSTextField *width = [self fieldWithText:parts.count > 0 ? parts[0] : @"" placeholder:@"screenSizeX/2" width:220 action:@selector(throwSizeChanged:) identifier:@"throw-width"];
+  NSTextField *height = [self fieldWithText:parts.count > 1 ? parts[1] : @"" placeholder:@"screenSizeY" width:220 action:@selector(throwSizeChanged:) identifier:@"throw-height"];
+  [self addRowWithLabel:@"Width" content:@[width] identifier:@"row-throw-width"];
+  [self addRowWithLabel:@"Height" content:@[height] identifier:@"row-throw-height"];
+}
+
+- (void)throwSizeChanged:(NSTextField *)field {
+  if (![field isDescendantOf:self]) return;
+  NSView *width = [self descendantWithIdentifier:@"throw-width" in:self], *height = [self descendantWithIdentifier:@"throw-height" in:self];
+  NSString *w = [[(NSTextField *)width stringValue] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+  NSString *h = [[(NSTextField *)height stringValue] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+  NSString *value = [NSString stringWithFormat:@"resize:%@;%@", w, h];
+  if ([value isEqualToString:self.draftAction.b]) return;
+  self.draftAction.b = value;
+  dispatch_async(dispatch_get_main_queue(), ^{ [self refresh]; });
+}
+
+- (NSView *)descendantWithIdentifier:(NSString *)identifier in:(NSView *)root {
+  if ([root.identifier isEqualToString:identifier]) return root;
+  for (NSView *sub in root.subviews) {
+    NSView *found = [self descendantWithIdentifier:identifier in:sub];
+    if (found != nil) return found;
+  }
+  return nil;
+}
+
+// An application: pick an installed one, or type a name (an app that isn't installed yet, or any other command).
+- (NSComboBox *)applicationCombo:(NSString *)value {
+  NSComboBox *combo = [[NSComboBox alloc] initWithFrame:NSZeroRect];
+  [combo setFont:[MWMTheme fontBody]];
+  [combo addItemsWithObjectValues:InstalledApplicationNames()];
+  [combo setNumberOfVisibleItems:12];
+  [combo setStringValue:value ?: @""];
+  [combo setPlaceholderString:@"Choose or type an application"];
+  [combo setTarget:self];
+  [combo setAction:@selector(firstChanged:)];
+  [combo setDelegate:self];
+  [combo setIdentifier:@"field-a"];
+  [combo setCompletes:YES];
+  [[combo cell] setSendsActionOnEndEditing:YES];
+  [[combo.widthAnchor constraintEqualToConstant:260] setActive:YES];
+  return combo;
+}
+
 // A snapshot's name: type a new one, or pick one that's saved.
 - (NSComboBox *)snapshotNameCombo:(NSString *)value {
   NSComboBox *combo = [[NSComboBox alloc] initWithFrame:NSZeroRect];
@@ -535,9 +745,18 @@ static NSArray<NSString *> *InstalledApplicationNames(void) {
   [search setDelegate:self];
   [search setIdentifier:@"slot-search"];
   [search setTranslatesAutoresizingMaskIntoConstraints:NO];
-  NSSegmentedControl *filter = [NSSegmentedControl segmentedControlWithLabels:@[@"All", @"Presets", @"Custom"] trackingMode:NSSegmentSwitchTrackingSelectOne target:self action:@selector(slotFilterChanged:)];
-  [filter setSelectedSegment:self.slotFilter];
+  // Which slots to list, and a way to the Slots page, in a menu beside the search.
+  NSPopUpButton *filter = [[NSPopUpButton alloc] initWithFrame:NSZeroRect pullsDown:NO];
+  [filter addItemsWithTitles:@[@"All slots", @"Presets", @"Custom"]];
+  [filter selectItemAtIndex:self.slotFilter];
+  [[filter menu] addItem:[NSMenuItem separatorItem]];
+  [filter addItemWithTitle:@"Manage slots…"];
+  [[filter lastItem] setRepresentedObject:[ConfigurationPushRows manageDisplaysMarker]];
+  [filter setTarget:self];
+  [filter setAction:@selector(slotFilterChanged:)];
   [filter setIdentifier:@"slot-filter"];
+  [filter setContentHuggingPriority:NSLayoutPriorityRequired forOrientation:NSLayoutConstraintOrientationHorizontal];
+  [search setContentHuggingPriority:1 forOrientation:NSLayoutConstraintOrientationHorizontal];
   NSStackView *top = [NSStackView stackViewWithViews:@[search, filter]];
   [top setSpacing:8];
   [top setAlignment:NSLayoutAttributeCenterY];
@@ -557,7 +776,7 @@ static NSArray<NSString *> *InstalledApplicationNames(void) {
   [picker setAlignment:NSLayoutAttributeLeading];
   [picker setSpacing:8];
   [picker setTranslatesAutoresizingMaskIntoConstraints:NO];
-  [NSLayoutConstraint activateConstraints:@[[picker.widthAnchor constraintEqualToConstant:420], [top.widthAnchor constraintEqualToAnchor:picker.widthAnchor], [scroll.widthAnchor constraintEqualToAnchor:picker.widthAnchor]]];
+  [NSLayoutConstraint activateConstraints:@[[top.widthAnchor constraintEqualToAnchor:picker.widthAnchor], [scroll.widthAnchor constraintEqualToAnchor:picker.widthAnchor]]];
   [self rebuildSlotList];
   return picker;
 }
@@ -644,9 +863,21 @@ static NSArray<NSString *> *InstalledApplicationNames(void) {
   dispatch_async(dispatch_get_main_queue(), ^{ [self refresh]; });
 }
 
-- (void)slotFilterChanged:(NSSegmentedControl *)control {
-  self.slotFilter = [control selectedSegment];
+- (void)slotFilterChanged:(NSPopUpButton *)control {
+  if ([[[control selectedItem] representedObject] isEqual:[ConfigurationPushRows manageDisplaysMarker]]) {
+    dispatch_async(dispatch_get_main_queue(), ^{ [self manageSlots]; });
+    [control selectItemAtIndex:self.slotFilter];
+    return;
+  }
+  self.slotFilter = [control indexOfSelectedItem];
   [self rebuildSlotList];
+}
+
+// Leaves the editor for the Slots page, asking first when there is something to lose.
+- (void)manageSlots {
+  if (![self leaveConfirmed]) return;
+  [self close];
+  if ([self.delegate respondsToSelector:@selector(shortcutEditorViewWantsSlots:)]) [self.delegate shortcutEditorViewWantsSlots:self];
 }
 
 // The text of an advanced action. A move or a push also shows where it puts a window, with its mistakes named
@@ -693,10 +924,12 @@ static NSArray<NSString *> *InstalledApplicationNames(void) {
     return;
   }
   __weak ConfigurationShortcutEditorView *weakSelf = self;
-  self.pushRows = [ConfigurationPushRows rowsForOptions:options direction:m.a screens:[self screenNames] onChange:^(MWMPushOptions *changed) {
+  NSMutableArray *screenTitles = [NSMutableArray array], *screenValues = [NSMutableArray array];
+  [self addScreenTitles:screenTitles values:screenValues wrapped:YES];
+  self.pushRows = [ConfigurationPushRows rowsForOptions:options direction:m.a screenTitles:screenTitles screenValues:screenValues onChange:^(MWMPushOptions *changed) {
     weakSelf.draftAction.b = [changed textForDirection:weakSelf.draftAction.a];
     dispatch_async(dispatch_get_main_queue(), ^{ [weakSelf refresh]; });
-  }];
+  } onManageDisplays:^{ dispatch_async(dispatch_get_main_queue(), ^{ [weakSelf manageDisplays]; }); }];
   for (NSDictionary *row in self.pushRows.rows) [self addRowWithLabel:row[@"label"] content:row[@"views"] identifier:row[@"identifier"]];
 }
 
@@ -711,7 +944,13 @@ static NSArray<NSString *> *InstalledApplicationNames(void) {
   dispatch_async(dispatch_get_main_queue(), ^{ [self refresh]; });
 }
 
+- (BOOL)isManageDisplaysChoice:(id)control {
+  return [control isKindOfClass:[NSPopUpButton class]] && [[[(NSPopUpButton *)control selectedItem] representedObject] isEqual:[ConfigurationPushRows manageDisplaysMarker]];
+}
+
 - (void)firstChanged:(id)control {
+  if ([control isKindOfClass:[NSView class]] && ![control isDescendantOf:self]) return;   // a field of the form that was just replaced, losing focus
+  if ([self isManageDisplaysChoice:control]) { dispatch_async(dispatch_get_main_queue(), ^{ [self manageDisplays]; }); return; }
   NSString *value = [control isKindOfClass:[NSPopUpButton class]] ? ([[(NSPopUpButton *)control selectedItem] representedObject] ?: @"") : [[control stringValue] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
   if ([value isEqualToString:self.draftAction.a]) return;
   self.draftAction.a = value;
@@ -719,6 +958,8 @@ static NSArray<NSString *> *InstalledApplicationNames(void) {
 }
 
 - (void)secondChanged:(id)control {
+  if ([control isKindOfClass:[NSView class]] && ![control isDescendantOf:self]) return;   // a field of the form that was just replaced, losing focus
+  if ([self isManageDisplaysChoice:control]) { dispatch_async(dispatch_get_main_queue(), ^{ [self manageDisplays]; }); return; }
   NSString *value = [control isKindOfClass:[NSPopUpButton class]] ? ([[(NSPopUpButton *)control selectedItem] representedObject] ?: @"") : [[control stringValue] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
   if ([value isEqualToString:self.draftAction.b]) return;
   self.draftAction.b = value;
@@ -781,7 +1022,7 @@ static NSArray<NSString *> *InstalledApplicationNames(void) {
     [column setSpacing:6];
     views = [NSMutableArray arrayWithObject:column];
   }
-  [self addRowWithLabel:@"Keys" content:views identifier:@"row-keys"];
+  [self addRowWithLabel:@"Keys" content:views identifier:@"row-keys" toStack:self.keysStack];
 }
 
 - (NSStackView *)rowOf:(NSArray<NSView *> *)views {
@@ -902,6 +1143,7 @@ static NSArray<NSString *> *InstalledApplicationNames(void) {
   if (![self hasUnsavedChanges] || [self problem] != nil) return;
   [self cancelRecording];
   NSString *modifiers = [self draftModifiersText];
+  [self nameScreensUsedByAction];
   if (self.isNew) {
     MWMBindingEntry *binding = [MWMBindingEntry bindingWithKey:self.draftKeyName modifiers:modifiers action:[self.draftAction string]];
     binding.enabled = YES;
@@ -923,7 +1165,8 @@ static NSArray<NSString *> *InstalledApplicationNames(void) {
 - (void)savePressed:(id)sender { [self save]; }
 - (void)cancelPressed:(id)sender { [self close]; }
 
-- (void)backPressed:(id)sender {
+// NO when there are changes to lose and the user chose to keep editing.
+- (BOOL)leaveConfirmed {
   if (self.confirmsDiscard && !self.isNew && [self hasUnsavedChanges]) {
     MWMAlert *alert = [MWMAlert alert];
     [alert setKind:MWMAlertKindConfirm];
@@ -931,9 +1174,13 @@ static NSArray<NSString *> *InstalledApplicationNames(void) {
     [alert setInformativeText:@"This shortcut has changes that haven't been saved."];
     [alert addButtonWithTitle:@"Keep editing"];
     [alert addDestructiveButtonWithTitle:@"Discard"];
-    if ([alert runModal] == NSAlertFirstButtonReturn) return;
+    if ([alert runModal] == NSAlertFirstButtonReturn) return NO;
   }
-  [self close];
+  return YES;
+}
+
+- (void)backPressed:(id)sender {
+  if ([self leaveConfirmed]) [self close];
 }
 
 @end

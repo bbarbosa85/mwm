@@ -49,6 +49,12 @@ static NSString *const kOriginal =
   [self.controller setValue:self.path forKey:@"configPathOverride"];
 }
 
+- (void)tearDown {
+  [self.controller.window orderOut:nil];
+  [self.controller close];
+  self.controller = nil;
+}
+
 // The pages are laid out for one width, so the window only changes in height.
 - (void)testTheWindowIsAlwaysTheSameWidth {
   NSWindow *window = [self.controller window];
@@ -64,6 +70,23 @@ static NSString *const kOriginal =
 
 - (void)load {
   [self.controller performSelector:NSSelectorFromString(@"loadFromDisk")];
+}
+
+// A page that would fit in less room, or in more, doesn't change the window.
+- (void)testTheWindowStaysTheSameWidthOnEveryPage {
+  [kOriginal writeToFile:self.path atomically:YES encoding:NSUTF8StringEncoding error:nil];
+  [self load];
+  NSWindow *window = [self.controller window];
+  [window orderFront:nil];
+  for (NSInteger section = 0; section < ConfigurationFormSectionCount; section++) {
+    self.controller.formView.selectedSection = (ConfigurationFormSection)section;
+    [window layoutIfNeeded];
+    [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.05]];
+    XCTAssertEqual(NSWidth([[window contentView] frame]), 1080, @"section %ld", (long)section);
+    NSView *form = (NSView *)self.controller.formView;
+    NSView *detail = [form valueForKey:@"detail"];
+    XCTAssertGreaterThan(NSWidth(detail.frame), 860, @"the page takes what the sidebar leaves: section %ld, %@", (long)section, NSStringFromRect(detail.frame));
+  }
 }
 
 - (MWMConfigDocument *)document {

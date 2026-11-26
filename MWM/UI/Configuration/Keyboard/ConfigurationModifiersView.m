@@ -237,16 +237,10 @@ static const CGFloat kUsedColumn = 150;
 - (void)buildEditorPage {
   self.header = [MWMSublevelHeader headerWithBackTitle:@"Modifiers" title:@"New Group" target:self action:@selector(backPressed:)];
 
-  self.nameField = [NSTextField textFieldWithString:@""];
-  [self.nameField setPlaceholderString:@"Name this group, like hyper"];
+  MWMNameField *nameField = [MWMNameField nameFieldWithPlaceholder:@"Name this group, like hyper" identifier:@"group-name" compact:NO];
+  self.nameField = nameField;
   [self.nameField setDelegate:self];
-  [self.nameField setIdentifier:@"group-name"];
-  [[self.nameField.widthAnchor constraintEqualToConstant:260] setActive:YES];
-  NSTextField *nameCaption = [MWMComponents captionLabel:@"Name"];
-  NSStackView *nameBlock = [NSStackView stackViewWithViews:@[nameCaption, self.nameField]];
-  [nameBlock setOrientation:NSUserInterfaceLayoutOrientationVertical];
-  [nameBlock setAlignment:NSLayoutAttributeLeading];
-  [nameBlock setSpacing:4];
+  NSStackView *nameBlock = [MWMComponents nameBlockWithField:nameField width:360];
 
   self.previewName = [MWMComponents labelWithText:@"" size:14 color:[MWMTheme textPrimary] weight:NSFontWeightSemibold];
   self.previewCaps = [[NSView alloc] init];

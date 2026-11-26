@@ -187,9 +187,9 @@ static NSString *const kConfig =
   [page selectSlotNamed:@"centre"];
   NSSegmentedControl *mode = [page valueForKey:@"modeControl"];
   [page performSelector:NSSelectorFromString(@"refresh")];
-  XCTAssertTrue([mode isHidden], @"an existing slot opens the way it is written");
+  XCTAssertTrue([mode isHiddenOrHasHiddenAncestor], @"an existing slot opens the way it is written");
   [page startNewSlot];
-  XCTAssertFalse([mode isHidden]);
+  XCTAssertFalse([mode isHiddenOrHasHiddenAncestor]);
   XCTAssertEqual([mode selectedSegment], 0);
   XCTAssertFalse([[page valueForKey:@"fieldsBlock"] isHidden]);
   [mode setSelectedSegment:1];
@@ -278,6 +278,26 @@ static NSString *const kConfig =
   // Free drag (⌥) doesn't snap.
   [canvas dragFrom:NSMakePoint(NSMinX([canvas viewRectForSlot:page.draftRect]), NSMidY(slot)) to:NSMakePoint(NSMinX(screen) + 0.2 * NSWidth(screen) + 0.4, NSMidY(slot)) free:YES];
   XCTAssertEqualWithAccuracy(page.draftRect.origin.x, 0.2, 0.002);
+}
+
+- (void)testHoldingShiftKeepsTheProportionsWhileResizing {
+  MWMConfigDocument *doc;
+  ConfigurationSlotsView *page = [self pageWithConfig:kConfig document:&doc];
+  [page selectSlotNamed:@"centre"];   // 25% to 75% across, full height
+  ConfigurationSlotCanvas *canvas = page.canvas;
+  NSRect slot = [canvas viewRectForSlot:page.draftRect];
+  NSRect screen = [canvas screenRect];
+  NSPoint from = NSMakePoint(NSMaxX(slot), NSMidY(slot));
+  [canvas dragFrom:from to:NSMakePoint(from.x - 0.1 * NSWidth(screen), from.y) free:YES proportional:YES];
+  CGRect rect = page.draftRect;
+  XCTAssertEqualWithAccuracy(rect.size.width, 0.4, 0.002, @"the side moved");
+  XCTAssertEqualWithAccuracy(rect.size.height, 0.8, 0.002, @"the height followed, from the middle");
+  XCTAssertEqualWithAccuracy(rect.origin.y, 0.1, 0.002);
+  XCTAssertEqualWithAccuracy(rect.origin.x, 0.25, 0.002, @"the far side stays");
+  // It can't grow past the screen: full height stays full height.
+  [canvas dragFrom:NSMakePoint(NSMaxX([canvas viewRectForSlot:page.draftRect]), NSMidY(slot)) to:NSMakePoint(NSMaxX(screen), NSMidY(slot)) free:YES proportional:YES];
+  XCTAssertLessThanOrEqual(page.draftRect.size.height, 1.0 + 1e-9);
+  XCTAssertLessThanOrEqual(CGRectGetMaxX(page.draftRect), 1.0 + 1e-9);
 }
 
 - (void)testMovingTheWholeSlotKeepsItOnTheScreen {

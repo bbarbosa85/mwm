@@ -1,11 +1,9 @@
 //
 //  ConfigurationBackupView.h
 //
-//  The Backup page. Backups go to a private GitHub gist, as named "environments" (the configuration,
-//  the snapshots, and the displays they were saved with). A card for this computer has a name and
-//  Back up (a name that exists replaces that backup); each saved environment is a card with its date,
-//  Restore and a trash icon.
-//
+//  The Backup page. Backup is a sync of the profiles in ~/.mwm (and the snapshots) with one private
+//  GitHub gist. Sync now sends what changed here and receives what changed there; under it, a list shows where
+//  each profile stands. Without a token the page walks through making one.
 //
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -20,37 +18,33 @@
 //  You should have received a copy of the GNU General Public License
 
 #import <Cocoa/Cocoa.h>
-#import "MWMBackup.h"
+#import "MWMSync.h"
 
-@class ConfigurationBackupView, MWMConfigDocument;
+@class ConfigurationBackupView;
 
 NS_ASSUME_NONNULL_BEGIN
 
 @protocol ConfigurationBackupViewDelegate <NSObject>
-// Put this text in the configuration file and show it. Answers whether that worked.
-- (BOOL)backupView:(ConfigurationBackupView *)view restoreConfigText:(NSString *)text;
-// Snapshots were replaced by a restore (the sidebar count follows).
-- (void)backupViewDidRestoreSnapshots:(ConfigurationBackupView *)view;
+// A sync received files (a profile, or snapshots): the open one may have changed on disk.
+- (void)backupViewDidChangeFiles:(ConfigurationBackupView *)view;
 @end
 
 @interface ConfigurationBackupView : NSView
 
 @property (weak, nullable) id<ConfigurationBackupViewDelegate> delegate;
-// The configuration the form is showing, which is what Back up saves.
-@property (strong, nullable, nonatomic) MWMConfigDocument *document;
-// Tests turn this off so nothing asks first or announces a result.
+// Tests turn this off so nothing announces a result or asks a question.
 @property (assign) BOOL interactive;
-@property (readonly) NSTextField *nameField;
 @property (readonly) NSTextField *tokenField;
-@property (readonly, copy) NSArray<MWMBackupEnvironment *> *environments;
+// Where each profile stands, from the last look at the gist.
+@property (readonly, copy) NSArray<MWMSyncItem *> *items;
 @property (readonly, copy, nullable) NSString *problem;
+@property (readonly, strong, nullable) MWMSyncReport *lastReport;
 
-// Asks GitHub for the saved environments and shows them.
+// Looks at the gist and shows where everything stands.
 - (void)refresh:(nullable void (^)(void))done;
 - (void)connectWithToken:(NSString *)token completion:(nullable void (^)(void))done;
-- (void)backUpAs:(NSString *)name completion:(nullable void (^)(void))done;
-- (void)restoreNamed:(NSString *)name;
-- (void)deleteNamed:(NSString *)name completion:(nullable void (^)(void))done;
+// Sends and receives, then refreshes the list.
+- (void)syncWithCompletion:(nullable void (^)(void))done;
 
 @end
 

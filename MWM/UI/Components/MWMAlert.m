@@ -100,16 +100,29 @@ static const CGFloat kPadding = 22;
     [texts addObject:body];
   }
   NSStackView *header;
-  if (self.showsAppIcon) {
+  if (self.showsAppIcon || self.showsSyncIcons) {
     // The icon centered above, and the text under it, left-aligned across the alert's whole width.
     textWidth = kAlertWidth - 2 * kPadding;
     for (NSTextField *text in texts) { [text setAlignment:NSTextAlignmentLeft]; [text setPreferredMaxLayoutWidth:textWidth]; }
     NSImage *icon = [[NSBundle mainBundle] imageForResource:@"icon"] ?: [NSApp applicationIconImage];
-    NSImageView *iconView = [NSImageView imageViewWithImage:icon];
-    [iconView setImageScaling:NSImageScaleProportionallyUpOrDown];
-    [iconView setIdentifier:@"alert-app-icon"];
-    [[iconView.widthAnchor constraintEqualToConstant:64] setActive:YES];
-    [[iconView.heightAnchor constraintEqualToConstant:64] setActive:YES];
+    NSImageView *appIcon = [NSImageView imageViewWithImage:icon];
+    [appIcon setImageScaling:NSImageScaleProportionallyUpOrDown];
+    [appIcon setIdentifier:@"alert-app-icon"];
+    [[appIcon.widthAnchor constraintEqualToConstant:64] setActive:YES];
+    [[appIcon.heightAnchor constraintEqualToConstant:64] setActive:YES];
+    NSView *iconView = appIcon;
+    if (self.showsSyncIcons) {
+      NSImageView *arrows = [NSImageView imageViewWithImage:[NSImage imageWithSystemSymbolName:@"arrow.left.arrow.right" accessibilityDescription:@"Sync"]];
+      [arrows setContentTintColor:[MWMTheme textSecondary]];
+      [arrows setSymbolConfiguration:[NSImageSymbolConfiguration configurationWithPointSize:22 weight:NSFontWeightRegular]];
+      [arrows setIdentifier:@"alert-sync-arrows"];
+      NSView *cloud = [MWMComponents iconTileWithSymbol:@"icloud" color:[MWMTheme accent] size:64];
+      [cloud setIdentifier:@"alert-sync-cloud"];
+      NSStackView *row = [NSStackView stackViewWithViews:@[appIcon, arrows, cloud]];
+      [row setSpacing:MWMSpacingL];
+      [row setAlignment:NSLayoutAttributeCenterY];
+      iconView = row;
+    }
     NSStackView *textColumn = [NSStackView stackViewWithViews:texts];
     [textColumn setOrientation:NSUserInterfaceLayoutOrientationVertical];
     [textColumn setAlignment:NSLayoutAttributeLeading];

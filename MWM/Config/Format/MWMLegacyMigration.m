@@ -21,7 +21,7 @@
 #import <JavaScriptCore/JavaScriptCore.h>
 #import "MWMConfigDocument.h"
 #import "MWMConfigFormat.h"
-#import "MWMConfigurations.h"
+#import "MWMProfiles.h"
 #import "StringTokenizer.h"
 #import "MWMLogger.h"
 
@@ -426,10 +426,10 @@ static id NilIfNull(id value) {
 
 #pragma mark - First launch
 
-+ (nullable NSDictionary *)importFirstRunConfigurations {
-  if ([MWMConfigurations folderExists]) return nil;
++ (nullable NSDictionary *)importFirstRunProfiles {
+  if ([MWMProfiles folderExists]) return nil;
   NSFileManager *fm = [NSFileManager defaultManager];
-  NSString *home = [MWMConfigurations homeDirectory];
+  NSString *home = [MWMProfiles homeDirectory];
   NSString *mwmYML = [home stringByAppendingPathComponent:@".mwm.yml"];
   NSMutableArray<NSString *> *slateFiles = [NSMutableArray array];
   NSString *legacyPath = [home stringByAppendingPathComponent:@".slate"];
@@ -445,18 +445,18 @@ static id NilIfNull(id value) {
   NSMutableDictionary *result = [NSMutableDictionary dictionaryWithDictionary:@{@"moved": @NO, @"warnings": [NSMutableArray array]}];
   NSMutableArray *warnings = result[@"warnings"];
   NSError *error = nil;
-  if (![MWMConfigurations createFolder:&error]) {
+  if (![MWMProfiles createFolder:&error]) {
     result[@"error"] = [error localizedDescription];
     return result;
   }
 
   // The configuration people already use moves into the folder (a symlink moves as a symlink).
   if (hasMWMYML) {
-    NSString *target = [MWMConfigurations pathForName:@"default"];
+    NSString *target = [MWMProfiles pathForName:@"default"];
     if ([fm moveItemAtPath:mwmYML toPath:target error:&error]) {
       result[@"moved"] = @YES;
     } else {
-      [fm removeItemAtPath:[MWMConfigurations folder] error:nil];   // empty, so the next launch tries again
+      [fm removeItemAtPath:[MWMProfiles folder] error:nil];   // empty, so the next launch tries again
       result[@"error"] = [NSString stringWithFormat:@"~/.mwm.yml couldn't be moved: %@", [error localizedDescription]];
       return result;
     }
@@ -472,15 +472,15 @@ static id NilIfNull(id value) {
     if (doc == nil) {
       result[@"slateProblem"] = error ? [error localizedDescription] : @"Nothing in them could be converted.";
     } else {
-      NSString *name = hasMWMYML ? [MWMConfigurations freeNameFrom:@"slate-import"] : @"default";
-      if ([MWMConfigurations createNamed:name text:[doc stringRepresentation] error:&error]) {
+      NSString *name = hasMWMYML ? [MWMProfiles freeNameFrom:@"slate-import"] : @"default";
+      if ([MWMProfiles createNamed:name text:[doc stringRepresentation] error:&error]) {
         result[@"importedName"] = name;
       } else {
         result[@"slateProblem"] = [error localizedDescription];
       }
     }
   }
-  [MWMConfigurations setActiveName:@"default"];
+  [MWMProfiles setActiveName:@"default"];
   return result;
 }
 
@@ -491,13 +491,13 @@ static id NilIfNull(id value) {
   BOOL moved = [result[@"moved"] boolValue];
   NSString *imported = result[@"importedName"];
   MWMAlertKind kind = MWMAlertKindSuccess;
-  NSString *title = @"MWM keeps its configurations in ~/.mwm";
+  NSString *title = @"MWM keeps your profiles in ~/.mwm";
   if (result[@"error"] != nil) {
     kind = MWMAlertKindWarning;
     title = @"Couldn't set up ~/.mwm";
     [info appendFormat:@"%@\n\nNothing was changed. MWM will try again next time it opens.", result[@"error"]];
   } else {
-    if (moved) [info appendString:@"Your configuration moved from ~/.mwm.yml to ~/.mwm/default.mwm.yaml."];
+    if (moved) [info appendString:@"Your settings moved from ~/.mwm.yml to the profile ~/.mwm/default.mwm.yaml."];
     if (imported != nil) {
       title = moved ? @"Your Slate setup was imported too" : @"Your Slate setup was imported";
       [info appendFormat:@"%@%@ %@ imported as “%@”. Your Slate files weren't changed.", [info length] ? @"\n\n" : @"", slate, [result[@"slateFiles"] count] == 1 ? @"was" : @"were", imported];
@@ -512,7 +512,7 @@ static id NilIfNull(id value) {
       for (NSUInteger i = 0; i < shown; i++) [info appendFormat:@"\n• %@", warnings[i]];
       if ([warnings count] > shown) [info appendFormat:@"\n• …and %lu more", (unsigned long)([warnings count] - shown)];
     }
-    if ([[MWMConfigurations names] count] > 1) [info appendString:@"\n\nYou can switch between configurations in the menu bar or in Settings."];
+    if ([[MWMProfiles names] count] > 1) [info appendString:@"\n\nYou can switch between profiles in the menu bar or in Settings."];
   }
   MWMAlert *alert = [MWMAlert alert];
   [alert setShowsAppIcon:YES];
@@ -534,7 +534,7 @@ static id NilIfNull(id value) {
 }
 
 + (void)runStartupMigration {
-  NSDictionary *result = [self importFirstRunConfigurations];
+  NSDictionary *result = [self importFirstRunProfiles];
   if (result == nil) return;
   MWMLogger(@"First launch with ~/.mwm: %@", result);
   [self showFirstRunResult:result];
@@ -550,7 +550,7 @@ static id NilIfNull(id value) {
     MWMAlert *alert = [MWMAlert alert];
     [alert setShowsAppIcon:YES];
     [alert setKind:MWMAlertKindSuccess];
-    [alert setMessageText:@"Your configuration was updated"];
+    [alert setMessageText:@"Your profile was updated"];
     [alert setInformativeText:[NSString stringWithFormat:
       @"%@ now uses the new format: one entry per monitor and slot, and actions written out as fields. "
       @"Nothing changes in how your shortcuts work. The old file is kept as %@.", [path stringByAbbreviatingWithTildeInPath], shown]];

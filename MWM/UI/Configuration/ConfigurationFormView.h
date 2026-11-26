@@ -42,7 +42,7 @@ typedef NS_ENUM(NSInteger, ConfigurationFormSection) {
   ConfigurationFormSectionAdvanced,
   ConfigurationFormSectionSnapshots,
   ConfigurationFormSectionBackup,
-  ConfigurationFormSectionConfigurations,
+  ConfigurationFormSectionProfiles,
   ConfigurationFormSectionCount,
 };
 
@@ -61,12 +61,12 @@ typedef NS_ENUM(NSInteger, ConfigurationFormSection) {
 // Launch at login isn't in the file, so the app answers for it.
 - (BOOL)formViewLaunchesAtLogin:(ConfigurationFormView *)formView;
 - (void)formView:(ConfigurationFormView *)formView setLaunchesAtLogin:(BOOL)launches;
-// The Configurations page switches to another configuration: save what's open, make it active and restart MWM.
-- (void)formView:(ConfigurationFormView *)formView switchToConfigurationNamed:(NSString *)name;
-// The active configuration's file was renamed.
-- (void)formViewDidRenameActiveConfiguration:(ConfigurationFormView *)formView;
-// The Backup page restores a configuration: put this text in the file and show it. Answers whether that worked.
-- (BOOL)formView:(ConfigurationFormView *)formView restoreConfigText:(NSString *)text;
+// The Profiles page chose another profile to edit (MWM switches to it when Apply and Restart is pressed).
+- (void)formView:(ConfigurationFormView *)formView useProfileNamed:(NSString *)name;
+// A profile was renamed.
+- (void)formView:(ConfigurationFormView *)formView didRenameProfileNamed:(NSString *)name to:(NSString *)newName;
+// A sync received files or changed the configurations: the open one may have changed on disk.
+- (void)formViewDidChangeFilesBySync:(ConfigurationFormView *)formView;
 @end
 
 @interface ConfigurationFormView : NSView <NSTableViewDataSource, NSTableViewDelegate>
@@ -77,6 +77,8 @@ typedef NS_ENUM(NSInteger, ConfigurationFormSection) {
 @property (strong, nonatomic, nullable) MWMConfigDocument *document;
 
 @property (assign, nonatomic) ConfigurationFormSection selectedSection;
+// The profile the window is editing, for the Profiles page.
+@property (copy, nullable, nonatomic) NSString *editingProfile;
 
 // Keyboard page only: show one kind of shortcut (a MWMBindingCategory), or -1 for all.
 @property (assign, nonatomic) NSInteger keyboardFilter;

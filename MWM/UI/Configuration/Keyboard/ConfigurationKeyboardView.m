@@ -133,6 +133,14 @@
   [self setEditing:NO];
 }
 
+- (void)shortcutEditorViewWantsSlots:(ConfigurationShortcutEditorView *)view {
+  if ([self.delegate respondsToSelector:@selector(keyboardViewWantsSlots:)]) [self.delegate keyboardViewWantsSlots:self];
+}
+
+- (void)shortcutEditorViewWantsDisplays:(ConfigurationShortcutEditorView *)view {
+  if ([self.delegate respondsToSelector:@selector(keyboardViewWantsDisplays:)]) [self.delegate keyboardViewWantsDisplays:self];
+}
+
 #pragma mark - List view
 
 - (void)shortcutListViewDidChangeDocument:(ConfigurationShortcutListView *)view {

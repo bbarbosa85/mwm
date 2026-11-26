@@ -1,7 +1,7 @@
 //
 //  MWMGist.h
 //
-//  Backups live in one private GitHub gist ("MWM backup"), one file per environment. This talks to
+//  Backups live in one private GitHub gist ("MWM backup"), one file per configuration. This talks to
 //  the GitHub API with a token the person pastes, kept in the Keychain. Every call answers on the
 //  main thread with a plain-language problem (nil when it worked).
 //
@@ -19,7 +19,6 @@
 //  along with this program.  If not, see http://www.gnu.org/licenses
 
 #import <Foundation/Foundation.h>
-#import "MWMBackup.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -38,10 +37,11 @@ typedef void (^MWMGistTransport)(NSURLRequest *request, MWMGistResponse done);
 
 // Checks the token with GitHub.
 + (void)checkToken:(NSString *)token completion:(void (^)(NSString *_Nullable problem))done;
-+ (void)listEnvironments:(void (^)(NSArray<MWMBackupEnvironment *> *environments, NSString *_Nullable problem))done;
-// Adds the environment, or replaces the one of the same name.
-+ (void)saveEnvironment:(MWMBackupEnvironment *)environment completion:(void (^)(NSString *_Nullable problem))done;
-+ (void)deleteEnvironmentNamed:(NSString *)name completion:(void (^)(NSString *_Nullable problem))done;
+// Every file in the gist, by name, as text. `exists` is NO when there is no backup gist yet (then `files` is empty).
++ (void)fetchFiles:(void (^)(NSDictionary<NSString *, NSString *> *files, BOOL exists, NSString *_Nullable problem))done;
+// Adds or replaces files (NSString values) and removes the ones whose value is NSNull, in one request. Creates the
+// private gist when there is none and something is added.
++ (void)updateFiles:(NSDictionary<NSString *, id> *)files completion:(void (^)(NSString *_Nullable problem))done;
 
 @end
 

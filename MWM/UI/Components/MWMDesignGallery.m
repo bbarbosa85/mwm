@@ -210,7 +210,7 @@ static NSStackView *HorizontalStack(NSArray<NSView *> *views, CGFloat spacing) {
   NSView *settingsBlock = [MWMComponents settingsBlockWithSymbol:@"power" title:@"Startup" subtitle:@"Runs quietly in the menu bar" rows:@[[MWMComponents controlRowWithTitle:@"Launch MWM at login" subtitle:nil control:toggle]] titleColumnWidth:200];
   [[settingsBlock.widthAnchor constraintEqualToConstant:520] setActive:YES];
   // The top and bottom of a page opened from another.
-  MWMSublevelHeader *header = [MWMSublevelHeader headerWithBackTitle:@"Keyboard" title:@"Editing Shortcut" target:nil action:nil];
+  MWMSublevelHeader *header = [MWMSublevelHeader headerWithBackTitle:@"Bindings" title:@"Editing Shortcut" target:nil action:nil];
   [[header.widthAnchor constraintEqualToConstant:520] setActive:YES];
   MWMSaveBar *saveBar = [MWMSaveBar barWithTarget:nil cancel:nil save:nil];
   [saveBar setDirty:YES canSave:YES];

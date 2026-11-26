@@ -33,6 +33,7 @@ typedef NS_ENUM(NSInteger, MapKeyState) {
   MapKeyStateConflict,
   MapKeyStateReserved,   // macOS uses it with this group's modifiers
   MapKeyStateOn,         // a modifier that is part of the combination being built
+  MapKeyStateGroup,      // a modifier of the selected group (dashed, in the group's color)
 };
 
 // One key. A modifier key is drawn dashed and can't hold a shortcut; in the group editor it is clickable.

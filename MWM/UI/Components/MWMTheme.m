@@ -51,6 +51,7 @@ static NSColor *Named(NSString *name, NSColor *fallback) {
 + (NSColor *)feature { return Named(@"MWMFeature", [NSColor systemPurpleColor]); }
 + (NSColor *)warning { return Named(@"MWMWarning", [NSColor systemOrangeColor]); }
 + (NSColor *)reserved { return Named(@"MWMReserved", [NSColor systemYellowColor]); }
++ (NSColor *)groupColor { return Named(@"MWMGroup", [NSColor systemPinkColor]); }
 + (NSColor *)danger { return Named(@"MWMDanger", [NSColor systemRedColor]); }
 
 + (NSColor *)tint:(NSColor *)color opacity:(CGFloat)opacity { return [color colorWithAlphaComponent:opacity]; }

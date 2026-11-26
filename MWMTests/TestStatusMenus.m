@@ -1,7 +1,7 @@
 //
 //  TestStatusMenus.m
 //
-//  The menu bar menu: Snapshots, Keyboard Shortcuts and the pages of the window.
+//  The menu bar menu: Keyboard, Snapshots, Profiles, Backup and the pages of the window.
 //
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -18,8 +18,7 @@
 
 #import <XCTest/XCTest.h>
 #import "MWMStatusMenus.h"
-#import "MWMBackup.h"
-#import "MWMConfigurations.h"
+#import "MWMProfiles.h"
 #import "MWMSnapshots.h"
 #import "Snapshot.h"
 #import "SnapshotList.h"
@@ -86,56 +85,54 @@
 
 - (void)testThePagesMenuHasEveryPageOfTheWindow {
   NSMenu *menu = [[MWMStatusMenus shared] pagesMenu];
-  XCTAssertEqualObjects([self titles:menu], (@[@"Keyboard", @"Modifiers", @"-", @"Displays", @"Slots", @"Snapshots", @"-", @"General", @"Advanced", @"Other Aliases", @"Configurations", @"Backup"]));
-  XCTAssertEqualObjects([self titles:[[MWMStatusMenus shared] keyboardMenu]], (@[@"Keyboard Map", @"List of Shortcuts", @"-", @"New Shortcut…", @"Modifier Groups"]));
+  XCTAssertEqualObjects([self titles:menu], (@[@"Modifiers", @"Bindings", @"-", @"Displays", @"Slots", @"-", @"General", @"Advanced", @"Other Aliases", @"-", @"Snapshots", @"Profiles", @"Backup"]));
+  XCTAssertEqualObjects([self titles:[[MWMStatusMenus shared] keyboardMenu]], (@[@"Modifiers", @"-", @"Bindings Map", @"Bindings List", @"-", @"New Shortcut…"]));
 }
 
-- (void)testTheConfigurationsMenuChecksTheActiveOne {
-  NSMenu *menu = [[NSMenu alloc] initWithTitle:@"Configurations"];
-  [[MWMStatusMenus shared] showConfigurations:@[@"default", @"desk"] active:@"desk" inMenu:menu];
-  XCTAssertEqualObjects([self titles:menu], (@[@"default", @"desk", @"-", @"Manage Configurations…"]));
+- (void)testTheProfilesMenuChecksTheActiveOne {
+  NSMenu *menu = [[NSMenu alloc] initWithTitle:@"Profiles"];
+  [[MWMStatusMenus shared] showProfiles:@[@"default", @"desk"] active:@"desk" inMenu:menu];
+  XCTAssertEqualObjects([self titles:menu], (@[@"default", @"desk", @"-", @"Manage Profiles…"]));
   XCTAssertEqual([[menu itemAtIndex:0] state], NSControlStateValueOff);
   XCTAssertEqual([[menu itemAtIndex:1] state], NSControlStateValueOn);
-  [[MWMStatusMenus shared] showConfigurations:@[] active:@"default" inMenu:menu];
-  XCTAssertEqualObjects([self titles:menu], (@[@"No configurations yet", @"-", @"Manage Configurations…"]));
+  [[MWMStatusMenus shared] showProfiles:@[] active:@"default" inMenu:menu];
+  XCTAssertEqualObjects([self titles:menu], (@[@"No profiles yet", @"-", @"Manage Profiles…"]));
   XCTAssertFalse([[menu itemAtIndex:0] isEnabled]);
 }
 
-- (void)testTheRestoreMenuListsBackupsOrSaysThereAreNone {
+- (void)testTheBackupMenuSyncsAndOpensTheSettings {
   MWMStatusMenus *menus = [MWMStatusMenus shared];
-  NSMenu *menu = [[NSMenu alloc] initWithTitle:@"Restore Configuration"];
-  [menus showBackups:@[] inMenu:menu];
-  XCTAssertEqualObjects([self titles:menu], (@[@"No backups configured", @"-", @"Manage Backups…"]));
-  XCTAssertFalse([[menu itemAtIndex:0] isEnabled]);
-  MWMBackupEnvironment *desk = [MWMBackupEnvironment environmentNamed:@"Desk" configText:@"" snapshots:@{} displays:@[] date:[NSDate date]];
-  MWMBackupEnvironment *laptop = [MWMBackupEnvironment environmentNamed:@"Laptop" configText:@"" snapshots:@{} displays:@[] date:[NSDate date]];
-  [menus showBackups:@[desk, laptop] inMenu:menu];
-  XCTAssertEqualObjects([self titles:menu], (@[@"Desk", @"Laptop", @"-", @"Manage Backups…"]));
+  NSMenu *menu = [[NSMenu alloc] initWithTitle:@"Backup"];
+  [menus showBackupInMenu:menu lastSync:@"Last synced today, 10:42"];
+  XCTAssertEqualObjects([self titles:menu], (@[@"Sync Now", @"Last synced today, 10:42", @"-", @"Backup Settings…"]));
   XCTAssertTrue([[menu itemAtIndex:0] isEnabled]);
+  XCTAssertFalse([[menu itemAtIndex:1] isEnabled], @"it's only information");
+  [menus showBackupInMenu:menu lastSync:nil];
+  XCTAssertEqualObjects([self titles:menu], (@[@"Sync Now", @"Not synced yet", @"-", @"Backup Settings…"]));
 }
 
-- (void)testTheStatusMenuPutsTheCapabilitiesFirst {
+- (void)testTheStatusMenuFollowsTheSidebarOrder {
   SEL build = NSSelectorFromString(@"buildStatusMenu");
   id delegate = [NSApp delegate];
   XCTAssertTrue([delegate respondsToSelector:build]);
   NSMenu *menu = [delegate performSelector:build];
   NSArray *titles = [self titles:menu];
-  NSUInteger snapshots = [titles indexOfObject:@"Snapshots"], keyboard = [titles indexOfObject:@"Keyboard Shortcuts"], configure = [titles indexOfObject:@"Settings…"];
-  NSUInteger reload = [titles indexOfObject:@"Reload Configuration"], login = [titles indexOfObject:@"Launch MWM at Login"], about = [titles indexOfObject:@"About MWM"];
-  XCTAssertEqual(snapshots, 0u, @"%@", titles);
-  XCTAssertTrue(snapshots < keyboard && keyboard < login && login < configure && reload < about, @"%@", titles);
-  XCTAssertEqualObjects([titles objectAtIndex:login - 1], @"-");
-  XCTAssertEqualObjects([titles objectAtIndex:login + 1], @"-");
+  NSUInteger keyboard = [titles indexOfObject:@"Keyboard"], snapshots = [titles indexOfObject:@"Snapshots"], profiles = [titles indexOfObject:@"Profiles"], backup = [titles indexOfObject:@"Backup"];
+  NSUInteger reload = [titles indexOfObject:@"Reload Configuration"], login = [titles indexOfObject:@"Launch MWM at Login"], configure = [titles indexOfObject:@"Settings…"];
+  NSUInteger about = [titles indexOfObject:@"About MWM"], updates = [titles indexOfObject:@"Check for Updates…"];
+  XCTAssertEqual(keyboard, 0u, @"%@", titles);
+  XCTAssertTrue(keyboard < snapshots && snapshots < profiles && profiles < backup, @"the shared pages in the sidebar's order: %@", titles);
+  XCTAssertTrue(backup < reload && reload < login && login < configure && configure < about, @"%@", titles);
+  XCTAssertEqual(login, reload + 1, @"Reload Configuration, then Launch at Login");
+  XCTAssertEqualObjects([titles objectAtIndex:snapshots - 1], @"-");
+  XCTAssertEqualObjects([titles objectAtIndex:reload - 1], @"-");
+  XCTAssertEqualObjects([titles objectAtIndex:configure - 1], @"-");
+  XCTAssertNotNil([[menu itemWithTitle:@"Keyboard"] submenu]);
   XCTAssertNotNil([[menu itemWithTitle:@"Snapshots"] submenu]);
-  XCTAssertNotNil([[menu itemWithTitle:@"Keyboard Shortcuts"] submenu]);
-  NSUInteger restore = [titles indexOfObject:@"Backup"], configurations = [titles indexOfObject:@"Configurations"];
-  XCTAssertTrue(configure < configurations && configurations < restore && restore < reload, @"%@", titles);
-  XCTAssertNotNil([[menu itemWithTitle:@"Configurations"] submenu]);
+  XCTAssertNotNil([[menu itemWithTitle:@"Profiles"] submenu]);
   XCTAssertNotNil([[menu itemWithTitle:@"Backup"] submenu]);
-  XCTAssertEqualObjects([titles objectAtIndex:reload + 1], @"-", @"%@", titles);
   XCTAssertEqual([titles indexOfObject:@"Backup…"], (NSUInteger)NSNotFound);
   XCTAssertEqual([titles indexOfObject:@"Open Page"], (NSUInteger)NSNotFound);
-  NSUInteger updates = [titles indexOfObject:@"Check for Updates…"];
   XCTAssertEqual(updates, about + 1, @"grouped right under About: %@", titles);
   XCTAssertEqualObjects([titles objectAtIndex:[titles count] - 3], @"Check for Updates…");
   XCTAssertEqualObjects([titles objectAtIndex:[titles count] - 2], @"-");

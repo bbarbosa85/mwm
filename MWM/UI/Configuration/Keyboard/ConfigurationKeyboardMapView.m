@@ -37,7 +37,7 @@ static const CGFloat kGroupsWidth = 188;
 @property (strong) NSStackView *groupsStack;
 @property (strong) ConfigurationMacKeyboard *keyboard;
 @property (strong) NSStackView *selectionStack;
-@property (strong) NSStackView *legendStack;
+@property (strong) NSPopover *legendPopover;
 @property (copy) NSArray<ConfigurationMapKey *> *keys;
 @end
 
@@ -78,37 +78,40 @@ static const CGFloat kGroupsWidth = 188;
     [self.keyboard.centerXAnchor constraintEqualToAnchor:keyboardCard.centerXAnchor],
   ]];
 
-  self.legendStack = [NSStackView stackViewWithViews:@[]];
-  [self.legendStack setSpacing:16];
-
   self.selectionStack = [NSStackView stackViewWithViews:@[]];
   [self.selectionStack setOrientation:NSUserInterfaceLayoutOrientationVertical];
   [self.selectionStack setAlignment:NSLayoutAttributeLeading];
   [self.selectionStack setSpacing:10];
-  [self.selectionStack setEdgeInsets:NSEdgeInsetsMake(16, 16, 14, 16)];
+  [self.selectionStack setEdgeInsets:NSEdgeInsetsMake(MWMSpacingL, MWMSpacingL, MWMSpacingL, MWMSpacingL)];
   ConfigurationBlockView *selectionCard = [[ConfigurationBlockView alloc] init];
   [selectionCard setTranslatesAutoresizingMaskIntoConstraints:NO];
   [self.selectionStack setTranslatesAutoresizingMaskIntoConstraints:NO];
   [selectionCard addSubview:self.selectionStack];
   [NSLayoutConstraint activateConstraints:@[
-    [selectionCard.heightAnchor constraintEqualToConstant:222],
-    [self.selectionStack.topAnchor constraintEqualToAnchor:selectionCard.topAnchor],
+    [self.selectionStack.topAnchor constraintEqualToAnchor:selectionCard.topAnchor], [self.selectionStack.bottomAnchor constraintEqualToAnchor:selectionCard.bottomAnchor],
     [self.selectionStack.leadingAnchor constraintEqualToAnchor:selectionCard.leadingAnchor], [self.selectionStack.trailingAnchor constraintEqualToAnchor:selectionCard.trailingAnchor],
   ]];
 
-  NSTextField *note = [self labelWithText:@"Dashed keys are modifiers. They make the groups, so they can't hold a shortcut." size:11 color:[MWMTheme textTertiary] weight:NSFontWeightRegular];
   NSView *spacer = [[NSView alloc] init];
   [spacer setContentHuggingPriority:1 forOrientation:NSLayoutConstraintOrientationVertical];
-  NSStackView *main = [NSStackView stackViewWithViews:@[keyboardCard, self.legendStack, note, selectionCard, spacer]];
+  // The colors are explained in a popover from a button right under the keyboard.
+  NSButton *legend = [NSButton buttonWithTitle:@"Key colors" target:self action:@selector(legendPressed:)];
+  [legend setImage:[NSImage imageWithSystemSymbolName:@"paintpalette" accessibilityDescription:nil]];
+  [legend setImagePosition:NSImageLeft];
+  [legend setBezelStyle:NSBezelStyleRounded];
+  [legend setControlSize:NSControlSizeSmall];
+  [legend setIdentifier:@"keyboard-legend"];
+  [legend setToolTip:@"What the colors on the keyboard mean"];
+  NSStackView *legendRow = [NSStackView stackViewWithViews:@[[MWMComponents spacer], legend]];   // at the right of the keyboard
+  NSStackView *main = [NSStackView stackViewWithViews:@[keyboardCard, legendRow, selectionCard, spacer]];
   [main setOrientation:NSUserInterfaceLayoutOrientationVertical];
   [main setAlignment:NSLayoutAttributeLeading];
   [main setSpacing:12];
   [main setEdgeInsets:NSEdgeInsetsMake(8, 0, 16, 20)];
   [main setTranslatesAutoresizingMaskIntoConstraints:NO];
   [main setCustomSpacing:6 afterView:keyboardCard];
-  [main setCustomSpacing:4 afterView:self.legendStack];
-  [main setCustomSpacing:16 afterView:note];
-  for (NSView *view in @[keyboardCard, selectionCard]) [[view.widthAnchor constraintEqualToAnchor:main.widthAnchor constant:-20] setActive:YES];
+  [main setCustomSpacing:16 afterView:legendRow];
+  for (NSView *view in @[keyboardCard, legendRow, selectionCard]) [[view.widthAnchor constraintEqualToAnchor:main.widthAnchor constant:-20] setActive:YES];
 
   [self addSubview:self.groupsStack];
   [self addSubview:main];
@@ -193,7 +196,7 @@ static const CGFloat kGroupsWidth = 188;
     NSView *detail = group.custom ? [self labelWithText:@"other combinations" size:11 color:[MWMTheme textSecondary] weight:NSFontWeightRegular]
                                   : [ConfigurationKeyViews modifierCaps:group.modifierNames size:20];
     NSView *row = [MWMComponents countRowWithTitle:group.name count:group.count detail:detail detailSpacing:6 insets:NSEdgeInsetsMake(10, 12, 10, 12)
-                                         boldTitle:YES selected:selected onClick:^{ weakSelf.groupName = name; }];
+                                         boldTitle:YES selected:selected selectedColor:[MWMTheme groupColor] onClick:^{ weakSelf.groupName = name; }];
     [row setIdentifier:[@"group-" stringByAppendingString:group.name]];
     [self.groupsStack addArrangedSubview:row];
     [[row.widthAnchor constraintEqualToConstant:kGroupsWidth] setActive:YES];
@@ -218,7 +221,13 @@ static const CGFloat kGroupsWidth = 188;
   __weak ConfigurationKeyboardMapView *weakSelf = self;
   for (ConfigurationMapKey *key in keys) {
     [self.keyboard addSubview:key];
-    if (key.modifier) continue;
+    if (key.modifier) {
+      // The selected group's modifier keys (the left ones, which are the ones that build a group), in the group's color, still dashed.
+      BOOL inGroup = key.modifierName != nil && [modifiers containsObject:key.modifierName] && !(self.pickerMode && [[self currentGroup] custom]);
+      key.state = inGroup ? MapKeyStateGroup : MapKeyStateFree;
+      [key setNeedsDisplay:YES];
+      continue;
+    }
     NSString *name = key.keyName;
     [self styleKey:key modifiers:modifiers];
     key.selected = [name isEqualToString:self.selectedKeyName ?: @""];
@@ -231,7 +240,6 @@ static const CGFloat kGroupsWidth = 188;
     [self.keyboard showModifierPickerWithSelected:modifiers dimOthers:NO toggle:^(NSString *name) { [weakSelf toggleModifierNamed:name]; }];
   }
   [self.keyboard setNeedsLayout:YES];
-  [self rebuildLegend];
 }
 
 // A key's color in the current group: what its shortcut does, or conflict / reserved / free.
@@ -265,26 +273,47 @@ static const CGFloat kGroupsWidth = 188;
   return nil;
 }
 
-- (void)rebuildLegend {
-  for (NSView *view in [[self.legendStack arrangedSubviews] copy]) {
-    [self.legendStack removeArrangedSubview:view];
-    [view removeFromSuperview];
-  }
+- (void)legendPressed:(NSButton *)sender {
+  if (self.legendPopover.shown) { [self.legendPopover close]; return; }
+  NSViewController *controller = [[NSViewController alloc] init];
+  controller.view = [self legendView];
+  self.legendPopover = [[NSPopover alloc] init];
+  [self.legendPopover setBehavior:NSPopoverBehaviorTransient];
+  [self.legendPopover setContentViewController:controller];
+  [self.legendPopover showRelativeToRect:sender.bounds ofView:sender preferredEdge:NSRectEdgeMaxY];
+}
+
+// What the colors on the keyboard mean, for the Legend popover.
+- (NSView *)legendView {
   NSArray *entries = @[@[@"Move to slot", [MWMTheme accent]], @[@"Windows and apps", [MWMTheme success]], @[@"Features", [MWMTheme feature]],
-                       @[@"Conflict", [MWMTheme warning]], @[@"Reserved by macOS", [MWMTheme reserved]]];
+                       @[@"Conflict", [MWMTheme warning]], @[@"Reserved by macOS", [MWMTheme reserved]], @[@"Selected group", [MWMTheme groupColor]]];
+  NSMutableArray *rows = [NSMutableArray array];
+  [rows addObject:[self labelWithText:@"Key colors" size:13 color:[MWMTheme textPrimary] weight:NSFontWeightMedium]];
   for (NSArray *entry in entries) {
     NSView *dot = [[NSView alloc] init];
     [dot setWantsLayer:YES];
     [[dot layer] setCornerRadius:3];
     [[dot layer] setBackgroundColor:[[(NSColor *)entry[1] colorWithAlphaComponent:0.6] CGColor]];
     [dot setTranslatesAutoresizingMaskIntoConstraints:NO];
-    [NSLayoutConstraint activateConstraints:@[[dot.widthAnchor constraintEqualToConstant:9], [dot.heightAnchor constraintEqualToConstant:9]]];
-    NSTextField *label = [self labelWithText:entry[0] size:11 color:[MWMTheme textTertiary] weight:NSFontWeightRegular];
+    [NSLayoutConstraint activateConstraints:@[[dot.widthAnchor constraintEqualToConstant:10], [dot.heightAnchor constraintEqualToConstant:10]]];
+    NSTextField *label = [self labelWithText:entry[0] size:12 color:[MWMTheme textPrimary] weight:NSFontWeightRegular];
     NSStackView *item = [NSStackView stackViewWithViews:@[dot, label]];
-    [item setSpacing:5];
+    [item setSpacing:MWMSpacingS];
     [item setAlignment:NSLayoutAttributeCenterY];
-    [self.legendStack addArrangedSubview:item];
+    [rows addObject:item];
   }
+  // The note wraps inside the popover, whose padding is the design system's.
+  NSTextField *note = [MWMComponents wrappingLabelWithText:@"Dashed keys are modifiers. They make the groups, so they can't hold a shortcut." size:11 color:[MWMTheme textTertiary] weight:NSFontWeightRegular];
+  [note setPreferredMaxLayoutWidth:228];
+  [rows addObject:note];
+  NSStackView *stack = [NSStackView stackViewWithViews:rows];
+  [stack setOrientation:NSUserInterfaceLayoutOrientationVertical];
+  [stack setAlignment:NSLayoutAttributeLeading];
+  [stack setSpacing:MWMSpacingS];
+  [stack setEdgeInsets:NSEdgeInsetsMake(MWMSpacingL, MWMSpacingL, MWMSpacingL, MWMSpacingL)];
+  [[stack.widthAnchor constraintEqualToConstant:228 + 2 * MWMSpacingL] setActive:YES];
+  [[note.widthAnchor constraintEqualToConstant:228] setActive:YES];
+  return stack;
 }
 
 - (void)selectKeyNamed:(NSString *)keyName {
@@ -368,6 +397,9 @@ static const CGFloat kGroupsWidth = 188;
   NSString *keyName = self.selectedKeyName;
   if (keyName == nil) {
     [self.selectionStack addArrangedSubview:[self labelWithText:@"Click a key to see what it does, or to give it a shortcut." size:13 color:[MWMTheme textTertiary] weight:NSFontWeightRegular]];
+    NSButton *newShortcut = [MWMComponents secondaryButtonWithTitle:@"New Shortcut" symbol:@"plus" target:self action:@selector(newPressed:)];
+    [newShortcut setIdentifier:@"new-shortcut"];
+    [self.selectionStack addArrangedSubview:newShortcut];
     return;
   }
   MWMModifierGroup *group = [self currentGroup];
@@ -400,6 +432,9 @@ static const CGFloat kGroupsWidth = 188;
 
   // Buttons on their own row, right-aligned; a conflict chip sits to their left.
   NSMutableArray *buttonRow = [NSMutableArray array];
+  NSButton *newShortcut = [MWMComponents secondaryButtonWithTitle:@"New Shortcut" symbol:@"plus" target:self action:@selector(newPressed:)];   // always there
+  [newShortcut setIdentifier:@"new-shortcut"];
+  [buttonRow addObject:newShortcut];
   NSView *spacer = [MWMComponents spacer];
   [buttonRow addObject:spacer];
   if (info != nil) {
@@ -421,13 +456,11 @@ static const CGFloat kGroupsWidth = 188;
     NSButton *add = [MWMComponents primaryButtonWithTitle:@"Add Shortcut" target:self action:@selector(addPressed:)];
     [buttonRow addObject:add];
   }
-  if ([buttonRow count] > 1) {
-    NSStackView *buttons = [NSStackView stackViewWithViews:buttonRow];
-    [buttons setSpacing:8];
-    [buttons setAlignment:NSLayoutAttributeCenterY];
-    [self.selectionStack addArrangedSubview:buttons];
-    [[buttons.widthAnchor constraintEqualToAnchor:self.selectionStack.widthAnchor constant:-32] setActive:YES];
-  }
+  NSStackView *buttons = [NSStackView stackViewWithViews:buttonRow];
+  [buttons setSpacing:8];
+  [buttons setAlignment:NSLayoutAttributeCenterY];
+  [self.selectionStack addArrangedSubview:buttons];
+  [[buttons.widthAnchor constraintEqualToAnchor:self.selectionStack.widthAnchor constant:-32] setActive:YES];
 }
 
 #pragma mark - Picker
@@ -504,6 +537,10 @@ static const CGFloat kGroupsWidth = 188;
 - (void)editPressed:(id)sender {
   MWMShortcutInfo *info = [self infoForKeyName:self.selectedKeyName ?: @""];
   if (info != nil) [self.delegate keyboardMapView:self wantsToEditBindingAtIndex:info.index];
+}
+
+- (void)newPressed:(id)sender {
+  [self.delegate keyboardMapView:self wantsNewShortcutInGroup:nil keyName:nil];
 }
 
 - (void)addPressed:(id)sender {

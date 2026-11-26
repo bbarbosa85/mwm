@@ -35,6 +35,10 @@ typedef NS_ENUM(NSInteger, ConfigurationKeyboardMode) {
 @optional
 // The user wants to look at or change the modifier groups (they live on the Modifiers page).
 - (void)keyboardViewWantsGroups:(ConfigurationKeyboardView *)view;
+// The user wants to look at or change the displays (they live on the Displays page).
+- (void)keyboardViewWantsDisplays:(ConfigurationKeyboardView *)view;
+// The user wants to look at or change the slots (they live on the Slots page).
+- (void)keyboardViewWantsSlots:(ConfigurationKeyboardView *)view;
 // A shortcut was opened for editing (YES) or closed (NO). The window hides its header and bottom bar while one is open.
 - (void)keyboardView:(ConfigurationKeyboardView *)view didChangeEditing:(BOOL)editing;
 @end

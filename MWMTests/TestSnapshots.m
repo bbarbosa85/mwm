@@ -40,8 +40,9 @@
 #import "ConfigurationShortcutEditorView.h"
 #import "MWMDesignGallery.h"
 #import "ConfigurationBackupView.h"
-#import "ConfigurationConfigurationsView.h"
-#import "MWMConfigurations.h"
+#import "ConfigurationProfilesView.h"
+#import "MWMProfiles.h"
+#import "MWMSync.h"
 #import "MWMGist.h"
 #import "MWMDisplays.h"
 #import "TestFakeGitHub.h"
@@ -102,19 +103,35 @@ static NSString *const kConfig =
 }
 
 // How far two images are apart: the average difference per color channel, 0 to 255.
+// The pixels of an image as 8-bit sRGB, so two images can be compared byte by byte.
+static NSData *PixelsOf(NSBitmapImageRep *rep) {
+  CGImageRef image = [rep CGImage];
+  size_t width = CGImageGetWidth(image), height = CGImageGetHeight(image);
+  NSMutableData *data = [NSMutableData dataWithLength:width * height * 4];
+  CGColorSpaceRef space = CGColorSpaceCreateWithName(kCGColorSpaceSRGB);
+  CGContextRef context = CGBitmapContextCreate([data mutableBytes], width, height, 8, width * 4, space, kCGImageAlphaPremultipliedLast);
+  CGContextDrawImage(context, CGRectMake(0, 0, width, height), image);
+  CGContextRelease(context);
+  CGColorSpaceRelease(space);
+  return data;
+}
+
+// The average difference per color channel, from 0 to 255, over every other pixel.
 - (double)differenceBetween:(NSBitmapImageRep *)a and:(NSBitmapImageRep *)b {
   if ([a pixelsWide] != [b pixelsWide] || [a pixelsHigh] != [b pixelsHigh]) return 255;
+  NSData *pa = PixelsOf(a), *pb = PixelsOf(b);
+  const uint8_t *x = [pa bytes], *y = [pb bytes];
+  NSInteger width = [a pixelsWide], height = [a pixelsHigh];
   double total = 0;
   NSInteger count = 0;
-  for (NSInteger y = 0; y < [a pixelsHigh]; y += 2) {
-    for (NSInteger x = 0; x < [a pixelsWide]; x += 2) {
-      NSColor *ca = [[a colorAtX:x y:y] colorUsingColorSpace:[NSColorSpace sRGBColorSpace]];
-      NSColor *cb = [[b colorAtX:x y:y] colorUsingColorSpace:[NSColorSpace sRGBColorSpace]];
-      total += fabs(ca.redComponent - cb.redComponent) + fabs(ca.greenComponent - cb.greenComponent) + fabs(ca.blueComponent - cb.blueComponent);
+  for (NSInteger row = 0; row < height; row += 2) {
+    for (NSInteger column = 0; column < width; column += 2) {
+      NSInteger at = (row * width + column) * 4;
+      total += abs((int)x[at] - (int)y[at]) + abs((int)x[at + 1] - (int)y[at + 1]) + abs((int)x[at + 2] - (int)y[at + 2]);
       count += 3;
     }
   }
-  return count == 0 ? 0 : total / count * 255;
+  return count == 0 ? 0 : total / count;
 }
 
 - (void)checkView:(NSView *)view size:(NSSize)size name:(NSString *)name dark:(BOOL)dark {
@@ -189,13 +206,20 @@ static NSString *const kConfig =
     push.draftAction.b = @"bar-resize:screenSizeX/4";
     [push performSelector:NSSelectorFromString(@"refresh")];
     [self checkView:push size:NSMakeSize(1000, 640) name:@"shortcut-editor-push" dark:[dark boolValue]];
+    ConfigurationShortcutEditorView *thrown = [[ConfigurationShortcutEditorView alloc] initWithFrame:NSMakeRect(0, 0, 1000, 640)];
+    thrown.document = doc;
+    [thrown editBindingAtIndex:0];
+    [thrown selectKind:MWMActionKindThrow];
+    thrown.draftAction.b = @"resize:screenSizeX/2;screenSizeY";
+    [thrown performSelector:NSSelectorFromString(@"refresh")];
+    [self checkView:thrown size:NSMakeSize(1000, 640) name:@"shortcut-editor-throw" dark:[dark boolValue]];
     ConfigurationShortcutEditorView *custom = [[ConfigurationShortcutEditorView alloc] initWithFrame:NSMakeRect(0, 0, 1000, 640)];
     custom.document = doc;
     [custom editBindingAtIndex:0];
     [custom selectKind:MWMActionKindCustom];
     custom.draftAction.a = @"move screenOriginX+screenSizeX/5;screenOriginY (4*screenSizeX/5)-14;screenSizeY";
     [custom performSelector:NSSelectorFromString(@"refresh")];
-    [self checkView:custom size:NSMakeSize(1000, 640) name:@"shortcut-editor-advanced" dark:[dark boolValue]];
+    [self checkView:custom size:NSMakeSize(1000, 900) name:@"shortcut-editor-advanced" dark:[dark boolValue]];
   }
 }
 
@@ -233,14 +257,14 @@ static NSString *const kConfig =
   NSString *config = @"positions:\n  rightfourfifths: move (screenOriginX+screenSizeX/5)+14;screenOriginY (4*screenSizeX/5)-14;screenSizeY\n  floating: move windowTopLeftX;windowTopLeftY screenSizeX/3;screenSizeY/2\n";
   for (NSNumber *dark in @[@NO, @YES]) {
     MWMConfigDocument *doc = [MWMConfigDocument documentFromString:config error:nil];
-    ConfigurationSlotsView *margins = [[ConfigurationSlotsView alloc] initWithFrame:NSMakeRect(0, 0, 1000, 640)];
+    ConfigurationSlotsView *margins = [[ConfigurationSlotsView alloc] initWithFrame:NSMakeRect(0, 0, 1000, 900)];
     margins.document = doc;
     [margins selectSlotNamed:@"rightfourfifths"];
-    [self checkView:margins size:NSMakeSize(1000, 640) name:@"slots-editor-margins" dark:[dark boolValue]];
-    ConfigurationSlotsView *custom = [[ConfigurationSlotsView alloc] initWithFrame:NSMakeRect(0, 0, 1000, 640)];
+    [self checkView:margins size:NSMakeSize(1000, 900) name:@"slots-editor-margins" dark:[dark boolValue]];
+    ConfigurationSlotsView *custom = [[ConfigurationSlotsView alloc] initWithFrame:NSMakeRect(0, 0, 1000, 900)];
     custom.document = doc;
     [custom selectSlotNamed:@"floating"];
-    [self checkView:custom size:NSMakeSize(1000, 640) name:@"slots-editor-custom" dark:[dark boolValue]];
+    [self checkView:custom size:NSMakeSize(1000, 900) name:@"slots-editor-custom" dark:[dark boolValue]];
     ConfigurationSlotsView *gallery = [[ConfigurationSlotsView alloc] initWithFrame:NSMakeRect(0, 0, 1000, 640)];
     gallery.document = doc;
     [self checkView:gallery size:NSMakeSize(1000, 640) name:@"slots-gallery-formulas" dark:[dark boolValue]];
@@ -250,63 +274,75 @@ static NSString *const kConfig =
 - (void)testTheSlotsEditorLooksTheSame {
   for (NSNumber *dark in @[@NO, @YES]) {
     MWMConfigDocument *doc = [MWMConfigDocument documentFromString:kConfig error:nil];
-    ConfigurationSlotsView *slots = [[ConfigurationSlotsView alloc] initWithFrame:NSMakeRect(0, 0, 1000, 640)];
+    ConfigurationSlotsView *slots = [[ConfigurationSlotsView alloc] initWithFrame:NSMakeRect(0, 0, 1000, 900)];
     slots.document = doc;
     [slots selectSlotNamed:@"half"];
-    [self checkView:slots size:NSMakeSize(1000, 640) name:@"slots-editor" dark:[dark boolValue]];
+    [self checkView:slots size:NSMakeSize(1000, 900) name:@"slots-editor" dark:[dark boolValue]];
   }
 }
 
 - (void)testTheBackupPageLooksTheSame {
+  NSString *home = [NSTemporaryDirectory() stringByAppendingPathComponent:[[NSUUID UUID] UUIDString]];
+  [[NSFileManager defaultManager] createDirectoryAtPath:home withIntermediateDirectories:YES attributes:nil error:nil];
+  [MWMProfiles setHomeDirectory:home];
   [MWMGist useMemoryStorage:YES];
   [MWMGist setToken:@"ghp_test"];
   TestFakeGitHub *github = [[TestFakeGitHub alloc] init];
   [github install];
-  MWMDisplay *odyssey = [MWMDisplay displayNamed:@"Samsung Odyssey G9" width:5120 height:1440 builtIn:NO x:0 y:0];
-  MWMDisplay *builtIn = [MWMDisplay displayNamed:@"Built-in" width:3024 height:1964 builtIn:YES x:-3024 y:0];
-  [MWMDisplays setConnectedOverride:@[odyssey, builtIn]];
-  NSString *text = [kConfig stringByReplacingOccurrencesOfString:@"positions:" withString:@"slots:"];
-  NSArray *saved = @[@[@"Desk, two monitors", @[odyssey, builtIn], @1762948800], @[@"Laptop only", @[builtIn], @1761998400]];
-  for (NSArray *item in saved) {
-    XCTestExpectation *done = [self expectationWithDescription:@"save"];
-    MWMBackupEnvironment *environment = [MWMBackupEnvironment environmentNamed:item[0] configText:kConfig snapshots:@{@"work": @{@"name": @"work"}, @"couch": @{@"name": @"couch"}} displays:item[1] date:[NSDate dateWithTimeIntervalSince1970:[item[2] doubleValue]]];
-    [MWMGist saveEnvironment:environment completion:^(NSString *problem) { [done fulfill]; }];
-    [self waitForExpectations:@[done] timeout:30];
-  }
-  (void)text;
+  // Noon UTC, so the dates read the same in any time zone.
+  NSDate *(^day)(NSInteger) = ^NSDate *(NSInteger d) { return [NSDate dateWithTimeIntervalSince1970:1762948800 + 86400.0 * d]; };
+  NSDateFormatter *iso = [[NSDateFormatter alloc] init];
+  iso.locale = [NSLocale localeWithLocaleIdentifier:@"en_US_POSIX"];
+  iso.timeZone = [NSTimeZone timeZoneForSecondsFromGMT:0];
+  iso.dateFormat = @"yyyy-MM-dd'T'HH:mm:ss'Z'";
+  void (^local)(NSString *, NSString *, NSInteger) = ^(NSString *name, NSString *text, NSInteger d) {
+    [MWMProfiles createNamed:name text:text error:nil];
+    [[NSFileManager defaultManager] setAttributes:@{NSFileModificationDate: day(d)} ofItemAtPath:[MWMProfiles pathForName:name] error:nil];
+  };
+  local(@"default", @"version: 2\n", -3);
+  local(@"Desk, two monitors", @"version: 2\n# here\n", -1);
+  local(@"couch", @"version: 2\n# couch\n", -2);
+  NSDictionary *manifest = @{@"default": @{@"updatedAt": [iso stringFromDate:day(-3)]}, @"Desk, two monitors": @{@"updatedAt": [iso stringFromDate:day(-6)]}, @"Laptop only": @{@"updatedAt": [iso stringFromDate:day(-9)]}};
+  NSData *manifestData = [NSJSONSerialization dataWithJSONObject:@{@"version": @1, @"files": manifest} options:0 error:nil];
+  [github addBackupGistWithFiles:@{@"default.mwm.yaml": @"version: 2\n", @"Desk, two monitors.mwm.yaml": @"version: 2\n# there\n", @"Laptop only.mwm.yaml": @"version: 2\n# laptop\n", @"old setup.mwm.yaml": @"version: 2\n# old\n",
+                                   @"mwm-sync.json": [[NSString alloc] initWithData:manifestData encoding:NSUTF8StringEncoding]}];
+  // "old setup" was in sync once and is gone from this computer.
+  NSDictionary *state = @{@"version": @1, @"base": @{@"old setup": [MWMSyncFile hashOfText:@"version: 2\n# old\n"]}};
+  [[NSJSONSerialization dataWithJSONObject:state options:0 error:nil] writeToFile:[[MWMProfiles folder] stringByAppendingPathComponent:@".sync.json"] atomically:YES];
   NSMutableDictionary *lists = [NSMutableDictionary dictionary];
   for (NSString *name in @[@"work", @"couch"]) lists[name] = [[SnapshotList alloc] initWithName:name saveToDisk:YES isStack:NO];
   [MWMSnapshots setListsOverride:lists];
-  ConfigurationBackupView *page = [[ConfigurationBackupView alloc] initWithFrame:NSMakeRect(0, 0, 840, 720)];
-  page.document = [MWMConfigDocument documentFromString:kConfig error:nil];
+  [MWMSync setSnapshotsModifiedOverride:day(-4)];
+  ConfigurationBackupView *page = [[ConfigurationBackupView alloc] initWithFrame:NSMakeRect(0, 0, 840, 520)];
   XCTestExpectation *loaded = [self expectationWithDescription:@"refresh"];
   [page refresh:^{ [loaded fulfill]; }];
   [self waitForExpectations:@[loaded] timeout:30];
-  for (NSNumber *dark in @[@NO, @YES]) [self checkView:page size:NSMakeSize(840, 720) name:@"backup" dark:[dark boolValue]];
+  for (NSNumber *dark in @[@NO, @YES]) [self checkView:page size:NSMakeSize(840, 520) name:@"backup" dark:[dark boolValue]];
+  [MWMSync setSnapshotsModifiedOverride:nil];
   [MWMSnapshots setListsOverride:nil];
-  [MWMDisplays setConnectedOverride:nil];
   [MWMGist setTransport:nil];
   [MWMGist useMemoryStorage:NO];
+  [MWMProfiles setHomeDirectory:nil];
+  [[NSFileManager defaultManager] removeItemAtPath:home error:nil];
 }
 
-- (void)testTheConfigurationsPageLooksTheSame {
+- (void)testTheProfilesPageLooksTheSame {
   NSString *home = [NSTemporaryDirectory() stringByAppendingPathComponent:[[NSUUID UUID] UUIDString]];
   [[NSFileManager defaultManager] createDirectoryAtPath:home withIntermediateDirectories:YES attributes:nil error:nil];
-  [MWMConfigurations setHomeDirectory:home];
+  [MWMProfiles setHomeDirectory:home];
   for (NSArray *item in @[@[@"default", @1762948800], @[@"Desk, two monitors", @1762603200], @[@"Laptop only", @1761998400]]) {
-    [MWMConfigurations createNamed:item[0] text:@"version: 2\n" error:nil];
-    [[NSFileManager defaultManager] setAttributes:@{NSFileModificationDate: [NSDate dateWithTimeIntervalSince1970:[item[1] doubleValue]]} ofItemAtPath:[MWMConfigurations pathForName:item[0]] error:nil];
+    [MWMProfiles createNamed:item[0] text:@"version: 2\n" error:nil];
+    [[NSFileManager defaultManager] setAttributes:@{NSFileModificationDate: [NSDate dateWithTimeIntervalSince1970:[item[1] doubleValue]]} ofItemAtPath:[MWMProfiles pathForName:item[0]] error:nil];
   }
-  ConfigurationConfigurationsView *page = [[ConfigurationConfigurationsView alloc] initWithFrame:NSMakeRect(0, 0, 840, 640)];
-  for (NSNumber *dark in @[@NO, @YES]) [self checkView:page size:NSMakeSize(840, 640) name:@"configurations" dark:[dark boolValue]];
-  [MWMConfigurations setHomeDirectory:nil];
+  ConfigurationProfilesView *page = [[ConfigurationProfilesView alloc] initWithFrame:NSMakeRect(0, 0, 840, 640)];
+  for (NSNumber *dark in @[@NO, @YES]) [self checkView:page size:NSMakeSize(840, 640) name:@"profiles" dark:[dark boolValue]];
+  [MWMProfiles setHomeDirectory:nil];
   [[NSFileManager defaultManager] removeItemAtPath:home error:nil];
 }
 
 - (void)testTheBackupConnectPageLooksTheSame {
   [MWMGist useMemoryStorage:YES];
   ConfigurationBackupView *page = [[ConfigurationBackupView alloc] initWithFrame:NSMakeRect(0, 0, 840, 640)];
-  page.document = [MWMConfigDocument documentFromString:kConfig error:nil];
   for (NSNumber *dark in @[@NO, @YES]) [self checkView:page size:NSMakeSize(840, 640) name:@"backup-connect" dark:[dark boolValue]];
   [MWMGist useMemoryStorage:NO];
 }
@@ -345,7 +381,7 @@ static NSString *const kConfig =
     ConfigurationKeyboardMapView *custom = [[ConfigurationKeyboardMapView alloc] initWithFrame:NSMakeRect(0, 0, 1000, 640)];
     custom.document = doc;
     custom.groupName = @"shyper";
-    [self checkView:custom size:NSMakeSize(1000, 640) name:@"keyboard-map-empty-group" dark:d];
+    [self checkView:custom size:NSMakeSize(1000, 900) name:@"keyboard-map-empty-group" dark:d];
 
     NSMutableDictionary *lists = [NSMutableDictionary dictionary];
     NSArray *desk = @[@{@"name": @"Built-in", @"width": @1512, @"height": @982, @"x": @0, @"y": @0, @"builtIn": @YES},

@@ -27,7 +27,12 @@ NS_ASSUME_NONNULL_BEGIN
 @interface ConfigurationPushRows : NSObject
 @property (readonly) NSArray<NSDictionary *> *rows;
 // onChange gets the options as they are after the user changed something.
-+ (instancetype)rowsForOptions:(MWMPushOptions *)options direction:(NSString *)direction screens:(NSArray<NSString *> *)screens onChange:(void (^)(MWMPushOptions *options))onChange;
+// The screens are offered after "Current screen": a title and the value each one writes, then "Manage displays…",
+// which calls onManageDisplays.
++ (instancetype)rowsForOptions:(MWMPushOptions *)options direction:(NSString *)direction screenTitles:(NSArray<NSString *> *)titles screenValues:(NSArray<NSString *> *)values
+                       onChange:(void (^)(MWMPushOptions *options))onChange onManageDisplays:(void (^)(void))onManageDisplays;
+// What the "Manage displays…" item stands for.
++ (NSString *)manageDisplaysMarker;
 @end
 
 NS_ASSUME_NONNULL_END

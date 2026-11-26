@@ -25,4 +25,8 @@
 - (void)install;
 - (void)addFile:(NSString *)name content:(NSString *)content toGistWithDescription:(NSString *)description;
 - (void)addPublicGistNamed:(NSString *)description;
+// Makes the private "MWM backup" gist with these files (name → text).
+- (void)addBackupGistWithFiles:(NSDictionary<NSString *, NSString *> *)files;
+// The files of the private "MWM backup" gist, by name (empty when there is none).
+- (NSDictionary<NSString *, NSString *> *)backupFiles;
 @end

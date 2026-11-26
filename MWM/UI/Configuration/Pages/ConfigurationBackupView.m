@@ -17,19 +17,17 @@
 #import "ConfigurationBackupView.h"
 #import "MWMAlert.h"
 #import "MWMComponents.h"
-#import "MWMConfigDocument.h"
-#import "MWMDisplays.h"
 #import "MWMGist.h"
-#import "MWMSnapshots.h"
+#import "MWMSyncPresenter.h"
 #import "MWMTheme.h"
 
-@interface ConfigurationBackupView () <NSTextFieldDelegate>
+@interface ConfigurationBackupView ()
 @property (strong) NSStackView *rows;
-@property (strong) NSTextField *nameField;
 @property (strong) NSTextField *tokenField;
-@property (strong) NSButton *backUpButton;
-@property (copy) NSArray<MWMBackupEnvironment *> *environments;
+@property (strong) NSButton *syncButton;
+@property (copy) NSArray<MWMSyncItem *> *items;
 @property (copy, nullable) NSString *problem;
+@property (strong, nullable) MWMSyncReport *lastReport;
 @property (assign) BOOL loading;
 @property (assign) BOOL loaded;
 @property (assign) BOOL editingToken;
@@ -42,11 +40,7 @@
   self = [super initWithFrame:frame];
   if (self) {
     _interactive = YES;
-    _environments = @[];
-    _nameField = [NSTextField textFieldWithString:@"My computer"];
-    [_nameField setDelegate:self];
-    [_nameField setIdentifier:@"backup-name"];
-    [_nameField setContentHuggingPriority:1 forOrientation:NSLayoutConstraintOrientationHorizontal];
+    _items = @[];
     _tokenField = [NSSecureTextField textFieldWithString:@""];
     [_tokenField setPlaceholderString:@"ghp_…"];
     [_tokenField setIdentifier:@"backup-token"];
@@ -54,7 +48,7 @@
     _rows = [NSStackView stackViewWithViews:@[]];
     [_rows setOrientation:NSUserInterfaceLayoutOrientationVertical];
     [_rows setAlignment:NSLayoutAttributeLeading];
-    [_rows setSpacing:MWMSpacingL];
+    [_rows setSpacing:MWMSpacingM];
     [_rows setEdgeInsets:NSEdgeInsetsMake(8, MWMSpacingXL, MWMSpacingXL, MWMSpacingXL)];
     NSScrollView *scroll = [MWMComponents scrollViewWithContent:_rows];
     [self addSubview:scroll];
@@ -67,73 +61,6 @@
 - (void)viewDidMoveToWindow {
   [super viewDidMoveToWindow];
   if (self.window != nil && !self.loaded && [MWMGist token] != nil) [self refresh:nil];
-}
-
-- (void)setDocument:(MWMConfigDocument *)document {
-  _document = document;
-  [self rebuild];
-}
-
-#pragma mark - Facts
-
-- (NSView *)factsForDisplays:(NSArray<MWMDisplay *> *)displays shortcuts:(NSUInteger)shortcuts modifiers:(NSUInteger)modifiers snapshots:(NSUInteger)snapshots {
-  NSMutableArray *lines = [NSMutableArray array];
-  NSTextField *heading = [MWMComponents captionLabel:@"Displays"];
-  [lines addObject:heading];
-  for (MWMDisplay *display in displays) {
-    NSMutableAttributedString *line = [[NSMutableAttributedString alloc] initWithString:display.name attributes:@{NSFontAttributeName: [MWMTheme fontSmall], NSForegroundColorAttributeName: [MWMTheme textPrimary]}];
-    [line appendAttributedString:[[NSAttributedString alloc] initWithString:[NSString stringWithFormat:@" (%ld × %ld)", (long)display.width, (long)display.height] attributes:@{NSFontAttributeName: [MWMTheme fontSmall], NSForegroundColorAttributeName: [MWMTheme textSecondary]}]];
-    [lines addObject:[NSTextField labelWithAttributedString:line]];
-  }
-  if ([displays count] == 0) [lines addObject:[MWMComponents secondaryLabel:@"No displays recorded"]];
-  NSStackView *displaysColumn = [NSStackView stackViewWithViews:lines];
-  [displaysColumn setOrientation:NSUserInterfaceLayoutOrientationVertical];
-  [displaysColumn setAlignment:NSLayoutAttributeLeading];
-  [displaysColumn setSpacing:3];
-
-  NSMutableArray *counts = [NSMutableArray array];
-  NSArray *items = @[@[@"keyboard", @"shortcut", @(shortcuts)], @[@"command", @"modifier", @(modifiers)], @[@"camera", @"snapshot", @(snapshots)]];
-  for (NSArray *item in items) {
-    NSUInteger count = [item[2] unsignedIntegerValue];
-    NSImageView *icon = [NSImageView imageViewWithImage:[NSImage imageWithSystemSymbolName:item[0] accessibilityDescription:nil]];
-    [icon setContentTintColor:[MWMTheme textSecondary]];
-    NSTextField *text = [MWMComponents labelWithText:[NSString stringWithFormat:@"%lu %@%@", (unsigned long)count, item[1], count == 1 ? @"" : @"s"] font:[MWMTheme fontSmall] color:[MWMTheme textPrimary]];
-    NSStackView *line = [NSStackView stackViewWithViews:@[icon, text]];
-    [line setSpacing:MWMSpacingS];
-    [line setAlignment:NSLayoutAttributeCenterY];
-    [[icon.widthAnchor constraintEqualToConstant:18] setActive:YES];
-    [counts addObject:line];
-  }
-  NSStackView *countsColumn = [NSStackView stackViewWithViews:counts];
-  [countsColumn setOrientation:NSUserInterfaceLayoutOrientationVertical];
-  [countsColumn setAlignment:NSLayoutAttributeLeading];
-  [countsColumn setSpacing:6];
-  [countsColumn setIdentifier:@"backup-counts"];
-
-  NSStackView *facts = [NSStackView stackViewWithViews:@[displaysColumn, [MWMComponents spacer], countsColumn]];
-  [facts setAlignment:NSLayoutAttributeTop];
-  [facts setSpacing:MWMSpacingXL];
-  return facts;
-}
-
-// The title, a separator and the facts, wrapped in a card.
-- (NSView *)cardWithTop:(NSView *)top facts:(NSView *)facts dashed:(BOOL)dashed extra:(NSArray<NSView *> *)extra identifier:(NSString *)identifier {
-  NSMutableArray *views = [NSMutableArray arrayWithObject:top];
-  [views addObjectsFromArray:extra];
-  NSView *line = [MWMComponents separator];
-  [views addObject:line];
-  [views addObject:facts];
-  NSStackView *column = [NSStackView stackViewWithViews:views];
-  [column setOrientation:NSUserInterfaceLayoutOrientationVertical];
-  [column setAlignment:NSLayoutAttributeLeading];
-  [column setSpacing:MWMSpacingM];
-  for (NSView *view in views) [[view.widthAnchor constraintEqualToAnchor:column.widthAnchor] setActive:YES];
-  [column setCustomSpacing:MWMSpacingL afterView:[views count] > 2 ? extra.lastObject ?: top : top];
-  NSView *card = dashed ? [MWMComponents dashedCard] : [MWMComponents card];
-  [card setIdentifier:identifier];
-  [card addSubview:column];
-  [MWMComponents pinView:column toEdgesOf:card insets:NSEdgeInsetsMake(MWMSpacingL, MWMSpacingL, MWMSpacingL, MWMSpacingL)];
-  return card;
 }
 
 #pragma mark - Page
@@ -205,57 +132,102 @@ static NSString *const kTokensURL = @"https://github.com/settings/tokens";
 
 - (void)createTokenPressed:(id)sender { [[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:kNewTokenURL]]; }
 
-- (NSArray<MWMDisplay *> *)connectedDisplays { return [MWMDisplays connected]; }
 
-- (NSDictionary *)currentCounts {
-  return @{@"shortcuts": @([self.document.bindings count]), @"modifiers": @([self.document.modifiers count]), @"snapshots": @([[MWMSnapshots snapshots] count])};
+#pragma mark - The list
+
+static NSString *StatusTitle(MWMSyncStatus status) {
+  switch (status) {
+    case MWMSyncStatusSynced: return @"Synced";
+    case MWMSyncStatusChangedHere: return @"Changed here";
+    case MWMSyncStatusNewerInGist: return @"Newer in the gist";
+    case MWMSyncStatusOnlyHere: return @"Only here";
+    case MWMSyncStatusOnlyInGist: return @"Only in the gist";
+    case MWMSyncStatusDeletedHere: return @"Deleted here";
+    case MWMSyncStatusDeletedInGist: return @"Deleted in the gist";
+  }
 }
 
-- (NSView *)thisComputerCard {
-  NSDictionary *counts = [self currentCounts];
-  NSTextField *title = [MWMComponents labelWithText:@"This computer now" font:[MWMTheme fontBodyStrong] color:[MWMTheme textPrimary]];
-  self.backUpButton = [MWMComponents accentButtonWithTitle:@"Back up" symbol:@"icloud.and.arrow.up" target:self action:@selector(backUpPressed:)];
-  [self.backUpButton setIdentifier:@"backup-save"];
-  NSStackView *form = [NSStackView stackViewWithViews:@[[MWMComponents labelWithText:@"Name" font:[MWMTheme fontSmall] color:[MWMTheme textSecondary]], self.nameField, self.backUpButton]];
-  [form setSpacing:MWMSpacingS];
-  [form setAlignment:NSLayoutAttributeCenterY];
-  NSTextField *hint = [MWMComponents wrappingLabelWithText:@"Saving with a name that already exists replaces that backup." size:12 color:[MWMTheme textSecondary] weight:NSFontWeightRegular];
-  [hint setIdentifier:@"backup-hint"];
-  NSView *facts = [self factsForDisplays:[self connectedDisplays] shortcuts:[counts[@"shortcuts"] unsignedIntegerValue] modifiers:[counts[@"modifiers"] unsignedIntegerValue] snapshots:[counts[@"snapshots"] unsignedIntegerValue]];
-  [facts setIdentifier:@"backup-now-facts"];
-  NSView *card = [self cardWithTop:title facts:facts dashed:YES extra:@[form, hint] identifier:@"backup-now"];
-  [self updateBackUpButton];
+static NSString *StatusNote(MWMSyncStatus status) {
+  switch (status) {
+    case MWMSyncStatusSynced: return @"Nothing to do";
+    case MWMSyncStatusChangedHere: case MWMSyncStatusOnlyHere: return @"Will be sent";
+    case MWMSyncStatusNewerInGist: case MWMSyncStatusOnlyInGist: return @"Will be received";
+    case MWMSyncStatusDeletedHere: return @"Still in the gist";
+    case MWMSyncStatusDeletedInGist: return @"Still on this computer";
+  }
+}
+
+static NSColor *StatusColor(MWMSyncStatus status) {
+  switch (status) {
+    case MWMSyncStatusSynced: return [MWMTheme success];
+    case MWMSyncStatusDeletedHere: case MWMSyncStatusDeletedInGist: return [MWMTheme warning];
+    default: return [MWMTheme accent];
+  }
+}
+
+// A name, a status chip, the date it was last edited, and what the next sync will do: one row of columns.
+- (NSView *)rowForItem:(MWMSyncItem *)item {
+  NSTextField *name = [MWMComponents labelWithText:item.name font:[MWMTheme fontBodyStrong] color:[MWMTheme textPrimary]];
+  [name setLineBreakMode:NSLineBreakByTruncatingTail];
+  [name setContentHuggingPriority:1 forOrientation:NSLayoutConstraintOrientationHorizontal];
+  [name setContentCompressionResistancePriority:250 forOrientation:NSLayoutConstraintOrientationHorizontal];
+  MWMChipView *chip = [MWMChipView chipWithText:StatusTitle(item.status) color:StatusColor(item.status)];
+  [chip setIdentifier:[@"backup-status-" stringByAppendingString:item.name]];
+  NSView *chipColumn = [[NSView alloc] init];
+  [chipColumn setTranslatesAutoresizingMaskIntoConstraints:NO];
+  [chipColumn addSubview:chip];
+  [chip setTranslatesAutoresizingMaskIntoConstraints:NO];
+  [NSLayoutConstraint activateConstraints:@[[chip.leadingAnchor constraintEqualToAnchor:chipColumn.leadingAnchor], [chip.centerYAnchor constraintEqualToAnchor:chipColumn.centerYAnchor],
+                                            [chipColumn.widthAnchor constraintEqualToConstant:170], [chipColumn.heightAnchor constraintEqualToConstant:22]]];
+  NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
+  [formatter setLocalizedDateFormatFromTemplate:@"d MMM yyyy"];
+  NSDate *date = item.local.modified ?: item.remote.modified;
+  NSTextField *edited = [MWMComponents labelWithText:date != nil && ![date isEqualToDate:[NSDate distantPast]] ? [formatter stringFromDate:date] : @"—" font:[MWMTheme fontSmall] color:[MWMTheme textSecondary]];
+  [edited setIdentifier:@"backup-date"];
+  [[edited.widthAnchor constraintEqualToConstant:100] setActive:YES];
+  NSTextField *note = [MWMComponents labelWithText:StatusNote(item.status) font:[MWMTheme fontSmall] color:[MWMTheme textSecondary]];
+  [note setIdentifier:@"backup-note"];
+  [[note.widthAnchor constraintEqualToConstant:150] setActive:YES];
+  NSStackView *columns = [NSStackView stackViewWithViews:@[name, chipColumn, edited, note]];
+  [columns setSpacing:MWMSpacingM];
+  [columns setAlignment:NSLayoutAttributeCenterY];
+  NSView *card = [MWMComponents card];
+  [card setIdentifier:[@"backup-item-" stringByAppendingString:item.name]];
+  [card addSubview:columns];
+  [MWMComponents pinView:columns toEdgesOf:card insets:NSEdgeInsetsMake(MWMSpacingM + 2, MWMSpacingL, MWMSpacingM + 2, MWMSpacingL)];
   return card;
 }
 
-- (NSView *)cardForEnvironment:(MWMBackupEnvironment *)environment {
-  NSString *name = environment.name;
-  NSMutableArray *top = [NSMutableArray arrayWithObject:[MWMComponents labelWithText:name font:[MWMTheme fontBodyStrong] color:[MWMTheme textPrimary]]];
-  if ([environment matchesDisplays:[self connectedDisplays]]) {
-    MWMChipView *chip = [MWMChipView chipWithText:@"Matches" color:[MWMTheme success]];
-    [chip setIdentifier:@"backup-matches"];
-    [top addObject:chip];
-  }
-  [top addObject:[MWMComponents spacer]];
+- (NSString *)lastSyncLine {
+  NSDate *date = [MWMSync lastSyncDate];
+  if (date == nil) return @"Not synced yet. Sync now sends your profiles to your gist and brings back any it has.";
   NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
-  [formatter setLocalizedDateFormatFromTemplate:@"d MMM yyyy"];
-  NSTextField *date = [MWMComponents labelWithText:[formatter stringFromDate:environment.savedAt] font:[MWMTheme fontSmall] color:[MWMTheme textSecondary]];
-  [date setAlignment:NSTextAlignmentRight];
-  [date setIdentifier:@"backup-date"];
-  NSButton *restore = [MWMComponents secondaryButtonWithTitle:@"Restore" target:self action:@selector(restorePressed:)];
-  [restore setIdentifier:[@"restore-" stringByAppendingString:name]];
-  [restore setToolTip:@"Replace your shortcuts, slots and snapshots with this backup"];
-  NSButton *remove = [NSButton buttonWithImage:[NSImage imageWithSystemSymbolName:@"trash" accessibilityDescription:@"Delete"] target:self action:@selector(deletePressed:)];
-  [remove setBordered:NO];
-  [remove setContentTintColor:[MWMTheme textTertiary]];
-  [remove setIdentifier:[@"delete-" stringByAppendingString:name]];
-  [remove setToolTip:@"Delete this backup"];
-  [top addObjectsFromArray:@[date, restore, remove]];
-  NSStackView *header = [NSStackView stackViewWithViews:top];
-  [header setSpacing:MWMSpacingM];
-  [header setAlignment:NSLayoutAttributeCenterY];
-  NSView *facts = [self factsForDisplays:environment.displays shortcuts:environment.shortcutCount modifiers:environment.modifierCount snapshots:environment.snapshotCount];
-  return [self cardWithTop:header facts:facts dashed:NO extra:@[] identifier:[@"backup-" stringByAppendingString:name]];
+  [formatter setDateStyle:NSDateFormatterMediumStyle];
+  [formatter setTimeStyle:NSDateFormatterShortStyle];
+  [formatter setDoesRelativeDateFormatting:YES];
+  NSString *summary = [MWMSync lastSummary];
+  return [NSString stringWithFormat:@"Last synced %@%@", [formatter stringFromDate:date], summary ? [@" · " stringByAppendingString:summary] : @""];
+}
+
+- (NSView *)syncCard {
+  NSTextField *title = [MWMComponents labelWithText:@"Sync your profiles" font:[MWMTheme fontBodyStrong] color:[MWMTheme textPrimary]];
+  NSTextField *line = [MWMComponents secondaryLabel:[self lastSyncLine]];
+  [line setIdentifier:@"backup-lastsync"];
+  NSStackView *text = [NSStackView stackViewWithViews:@[title, line]];
+  [text setOrientation:NSUserInterfaceLayoutOrientationVertical];
+  [text setAlignment:NSLayoutAttributeLeading];
+  [text setSpacing:3];
+  self.syncButton = [MWMComponents accentButtonWithTitle:self.busy ? @"Syncing…" : @"Sync now" symbol:@"arrow.triangle.2.circlepath" target:self action:@selector(syncPressed:)];
+  [self.syncButton setIdentifier:@"backup-sync"];
+  [self.syncButton setEnabled:!self.busy];
+  NSStackView *row = [NSStackView stackViewWithViews:@[text, [MWMComponents spacer], self.syncButton]];
+  [row setSpacing:MWMSpacingM];
+  [row setAlignment:NSLayoutAttributeCenterY];
+  NSView *card = [MWMComponents dashedCard];
+  [card setIdentifier:@"backup-sync-card"];
+  [card addSubview:row];
+  [MWMComponents pinView:row toEdgesOf:card insets:NSEdgeInsetsMake(MWMSpacingL, MWMSpacingL, MWMSpacingL, MWMSpacingL)];
+  return card;
 }
 
 - (void)rebuild {
@@ -279,10 +251,8 @@ static NSString *const kTokensURL = @"https://github.com/settings/tokens";
     add(bar);
   }
   if (!connected) return;
-  add([self thisComputerCard]);
-  [self.rows setCustomSpacing:MWMSpacingXL + 8 afterView:self.rows.arrangedSubviews.lastObject];
-  add([MWMComponents sectionHeading:@"Saved in your gist"]);
-  [self.rows setCustomSpacing:MWMSpacingM afterView:self.rows.arrangedSubviews.lastObject];
+  add([self syncCard]);
+  [self.rows setCustomSpacing:MWMSpacingXL afterView:self.rows.arrangedSubviews.lastObject];
   if (self.problem != nil) {
     NSTextField *error = [MWMComponents wrappingLabelWithText:self.problem size:13 color:[MWMTheme danger] weight:NSFontWeightRegular];
     [error setIdentifier:@"backup-problem"];
@@ -293,38 +263,24 @@ static NSString *const kTokensURL = @"https://github.com/settings/tokens";
     [line setAlignment:NSLayoutAttributeCenterY];
     add(line);
   } else if (self.loading && !self.loaded) {
-    NSTextField *wait = [MWMComponents secondaryLabel:@"Loading your backups…"];
+    NSTextField *wait = [MWMComponents secondaryLabel:@"Looking at your gist…"];
     [wait setIdentifier:@"backup-loading"];
     add(wait);
-  } else if ([self.environments count] == 0) {
-    NSTextField *none = [MWMComponents wrappingLabelWithText:@"No backups yet. Name this computer's setup and choose Back up." size:13 color:[MWMTheme textSecondary] weight:NSFontWeightRegular];
+  } else if ([self.items count] == 0) {
+    NSTextField *none = [MWMComponents wrappingLabelWithText:@"Nothing to sync yet. Make a profile in Settings, then choose Sync now." size:13 color:[MWMTheme textSecondary] weight:NSFontWeightRegular];
     [none setIdentifier:@"backup-empty"];
     add(none);
-  }
-  for (MWMBackupEnvironment *environment in self.environments) {
-    add([self cardForEnvironment:environment]);
-    [self.rows setCustomSpacing:MWMSpacingM afterView:self.rows.arrangedSubviews.lastObject];
+  } else {
+    for (MWMSyncItem *item in self.items) add([self rowForItem:item]);
   }
 }
 
 #pragma mark - Actions
 
-- (void)updateBackUpButton {
-  NSString *problem = self.document == nil ? @"Nothing to back up yet." : [MWMBackupEnvironment problemWithName:[self.nameField stringValue]];
-  [self.backUpButton setEnabled:problem == nil && !self.busy];
-  [self.backUpButton setToolTip:problem ?: @"Save this computer's setup to your gist"];
-}
-
-- (void)controlTextDidChange:(NSNotification *)note { [self updateBackUpButton]; }
-
 - (void)changeTokenPressed:(id)sender { self.editingToken = YES; [self rebuild]; }
-
 - (void)connectPressed:(id)sender { [self connectWithToken:[self.tokenField stringValue] completion:nil]; }
-- (void)backUpPressed:(id)sender { [self backUpAs:[self.nameField stringValue] completion:nil]; }
 - (void)retryPressed:(id)sender { [self refresh:nil]; }
-
-- (void)restorePressed:(NSButton *)sender { [self restoreNamed:[sender.identifier substringFromIndex:[@"restore-" length]]]; }
-- (void)deletePressed:(NSButton *)sender { [self deleteNamed:[sender.identifier substringFromIndex:[@"delete-" length]] completion:nil]; }
+- (void)syncPressed:(id)sender { [self syncWithCompletion:nil]; }
 
 - (void)showProblem:(NSString *)message title:(NSString *)title {
   if (!self.interactive) return;
@@ -339,11 +295,11 @@ static NSString *const kTokensURL = @"https://github.com/settings/tokens";
   self.loading = YES;
   self.problem = nil;
   [self rebuild];
-  [MWMGist listEnvironments:^(NSArray<MWMBackupEnvironment *> *environments, NSString *problem) {
+  [MWMSync preview:^(NSArray<MWMSyncItem *> *items, NSString *problem) {
     self.loading = NO;
     self.loaded = problem == nil;
     self.problem = problem;
-    self.environments = environments;
+    self.items = items;
     [self rebuild];
     if (done) done();
   }];
@@ -368,74 +324,18 @@ static NSString *const kTokensURL = @"https://github.com/settings/tokens";
   }];
 }
 
-- (void)backUpAs:(NSString *)name completion:(void (^)(void))done {
-  NSString *trimmed = [MWMBackupEnvironment trimmedName:name];
-  NSString *problem = [MWMBackupEnvironment problemWithName:trimmed];
-  if (problem != nil || self.document == nil) { [self showProblem:problem ?: @"There's no configuration to back up yet." title:@"Can't back up"]; if (done) done(); return; }
-  MWMBackupEnvironment *environment = [MWMBackupEnvironment environmentNamed:trimmed configText:[self.document stringRepresentation] snapshots:[MWMSnapshots exportAll] displays:[self connectedDisplays] date:[NSDate date]];
+- (void)syncWithCompletion:(void (^)(void))done {
+  if (self.busy) { if (done) done(); return; }
   self.busy = YES;
-  [self updateBackUpButton];
-  [MWMGist saveEnvironment:environment completion:^(NSString *saveProblem) {
-    self.busy = NO;
-    if (saveProblem != nil) {
-      [self updateBackUpButton];
-      [self showProblem:saveProblem title:@"The backup wasn't saved"];
-      if (done) done();
-      return;
-    }
-    [self refresh:done];
-  }];
-}
-
-- (MWMBackupEnvironment *)environmentNamed:(NSString *)name {
-  for (MWMBackupEnvironment *environment in self.environments) if ([environment.name isEqualToString:name]) return environment;
-  return nil;
-}
-
-- (void)restoreNamed:(NSString *)name {
-  MWMBackupEnvironment *environment = [self environmentNamed:name];
-  if (environment == nil) return;
-  NSError *error = nil;
-  if ([MWMConfigDocument documentFromString:environment.configText lenient:YES error:&error] == nil) {
-    [self showProblem:@"The configuration in this backup can't be read." title:@"Can't restore"];
-    return;
-  }
-  if (self.interactive) {
-    MWMAlert *alert = [MWMAlert alert];
-    [alert setKind:MWMAlertKindConfirm];
-    [alert setMessageText:[NSString stringWithFormat:@"Restore \"%@\"?", name]];
-    [alert setInformativeText:@"Replaces your shortcuts, slots and snapshots with this backup. A copy of your current configuration is kept next to it first."];
-    [alert addButtonWithTitle:@"Restore"];
-    [alert addButtonWithTitle:@"Cancel"];
-    if ([alert runModal] != NSAlertFirstButtonReturn) return;
-  }
-  if (![self.delegate backupView:self restoreConfigText:environment.configText]) return;
-  [MWMSnapshots importAll:environment.snapshots];
-  [self.delegate backupViewDidRestoreSnapshots:self];
   [self rebuild];
-  if (self.interactive) {
-    MWMAlert *done = [MWMAlert alert];
-    [done setKind:MWMAlertKindSuccess];
-    [done setMessageText:[NSString stringWithFormat:@"Restored \"%@\"", name]];
-    [done setInformativeText:@"Choose Apply to start using it."];
-    [done runModal];
-  }
-}
-
-- (void)deleteNamed:(NSString *)name completion:(void (^)(void))done {
-  if (self.interactive) {
-    MWMAlert *alert = [MWMAlert alert];
-    [alert setKind:MWMAlertKindDanger];
-    [alert setMessageText:[NSString stringWithFormat:@"Delete \"%@\"?", name]];
-    [alert setInformativeText:@"The backup is removed from your gist. This can't be undone."];
-    [alert addButtonWithTitle:@"Cancel"];
-    [alert addDestructiveButtonWithTitle:@"Delete"];
-    if ([alert runModal] == NSAlertFirstButtonReturn) { if (done) done(); return; }
-  }
-  [MWMGist deleteEnvironmentNamed:name completion:^(NSString *problem) {
-    if (problem != nil) { [self showProblem:problem title:@"The backup wasn't deleted"]; if (done) done(); return; }
+  void (^finished)(MWMSyncReport *) = ^(MWMSyncReport *report) {
+    self.busy = NO;
+    self.lastReport = report;
+    if (report.received > 0 || [report.flagged count] > 0) [self.delegate backupViewDidChangeFiles:self];
     [self refresh:done];
-  }];
+  };
+  if (self.interactive) [MWMSyncPresenter runWithCompletion:finished];
+  else [MWMSync syncWithCompletion:finished];
 }
 
 @end

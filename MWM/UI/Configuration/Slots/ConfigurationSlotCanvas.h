@@ -50,6 +50,8 @@ NS_ASSUME_NONNULL_BEGIN
 - (NSRect)viewRectForSlot:(CGRect)rect;
 // For tests: drag from a point to another as the mouse would, optionally with ⌥ held.
 - (void)dragFrom:(NSPoint)from to:(NSPoint)to free:(BOOL)free;
+// The same, keeping the slot's proportions while it is resized (⇧).
+- (void)dragFrom:(NSPoint)from to:(NSPoint)to free:(BOOL)free proportional:(BOOL)proportional;
 
 @end
 

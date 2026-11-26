@@ -29,7 +29,7 @@
   <aside id="toc" aria-label="Contents">
     <div class="searchbar" id="searchbar">
       <div class="box">
-        <span aria-hidden="true">🔍</span>
+        <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" style="flex:none;fill:none;stroke:var(--muted);stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><circle cx="11" cy="11" r="6.5"/><path d="m20 20-4.2-4.2"/></svg>
         <input id="q" type="search" placeholder="Search…" autocomplete="off" aria-label="Search the documentation">
         <button id="clear" type="button" aria-label="Clear search">✕</button>
         <kbd>/</kbd>
@@ -45,12 +45,13 @@
     <a href="#jump-to-apps">Jump to an app</a>
     <a href="#screens">Work with more screens</a>
     <a href="#snapshots">Save my whole desktop</a>
+    <a href="#profiles">Keep several profiles</a>
     <a href="#backup">Back up my setup</a>
     <a href="#resize-nudge">Resize and nudge</a>
     <a href="#window-hints">Jump with window hints</a>
     <a href="#modifier-groups">Use the hyper key</a>
     <h4>Find your way around</h4>
-    <a href="#window">The configuration window</a>
+    <a href="#window">The Settings window</a>
     <a href="#menu-bar">The menu bar</a>
     <a href="#defaults">Shortcuts you get</a>
     <h4>The settings file</h4>
@@ -92,7 +93,7 @@
       <p class="intro">MWM already has <a href="#defaults">some shortcuts</a> to try. To add your own:</p>
       <div class="split2">
         <div>
-          <ol class="s"><li><div>Menu bar icon → <b>Settings…</b> → <b>Keyboard</b>.</div></li><li><div>Click a free key and choose <b>Add Shortcut</b>. Pick what it does.</div></li><li><div><b>Record</b> the keys, press <b>Save</b>, then <b>Apply and Restart</b>.</div></li></ol>
+          <ol class="s"><li><div>Menu bar icon → <b>Settings…</b> → <b>Bindings</b>, then <b>New Shortcut</b> (or click a free key and choose <b>Add Shortcut</b>).</div></li><li><div><b>Record</b> the keys at the top, then pick what it does: <b>Focus app</b>, <b>Move to slot</b>, <b>Throw to screen</b> or <b>Push</b>. <b>More actions</b> has the rest.</div></li><li><div>Press <b>Save</b>, then <b>Apply and Restart</b>.</div></li></ol>
           <div class="tip">Or start from an <a href="examples.html">example</a>.</div>
         </div>
         <div class="window"><div class="bar"><i></i><i></i><i></i><span>Editing shortcut</span></div><picture><source srcset="assets/shortcut-editor-dark.png" media="(prefers-color-scheme: dark)"><img src="assets/shortcut-editor-light.png" alt="The shortcut editor: choose what it does and record the keys"></picture></div>
@@ -104,7 +105,7 @@
       <h2>Put a window in part of the screen</h2>
       <p class="intro">Snap the window you are using to a half, a third, a corner or any area. Each area is called a <b>slot</b>.</p>
       <div class="figs c4"><div class="fig"><svg viewBox="0 0 240 180" role="img" aria-hidden="true"><defs><linearGradient id="g150" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2b3a8f"/><stop offset="1" stop-color="#6a2f9a"/></linearGradient></defs><rect x="1" y="1" width="238" height="148" rx="10" fill="url(#g150)" stroke="rgba(255,255,255,.25)" stroke-width="2"/><rect x="1" y="1" width="238" height="10" rx="5" fill="rgba(0,0,0,.3)"/><rect x="7.0" y="15.0" width="110.0" height="125.0" rx="5" fill="#ffffff"/><rect x="120.0" y="15.0" width="110.0" height="125.0" rx="5" fill="#ffd21f"/><text x="120.0" y="171" text-anchor="middle" font-size="15" font-weight="700" fill="currentColor" font-family="-apple-system, sans-serif">Halves</text></svg></div><div class="fig"><svg viewBox="0 0 240 180" role="img" aria-hidden="true"><defs><linearGradient id="g70338" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2b3a8f"/><stop offset="1" stop-color="#6a2f9a"/></linearGradient></defs><rect x="1" y="1" width="238" height="148" rx="10" fill="url(#g70338)" stroke="rgba(255,255,255,.25)" stroke-width="2"/><rect x="1" y="1" width="238" height="10" rx="5" fill="rgba(0,0,0,.3)"/><rect x="7.0" y="15.0" width="73.8" height="125.0" rx="5" fill="#ffffff"/><rect x="83.8" y="15.0" width="71.6" height="125.0" rx="5" fill="#ffd21f"/><rect x="158.4" y="15.0" width="71.6" height="125.0" rx="5" fill="#ff5a5f"/><text x="120.0" y="171" text-anchor="middle" font-size="15" font-weight="700" fill="currentColor" font-family="-apple-system, sans-serif">Thirds</text></svg></div><div class="fig"><svg viewBox="0 0 240 180" role="img" aria-hidden="true"><defs><linearGradient id="g99124" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2b3a8f"/><stop offset="1" stop-color="#6a2f9a"/></linearGradient></defs><rect x="1" y="1" width="238" height="148" rx="10" fill="url(#g99124)" stroke="rgba(255,255,255,.25)" stroke-width="2"/><rect x="1" y="1" width="238" height="10" rx="5" fill="rgba(0,0,0,.3)"/><rect x="7.0" y="15.0" width="110.0" height="61.0" rx="5" fill="#ffffff"/><rect x="120.0" y="15.0" width="110.0" height="61.0" rx="5" fill="#ffd21f"/><rect x="7.0" y="79.0" width="110.0" height="61.0" rx="5" fill="#ff5a5f"/><rect x="120.0" y="79.0" width="110.0" height="61.0" rx="5" fill="#7fb0ff"/><text x="120.0" y="171" text-anchor="middle" font-size="15" font-weight="700" fill="currentColor" font-family="-apple-system, sans-serif">Quarters</text></svg></div><div class="fig"><svg viewBox="0 0 240 180" role="img" aria-hidden="true"><defs><linearGradient id="g87496" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2b3a8f"/><stop offset="1" stop-color="#6a2f9a"/></linearGradient></defs><rect x="1" y="1" width="238" height="148" rx="10" fill="url(#g87496)" stroke="rgba(255,255,255,.25)" stroke-width="2"/><rect x="1" y="1" width="238" height="10" rx="5" fill="rgba(0,0,0,.3)"/><rect x="7.0" y="15.0" width="53.5" height="125.0" rx="5" fill="rgba(255,255,255,.25)"/><rect x="63.5" y="15.0" width="110.0" height="125.0" rx="5" fill="#ffffff"/><rect x="176.5" y="15.0" width="53.5" height="125.0" rx="5" fill="rgba(255,255,255,.25)"/><text x="120.0" y="171" text-anchor="middle" font-size="15" font-weight="700" fill="currentColor" font-family="-apple-system, sans-serif">Your own</text></svg></div></div>
-      <div class="pane app"><div class="label"><span>In the app</span></div><ol class="s"><li><div>Add a shortcut (<a href="#first-shortcut">how</a>) and choose <b>Move to</b>.</div></li><li><div>Pick a slot. Halves, thirds and quarters are built in.</div></li></ol><div class="tip">Need your own area? <b>Slots → New Slot</b>: drag on the picture, or type exact values. Switch a size to <b>px</b>, center it, or add <b>margins</b> to leave space around the slot.</div></div>
+      <div class="pane app"><div class="label"><span>In the app</span></div><ol class="s"><li><div>Add a shortcut (<a href="#first-shortcut">how</a>) and choose <b>Move to slot</b>.</div></li><li><div>Pick a slot. Halves, thirds and quarters are built in.</div></li></ol><div class="tip">Need your own area? <b>Slots → New Slot</b>: drag the slot on the picture and drag a handle to resize it (hold <kbd>⇧</kbd> to keep its proportions, <kbd>⌥</kbd> to ignore the grid), or type exact values. Switch a size to <b>px</b>, center it, or add <b>margins</b> to leave space around the slot.</div></div>
       <div class="pane file"><div class="label"><span>In the file</span></div><pre><code>bindings:
   - key: left
     mods: hyper
@@ -118,7 +119,7 @@ slots:                      # your own areas
       <h2>Jump to an app</h2>
       <p class="intro">Bring any app to the front with one shortcut.</p>
       <div class="fig wide"><svg viewBox="0 0 560 110" role="img" aria-hidden="true"><g font-family="-apple-system, sans-serif" font-weight="700" font-size="15" fill="#fff" text-anchor="middle"><g transform="translate(20 20)"><rect width="110" height="70" rx="14" fill="#1f5bff"/><text x="55" y="31" font-size="22">S</text><text x="55" y="55" font-size="13" font-weight="600" opacity=".9">Safari</text></g><g transform="translate(155 20)"><rect width="110" height="70" rx="14" fill="#4a4d5c"/><text x="55" y="31" font-size="22">T</text><text x="55" y="55" font-size="13" font-weight="600" opacity=".9">Terminal</text></g><g transform="translate(290 20)"><rect width="110" height="70" rx="14" fill="#28a745"/><text x="55" y="31" font-size="22">M</text><text x="55" y="55" font-size="13" font-weight="600" opacity=".9">Messages</text></g><g transform="translate(425 20)"><rect width="110" height="70" rx="14" fill="#ff5a5f"/><text x="55" y="31" font-size="22">C</text><text x="55" y="55" font-size="13" font-weight="600" opacity=".9">Calendar</text></g></g></svg></div>
-      <div class="pane app"><div class="label"><span>In the app</span></div><ol class="s"><li><div>Add a shortcut (<a href="#first-shortcut">how</a>) and choose <b>Focus app</b>.</div></li><li><div>Type the app's name exactly as the menu bar shows it, such as <code>Google Chrome</code>.</div></li></ol><div class="tip">The app must already be running. MWM does not open closed apps.</div></div>
+      <div class="pane app"><div class="label"><span>In the app</span></div><ol class="s"><li><div>Add a shortcut (<a href="#first-shortcut">how</a>) and choose <b>Focus app</b>.</div></li><li><div>Pick the app from the list, or type its name exactly as the menu bar shows it, such as <code>Google Chrome</code>.</div></li></ol><div class="tip">The app must already be running. MWM does not open closed apps.</div></div>
       <div class="pane file"><div class="label"><span>In the file</span></div><pre><code>  - key: s
     mods: [alt, shift]
     action: {type: focus-app, app: Safari}</code></pre></div>
@@ -140,7 +141,7 @@ slots:                      # your own areas
 <path d="M205 90 H282" stroke="#1f5bff" stroke-width="5" stroke-linecap="round" stroke-dasharray="2 10"/><path d="M270 78 L286 90 L270 102" fill="none" stroke="#1f5bff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
 <rect x="178" y="56" width="52" height="34" rx="5" fill="#ffd21f" stroke="#fff" stroke-width="2"/>
 </svg><p class="cap">Give each screen a name. Then send a window to <b>desk</b>, or to the <b>next</b> screen.</p></div>
-      <div class="pane app"><div class="label"><span>In the app</span></div><ol class="s"><li><div>Open <b>Displays</b>, press <b>Add</b> next to a screen, and name it (<code>laptop</code>, <code>desk</code>).</div></li><li><div>Add a shortcut: <b>Move to</b> with that screen under <b>On screen</b>, or <b>Throw to screen</b> to send the window to the <b>next</b> one.</div></li></ol><div class="tip">If a named screen is missing, MWM uses the one you are on.</div></div>
+      <div class="pane app"><div class="label"><span>In the app</span></div><ol class="s"><li><div>Open <b>Displays</b>, press <b>Add</b> next to a screen, and name it (<code>laptop</code>, <code>desk</code>).</div></li><li><div>Add a shortcut: <b>Move to slot</b> with that screen under <b>On screen</b>, or <b>Throw to screen</b> to send the window to the <b>next</b> one. Choose its <b>Window size</b>: fill the screen, keep its size, or a custom size.</div></li></ol><div class="tip">Screen lists also show every connected display; one with no name yet is named for you when you save. <b>Manage displays…</b> opens the Displays page. If a named screen is missing, MWM uses the one you are on.</div></div>
       <div class="pane file"><div class="label"><span>In the file</span></div><pre><code>monitors:
   laptop: {display: built-in}
   desk: {display: &quot;Studio Display&quot;}
@@ -178,10 +179,23 @@ bindings:
     action: {type: restore-snapshot, name: work}</code></pre></div>
     </section>
     
-    <section class="doc how" id="backup" data-title="Back up and restore your setup backup restore gist github environment displays token sync">
+    <section class="doc how" id="profiles" data-title="Keep several profiles switch choose apply restart not applied duplicate rename delete new from file active desk laptop slate import mwm folder">
+      <h2>Keep several profiles</h2>
+      <p class="intro">Keep one setup for each desk or computer and switch between them. Only one is active at a time, and MWM uses that one.</p>
+      <div class="pane app"><div class="label"><span>In the app</span></div><ol class="s"><li><div>The button at the left of the bottom bar shows the profile the pages edit. Open it to choose another one, or <b>Manage profiles…</b> for all of them as cards. <b>Manage profiles</b> is also the last item of the sidebar.</div></li><li><div>Choosing a profile only changes what the window edits. MWM starts using it when you press <b>Apply and Restart</b>; until then the bar says <b>not applied</b>. If you close the window first, it asks whether to apply or drop the choice.</div></li><li><div>On the Profiles page, press <b>Add profile</b> and choose where it comes from: what is running now, a copy of one of your profiles, or a file you downloaded, such as an <a href="examples.html">example</a>. Then pick a name; a short summary shows what the profile holds. The copy icon on a card goes straight to naming. <b>Rename</b> and the trash icon are on each card.</div></li></ol><div class="tip">The running profile, the one being edited and the last one can't be deleted, and a deleted one goes to the Trash. Snapshots are shared by every profile.</div></div>
+      <div class="pane file"><div class="label"><span>In the file</span></div><pre><code>~/.mwm/default.mwm.yaml
+~/.mwm/desk.mwm.yaml
+~/.mwm/active          # the name of the active one</code></pre></div>
+    </section>
+
+    <section class="doc how" id="backup" data-title="Back up and sync your setup backup sync gist github token newest wins deleted profiles snapshots">
       <h2>Back up your setup</h2>
-      <p class="intro">Keep your shortcuts, slots and snapshots in a private GitHub gist. Save one backup for each set of displays, and bring any of them back.</p>
-      <div class="pane app"><div class="label"><span>In the app</span></div><ol class="s"><li><div>Open <b>Backup</b> and choose <b>Create token on GitHub</b>. The page opens with the <b>gist</b> permission ticked. It has to be a <a href="https://github.com/settings/tokens/new?description=MWM%20backup&amp;scopes=gist">classic token</a>; generate it, copy it and paste it into MWM. It's kept in your Keychain.</div></li><li><div>Name this computer's setup, like <b>Desk, two monitors</b>, and press <b>Back up</b>. A name that already exists <b>replaces</b> that backup.</div></li><li><div>Each saved backup is a card with its displays and counts. The one that matches your connected displays is marked <b>Matches</b>. Press <b>Restore</b> to bring it back, or the trash icon to delete it.</div></li></ol><div class="tip">Restoring keeps a copy of your current file next to it. Choose <b>Apply</b> afterwards to start using it.</div></div>
+      <p class="intro">Keep every profile, and your snapshots, in a private GitHub gist, and bring them to another computer. Backup is a sync: it makes your <code>~/.mwm</code> folder and the gist match.</p>
+      <div class="pane app"><div class="label"><span>In the app</span></div><ol class="s"><li><div>Open <b>Backup</b> and choose <b>Create token on GitHub</b>. The page opens with the <b>gist</b> permission ticked. It has to be a <a href="https://github.com/settings/tokens/new?description=MWM%20backup&amp;scopes=gist">classic token</a>; generate it, copy it and paste it into MWM. It's kept in your Keychain.</div></li><li><div>Choose <b>Sync now</b>, here or in the <b>Backup</b> menu. MWM sends what changed on this computer and receives what changed in the gist. The list under it shows where each profile stands.</div></li><li><div>If a profile changed in both places, the newer one wins, and the other is kept as a <code>.bak</code> copy next to it. A sync never deletes anything by itself: when a profile was deleted on one side, MWM asks whether to <b>clear it everywhere</b> or <b>keep it</b> and bring it back.</div></li></ol><div class="tip">Snapshots sync too. Which profile is active doesn't: each computer picks its own.</div></div>
+      <div class="pane file"><div class="label"><span>In your gist</span></div><pre><code>default.mwm.yaml
+desk.mwm.yaml
+snapshots.json
+mwm-sync.json          # when each file was last sent</code></pre></div>
     </section>
 
     <section class="doc how" id="resize-nudge" data-title="Resize, nudge and push resize nudge push grow move edge size">
@@ -226,32 +240,34 @@ bindings:
     mods: [alt, shift]   # or the keys</code></pre></div>
     </section>
 
-    <section class="doc" id="window" data-title="The configuration window tour keyboard modifiers displays slots snapshots general advanced apply">
-      <h2>The configuration window</h2>
-      <p class="intro">Open it with <b>Settings…</b> or <kbd>⌘</kbd><kbd>,</kbd>. Changes save as you go. Press <b>Apply and Restart</b> to start using them.</p>
+    <section class="doc" id="window" data-title="The Settings window tour keyboard modifiers displays slots snapshots profiles backup general advanced apply">
+      <h2>The Settings window</h2>
+      <p class="intro">Open it with <b>Settings…</b> or <kbd>⌘</kbd><kbd>,</kbd>. Changes save as you go. Press <b>Apply and Restart</b> to start using them. The button in the bottom bar shows the profile you are editing; the pages under <b>Keyboard</b>, <b>Screens</b> and <b>Options</b> belong to it, while <b>Snapshots</b>, <b>Profiles</b> and <b>Backup</b> under <b>Other</b> are used by every profile.</p>
       <div class="window"><div class="bar"><i></i><i></i><i></i><span>MWM configuration</span></div><picture><source srcset="assets/keyboard-map-dark.png" media="(prefers-color-scheme: dark)"><img src="assets/keyboard-map-light.png" alt="The keyboard map: every shortcut on a Mac keyboard, colored by what it does" loading="lazy"></picture></div>
       <div class="cards2">
-        <div class="mini"><h3>Keyboard</h3><p>All shortcuts, as a <b>Map</b> or a searchable <b>List</b>. Conflicts are flagged.</p></div>
         <div class="mini"><h3>Modifiers</h3><p>Your key groups, like hyper.</p></div>
+        <div class="mini"><h3>Bindings</h3><p>All shortcuts, as a <b>Map</b> or a searchable <b>List</b>. Conflicts are flagged, and <b>Key colors</b> under the map explains the colors.</p></div>
         <div class="mini"><h3>Displays</h3><p>Your screens and their names.</p></div>
-        <div class="mini"><h3>Slots</h3><p>Areas of the screen. Presets plus your own.</p></div>
+        <div class="mini"><h3>Slots</h3><p>Areas of the screen. Presets plus your own, drawn by dragging.</p></div>
         <div class="mini"><h3>Snapshots</h3><p>Your saved desktops.</p></div>
-        <div class="mini"><h3>Backup</h3><p>Your setup in a private gist.</p></div>
-        <div class="mini"><h3>General · Advanced</h3><p>Window hints, keyboard layout, key repeat.</p></div>
+        <div class="mini"><h3>Profile button</h3><p>At the left of the bottom bar: the profile you are editing. Its menu switches profiles and opens <b>Manage profiles…</b>.</p></div>
+        <div class="mini"><h3>Backup</h3><p>Sync your profiles with a private gist.</p></div>
+        <div class="mini"><h3>Options</h3><p>General, Advanced and Other aliases: window hints, keyboard layout, key repeat.</p></div>
       </div>
     </section>
 
-    <section class="doc" id="menu-bar" data-title="The menu bar menu snapshots keyboard shortcuts launch login settings backup restore reload about updates quit">
+    <section class="doc" id="menu-bar" data-title="The menu bar menu keyboard snapshots launch login settings backup restore reload about updates quit">
       <h2>The menu bar</h2>
       <p class="intro">Click the MWM icon at the top right of your screen.</p>
       <table>
         <tbody>
+          <tr><td><b>Keyboard</b></td><td>Open the map or list, or add a shortcut.</td></tr>
           <tr><td><b>Snapshots</b></td><td>Save, restore, update or delete.</td></tr>
-          <tr><td><b>Keyboard Shortcuts</b></td><td>Open the map or list, or add a shortcut.</td></tr>
+          <tr><td><b>Profiles</b></td><td>Pick a profile to open Settings on it, <b>not applied</b> until you press <b>Apply and Restart</b>. The running profile stays checked. <b>Manage Profiles…</b> opens the Profiles page.</td></tr>
+          <tr><td><b>Backup</b></td><td><b>Sync Now</b> sends and receives your profiles, with the time of the last sync under it. <b>Backup Settings…</b> opens the Backup page. Without a token, Sync Now opens that page too.</td></tr>
+          <tr><td><b>Reload Configuration</b></td><td>Restart MWM to re-read your settings.</td></tr>
           <tr><td><b>Launch MWM at Login</b></td><td>Start MWM when you log in.</td></tr>
           <tr><td><b>Settings…</b></td><td>Open the window (<kbd>⌘</kbd><kbd>,</kbd>).</td></tr>
-          <tr><td><b>Backup</b></td><td>Restore any backup from your gist, or choose <b>Manage Backups…</b> to open the Backup page. It says <b>No backups configured</b> until you have saved one.</td></tr>
-          <tr><td><b>Reload Configuration</b></td><td>Restart MWM to re-read your settings.</td></tr>
           <tr><td><b>Check for Updates…</b></td><td>Look for a newer version now. MWM also checks each time it opens; turn that off under <b>General</b>. Choose <b>Update now</b> to download it, check it, and restart into it. If MWM is somewhere it can't replace itself, it opens the download page instead.</td></tr>
         </tbody>
       </table>
@@ -275,9 +291,9 @@ bindings:
       </table>
     </section>
 
-    <section class="doc" id="config-file" data-title="The settings file what is in it version 2 yaml mwm.yml sections edit by hand">
+    <section class="doc" id="config-file" data-title="The settings file what is in it version 2 yaml mwm.yaml sections edit by hand">
       <h2>The settings file</h2>
-      <p class="intro">Everything you set is saved in <code>~/.mwm.yml</code>. You never have to open it. It holds no code, so nothing in it can run.</p>
+      <p class="intro">Everything you set is saved in the active profile, a file in <code>~/.mwm</code> such as <code>~/.mwm/default.mwm.yaml</code>. You never have to open it. It holds no code, so nothing in it can run.</p>
       <div class="cards3">
         <div class="mini"><h3><code>settings</code></h3><p>Everyday options.</p></div>
         <div class="mini"><h3><code>modifiers</code></h3><p>Key groups, like hyper.</p></div>
@@ -387,10 +403,10 @@ bindings:
       <table>
         <thead><tr><th>In the app</th><th>Type</th><th>Fields</th><th>What it does</th></tr></thead>
         <tbody>
-          <tr><td>Move to</td><td><code>move</code></td><td><code>slot</code>, <code>screen</code>?</td><td>Put the window in a slot.</td></tr>
+          <tr><td>Move to slot</td><td><code>move</code></td><td><code>slot</code>, <code>screen</code>?</td><td>Put the window in a slot.</td></tr>
           <tr><td>Focus app</td><td><code>focus-app</code></td><td><code>app</code></td><td>Bring a running app forward.</td></tr>
           <tr><td>Focus window</td><td><code>focus</code></td><td><code>direction</code></td><td>Go to the window <code>left</code>, <code>right</code>, <code>up</code>, <code>down</code> or <code>behind</code>.</td></tr>
-          <tr><td>Throw to screen</td><td><code>throw</code></td><td><code>screen</code>, <code>style</code>?</td><td>Send to another screen (name, number, <code>next</code>, <code>previous</code>). <code>style: resize</code> fits it.</td></tr>
+          <tr><td>Throw to screen</td><td><code>throw</code></td><td><code>screen</code>, <code>style</code>?</td><td>Send to another screen (name, number, <code>next</code>, <code>previous</code>). <code>style</code> is <code>resize</code> (fill the screen), <code>noresize</code> (keep its size) or <code>resize:&lt;width&gt;;&lt;height&gt;</code>.</td></tr>
           <tr><td>Nudge</td><td><code>nudge</code></td><td><code>x</code>, <code>y</code></td><td>Move by pixels or percent.</td></tr>
           <tr><td>Resize</td><td><code>resize</code></td><td><code>x</code>, <code>y</code></td><td>Grow or shrink.</td></tr>
           <tr><td>Push</td><td><code>push</code></td><td><code>direction</code>, <code>options</code>?</td><td>Push against an edge.</td></tr>
@@ -431,8 +447,8 @@ slots:
       <h2>Coming from Slate</h2>
       <p class="intro">MWM is a fork of <a href="https://github.com/jigish/slate">Slate</a>, and your old settings still work.</p>
       <ul>
-        <li><code>~/.slate</code> and <code>~/.slate.yml</code> are converted to <code>~/.mwm.yml</code> on first launch. The old files are kept as backups.</li>
-        <li>JavaScript settings (<code>~/.slate.js</code>) can't be converted, because MWM no longer runs code from settings.</li>
+        <li>The first time MWM opens with the <code>~/.mwm</code> folder, <code>~/.slate</code>, <code>~/.slate.yml</code> and a <code>~/.slate.js</code> written by the old configuration window are converted into a profile called <b>default</b>. Your Slate files are only read: MWM never renames, moves or changes them. If you already had a <code>~/.mwm.yml</code>, it moves into <code>~/.mwm</code> as <b>default</b> and the Slate import becomes a second profile, <b>slate-import</b>.</li>
+        <li>Any other JavaScript in <code>~/.slate.js</code> can't be converted, because MWM no longer runs code from settings.</li>
         <li>In <b>Advanced…</b>, a <code>move</code> or <code>push</code> action shows where it puts a window, names mistakes in plain words, and has a <b>?</b> button listing these names. Classic commands (<code>chain</code>, <code>shell</code> …) still work there as text. See the <a href="https://github.com/bbarbosa85/mwm/blob/master/docs/operations-reference.md">operations reference</a>.</li>
       </ul>
     </section>
@@ -450,7 +466,7 @@ slots:
       <details><summary>The window shows an error</summary>
         <p>The bottom bar names the line. Fix it in a text editor and reopen the window.</p></details>
       <details><summary>I want to start over</summary>
-        <p>Quit MWM and move <code>~/.mwm.yml</code> aside. MWM starts with its defaults.</p></details>
+        <p>Quit MWM and move the active profile (<code>~/.mwm/default.mwm.yaml</code>, or the one named in <code>~/.mwm/active</code>) aside. MWM starts with its defaults. Or make a <b>New profile</b> under <b>Manage profiles…</b> and apply it.</p></details>
     </section>
 
     <p class="muted foot">MWM is free software under the GPLv3, a fork of Slate. <a href="https://github.com/bbarbosa85/mwm">Source</a> · <a href="https://github.com/bbarbosa85/mwm/issues">Report a problem</a></p>

@@ -9,9 +9,9 @@ Slate provides several rich, semi-transparent HUD overlays rendered directly on 
 The Grid feature allows users to position and resize windows visually using mouse dragging across a subdivided grid matrix.
 
 ### Architecture:
-- [`GridWindow`](file:///Users/brunobarbosa/Projetos/mwm/mwm/MWM/GridWindow.m): A borderless `NSWindow` with `NSScreenSaverWindowLevel - 1`, set to floating and translucent (`backgroundColor = clearColor`).
-- [`GridView`](file:///Users/brunobarbosa/Projetos/mwm/mwm/MWM/GridView.m): The container canvas view that manages matrix subdivisions, tracking mouse-down and mouse-drag selection rectangles.
-- [`GridCellView`](file:///Users/brunobarbosa/Projetos/mwm/mwm/MWM/GridCellView.m): Individual cells that visually toggle highlight colors (`gridCellBackgroundColor` vs. `gridCellSelectedColor`) when the mouse sweeps across them.
+- [`GridWindow`](../MWM/UI/Overlays/GridWindow.m): A borderless `NSWindow` with `NSScreenSaverWindowLevel - 1`, set to floating and translucent (`backgroundColor = clearColor`).
+- [`GridView`](../MWM/UI/Overlays/GridView.m): The container canvas view that manages matrix subdivisions, tracking mouse-down and mouse-drag selection rectangles.
+- [`GridCellView`](../MWM/UI/Overlays/GridCellView.m): Individual cells that visually toggle highlight colors (`gridCellBackgroundColor` vs. `gridCellSelectedColor`) when the mouse sweeps across them.
 
 ### Invocation Syntax:
 ```
@@ -36,8 +36,8 @@ bind g:ctrl;cmd grid padding:5 1920x1080:16,9 2560x1440:24,14
 Inspired by Vimium / Vimperator link hints, Window Hints overlay quick jump letters on every visible window on screen.
 
 ### Architecture & Collision Avoidance:
-- [`HintWindow`](file:///Users/brunobarbosa/Projetos/mwm/mwm/MWM/HintWindow.m): Lightweight transparent window created for each candidate window.
-- [`HintView`](file:///Users/brunobarbosa/Projetos/mwm/mwm/MWM/HintView.m): Draws the rounded badge, letter text, and optional application icon.
+- [`HintWindow`](../MWM/UI/Overlays/HintWindow.m): Lightweight transparent window created for each candidate window.
+- [`HintView`](../MWM/UI/Overlays/HintView.m): Draws the rounded badge, letter text, and optional application icon.
 - **Collision Avoidance ("Spread Algorithm")**:
   - When multiple windows overlap closely (e.g. cascaded terminal windows), standard badge placement at the center or top-left causes badges to overlap, obscuring characters.
   - When `windowHintsSpread true` is enabled, Slate performs a spiral 2D collision search around the desired badge anchor:
@@ -73,12 +73,11 @@ Slate includes a full replacement for macOS's built-in `Cmd+Tab` switcher.
      - **`h`**: Toggles hide on the selected application.
      - **`` ` `` (Backtick)**: Reverses direction through the switcher list.
 3. **Quitting Overlay**:
-   - Applications marked for quit display an animated, red cross-out overlay ([`SwitchAppQuittingOverlayView`](file:///Users/brunobarbosa/Projetos/mwm/mwm/MWM/SwitchAppQuittingOverlayView.m)).
+   - Applications marked for quit display an animated, red cross-out overlay ([`SwitchAppQuittingOverlayView`](../MWM/UI/Overlays/SwitchAppQuittingOverlayView.m)).
    - Actions execute as soon as the user releases the `Cmd` modifier.
 
 ---
 
 ## 4. Configuration Window
 
-- **Settings…** (⌘,) in the status menu opens a form for `~/.mwm.yml`. See [Configuration File](configuration-yaml.md).
-
+**Settings…** (⌘,) in the menu bar opens the window that edits the profiles in `~/.mwm`. It has its own guide: [The Settings window](settings-window.md). The file format and syncing are in [Profiles](configuration-yaml.md).

@@ -1,7 +1,7 @@
 # Example: the author's daily setup. A MacBook with a 5120x1440 ultrawide, hyper = ctrl + alt + cmd.
 # Halves, thirds and quarters on the number row and keypad, app shortcuts on alt + shift,
-# window hints on cmd + shift + H. Change the app names and screens to your own, then save this
-# file as ~/.mwm.yml (or open it in Settings).
+# window hints on cmd + shift + H. Change the app names and screens to your own. Add it in
+# Settings > Manage profiles > Add profile > From a file, or put it in ~/.mwm.
 #
 # MWM configuration, managed by the configuration window (Settings...).
 # The window rewrites this file when you change something there, so comments
