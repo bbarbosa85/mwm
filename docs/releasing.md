@@ -23,7 +23,7 @@
    development build the tests and `script/screens` use. The files in `build/` are not committed;
    the script also copies the three files to `docs/downloads/`, which is committed, and points the download links on the site pages (home, docs, features, examples) at the new file names.
 
-3. Commit `docs/downloads/` in a pull request. Once merged, GitHub Pages serves the files, and the
+3. Add the version to the website's changelog (`docs/changelog.html`: a new section at the top, the "Latest" tag moved to it, the same text as the release notes), then commit it with `docs/downloads/` in a pull request. Once merged, GitHub Pages serves the files, and the
    product page (`docs/index.html`) links to `docs/downloads/MWM-<version>.dmg` and `.zip` on `master` (`github.com/bbarbosa85/mwm/raw/master/docs/downloads/...`). Each release adds about 3.5 MB to the repository's history.
 
 4. **Publish a GitHub release for the version** (not a draft), tagged `v` plus the app's version
