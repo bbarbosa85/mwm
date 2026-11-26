@@ -32,6 +32,9 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)setSavedText:(NSString *)text symbol:(NSString *)symbol color:(NSColor *)color;
 - (void)setStatusText:(NSString *)text symbol:(NSString *)symbol color:(NSColor *)color tip:(nullable NSString *)tip;
 
+// The file shown next to the saved state (the active configuration).
+- (void)setPath:(NSString *)path;
+
 // The validity status, for positioning the issue list under it.
 @property (readonly) NSButton *statusButton;
 @property (readonly) NSButton *saveButton;

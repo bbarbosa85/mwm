@@ -321,49 +321,35 @@ static NSString *const kManagedJS =
   XCTAssertEqualObjects([merged.bindings valueForKey:@"key"], (@[@"r", @"x", @"y"]), @"~/.slate bindings first, as before");
 }
 
-#pragma mark - Files
+#pragma mark - Converting files (nothing on disk changes)
 
-- (void)testMigrateFileWritesYAMLAndRenamesLegacy {
+- (void)testConvertingReadsTheFileAndLeavesItAlone {
   NSString *dir = [self tempDirectory];
   NSString *legacyPath = [dir stringByAppendingPathComponent:@".slate"];
-  NSString *ymlPath = [dir stringByAppendingPathComponent:@".mwm.yml"];
   [kLegacy writeToFile:legacyPath atomically:YES encoding:NSUTF8StringEncoding error:nil];
 
   NSError *error = nil;
-  NSArray *backups = [MWMLegacyMigration migrateLegacyFile:legacyPath javaScriptFile:nil oldYAMLFile:nil toFile:ymlPath warnings:[NSMutableArray array] error:&error];
-  XCTAssertEqual([backups count], 1u, @"%@", error);
-
-  NSFileManager *fm = [NSFileManager defaultManager];
-  XCTAssertFalse([fm fileExistsAtPath:legacyPath], @"~/.slate no longer loads");
-  XCTAssertTrue([[backups[0] lastPathComponent] hasPrefix:@".slate.migrated-"], @"%@", backups);
-  XCTAssertEqualObjects([NSString stringWithContentsOfFile:backups[0] encoding:NSUTF8StringEncoding error:nil], kLegacy);
-  MWMConfigDocument *written = [MWMConfigDocument documentWithContentsOfFile:ymlPath error:&error];
-  XCTAssertNotNil(written, @"%@", error);
-  XCTAssertEqualObjects([self resolvedBindings:written], [self legacyExpandedBindings:kLegacy]);
+  MWMConfigDocument *doc = [MWMLegacyMigration documentByConvertingLegacyFile:legacyPath javaScriptFile:nil oldYAMLFile:nil warnings:[NSMutableArray array] error:&error];
+  XCTAssertNotNil(doc, @"%@", error);
+  XCTAssertEqualObjects([self resolvedBindings:doc], [self legacyExpandedBindings:kLegacy]);
+  XCTAssertEqualObjects([NSString stringWithContentsOfFile:legacyPath encoding:NSUTF8StringEncoding error:nil], kLegacy, @"~/.slate is untouched");
+  XCTAssertEqual([[[NSFileManager defaultManager] contentsOfDirectoryAtPath:dir error:nil] count], 1u, @"nothing new on disk");
 }
 
-- (void)testMigrateBothFilesIntoExistingYAML {
+- (void)testConvertingMergesTheNewerFilesOverTheOlder {
   NSString *dir = [self tempDirectory];
   NSString *legacyPath = [dir stringByAppendingPathComponent:@".slate"];
   NSString *jsPath = [dir stringByAppendingPathComponent:@".slate.js"];
-  NSString *ymlPath = [dir stringByAppendingPathComponent:@".mwm.yml"];
-  NSString *yml = @"settings:\n  keyboardLayout: qwerty\nbindings:\n  - key: z\n    action: relaunch\n";
   [@"bind r:cmd relaunch\n" writeToFile:legacyPath atomically:YES encoding:NSUTF8StringEncoding error:nil];
   [kManagedJS writeToFile:jsPath atomically:YES encoding:NSUTF8StringEncoding error:nil];
-  [yml writeToFile:ymlPath atomically:YES encoding:NSUTF8StringEncoding error:nil];
 
   NSError *error = nil;
-  NSArray *backups = [MWMLegacyMigration migrateLegacyFile:legacyPath javaScriptFile:jsPath oldYAMLFile:nil toFile:ymlPath warnings:[NSMutableArray array] error:&error];
-  XCTAssertEqual([backups count], 2u, @"%@", error);
-  MWMConfigDocument *written = [MWMConfigDocument documentWithContentsOfFile:ymlPath error:&error];
-  XCTAssertEqualObjects([written.bindings valueForKey:@"key"], (@[@"r", @"x", @"y", @"z"]), @"%@", error);
-  NSUInteger layout = [[written.settings valueForKey:@"name"] indexOfObject:@"keyboardLayout"];
-  XCTAssertEqualObjects(written.settings[layout].value, @"qwerty", @"~/.mwm.yml wins");
-  XCTAssertEqualObjects([NSString stringWithContentsOfFile:[ymlPath stringByAppendingString:@".bak"] encoding:NSUTF8StringEncoding error:nil], yml);
-  XCTAssertFalse([[NSFileManager defaultManager] fileExistsAtPath:jsPath]);
+  MWMConfigDocument *doc = [MWMLegacyMigration documentByConvertingLegacyFile:legacyPath javaScriptFile:jsPath oldYAMLFile:nil warnings:[NSMutableArray array] error:&error];
+  XCTAssertEqualObjects([doc.bindings valueForKey:@"key"], (@[@"r", @"x", @"y"]), @"%@", error);
+  XCTAssertTrue([[NSFileManager defaultManager] fileExistsAtPath:jsPath], @"~/.slate.js is untouched");
 }
 
-- (void)testMigrateFileFollowsSymlinkedLegacyFile {
+- (void)testConvertingFollowsASymlinkedFile {
   NSString *dir = [self tempDirectory];
   NSString *target = [dir stringByAppendingPathComponent:@"dotfiles-slate"];
   NSString *legacyPath = [dir stringByAppendingPathComponent:@".slate"];
@@ -371,61 +357,47 @@ static NSString *const kManagedJS =
   [[NSFileManager defaultManager] createSymbolicLinkAtPath:legacyPath withDestinationPath:target error:nil];
 
   NSError *error = nil;
-  NSArray *backups = [MWMLegacyMigration migrateLegacyFile:legacyPath javaScriptFile:nil
-                                                 oldYAMLFile:nil
-                                                      toFile:[dir stringByAppendingPathComponent:@".mwm.yml"]
-                                                    warnings:[NSMutableArray array] error:&error];
-  XCTAssertEqual([backups count], 1u, @"%@", error);
-  XCTAssertTrue([[NSFileManager defaultManager] fileExistsAtPath:target], @"the symlink's target is left alone");
-  XCTAssertEqualObjects([[NSFileManager defaultManager] attributesOfItemAtPath:backups[0] error:nil][NSFileType], NSFileTypeSymbolicLink);
+  MWMConfigDocument *doc = [MWMLegacyMigration documentByConvertingLegacyFile:legacyPath javaScriptFile:nil oldYAMLFile:nil warnings:[NSMutableArray array] error:&error];
+  XCTAssertEqual([doc.bindings count], 1u, @"%@", error);
+  XCTAssertEqualObjects([[NSFileManager defaultManager] attributesOfItemAtPath:legacyPath error:nil][NSFileType], NSFileTypeSymbolicLink, @"the link stays");
 }
 
-- (void)testMigrateFileFailsWithoutChangingAnything {
+- (void)testConvertingAFileThatCantBeUsedFailsWithAnError {
   NSString *dir = [self tempDirectory];
   NSString *legacyPath = [dir stringByAppendingPathComponent:@".slate"];
-  NSString *ymlPath = [dir stringByAppendingPathComponent:@".mwm.yml"];
   [@"bind r:${nope} relaunch\n" writeToFile:legacyPath atomically:YES encoding:NSUTF8StringEncoding error:nil];
 
   NSError *error = nil;
-  XCTAssertNil([MWMLegacyMigration migrateLegacyFile:legacyPath javaScriptFile:nil oldYAMLFile:nil toFile:ymlPath warnings:[NSMutableArray array] error:&error]);
+  XCTAssertNil([MWMLegacyMigration documentByConvertingLegacyFile:legacyPath javaScriptFile:nil oldYAMLFile:nil warnings:[NSMutableArray array] error:&error]);
   XCTAssertEqual(error.code, MWMConfigDocumentErrorInvalid);
   XCTAssertTrue([[NSFileManager defaultManager] fileExistsAtPath:legacyPath]);
-  XCTAssertFalse([[NSFileManager defaultManager] fileExistsAtPath:ymlPath]);
 }
 
-- (void)testMigratePreviousYAMLFile {
+- (void)testAJavaScriptFileThatCantBeConvertedIsReportedAndSkipped {
   NSString *dir = [self tempDirectory];
-  NSString *oldPath = [dir stringByAppendingPathComponent:@".slate.yml"];
-  NSString *ymlPath = [dir stringByAppendingPathComponent:@".mwm.yml"];
-  NSString *old = @"settings:\n  keyboardLayout: colemak\nbindings:\n  - key: r\n    action: relaunch\n";
-  [old writeToFile:oldPath atomically:YES encoding:NSUTF8StringEncoding error:nil];
+  NSString *legacyPath = [dir stringByAppendingPathComponent:@".slate"];
+  NSString *jsPath = [dir stringByAppendingPathComponent:@".slate.js"];
+  [@"bind r:cmd relaunch\n" writeToFile:legacyPath atomically:YES encoding:NSUTF8StringEncoding error:nil];
+  [@"slate.bind('a', function() { return 1; });" writeToFile:jsPath atomically:YES encoding:NSUTF8StringEncoding error:nil];
 
+  NSMutableArray *warnings = [NSMutableArray array];
   NSError *error = nil;
-  NSArray *backups = [MWMLegacyMigration migrateLegacyFile:nil javaScriptFile:nil oldYAMLFile:oldPath toFile:ymlPath
-                                                    warnings:[NSMutableArray array] error:&error];
-  XCTAssertEqual([backups count], 1u, @"%@", error);
-  XCTAssertTrue([[backups[0] lastPathComponent] hasPrefix:@".slate.yml.migrated-"], @"%@", backups);
-  XCTAssertFalse([[NSFileManager defaultManager] fileExistsAtPath:oldPath], @"~/.slate.yml no longer loads");
-  MWMConfigDocument *written = [MWMConfigDocument documentWithContentsOfFile:ymlPath error:&error];
-  XCTAssertEqualObjects(written.settings[0].value, @"colemak", @"%@", error);
-  XCTAssertEqualObjects(written.bindings[0].action, @"relaunch");
+  MWMConfigDocument *doc = [MWMLegacyMigration documentByConvertingLegacyFile:legacyPath javaScriptFile:jsPath oldYAMLFile:nil warnings:warnings error:&error];
+  XCTAssertEqual([doc.bindings count], 1u, @"%@", error);
+  XCTAssertTrue([[warnings componentsJoinedByString:@" "] containsString:@"~/.slate.js wasn't imported"], @"%@", warnings);
 }
 
-- (void)testPreviousYAMLLoadsAfterTheOlderFormats {
+- (void)testThePreviousYAMLFileLoadsAfterTheOlderFormats {
   NSString *dir = [self tempDirectory];
   NSString *legacyPath = [dir stringByAppendingPathComponent:@".slate"];
   NSString *oldPath = [dir stringByAppendingPathComponent:@".slate.yml"];
-  NSString *ymlPath = [dir stringByAppendingPathComponent:@".mwm.yml"];
   [@"config keyboardLayout dvorak\nbind r:cmd relaunch\n" writeToFile:legacyPath atomically:YES encoding:NSUTF8StringEncoding error:nil];
   [@"settings:\n  keyboardLayout: colemak\nbindings:\n  - key: x\n    action: undo\n" writeToFile:oldPath atomically:YES encoding:NSUTF8StringEncoding error:nil];
 
   NSError *error = nil;
-  NSArray *backups = [MWMLegacyMigration migrateLegacyFile:legacyPath javaScriptFile:nil oldYAMLFile:oldPath toFile:ymlPath
-                                                    warnings:[NSMutableArray array] error:&error];
-  XCTAssertEqual([backups count], 2u, @"%@", error);
-  MWMConfigDocument *written = [MWMConfigDocument documentWithContentsOfFile:ymlPath error:&error];
-  XCTAssertEqualObjects(written.settings[0].value, @"colemak", @"the newer file wins: %@", error);
-  XCTAssertEqualObjects([written.bindings valueForKey:@"key"], (@[@"r", @"x"]), @"older bindings first");
+  MWMConfigDocument *doc = [MWMLegacyMigration documentByConvertingLegacyFile:legacyPath javaScriptFile:nil oldYAMLFile:oldPath warnings:[NSMutableArray array] error:&error];
+  XCTAssertEqualObjects(doc.settings[0].value, @"colemak", @"the newer file wins: %@", error);
+  XCTAssertEqualObjects([doc.bindings valueForKey:@"key"], (@[@"r", @"x"]), @"older bindings first");
 }
 
 @end

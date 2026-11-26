@@ -42,6 +42,7 @@ typedef NS_ENUM(NSInteger, ConfigurationFormSection) {
   ConfigurationFormSectionAdvanced,
   ConfigurationFormSectionSnapshots,
   ConfigurationFormSectionBackup,
+  ConfigurationFormSectionConfigurations,
   ConfigurationFormSectionCount,
 };
 
@@ -60,6 +61,10 @@ typedef NS_ENUM(NSInteger, ConfigurationFormSection) {
 // Launch at login isn't in the file, so the app answers for it.
 - (BOOL)formViewLaunchesAtLogin:(ConfigurationFormView *)formView;
 - (void)formView:(ConfigurationFormView *)formView setLaunchesAtLogin:(BOOL)launches;
+// The Configurations page switches to another configuration: save what's open, make it active and restart MWM.
+- (void)formView:(ConfigurationFormView *)formView switchToConfigurationNamed:(NSString *)name;
+// The active configuration's file was renamed.
+- (void)formViewDidRenameActiveConfiguration:(ConfigurationFormView *)formView;
 // The Backup page restores a configuration: put this text in the file and show it. Answers whether that worked.
 - (BOOL)formView:(ConfigurationFormView *)formView restoreConfigText:(NSString *)text;
 @end

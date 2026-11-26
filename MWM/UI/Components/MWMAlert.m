@@ -101,9 +101,9 @@ static const CGFloat kPadding = 22;
   }
   NSStackView *header;
   if (self.showsAppIcon) {
-    // The icon above, and the text centered under it, across the alert's whole width.
+    // The icon centered above, and the text under it, left-aligned across the alert's whole width.
     textWidth = kAlertWidth - 2 * kPadding;
-    for (NSTextField *text in texts) { [text setAlignment:NSTextAlignmentCenter]; [text setPreferredMaxLayoutWidth:textWidth]; }
+    for (NSTextField *text in texts) { [text setAlignment:NSTextAlignmentLeft]; [text setPreferredMaxLayoutWidth:textWidth]; }
     NSImage *icon = [[NSBundle mainBundle] imageForResource:@"icon"] ?: [NSApp applicationIconImage];
     NSImageView *iconView = [NSImageView imageViewWithImage:icon];
     [iconView setImageScaling:NSImageScaleProportionallyUpOrDown];
@@ -112,7 +112,7 @@ static const CGFloat kPadding = 22;
     [[iconView.heightAnchor constraintEqualToConstant:64] setActive:YES];
     NSStackView *textColumn = [NSStackView stackViewWithViews:texts];
     [textColumn setOrientation:NSUserInterfaceLayoutOrientationVertical];
-    [textColumn setAlignment:NSLayoutAttributeCenterX];
+    [textColumn setAlignment:NSLayoutAttributeLeading];
     [textColumn setSpacing:4];
     header = [NSStackView stackViewWithViews:@[iconView, textColumn]];
     [header setOrientation:NSUserInterfaceLayoutOrientationVertical];

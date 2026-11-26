@@ -138,31 +138,28 @@ static MWMConfig *_instance = nil;
   [self setDefaultLayouts:[[NSMutableArray alloc] init]];
   [self setAliases:[[NSMutableDictionary alloc] init]];
 
-  // Converts ~/.slate, ~/.slate.js and ~/.slate.yml into ~/.mwm.yml. If the user postpones
-  // it or it fails, ~/.slate keeps loading below; ~/.slate.js never runs.
+  // On the first launch with ~/.mwm: moves ~/.mwm.yml in and imports any Slate files, which are only read.
+  // After that MWM loads the active configuration only; ~/.slate is never loaded.
   [MWMLegacyMigration runStartupMigration];
   [MWMLegacyMigration runFormatMigration];
 
   NSString *ymlPath = [MWMConfigDocument defaultPath];
+  NSString *shownPath = [ymlPath stringByAbbreviatingWithTildeInPath];
   BOOL hasYAML = [[NSFileManager defaultManager] fileExistsAtPath:ymlPath];
   self.loadedConfigText = hasYAML ? [NSString stringWithContentsOfFile:ymlPath encoding:NSUTF8StringEncoding error:nil] : nil;
   NSError *yamlError = nil;
   BOOL loadedYAML = hasYAML && [self loadYAMLConfigAtPath:ymlPath error:&yamlError];
-  BOOL loadedDefault = [self loadConfigFileWithPath:@"~/.slate"];
-  if ([[NSFileManager defaultManager] fileExistsAtPath:[@"~/.slate.js" stringByExpandingTildeInPath]]) {
-    MWMLogger(@"  Ignoring ~/.slate.js: MWM no longer runs JavaScript configurations.");
-  }
 
-  if (yamlError != nil || (!loadedYAML && !loadedDefault)) {
-    NSString *message = yamlError ? @"~/.mwm.yml has an error" : @"Could not load ~/.mwm.yml";
+  if (yamlError != nil || !loadedYAML) {
+    NSString *message = yamlError ? [NSString stringWithFormat:@"%@ has an error", shownPath] : @"No configuration yet";
     MWMLogger(@"  ERROR %@: %@", message, [yamlError localizedDescription]);
     MWMAlert *alert = [MWMAlert alert];
+    [alert setShowsAppIcon:YES];
     alert.kind = MWMAlertKindWarning;
     alert.messageText = message;
-    alert.informativeText = [NSString stringWithFormat:@"%@MWM will use %@. Choose Open configuration to %@.",
+    alert.informativeText = [NSString stringWithFormat:@"%@MWM will use its default configuration. Choose Open configuration to %@.",
                              yamlError ? [NSString stringWithFormat:@"%@\n\n", [yamlError localizedDescription]] : @"",
-                             loadedDefault ? @"only ~/.slate" : @"its default configuration",
-                             yamlError ? @"see the problem" : @"create ~/.mwm.yml from the defaults and edit it"];
+                             yamlError ? @"see the problem" : [NSString stringWithFormat:@"create %@ from the defaults and edit it", shownPath]];
     [[alert addButtonWithTitle:@"Continue"] setKeyEquivalent:@"\r"];
     [[alert addButtonWithTitle:@"Quit"] setKeyEquivalent:@"q"];
     [[alert addButtonWithTitle:@"Open configuration"] setKeyEquivalent:@"o"];
@@ -174,12 +171,13 @@ static MWMConfig *_instance = nil;
       // After launch finishes, so the window opens on a fully set-up app.
       [(NSObject *)[NSApp delegate] performSelector:@selector(configureMWM) withObject:nil afterDelay:0];
     }
-    if (!loadedDefault) return [self loadConfigFileWithPath:[[NSBundle mainBundle] pathForResource:@"default" ofType:@"slate"]];
+    return [self loadConfigFileWithPath:[[NSBundle mainBundle] pathForResource:@"default" ofType:@"slate"]];
   }
 
   if (![self loadSnapshots]) {
     MWMLogger(@"  ERROR Could not load %@", SNAPSHOTS_FILE);
     MWMAlert *alert = [MWMAlert alert];
+    [alert setShowsAppIcon:YES];
     alert.kind = MWMAlertKindWarning;
     alert.messageText = @"Couldn't load your snapshots";
     alert.informativeText = [NSString stringWithFormat:@"MWM can carry on without them, or quit so you can fix the file. Deleting %@ starts fresh.", SNAPSHOTS_FILE];
@@ -219,7 +217,7 @@ static MWMConfig *_instance = nil;
   return NO;
 }
 
-// Reads ~/.mwm.yml and registers its settings and bindings. Nothing in it is run.
+// Reads the active configuration and registers its settings and bindings. Nothing in it is run.
 // What each screen role of the loaded config turned into, to notice when a
 // dock or undock changes it.
 static NSDictionary<NSString *, NSString *> *gLoadedRoleReferences = nil;
@@ -253,7 +251,7 @@ static NSDictionary<NSString *, NSString *> *RoleReferencesForDocument(MWMConfig
       [self addBinding:bind];
     } @catch (NSException *ex) {
       MWMLogger(@"   ERROR %@",[ex name]);
-      if ([MWMAlert quitOrSkipAfterProblem:[ex name] reason:[ex reason] context:[NSString stringWithFormat:@"~/.mwm.yml, binding #%lu", (unsigned long)binding.index + 1]]) {
+      if ([MWMAlert quitOrSkipAfterProblem:[ex name] reason:[ex reason] context:[NSString stringWithFormat:@"%@, binding #%lu", [path stringByAbbreviatingWithTildeInPath], (unsigned long)binding.index + 1]]) {
         MWMLogger(@"User selected exit");
         [NSApp terminate:nil];
       }

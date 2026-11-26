@@ -191,7 +191,7 @@ static id TypedValue(NSString *text) {
   NSButton *editor = [NSButton buttonWithTitle:@"Open in Text Editor" target:self action:@selector(openInTextEditor:)];
   NSStackView *buttons = [NSStackView stackViewWithViews:@[finder, editor]];
   [buttons setSpacing:8];
-  [self addBlock:[self blockWithSymbol:@"doc.text" title:@"Config file" subtitle:@"~/.mwm.yml" rows:@[
+  [self addBlock:[self blockWithSymbol:@"doc.text" title:@"Config file" subtitle:[[MWMConfigDocument defaultPath] stringByAbbreviatingWithTildeInPath] rows:@[
     [self rowWithTitle:@"Edit it by hand if you like" subtitle:nil control:buttons],
   ]]];
 }

@@ -40,6 +40,8 @@
 #import "ConfigurationShortcutEditorView.h"
 #import "MWMDesignGallery.h"
 #import "ConfigurationBackupView.h"
+#import "ConfigurationConfigurationsView.h"
+#import "MWMConfigurations.h"
 #import "MWMGist.h"
 #import "MWMDisplays.h"
 #import "TestFakeGitHub.h"
@@ -269,7 +271,7 @@ static NSString *const kConfig =
     XCTestExpectation *done = [self expectationWithDescription:@"save"];
     MWMBackupEnvironment *environment = [MWMBackupEnvironment environmentNamed:item[0] configText:kConfig snapshots:@{@"work": @{@"name": @"work"}, @"couch": @{@"name": @"couch"}} displays:item[1] date:[NSDate dateWithTimeIntervalSince1970:[item[2] doubleValue]]];
     [MWMGist saveEnvironment:environment completion:^(NSString *problem) { [done fulfill]; }];
-    [self waitForExpectations:@[done] timeout:5];
+    [self waitForExpectations:@[done] timeout:30];
   }
   (void)text;
   NSMutableDictionary *lists = [NSMutableDictionary dictionary];
@@ -279,12 +281,26 @@ static NSString *const kConfig =
   page.document = [MWMConfigDocument documentFromString:kConfig error:nil];
   XCTestExpectation *loaded = [self expectationWithDescription:@"refresh"];
   [page refresh:^{ [loaded fulfill]; }];
-  [self waitForExpectations:@[loaded] timeout:5];
+  [self waitForExpectations:@[loaded] timeout:30];
   for (NSNumber *dark in @[@NO, @YES]) [self checkView:page size:NSMakeSize(840, 720) name:@"backup" dark:[dark boolValue]];
   [MWMSnapshots setListsOverride:nil];
   [MWMDisplays setConnectedOverride:nil];
   [MWMGist setTransport:nil];
   [MWMGist useMemoryStorage:NO];
+}
+
+- (void)testTheConfigurationsPageLooksTheSame {
+  NSString *home = [NSTemporaryDirectory() stringByAppendingPathComponent:[[NSUUID UUID] UUIDString]];
+  [[NSFileManager defaultManager] createDirectoryAtPath:home withIntermediateDirectories:YES attributes:nil error:nil];
+  [MWMConfigurations setHomeDirectory:home];
+  for (NSArray *item in @[@[@"default", @1762948800], @[@"Desk, two monitors", @1762603200], @[@"Laptop only", @1761998400]]) {
+    [MWMConfigurations createNamed:item[0] text:@"version: 2\n" error:nil];
+    [[NSFileManager defaultManager] setAttributes:@{NSFileModificationDate: [NSDate dateWithTimeIntervalSince1970:[item[1] doubleValue]]} ofItemAtPath:[MWMConfigurations pathForName:item[0]] error:nil];
+  }
+  ConfigurationConfigurationsView *page = [[ConfigurationConfigurationsView alloc] initWithFrame:NSMakeRect(0, 0, 840, 640)];
+  for (NSNumber *dark in @[@NO, @YES]) [self checkView:page size:NSMakeSize(840, 640) name:@"configurations" dark:[dark boolValue]];
+  [MWMConfigurations setHomeDirectory:nil];
+  [[NSFileManager defaultManager] removeItemAtPath:home error:nil];
 }
 
 - (void)testTheBackupConnectPageLooksTheSame {

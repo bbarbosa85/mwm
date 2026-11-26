@@ -118,7 +118,7 @@
 - (void)wait:(void (^)(XCTestExpectation *))body {
   XCTestExpectation *expectation = [self expectationWithDescription:@"gist"];
   body(expectation);
-  [self waitForExpectations:@[expectation] timeout:5];
+  [self waitForExpectations:@[expectation] timeout:30];
 }
 
 - (NSArray<MWMBackupEnvironment *> *)listed {

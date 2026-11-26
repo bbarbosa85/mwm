@@ -46,23 +46,26 @@ NS_ASSUME_NONNULL_BEGIN
                                 higherName:(NSString *)higherName
                                   warnings:(NSMutableArray<NSString *> *)warnings;
 
-// Converts whichever of legacyPath, jsPath and oldYAMLPath exist (merging into
-// ymlPath when it exists, which wins), writes ymlPath, then renames the old
-// files to <path>.migrated-<timestamp> so they stop loading. Returns those
-// backup paths, or nil (with nothing changed on disk) on failure.
-+ (nullable NSArray<NSString *> *)migrateLegacyFile:(nullable NSString *)legacyPath
-                                     javaScriptFile:(nullable NSString *)jsPath
-                                        oldYAMLFile:(nullable NSString *)oldYAMLPath
-                                             toFile:(NSString *)ymlPath
-                                           warnings:(NSMutableArray<NSString *> *)warnings
-                                              error:(NSError **)error;
+// Converts whichever of these exist into one document, merging them in the order the older generations
+// loaded them (~/.slate, then ~/.slate.js, then ~/.slate.yml). Nothing on disk changes. A ~/.slate.js that
+// can't be converted is left out and reported in `warnings`. nil when none exist or one can't be converted.
++ (nullable MWMConfigDocument *)documentByConvertingLegacyFile:(nullable NSString *)legacyPath
+                                                 javaScriptFile:(nullable NSString *)jsPath
+                                                    oldYAMLFile:(nullable NSString *)oldYAMLPath
+                                                       warnings:(NSMutableArray<NSString *> *)warnings
+                                                          error:(NSError **)error;
 
-// Startup entry point: converts ~/.slate, ~/.slate.js and ~/.slate.yml into ~/.mwm.yml,
-// asking first if ~/.mwm.yml already exists. Shows alerts; does nothing
-// when neither old file exists.
+// First launch with the ~/.mwm folder (it doesn't exist yet): moves an existing ~/.mwm.yml to
+// ~/.mwm/default.mwm.yaml, and converts any Slate files into a configuration ("default", or "slate-import"
+// next to a moved ~/.mwm.yml). The Slate files are only read: never renamed, moved or loaded again.
+// Answers nil when there's nothing to do; else a summary (moved, importedName, slateFiles, slateProblem,
+// warnings, error) for the alert. Uses MWMConfigurations' home folder.
++ (nullable NSDictionary *)importFirstRunConfigurations;
+
+// Startup entry point: the step above, then an alert saying what happened.
 + (void)runStartupMigration;
 
-// Startup entry point, after the one above: rewrites an older-format ~/.mwm.yml in the
+// Startup entry point, after the one above: rewrites an older-format active configuration in the
 // current format (keeping the old file as a backup) and says so once.
 + (void)runFormatMigration;
 

@@ -32,6 +32,10 @@ NS_ASSUME_NONNULL_BEGIN
 - (NSMenu *)pagesMenu;
 // "Restore Configuration": the backups in the gist (newest first), or a message when there are none.
 - (NSMenu *)restoreMenu;
+// "Configurations": one item for each configuration, a check on the active one, and Manage Configurations….
+- (NSMenu *)configurationsMenu;
+// Fills the menu from these names (the menu does this when it opens; tests call it).
+- (void)showConfigurations:(NSArray<NSString *> *)names active:(NSString *)active inMenu:(NSMenu *)menu;
 // Fills the restore menu from these backups (the menu asks GitHub when it opens; tests call this).
 - (void)showBackups:(NSArray *)environments inMenu:(NSMenu *)menu;
 
