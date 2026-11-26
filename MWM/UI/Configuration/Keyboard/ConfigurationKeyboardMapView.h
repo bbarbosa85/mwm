@@ -31,7 +31,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)keyboardMapViewDidChangeDocument:(ConfigurationKeyboardMapView *)view;
 // Edit (a binding by index in the document), or add a shortcut on a free key.
 - (void)keyboardMapView:(ConfigurationKeyboardMapView *)view wantsToEditBindingAtIndex:(NSUInteger)index;
-- (void)keyboardMapView:(ConfigurationKeyboardMapView *)view wantsNewShortcutInGroup:(nullable NSString *)groupName keyName:(NSString *)keyName;
+- (void)keyboardMapView:(ConfigurationKeyboardMapView *)view wantsNewShortcutInGroup:(nullable NSString *)groupName keyName:(nullable NSString *)keyName;
 // The user wants to look at or change the groups themselves.
 - (void)keyboardMapViewWantsGroups:(ConfigurationKeyboardMapView *)view;
 @optional

@@ -50,7 +50,7 @@ static const CGFloat kScrollerRoom = 16;
 #pragma mark - Interface
 
 - (NSScrollView *)scrollViewWithStack:(NSStackView *)stack {
-  return [MWMComponents scrollViewWithContent:stack];
+  return [MWMComponents scrollViewWithContent:stack trailingRoom:kScrollerRoom];
 }
 
 - (void)buildInterface {
@@ -72,7 +72,6 @@ static const CGFloat kScrollerRoom = 16;
   [left setEdgeInsets:NSEdgeInsetsMake(10, 14, 12, 8)];
   [left setTranslatesAutoresizingMaskIntoConstraints:NO];
   for (NSView *view in @[self.search, filterScroll]) [[view.widthAnchor constraintEqualToAnchor:left.widthAnchor constant:-22] setActive:YES];
-  [[self.filterStack.widthAnchor constraintEqualToAnchor:filterScroll.widthAnchor constant:-kScrollerRoom] setActive:YES];
 
   self.countLabel = [NSTextField labelWithString:@""];
   [self.countLabel setFont:[MWMTheme fontSmall]];
@@ -95,7 +94,6 @@ static const CGFloat kScrollerRoom = 16;
   [right setEdgeInsets:NSEdgeInsetsMake(10, 16, 12, 20)];
   [right setTranslatesAutoresizingMaskIntoConstraints:NO];
   for (NSView *view in @[top, rowsScroll]) [[view.widthAnchor constraintEqualToAnchor:right.widthAnchor constant:-36] setActive:YES];
-  [[self.rowsStack.widthAnchor constraintEqualToAnchor:rowsScroll.widthAnchor constant:-kScrollerRoom] setActive:YES];   // the scroller is drawn over the right edge
 
   NSView *line = [MWMComponents separator];
   [self addSubview:left];

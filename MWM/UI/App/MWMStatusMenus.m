@@ -18,17 +18,17 @@
 #import "ConfigurationFormView.h"
 #import "ConfigurationWindowController.h"
 #import "MWMAlert.h"
-#import "MWMBackup.h"
-#import "MWMConfigurations.h"
-#import "MWMConfigDocument.h"
 #import "MWMGist.h"
+#import "MWMSync.h"
+#import "MWMSyncPresenter.h"
+#import "MWMProfiles.h"
+#import "MWMConfigDocument.h"
 #import "MWMSnapshots.h"
 
 @interface MWMStatusMenus ()
 @property (strong) NSMenu *snapshots;
 @property (strong) NSMenu *restore;
-@property (strong) NSMenu *configurations;
-@property (copy) NSArray<MWMBackupEnvironment *> *backups;
+@property (strong) NSMenu *profiles;
 @end
 
 @implementation MWMStatusMenus
@@ -59,8 +59,8 @@
 
 - (void)menuNeedsUpdate:(NSMenu *)menu {
   if (menu == self.snapshots) [self fillSnapshotsMenu:menu];
-  if (menu == self.restore) [self updateRestoreMenu];
-  if (menu == self.configurations) [self showConfigurations:[MWMConfigurations names] active:[MWMConfigurations activeName] inMenu:menu];
+  if (menu == self.restore) [self showBackupInMenu:menu lastSync:[self lastSyncLine]];
+  if (menu == self.profiles) [self showProfiles:[MWMProfiles names] active:[MWMProfiles activeName] inMenu:menu];
 }
 
 - (void)fillSnapshotsMenu:(NSMenu *)menu {
@@ -148,110 +148,77 @@
 
 - (void)manageSnapshots:(id)sender { [[ConfigurationWindowController sharedController] showConfigurationSection:ConfigurationFormSectionSnapshots]; }
 
-#pragma mark - Configurations
+#pragma mark - Profiles
 
-- (NSMenu *)configurationsMenu {
-  if (self.configurations == nil) {
-    self.configurations = [[NSMenu alloc] initWithTitle:@"Configurations"];
-    [self.configurations setDelegate:self];
-    [self showConfigurations:[MWMConfigurations names] active:[MWMConfigurations activeName] inMenu:self.configurations];
+- (NSMenu *)profilesMenu {
+  if (self.profiles == nil) {
+    self.profiles = [[NSMenu alloc] initWithTitle:@"Profiles"];
+    [self.profiles setDelegate:self];
+    [self showProfiles:[MWMProfiles names] active:[MWMProfiles activeName] inMenu:self.profiles];
   }
-  return self.configurations;
+  return self.profiles;
 }
 
-- (void)showConfigurations:(NSArray<NSString *> *)names active:(NSString *)active inMenu:(NSMenu *)menu {
+- (void)showProfiles:(NSArray<NSString *> *)names active:(NSString *)active inMenu:(NSMenu *)menu {
   [menu removeAllItems];
   for (NSString *name in names) {
-    NSMenuItem *item = [self item:name action:@selector(configurationChosen:) in:menu];
+    NSMenuItem *item = [self item:name action:@selector(profileChosen:) in:menu];
     [item setRepresentedObject:name];
     [item setState:[name caseInsensitiveCompare:active] == NSOrderedSame ? NSControlStateValueOn : NSControlStateValueOff];
   }
   if ([names count] == 0) {
-    NSMenuItem *none = [menu addItemWithTitle:@"No configurations yet" action:nil keyEquivalent:@""];
+    NSMenuItem *none = [menu addItemWithTitle:@"No profiles yet" action:nil keyEquivalent:@""];
     [none setEnabled:NO];
   }
   [menu addItem:[NSMenuItem separatorItem]];
-  [self item:@"Manage Configurations…" action:@selector(manageConfigurations:) in:menu];
+  [self item:@"Manage Profiles…" action:@selector(manageProfiles:) in:menu];
 }
 
-- (void)configurationChosen:(NSMenuItem *)item {
+- (void)profileChosen:(NSMenuItem *)item {
   NSString *name = item.representedObject;
-  if ([name caseInsensitiveCompare:[MWMConfigurations activeName]] == NSOrderedSame) return;
-  [[ConfigurationWindowController sharedController] switchToConfigurationNamed:name];
+  if ([name caseInsensitiveCompare:[MWMProfiles activeName]] == NSOrderedSame) return;
+  [[ConfigurationWindowController sharedController] showSettingsOnProfileNamed:name];
 }
 
-- (void)manageConfigurations:(id)sender { [[ConfigurationWindowController sharedController] showConfigurationSection:ConfigurationFormSectionConfigurations]; }
+- (void)manageProfiles:(id)sender { [[ConfigurationWindowController sharedController] showConfigurationSection:ConfigurationFormSectionProfiles]; }
 
-#pragma mark - Restore configuration
+#pragma mark - Backup
 
-- (NSMenu *)restoreMenu {
+- (NSMenu *)backupMenu {
   if (self.restore == nil) {
-    self.restore = [[NSMenu alloc] initWithTitle:@"Restore Configuration"];
+    self.restore = [[NSMenu alloc] initWithTitle:@"Backup"];
     [self.restore setDelegate:self];
-    [self showBackups:@[] inMenu:self.restore];
+    [self showBackupInMenu:self.restore lastSync:nil];
   }
   return self.restore;
 }
 
-// Shows what was last heard from GitHub right away, then asks again (when there's a token).
-- (void)updateRestoreMenu {
-  [self showBackups:self.backups ?: @[] inMenu:self.restore];
-  if ([MWMGist token] == nil) return;
-  [MWMGist listEnvironments:^(NSArray<MWMBackupEnvironment *> *environments, NSString *problem) {
-    if (problem != nil) return;
-    self.backups = environments;
-    [self showBackups:environments inMenu:self.restore];
-  }];
-}
-
-- (void)showBackups:(NSArray<MWMBackupEnvironment *> *)environments inMenu:(NSMenu *)menu {
-  [menu removeAllItems];
+- (NSString *)lastSyncLine {
+  NSDate *date = [MWMSync lastSyncDate];
+  if (date == nil) return nil;
   NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
   [formatter setDateStyle:NSDateFormatterMediumStyle];
-  [formatter setTimeStyle:NSDateFormatterNoStyle];
-  for (MWMBackupEnvironment *environment in environments) {
-    NSMenuItem *item = [self item:environment.name action:@selector(restoreBackupChosen:) in:menu];
-    [item setRepresentedObject:environment.name];
-    [item setToolTip:[NSString stringWithFormat:@"Saved %@", [formatter stringFromDate:environment.savedAt]]];
-  }
-  if ([environments count] == 0) {
-    NSMenuItem *none = [menu addItemWithTitle:@"No backups configured" action:nil keyEquivalent:@""];
-    [none setEnabled:NO];
-  }
-  [menu addItem:[NSMenuItem separatorItem]];
-  [self item:@"Manage Backups…" action:@selector(manageBackups:) in:menu];
+  [formatter setTimeStyle:NSDateFormatterShortStyle];
+  [formatter setDoesRelativeDateFormatting:YES];
+  return [NSString stringWithFormat:@"Last synced %@", [formatter stringFromDate:date]];
 }
 
-- (void)restoreBackupChosen:(NSMenuItem *)item {
-  NSString *name = item.representedObject;
-  MWMBackupEnvironment *environment = nil;
-  for (MWMBackupEnvironment *candidate in self.backups) if ([candidate.name isEqualToString:name]) environment = candidate;
-  if (environment == nil) return;
-  [NSApp activateIgnoringOtherApps:YES];
-  if ([MWMConfigDocument documentFromString:environment.configText lenient:YES error:nil] == nil) {
-    MWMAlert *failed = [MWMAlert alert];
-    [failed setKind:MWMAlertKindWarning];
-    [failed setMessageText:@"Can't restore"];
-    [failed setInformativeText:@"The configuration in this backup can't be read."];
-    [failed runModal];
-    return;
-  }
-  MWMAlert *alert = [MWMAlert alert];
-  [alert setKind:MWMAlertKindConfirm];
-  [alert setMessageText:[NSString stringWithFormat:@"Restore \"%@\"?", name]];
-  [alert setInformativeText:@"Replaces your shortcuts, slots and snapshots with this backup. A copy of your current configuration is kept next to it first."];
-  [alert addButtonWithTitle:@"Restore"];
-  [alert addButtonWithTitle:@"Cancel"];
-  if ([alert runModal] != NSAlertFirstButtonReturn) return;
-  ConfigurationWindowController *controller = [ConfigurationWindowController sharedController];
-  if (![controller restoreConfigText:environment.configText]) return;
-  [MWMSnapshots importAll:environment.snapshots];
-  [controller showConfigurationSection:ConfigurationFormSectionBackup];
-  MWMAlert *done = [MWMAlert alert];
-  [done setKind:MWMAlertKindSuccess];
-  [done setMessageText:[NSString stringWithFormat:@"Restored \"%@\"", name]];
-  [done setInformativeText:@"Choose Apply to start using it."];
-  [done runModal];
+- (void)showBackupInMenu:(NSMenu *)menu lastSync:(NSString *)lastSync {
+  [menu removeAllItems];
+  NSMenuItem *sync = [self item:@"Sync Now" action:@selector(syncNowChosen:) in:menu];
+  [sync setImage:[NSImage imageWithSystemSymbolName:@"arrow.triangle.2.circlepath" accessibilityDescription:nil]];
+  [sync setToolTip:@"Send what changed here to your gist and bring back what changed there"];
+  NSMenuItem *when = [menu addItemWithTitle:lastSync ?: @"Not synced yet" action:nil keyEquivalent:@""];
+  [when setEnabled:NO];
+  [menu addItem:[NSMenuItem separatorItem]];
+  [self item:@"Backup Settings…" action:@selector(manageBackups:) in:menu];
+}
+
+- (void)syncNowChosen:(id)sender {
+  if ([MWMGist token] == nil) { [self manageBackups:nil]; return; }
+  [MWMSyncPresenter runWithCompletion:^(MWMSyncReport *report) {
+    if (report.received > 0 || [report.flagged count] > 0) [[ConfigurationWindowController sharedController] reloadAfterSync];
+  }];
 }
 
 - (void)manageBackups:(id)sender { [[ConfigurationWindowController sharedController] showConfigurationSection:ConfigurationFormSectionBackup]; }
@@ -259,12 +226,14 @@
 #pragma mark - Keyboard shortcuts
 
 - (NSMenu *)keyboardMenu {
-  NSMenu *menu = [[NSMenu alloc] initWithTitle:@"Keyboard Shortcuts"];
-  [self item:@"Keyboard Map" action:@selector(openMap:) in:menu];
-  [self item:@"List of Shortcuts" action:@selector(openList:) in:menu];
+  NSMenu *menu = [[NSMenu alloc] initWithTitle:@"Keyboard"];
+  // The sidebar's names, Modifiers first.
+  [self item:@"Modifiers" action:@selector(openModifiers:) in:menu];
+  [menu addItem:[NSMenuItem separatorItem]];
+  [self item:@"Bindings Map" action:@selector(openMap:) in:menu];
+  [self item:@"Bindings List" action:@selector(openList:) in:menu];
   [menu addItem:[NSMenuItem separatorItem]];
   [self item:@"New Shortcut…" action:@selector(newShortcut:) in:menu];
-  [self item:@"Modifier Groups" action:@selector(openModifiers:) in:menu];
   return menu;
 }
 
@@ -277,9 +246,11 @@
 
 - (NSMenu *)pagesMenu {
   NSMenu *menu = [[NSMenu alloc] initWithTitle:@"Open Page"];
-  NSArray *groups = @[@[@[@"Keyboard", @(ConfigurationFormSectionKeyboard)], @[@"Modifiers", @(ConfigurationFormSectionModifiers)]],
-                      @[@[@"Displays", @(ConfigurationFormSectionMonitors)], @[@"Slots", @(ConfigurationFormSectionPositions)], @[@"Snapshots", @(ConfigurationFormSectionSnapshots)]],
-                      @[@[@"General", @(ConfigurationFormSectionGeneral)], @[@"Advanced", @(ConfigurationFormSectionAdvanced)], @[@"Other Aliases", @(ConfigurationFormSectionAliases)], @[@"Configurations", @(ConfigurationFormSectionConfigurations)], @[@"Backup", @(ConfigurationFormSectionBackup)]]];
+  // The sidebar's order and names.
+  NSArray *groups = @[@[@[@"Modifiers", @(ConfigurationFormSectionModifiers)], @[@"Bindings", @(ConfigurationFormSectionKeyboard)]],
+                      @[@[@"Displays", @(ConfigurationFormSectionMonitors)], @[@"Slots", @(ConfigurationFormSectionPositions)]],
+                      @[@[@"General", @(ConfigurationFormSectionGeneral)], @[@"Advanced", @(ConfigurationFormSectionAdvanced)], @[@"Other Aliases", @(ConfigurationFormSectionAliases)]],
+                      @[@[@"Snapshots", @(ConfigurationFormSectionSnapshots)], @[@"Profiles", @(ConfigurationFormSectionProfiles)], @[@"Backup", @(ConfigurationFormSectionBackup)]]];
   for (NSUInteger i = 0; i < [groups count]; i++) {
     if (i > 0) [menu addItem:[NSMenuItem separatorItem]];
     for (NSArray *page in groups[i]) {

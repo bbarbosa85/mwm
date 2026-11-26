@@ -31,6 +31,14 @@ NS_ASSUME_NONNULL_BEGIN
 + (instancetype)chipWithText:(NSString *)text color:(nullable NSColor *)color;
 @end
 
+// A row of choices drawn as small cards: an icon on a tile with the name under it. The chosen card has an accent
+// outline and a bolder name, like the Appearance choices in System Settings.
+@interface MWMOptionCards : NSStackView
+@property (assign, nonatomic) NSInteger selectedIndex;
+@property (copy, nullable) void (^onChange)(NSInteger index);
++ (instancetype)cardsWithTitles:(NSArray<NSString *> *)titles symbols:(NSArray<NSString *> *)symbols selectedIndex:(NSInteger)index onChange:(void (^)(NSInteger index))onChange;
+@end
+
 // The top of a page opened from another: a back button with the parent's name, and the title.
 @interface MWMSublevelHeader : NSView
 @property (readonly) NSTextField *titleLabel;
@@ -38,14 +46,24 @@ NS_ASSUME_NONNULL_BEGIN
 + (instancetype)headerWithBackTitle:(NSString *)backTitle title:(NSString *)title target:(nullable id)target action:(nullable SEL)action;
 @end
 
-// The bar under an editor, below a line: whether there is anything to save, then Save and Cancel.
+// The bar under an editor, below a line: whether there is anything to save, an optional message, then Save and Cancel.
 @interface MWMSaveBar : NSView
 @property (readonly) MWMChipView *chip;
+@property (readonly) NSTextField *messageLabel;   // a line of state to the left of Save (empty unless a page fills it)
 @property (readonly) NSButton *cancelButton;
 @property (readonly) NSButton *saveButton;
 + (instancetype)barWithTarget:(nullable id)target cancel:(nullable SEL)cancel save:(nullable SEL)save;
 // Shows "Unsaved changes" (or "No changes"), and turns Save on only when it can be used.
 - (void)setDirty:(BOOL)dirty canSave:(BOOL)canSave;
+@end
+
+// The field where something gets its name: a roomy rounded box with medium text, an accent ring while typing and
+// a red one when the name can't be used. The compact size is for rows and tables.
+@interface MWMNameField : NSTextField
+@property (readonly) BOOL compact;
+// Draws the red ring (set it while the name is empty or taken; the reason goes in a label next to the field).
+@property (assign, nonatomic) BOOL invalid;
++ (instancetype)nameFieldWithPlaceholder:(nullable NSString *)placeholder identifier:(nullable NSString *)identifier compact:(BOOL)compact;
 @end
 
 @interface MWMComponents : NSObject
@@ -55,7 +73,6 @@ NS_ASSUME_NONNULL_BEGIN
 + (NSTextField *)labelWithText:(NSString *)text size:(CGFloat)size color:(NSColor *)color weight:(NSFontWeight)weight;
 // Wraps onto more lines instead of cutting off.
 + (NSTextField *)wrappingLabelWithText:(NSString *)text size:(CGFloat)size color:(NSColor *)color weight:(NSFontWeight)weight;
-+ (NSTextField *)bodyLabel:(NSString *)text;          // primary text
 + (NSTextField *)secondaryLabel:(NSString *)text;     // small, secondary
 + (NSTextField *)captionLabel:(NSString *)text;       // small, tertiary
 + (NSTextField *)titleLabel:(NSString *)text;         // page and editor titles
@@ -71,6 +88,8 @@ NS_ASSUME_NONNULL_BEGIN
 // A vertical scroller around content that keeps the width of the visible area and grows downward,
 // starting at the top (the default for a short page).
 + (NSScrollView *)scrollViewWithContent:(NSView *)content;
+// The same, leaving some room free at the right, for a scroll bar that is drawn over the content.
++ (NSScrollView *)scrollViewWithContent:(NSView *)content trailingRoom:(CGFloat)room;
 // A rounded square with a symbol in a color: what a shortcut does, a feature, a group.
 + (NSView *)iconTileWithSymbol:(NSString *)symbolName color:(NSColor *)color size:(CGFloat)size;
 
@@ -91,12 +110,15 @@ NS_ASSUME_NONNULL_BEGIN
 // A line of text with an optional smaller line under it.
 + (NSView *)titleWithSubtitle:(NSString *)title subtitle:(nullable NSString *)subtitle;
 // Text on the left, a control on the right.
++ (NSView *)listCardWithRows:(NSArray<NSView *> *)rows;   // a card with the rows stacked and a hairline between them
 + (NSView *)controlRowWithTitle:(NSString *)title subtitle:(nullable NSString *)subtitle control:(NSView *)control;
 // A card with an icon, title and description in a column on the left, and the rows on the right.
 + (NSView *)settingsBlockWithSymbol:(NSString *)symbol title:(NSString *)title subtitle:(nullable NSString *)subtitle rows:(NSArray<NSView *> *)rows titleColumnWidth:(CGFloat)width;
 
 // A control with a small caption above it, as in a form.
 + (NSStackView *)fieldWithCaption:(NSString *)caption control:(NSView *)control;
+// A name field with its "Name" caption above it; width 0 fills the column.
++ (NSStackView *)nameBlockWithField:(MWMNameField *)field width:(CGFloat)width;
 // Views in a column, each as wide as the column less its insets.
 + (NSStackView *)columnWithViews:(NSArray<NSView *> *)views spacing:(CGFloat)spacing insets:(NSEdgeInsets)insets;
 // Views side by side in equal widths, aligned at the top.
@@ -116,6 +138,10 @@ NS_ASSUME_NONNULL_BEGIN
                    boldTitle:(BOOL)boldTitle selected:(BOOL)selected onClick:(void (^)(void))onClick;
 
 + (NSView *)selectableRowWithContent:(NSView *)content insets:(NSEdgeInsets)insets selected:(BOOL)selected onClick:(void (^)(void))onClick;
+// The same, tinted with this color (not the accent) when selected.
++ (NSView *)selectableRowWithContent:(NSView *)content insets:(NSEdgeInsets)insets selected:(BOOL)selected selectedColor:(nullable NSColor *)selectedColor onClick:(void (^)(void))onClick;
++ (NSView *)countRowWithTitle:(NSString *)title count:(NSUInteger)count detail:(nullable NSView *)detail detailSpacing:(CGFloat)spacing insets:(NSEdgeInsets)insets
+                   boldTitle:(BOOL)boldTitle selected:(BOOL)selected selectedColor:(nullable NSColor *)selectedColor onClick:(void (^)(void))onClick;
 
 @end
 

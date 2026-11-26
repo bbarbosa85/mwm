@@ -55,10 +55,11 @@
 - (BOOL)acceptsFirstMouse:(NSEvent *)event { return YES; }
 - (void)mouseDown:(NSEvent *)event { if (self.onClick) self.onClick(); }
 - (void)setSelected:(BOOL)selected { _selected = selected; [self updateTint]; }
+- (void)setSelectedColor:(NSColor *)selectedColor { _selectedColor = selectedColor; [self updateTint]; }
 - (void)updateTint {
   [self.effectiveAppearance performAsCurrentDrawingAppearance:^{
     [[self layer] setCornerRadius:self.cornerRadius];
-    [[self layer] setBackgroundColor:self.selected ? [[[MWMTheme accent] colorWithAlphaComponent:0.16] CGColor] : [[NSColor clearColor] CGColor]];
+    [[self layer] setBackgroundColor:self.selected ? [[(self.selectedColor ?: [MWMTheme accent]) colorWithAlphaComponent:0.16] CGColor] : [[NSColor clearColor] CGColor]];
   }];
 }
 - (void)viewDidChangeEffectiveAppearance { [super viewDidChangeEffectiveAppearance]; [self updateTint]; }

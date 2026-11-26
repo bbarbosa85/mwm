@@ -1,5 +1,5 @@
 //
-//  MWMConfigurations.m
+//  MWMProfiles.m
 //
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -14,21 +14,21 @@
 //  You should have received a copy of the GNU General Public License
 //  along with this program.  If not, see http://www.gnu.org/licenses
 
-#import "MWMConfigurations.h"
+#import "MWMProfiles.h"
 
 static NSString *gHome = nil;
 static NSString *const kDefaultName = @"default";
 static NSString *const kActiveFile = @"active";
 static NSString *const kExtensionYAML = @".mwm.yaml";
 static NSString *const kExtensionYML = @".mwm.yml";
-static NSString *const kErrorDomain = @"MWMConfigurations";
+static NSString *const kErrorDomain = @"MWMProfiles";
 static const NSUInteger kMaxNameLength = 60;
 
 static NSError *ConfigurationError(NSString *message) {
   return [NSError errorWithDomain:kErrorDomain code:1 userInfo:@{NSLocalizedDescriptionKey: message}];
 }
 
-@implementation MWMConfigurations
+@implementation MWMProfiles
 
 #pragma mark - Where
 
@@ -128,18 +128,27 @@ static NSError *ConfigurationError(NSString *message) {
   if ([trimmed rangeOfCharacterFromSet:[NSCharacterSet characterSetWithCharactersInString:@"/\\:"]].location != NSNotFound) return @"A name can't contain / \\ or :.";
   if ([trimmed hasPrefix:@"."]) return @"A name can't start with a dot.";
   NSString *taken = [self existingNameMatching:trimmed];
-  if (taken != nil && (except == nil || [taken caseInsensitiveCompare:except] != NSOrderedSame)) return @"A configuration with that name already exists.";
+  if (taken != nil && (except == nil || [taken caseInsensitiveCompare:except] != NSOrderedSame)) return @"A profile with that name already exists.";
   return nil;
 }
 
 + (NSString *)freeNameFrom:(NSString *)name {
   NSString *base = [self trimmedName:name];
-  if ([base length] == 0) base = @"configuration";
+  if ([base length] == 0) base = @"profile";
   if (![self existsNamed:base]) return base;
   for (NSUInteger i = 2;; i++) {
     NSString *candidate = [NSString stringWithFormat:@"%@ %lu", base, (unsigned long)i];
     if (![self existsNamed:candidate]) return candidate;
   }
+}
+
++ (NSString *)datedNameFrom:(NSString *)name date:(NSDate *)date {
+  NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
+  formatter.locale = [NSLocale localeWithLocaleIdentifier:@"en_US_POSIX"];
+  formatter.dateFormat = @"yyyy-MM-dd";
+  NSString *base = [self fileSafeName:name];
+  if ([base length] > kMaxNameLength - 13) base = [[base substringToIndex:kMaxNameLength - 13] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
+  return [self freeNameFrom:[NSString stringWithFormat:@"%@ (%@)", base, [formatter stringFromDate:date]]];
 }
 
 + (NSString *)fileSafeName:(NSString *)name {
@@ -194,11 +203,11 @@ static NSError *ConfigurationError(NSString *message) {
 
 + (BOOL)deleteNamed:(NSString *)name error:(NSError **)error {
   if ([[self activeName] caseInsensitiveCompare:name] == NSOrderedSame) {
-    if (error) *error = ConfigurationError(@"The active configuration can't be deleted. Activate another one first.");
+    if (error) *error = ConfigurationError(@"The active profile can't be deleted. Activate another one first.");
     return NO;
   }
   if ([[self names] count] <= 1) {
-    if (error) *error = ConfigurationError(@"The last configuration can't be deleted.");
+    if (error) *error = ConfigurationError(@"The last profile can't be deleted.");
     return NO;
   }
   NSURL *url = [NSURL fileURLWithPath:[self pathForName:name]];

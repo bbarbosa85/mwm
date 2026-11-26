@@ -161,6 +161,7 @@ static MWMSnapshotInfo *gCurrentOverride;
 + (MWMSnapshotInfo *)currentWindows {
   if (gCurrentOverride != nil) return gCurrentOverride;
   if (gOverride != nil) return nil;   // tests don't read the real windows
+  if (NSClassFromString(@"XCTestCase") != nil) return nil;   // nor do tests that set nothing up: reading every window on the desktop takes seconds
   return [self infoForSnapshot:[SnapshotOperation captureSnapshot] name:@"" keep:NO connected:[MWMDisplays connected]];
 }
 

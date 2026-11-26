@@ -24,7 +24,7 @@ static const CGFloat kBarHeight = 44;
 @interface ConfigurationStatusBar ()
 @property (strong) NSImageView *savedIcon;
 @property (strong) NSTextField *savedLabel;
-@property (strong) NSTextField *pathLabel;
+@property (strong) NSLayoutConstraint *savedLeading;
 @property (strong, readwrite) NSButton *statusButton;
 @property (strong, readwrite) NSButton *saveButton;
 @end
@@ -53,10 +53,7 @@ static const CGFloat kBarHeight = 44;
     self.savedIcon = [[NSImageView alloc] init];
     [self.savedIcon setTranslatesAutoresizingMaskIntoConstraints:NO];
     self.savedLabel = [self label];
-    NSTextField *pathLabel = [self label];
-    self.pathLabel = pathLabel;
-    [pathLabel setStringValue:[path stringByAbbreviatingWithTildeInPath]];
-    [pathLabel setTextColor:[MWMTheme textSecondary]];
+    [self.savedLabel setToolTip:[path stringByAbbreviatingWithTildeInPath]];   // the file, on hover
 
     self.statusButton = [NSButton buttonWithTitle:@"" target:target action:@selector(showIssues:)];
     [self.statusButton setTranslatesAutoresizingMaskIntoConstraints:NO];
@@ -70,22 +67,23 @@ static const CGFloat kBarHeight = 44;
     [self.saveButton setTranslatesAutoresizingMaskIntoConstraints:NO];
     [self.saveButton setKeyEquivalent:@"s"];
     [self.saveButton setKeyEquivalentModifierMask:NSEventModifierFlagCommand];
-    [self.saveButton setToolTip:@"Save the configuration without restarting MWM (⌘S)"];
+    [self.saveButton setToolTip:@"Save the profile without restarting MWM (⌘S)"];
     NSButton *apply = [NSButton buttonWithTitle:@"Apply and Restart" target:target action:@selector(apply:)];
     [apply setTranslatesAutoresizingMaskIntoConstraints:NO];
     [apply setBezelColor:[MWMTheme accent]];
-    [apply setToolTip:@"Close and restart MWM to apply the configuration"];
+    [apply setToolTip:@"Close and restart MWM to apply the profile"];
     NSButton *close = [NSButton buttonWithTitle:@"Close" target:target action:@selector(closeWindow:)];
     [close setTranslatesAutoresizingMaskIntoConstraints:NO];
     [close setKeyEquivalent:@"w"];
     [close setKeyEquivalentModifierMask:NSEventModifierFlagCommand];
     [close setToolTip:@"Close this window (⌘W)"];
 
-    for (NSView *view in @[separator, self.savedIcon, self.savedLabel, pathLabel, self.statusButton, self.saveButton, apply, close]) {
+    for (NSView *view in @[separator, self.savedIcon, self.savedLabel, self.statusButton, self.saveButton, apply, close]) {
       [self addSubview:view];
     }
 
-    NSLayoutConstraint *centered = [self.statusButton.centerXAnchor constraintEqualToAnchor:self.centerXAnchor];
+    self.savedLeading = [self.savedIcon.leadingAnchor constraintEqualToAnchor:self.leadingAnchor constant:14];
+    NSLayoutConstraint *centered =[self.statusButton.centerXAnchor constraintEqualToAnchor:self.centerXAnchor];
     [centered setPriority:NSLayoutPriorityDefaultHigh];
     [NSLayoutConstraint activateConstraints:@[
       [self.heightAnchor constraintEqualToConstant:kBarHeight],
@@ -93,16 +91,14 @@ static const CGFloat kBarHeight = 44;
       [separator.leadingAnchor constraintEqualToAnchor:self.leadingAnchor],
       [separator.trailingAnchor constraintEqualToAnchor:self.trailingAnchor],
 
-      [self.savedIcon.leadingAnchor constraintEqualToAnchor:self.leadingAnchor constant:14],
+      self.savedLeading,
       [self.savedIcon.centerYAnchor constraintEqualToAnchor:self.centerYAnchor],
       [self.savedLabel.leadingAnchor constraintEqualToAnchor:self.savedIcon.trailingAnchor constant:5],
       [self.savedLabel.centerYAnchor constraintEqualToAnchor:self.centerYAnchor],
-      [pathLabel.leadingAnchor constraintEqualToAnchor:self.savedLabel.trailingAnchor constant:10],
-      [pathLabel.centerYAnchor constraintEqualToAnchor:self.centerYAnchor],
 
       centered,
       [self.statusButton.centerYAnchor constraintEqualToAnchor:self.centerYAnchor],
-      [self.statusButton.leadingAnchor constraintGreaterThanOrEqualToAnchor:pathLabel.trailingAnchor constant:16],
+      [self.statusButton.leadingAnchor constraintGreaterThanOrEqualToAnchor:self.savedLabel.trailingAnchor constant:16],
       [self.statusButton.trailingAnchor constraintLessThanOrEqualToAnchor:apply.leadingAnchor constant:-16],
 
       [close.trailingAnchor constraintEqualToAnchor:self.trailingAnchor constant:-14],
@@ -116,8 +112,21 @@ static const CGFloat kBarHeight = 44;
   return self;
 }
 
+// The profile button goes at the left, ahead of the saved state.
+- (void)installProfileView:(NSView *)view {
+  [view setTranslatesAutoresizingMaskIntoConstraints:NO];
+  [self addSubview:view];
+  self.savedLeading.active = NO;
+  self.savedLeading = [self.savedIcon.leadingAnchor constraintEqualToAnchor:view.trailingAnchor constant:14];
+  [NSLayoutConstraint activateConstraints:@[
+    [view.leadingAnchor constraintEqualToAnchor:self.leadingAnchor constant:12],
+    [view.centerYAnchor constraintEqualToAnchor:self.centerYAnchor],
+    self.savedLeading,
+  ]];
+}
+
 - (void)setPath:(NSString *)path {
-  [self.pathLabel setStringValue:[path stringByAbbreviatingWithTildeInPath]];
+  [self.savedLabel setToolTip:[path stringByAbbreviatingWithTildeInPath]];
 }
 
 - (void)setSaved:(BOOL)saved enabled:(BOOL)enabled {

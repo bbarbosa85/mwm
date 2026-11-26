@@ -36,11 +36,11 @@ NS_ASSUME_NONNULL_BEGIN
 
 // The same, on a page of the sidebar (the menu bar opens these).
 - (void)showConfigurationSection:(ConfigurationFormSection)section;
-// Saves what's open, makes this the active configuration and restarts MWM. Does nothing (with an alert)
-// while the open file has errors.
-- (void)switchToConfigurationNamed:(NSString *)name;
-// Put this text in the configuration file (the old file is kept as a copy) and show it. NO if it couldn't be written.
-- (BOOL)restoreConfigText:(NSString *)text;
+// Opens Settings on this profile, not applied: MWM switches to it when Apply and Restart is pressed.
+// (It alerts instead when the open file has errors.)
+- (void)showSettingsOnProfileNamed:(NSString *)name;
+// Shows the open configuration again from disk (a sync may have changed it).
+- (void)reloadAfterSync;
 // The Keyboard page as a list, or with the editor open for a new shortcut.
 - (void)showKeyboardList;
 - (void)showNewShortcut;

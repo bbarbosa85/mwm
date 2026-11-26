@@ -42,6 +42,8 @@ const CGFloat kMacKeyboardCompactUnitsWide = 15.0;
       fill = [[MWMTheme warning] colorWithAlphaComponent:0.25]; stroke = [MWMTheme warning]; text = [MWMTheme warning]; break;
     case MapKeyStateReserved:
       fill = [[MWMTheme reserved] colorWithAlphaComponent:0.12]; stroke = [[MWMTheme reserved] colorWithAlphaComponent:0.5]; text = [MWMTheme reserved]; break;
+    case MapKeyStateGroup:
+      fill = [[MWMTheme groupColor] colorWithAlphaComponent:0.22]; stroke = [MWMTheme groupColor]; text = [MWMTheme groupColor]; break;
     case MapKeyStateOn:
       fill = [[MWMTheme accent] colorWithAlphaComponent:0.9]; stroke = [MWMTheme accent]; text = [NSColor whiteColor]; break;
     default:
@@ -52,7 +54,7 @@ const CGFloat kMacKeyboardCompactUnitsWide = 15.0;
   [fill setFill];
   [path fill];
   [stroke setStroke];
-  [path setLineWidth:0.8];
+  [path setLineWidth:self.state == MapKeyStateGroup ? 1.3 : 0.8];
   if (self.modifier && !self.clickable) { CGFloat dash[] = {3, 2}; [path setLineDash:dash count:2 phase:0]; }
   [path stroke];
   if (self.selected) {

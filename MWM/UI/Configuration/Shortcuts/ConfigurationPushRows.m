@@ -26,6 +26,7 @@
 @property (copy) NSString *direction;
 @property (copy) void (^onChange)(MWMPushOptions *options);
 @property (strong) NSArray<NSDictionary *> *rows;
+@property (copy) void (^onManageDisplays)(void);
 @end
 
 @implementation ConfigurationPushRows
@@ -48,20 +49,31 @@ static NSArray<NSString *> *UnitTitles(void) { return @[@"%", @"px", @"1 of N"];
   return popup;
 }
 
-+ (instancetype)rowsForOptions:(MWMPushOptions *)options direction:(NSString *)direction screens:(NSArray<NSString *> *)screens onChange:(void (^)(MWMPushOptions *))onChange {
++ (NSString *)manageDisplaysMarker { return @"@manage-displays"; }
+
++ (instancetype)rowsForOptions:(MWMPushOptions *)options direction:(NSString *)direction screenTitles:(NSArray<NSString *> *)titles screenValues:(NSArray<NSString *> *)values
+                       onChange:(void (^)(MWMPushOptions *))onChange onManageDisplays:(void (^)(void))onManageDisplays {
   ConfigurationPushRows *builder = [[ConfigurationPushRows alloc] init];
   builder.options = [options copy];
   builder.direction = direction;
   builder.onChange = onChange;
-  builder.rows = [builder buildRowsWithScreens:screens];
+  builder.onManageDisplays = onManageDisplays;
+  builder.rows = [builder buildRowsWithScreenTitles:titles values:values];
   return builder;
 }
 
-- (NSArray<NSDictionary *> *)buildRowsWithScreens:(NSArray<NSString *> *)screens {
+- (NSArray<NSDictionary *> *)buildRowsWithScreenTitles:(NSArray<NSString *> *)screenTitles values:(NSArray<NSString *> *)screenValues {
   NSMutableArray *rows = [NSMutableArray array];
   MWMPushOptions *options = self.options;
-  [rows addObject:@{@"label": @"Style", @"identifier": @"row-style",
-                    @"views": @[[self popupWithTitles:StyleTitles() values:@[@(MWMPushStyleKeepSize), @(MWMPushStyleCenter), @(MWMPushStyleBar), @(MWMPushStyleThickness)] selected:@(options.style) action:@selector(styleChanged:) identifier:@"push-style"]]}];
+  // The style as cards: what the window keeps or becomes, with an icon for each.
+  NSArray<NSNumber *> *styles = @[@(MWMPushStyleKeepSize), @(MWMPushStyleCenter), @(MWMPushStyleBar), @(MWMPushStyleThickness)];
+  __weak ConfigurationPushRows *weakSelf = self;
+  MWMOptionCards *styleCards = [MWMOptionCards cardsWithTitles:@[@"Keep its size", @"Centered", @"Full bar", @"Set thickness"]
+                                                       symbols:@[@"rectangle", @"rectangle.center.inset.filled", @"rectangle.lefthalf.filled", @"rectangle.leftthird.inset.filled"]
+                                                 selectedIndex:(NSInteger)[styles indexOfObject:@(options.style)]
+                                                      onChange:^(NSInteger index) { [weakSelf chooseStyle:(MWMPushStyle)[styles[index] integerValue]]; }];
+  [styleCards setIdentifier:@"push-style"];
+  [rows addObject:@{@"label": @"Style", @"identifier": @"row-style", @"views": @[styleCards]}];
   if (options.style == MWMPushStyleThickness) {
     NSTextField *value = [NSTextField textFieldWithString:[NSString stringWithFormat:@"%g", options.thickness]];
     [value setFont:[MWMTheme fontMono]];
@@ -77,11 +89,24 @@ static NSArray<NSString *> *UnitTitles(void) { return @[@"%", @"px", @"1 of N"];
     NSString *of = options.unit == MWMPushUnitPixels ? @"" : (across ? @"of the screen width" : @"of the screen height");
     if (options.unit == MWMPushUnitParts) of = across ? @"parts of the screen width (3 is a third)" : @"parts of the screen height (3 is a third)";
     NSTextField *note = [MWMComponents labelWithText:of font:[MWMTheme fontCaption] color:[MWMTheme textSecondary]];
-    [rows addObject:@{@"label": @"Thickness", @"identifier": @"row-thickness", @"views": @[value, unit, note]}];
+    // The note goes under the number and its unit, not beside them.
+    NSStackView *inputs = [NSStackView stackViewWithViews:@[value, unit]];
+    [inputs setSpacing:10];
+    [inputs setAlignment:NSLayoutAttributeCenterY];
+    NSStackView *column = [NSStackView stackViewWithViews:@[inputs, note]];
+    [column setOrientation:NSUserInterfaceLayoutOrientationVertical];
+    [column setAlignment:NSLayoutAttributeTrailing];
+    [column setSpacing:6];
+    [rows addObject:@{@"label": @"Thickness", @"identifier": @"row-thickness", @"views": @[column]}];
   }
   NSMutableArray *titles = [NSMutableArray arrayWithObject:@"Current screen"], *values = [NSMutableArray arrayWithObject:@""];
-  for (NSString *name in screens) { [titles addObject:name]; [values addObject:[NSString stringWithFormat:@"${%@}", name]]; }
-  [rows addObject:@{@"label": @"On screen", @"identifier": @"row-screen", @"views": @[[self popupWithTitles:titles values:values selected:options.screen action:@selector(screenChanged:) identifier:@"push-screen"]]}];
+  [titles addObjectsFromArray:screenTitles];
+  [values addObjectsFromArray:screenValues];
+  NSPopUpButton *screenPopup = [self popupWithTitles:titles values:values selected:options.screen action:@selector(screenChanged:) identifier:@"push-screen"];
+  [[screenPopup menu] addItem:[NSMenuItem separatorItem]];
+  [screenPopup addItemWithTitle:@"Manage displays…"];
+  [[screenPopup lastItem] setRepresentedObject:[ConfigurationPushRows manageDisplaysMarker]];
+  [rows addObject:@{@"label": @"On screen", @"identifier": @"row-screen", @"views": @[screenPopup]}];
   [rows addObject:@{@"label": @"Result", @"identifier": @"row-result", @"views": @[[self resultView]]}];
   return rows;
 }
@@ -99,8 +124,9 @@ static NSArray<NSString *> *UnitTitles(void) { return @[@"%", @"px", @"1 of N"];
   NSTextField *label = [MWMComponents labelWithText:text font:problem != nil ? [MWMTheme fontCaption] : [MWMTheme fontMono] color:problem != nil ? [MWMTheme warning] : [MWMTheme textSecondary]];
   [label setIdentifier:@"push-result"];
   NSStackView *stack = [NSStackView stackViewWithViews:@[thumbnail, label]];
-  [stack setSpacing:10];
-  [stack setAlignment:NSLayoutAttributeCenterY];
+  [stack setOrientation:NSUserInterfaceLayoutOrientationVertical];   // what it writes goes under the picture
+  [stack setSpacing:6];
+  [stack setAlignment:NSLayoutAttributeTrailing];
   return stack;
 }
 
@@ -108,8 +134,12 @@ static NSArray<NSString *> *UnitTitles(void) { return @[@"%", @"px", @"1 of N"];
 
 - (void)changed { self.onChange(self.options); }
 
-- (void)styleChanged:(NSPopUpButton *)popup {
-  self.options.style = (MWMPushStyle)[[[popup selectedItem] representedObject] integerValue];
+- (void)chooseStyle:(MWMPushStyle)style {
+  if (style == MWMPushStyleThickness && self.options.style != MWMPushStyleThickness) {
+    self.options.unit = MWMPushUnitParts;   // half to begin with
+    self.options.thickness = 2;
+  }
+  self.options.style = style;
   [self changed];
 }
 
@@ -138,7 +168,13 @@ static NSArray<NSString *> *UnitTitles(void) { return @[@"%", @"px", @"1 of N"];
 }
 
 - (void)screenChanged:(NSPopUpButton *)popup {
-  self.options.screen = [[popup selectedItem] representedObject] ?: @"";
+  NSString *value = [[popup selectedItem] representedObject] ?: @"";
+  if ([value isEqualToString:[ConfigurationPushRows manageDisplaysMarker]]) {
+    if (self.onManageDisplays) self.onManageDisplays();
+    [self changed];   // back to the screen it was
+    return;
+  }
+  self.options.screen = value;
   [self changed];
 }
 

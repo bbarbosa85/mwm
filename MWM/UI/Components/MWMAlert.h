@@ -36,6 +36,8 @@ typedef NS_ENUM(NSInteger, MWMAlertKind) {
 @property (assign) MWMAlertKind kind;
 // The app's icon centered above the text (left-aligned), instead of the tile for the kind.
 @property (assign) BOOL showsAppIcon;
+// For a sync: the app's icon, an arrows icon and a cloud tile side by side, centered above the text. Implies showsAppIcon.
+@property (assign) BOOL showsSyncIcons;
 @property (copy, nullable) NSString *messageText;
 @property (copy, nullable) NSString *informativeText;
 @property (strong, nullable) NSView *accessoryView;           // a field or fields under the text; as wide as the alert

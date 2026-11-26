@@ -32,7 +32,7 @@
 #import "ConfigurationKeyboardView.h"
 #import "ConfigurationSnapshotsView.h"
 #import "ConfigurationBackupView.h"
-#import "ConfigurationConfigurationsView.h"
+#import "ConfigurationProfilesView.h"
 #import "MWMSnapshots.h"
 #import "MWMShortcutIndex.h"
 #import "MWMSlots.h"
@@ -58,15 +58,15 @@ typedef struct {
 static SectionInfo InfoFor(ConfigurationFormSection section) {
   switch (section) {
     case ConfigurationFormSectionKeyboard:
-      return (SectionInfo){@"Keyboard", @"keyboard", @"Every shortcut, with what it does."};
+      return (SectionInfo){@"Bindings", @"keyboard", @"Every shortcut, with what it does."};
     case ConfigurationFormSectionAdvanced:
       return (SectionInfo){@"Advanced", @"slider.horizontal.3", @"Key repeat, how percentages are measured, and other settings."};
     case ConfigurationFormSectionSnapshots:
       return (SectionInfo){@"Snapshots", @"camera", @"Saved window arrangements."};
-    case ConfigurationFormSectionConfigurations:
-      return (SectionInfo){@"Configurations", @"square.stack.3d.up", @"Keep a setup for each desk or computer and switch between them. Only one is active."};
+    case ConfigurationFormSectionProfiles:
+      return (SectionInfo){@"Profiles", @"square.stack.3d.up", @"Keep a profile for each desk or computer and switch between them. Only one is active."};
     case ConfigurationFormSectionBackup:
-      return (SectionInfo){@"Backup", @"icloud.and.arrow.up", @"Keep your configuration and snapshots in a private GitHub gist, one backup for each set of displays."};
+      return (SectionInfo){@"Backup", @"icloud.and.arrow.up", @"Sync your profiles and snapshots with a private GitHub gist, to keep them safe and use them on another computer."};
     case ConfigurationFormSectionGeneral:
       return (SectionInfo){@"General", @"gearshape", @"Everyday settings. Anything not listed uses MWM's default."};
     case ConfigurationFormSectionModifiers:
@@ -96,19 +96,21 @@ static NSArray<NSDictionary *> *NavRows(void) {
   static dispatch_once_t once;
   dispatch_once(&once, ^{
     rows = @[
-      @{@"header": @"Shortcuts"},
-      @{@"section": @(ConfigurationFormSectionKeyboard)},
+      @{@"header": @"Keyboard"},
       @{@"section": @(ConfigurationFormSectionModifiers)},
+      @{@"section": @(ConfigurationFormSectionKeyboard)},
       @{@"header": @"Screens"},
       @{@"section": @(ConfigurationFormSectionMonitors)},
       @{@"section": @(ConfigurationFormSectionPositions)},
-      @{@"section": @(ConfigurationFormSectionSnapshots)},
-      @{@"header": @"Settings"},
+      @{@"header": @"Options"},
       @{@"section": @(ConfigurationFormSectionGeneral)},
       @{@"section": @(ConfigurationFormSectionAdvanced)},
       @{@"section": @(ConfigurationFormSectionAliases)},
-      @{@"section": @(ConfigurationFormSectionConfigurations)},
+      // Not part of any profile: shared by all of them. The profile being edited is chosen from the bottom bar.
+      @{@"header": @"Other"},
+      @{@"section": @(ConfigurationFormSectionSnapshots)},
       @{@"section": @(ConfigurationFormSectionBackup)},
+      @{@"section": @(ConfigurationFormSectionProfiles)},
     ];
   });
   return rows;
@@ -161,7 +163,7 @@ static NSString *DisplayValue(id value) {
   return [value description] ?: @"";
 }
 
-@interface ConfigurationFormView () <ConfigurationShortcutViewDelegate, ConfigurationActionViewDelegate, ConfigurationSettingsViewDelegate, ConfigurationDisplaysViewDelegate, ConfigurationSlotsViewDelegate, ConfigurationModifiersViewDelegate, ConfigurationKeyboardViewDelegate, ConfigurationSnapshotsViewDelegate, ConfigurationBackupViewDelegate, ConfigurationConfigurationsViewDelegate>
+@interface ConfigurationFormView () <ConfigurationShortcutViewDelegate, ConfigurationActionViewDelegate, ConfigurationSettingsViewDelegate, ConfigurationDisplaysViewDelegate, ConfigurationSlotsViewDelegate, ConfigurationModifiersViewDelegate, ConfigurationKeyboardViewDelegate, ConfigurationSnapshotsViewDelegate, ConfigurationBackupViewDelegate, ConfigurationProfilesViewDelegate>
 @property (strong) NSTableView *sidebar;
 @property (strong) NSView *detail;
 @property (strong) NSTextField *titleLabel;
@@ -176,7 +178,7 @@ static NSString *DisplayValue(id value) {
 @property (strong) ConfigurationDisplaysView *displaysView;
 @property (strong) ConfigurationSnapshotsView *snapshotsView;
 @property (strong) ConfigurationBackupView *backupView;
-@property (strong) ConfigurationConfigurationsView *configurationsView;
+@property (strong) ConfigurationProfilesView *profilesView;
 @property (strong) ConfigurationSlotsView *slotsView;
 @property (strong) ConfigurationModifiersView *modifiersView;
 @property (strong) NSLayoutConstraint *modifiersTopBelowHeader;
@@ -336,17 +338,17 @@ static NSString *DisplayValue(id value) {
   [self.backupView setDelegate:self];
   [self.backupView setHidden:YES];
 
-  self.configurationsView = [[ConfigurationConfigurationsView alloc] init];
-  [self.configurationsView setTranslatesAutoresizingMaskIntoConstraints:NO];
-  [self.configurationsView setDelegate:self];
-  [self.configurationsView setHidden:YES];
+  self.profilesView = [[ConfigurationProfilesView alloc] init];
+  [self.profilesView setTranslatesAutoresizingMaskIntoConstraints:NO];
+  [self.profilesView setDelegate:self];
+  [self.profilesView setHidden:YES];
 
   self.settingsView = [[ConfigurationSettingsView alloc] init];
   [self.settingsView setTranslatesAutoresizingMaskIntoConstraints:NO];
   [self.settingsView setDelegate:self];
   [self.settingsView setHidden:YES];
 
-  for (NSView *view in @[self.titleLabel, self.infoLabel, self.addButton, self.removeButton, self.filterBar, self.tableScroll, self.settingsView, self.modifiersView, self.displaysView, self.snapshotsView, self.backupView, self.configurationsView, self.slotsView, self.presetsView, self.slotsSwitcher, self.keyboardView, self.keyboardSwitcher, self.conflictsButton]) {
+  for (NSView *view in @[self.titleLabel, self.infoLabel, self.addButton, self.removeButton, self.filterBar, self.tableScroll, self.settingsView, self.modifiersView, self.displaysView, self.snapshotsView, self.backupView, self.profilesView, self.slotsView, self.presetsView, self.slotsSwitcher, self.keyboardView, self.keyboardSwitcher, self.conflictsButton]) {
     [self.detail addSubview:view];
   }
 
@@ -388,6 +390,7 @@ static NSString *DisplayValue(id value) {
     [divider.topAnchor constraintEqualToAnchor:self.topAnchor],
     [divider.bottomAnchor constraintEqualToAnchor:self.bottomAnchor],
     [divider.leadingAnchor constraintEqualToAnchor:sidebarScroll.trailingAnchor],
+    [divider.widthAnchor constraintEqualToConstant:1],   // without it the line takes whatever width the page leaves
     [self.detail.topAnchor constraintEqualToAnchor:self.topAnchor],
     [self.detail.bottomAnchor constraintEqualToAnchor:self.bottomAnchor],
     [self.detail.leadingAnchor constraintEqualToAnchor:divider.trailingAnchor],
@@ -435,10 +438,10 @@ static NSString *DisplayValue(id value) {
     [self.snapshotsView.bottomAnchor constraintEqualToAnchor:self.detail.bottomAnchor],
     [self.snapshotsView.leadingAnchor constraintEqualToAnchor:self.detail.leadingAnchor],
     [self.snapshotsView.trailingAnchor constraintEqualToAnchor:self.detail.trailingAnchor],
-    [self.configurationsView.topAnchor constraintEqualToAnchor:self.infoLabel.bottomAnchor constant:6],
-    [self.configurationsView.bottomAnchor constraintEqualToAnchor:self.detail.bottomAnchor],
-    [self.configurationsView.leadingAnchor constraintEqualToAnchor:self.detail.leadingAnchor],
-    [self.configurationsView.trailingAnchor constraintEqualToAnchor:self.detail.trailingAnchor],
+    [self.profilesView.topAnchor constraintEqualToAnchor:self.infoLabel.bottomAnchor constant:6],
+    [self.profilesView.bottomAnchor constraintEqualToAnchor:self.detail.bottomAnchor],
+    [self.profilesView.leadingAnchor constraintEqualToAnchor:self.detail.leadingAnchor],
+    [self.profilesView.trailingAnchor constraintEqualToAnchor:self.detail.trailingAnchor],
     [self.backupView.topAnchor constraintEqualToAnchor:self.infoLabel.bottomAnchor constant:6],
     [self.backupView.bottomAnchor constraintEqualToAnchor:self.detail.bottomAnchor],
     [self.backupView.leadingAnchor constraintEqualToAnchor:self.detail.leadingAnchor],
@@ -591,14 +594,13 @@ static NSString *DisplayValue(id value) {
   BOOL snapshots = section == ConfigurationFormSectionSnapshots;
   BOOL modifiers = section == ConfigurationFormSectionModifiers;
   BOOL backup = section == ConfigurationFormSectionBackup;
-  BOOL configurations = section == ConfigurationFormSectionConfigurations;
+  BOOL configurations = section == ConfigurationFormSectionProfiles;
   [self.addButton setHidden:cards || displays || slots || keyboard || snapshots || modifiers || backup || configurations];
   [self.removeButton setHidden:cards || displays || slots || keyboard || snapshots || modifiers || backup || configurations];
   [self.tableScroll setHidden:cards || displays || slots || keyboard || snapshots || modifiers || backup || configurations];
-  [self.configurationsView setHidden:!configurations];
-  if (configurations) [self.configurationsView reload];
+  [self.profilesView setHidden:!configurations];
+  if (configurations) [self.profilesView reload];
   [self.backupView setHidden:!backup];
-  self.backupView.document = backup ? self.document : nil;
   [self.modifiersView setHidden:!modifiers];
   self.modifiersView.document = modifiers ? self.document : nil;
   [self.snapshotsView setHidden:!snapshots];
@@ -675,6 +677,12 @@ static NSString *DisplayValue(id value) {
   }
 }
 
+
+- (void)setEditingProfile:(NSString *)editingProfile {
+  _editingProfile = [editingProfile copy];
+  self.profilesView.editingName = editingProfile;
+}
+
 - (BOOL)tableView:(NSTableView *)tableView isGroupRow:(NSInteger)row {
   return tableView == self.sidebar && NavRows()[row][@"header"] != nil;
 }
@@ -703,7 +711,8 @@ static NSString *DisplayValue(id value) {
   NSImageView *icon = [NSImageView imageViewWithImage:[NSImage imageWithSystemSymbolName:info.symbol accessibilityDescription:nil]];
   NSTextField *title = [NSTextField labelWithString:info.title];
   [title setLineBreakMode:NSLineBreakByTruncatingTail];
-  NSUInteger count = [self countForSection:(ConfigurationFormSection)row];
+  // The settings pages have no count worth showing.
+  NSUInteger count = IsSettingsSection((ConfigurationFormSection)row) ? 0 : [self countForSection:(ConfigurationFormSection)row];
   NSTextField *countLabel = [NSTextField labelWithString:count > 0 ? [NSString stringWithFormat:@"%lu", (unsigned long)count] : @""];
   [countLabel setTextColor:[MWMTheme textSecondary]];
   [countLabel setFont:[NSFont monospacedDigitSystemFontOfSize:[NSFont smallSystemFontSize] weight:NSFontWeightRegular]];
@@ -821,19 +830,16 @@ static NSString *DisplayValue(id value) {
   [self reloadSidebarKeepingSelection];
 }
 
-- (void)configurationsView:(ConfigurationConfigurationsView *)view switchToConfigurationNamed:(NSString *)name {
-  if ([self.delegate respondsToSelector:@selector(formView:switchToConfigurationNamed:)]) [self.delegate formView:self switchToConfigurationNamed:name];
+- (void)profilesView:(ConfigurationProfilesView *)view useProfileNamed:(NSString *)name {
+  if ([self.delegate respondsToSelector:@selector(formView:useProfileNamed:)]) [self.delegate formView:self useProfileNamed:name];
 }
 
-- (void)configurationsViewDidRenameActive:(ConfigurationConfigurationsView *)view {
-  if ([self.delegate respondsToSelector:@selector(formViewDidRenameActiveConfiguration:)]) [self.delegate formViewDidRenameActiveConfiguration:self];
+- (void)profilesView:(ConfigurationProfilesView *)view didRenameProfileNamed:(NSString *)name to:(NSString *)newName {
+  if ([self.delegate respondsToSelector:@selector(formView:didRenameProfileNamed:to:)]) [self.delegate formView:self didRenameProfileNamed:name to:newName];
 }
 
-- (BOOL)backupView:(ConfigurationBackupView *)view restoreConfigText:(NSString *)text {
-  return [self.delegate respondsToSelector:@selector(formView:restoreConfigText:)] && [self.delegate formView:self restoreConfigText:text];
-}
-
-- (void)backupViewDidRestoreSnapshots:(ConfigurationBackupView *)view {
+- (void)backupViewDidChangeFiles:(ConfigurationBackupView *)view {
+  if ([self.delegate respondsToSelector:@selector(formViewDidChangeFilesBySync:)]) [self.delegate formViewDidChangeFilesBySync:self];
   [self reloadSidebarKeepingSelection];
 }
 
@@ -895,6 +901,14 @@ static NSString *DisplayValue(id value) {
 
 - (void)keyboardViewWantsGroups:(ConfigurationKeyboardView *)view {
   [self setSelectedSection:ConfigurationFormSectionModifiers];
+}
+
+- (void)keyboardViewWantsSlots:(ConfigurationKeyboardView *)view {
+  [self setSelectedSection:ConfigurationFormSectionPositions];
+}
+
+- (void)keyboardViewWantsDisplays:(ConfigurationKeyboardView *)view {
+  [self setSelectedSection:ConfigurationFormSectionMonitors];
 }
 
 - (void)keyboardView:(ConfigurationKeyboardView *)view didChangeEditing:(BOOL)editing {

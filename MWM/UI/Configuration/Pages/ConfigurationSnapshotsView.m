@@ -145,10 +145,8 @@ static NSImage *IconForApp(NSString *name) {
 }
 
 - (void)buildInterface {
-  self.nameField = [NSTextField textFieldWithString:@""];
+  self.nameField = [MWMNameField nameFieldWithPlaceholder:nil identifier:@"snapshot-name" compact:NO];
   [self.nameField setDelegate:self];
-  [self.nameField setIdentifier:@"snapshot-name"];
-  [self.nameField setContentHuggingPriority:1 forOrientation:NSLayoutConstraintOrientationHorizontal];
   self.saveButton = [MWMComponents accentButtonWithTitle:@"Save" symbol:@"camera" target:self action:@selector(savePressed:)];
   [self.saveButton setIdentifier:@"snapshot-save"];
   [self.saveButton setToolTip:@"Record where every open window is right now"];

@@ -47,7 +47,7 @@ static NSArray<NSString *> *Match(NSString *pattern, NSString *text) {
 
 + (NSString *)titleForKind:(MWMActionKind)kind {
   switch (kind) {
-    case MWMActionKindMove: return @"Move to";
+    case MWMActionKindMove: return @"Move to slot";
     case MWMActionKindFocusApp: return @"Focus app";
     case MWMActionKindFocusDirection: return @"Focus window";
     case MWMActionKindThrow: return @"Throw to screen";
@@ -77,7 +77,7 @@ static NSArray<NSString *> *Match(NSString *pattern, NSString *text) {
     case MWMActionKindThrow: action.a = @"next"; action.b = @"resize"; break;
     case MWMActionKindNudge: action.a = @"+10%"; action.b = @"+0"; break;
     case MWMActionKindResize: action.a = @"+5%"; action.b = @"+0"; break;
-    case MWMActionKindPush: action.a = @"left"; action.b = @"bar-resize:screenSizeX/2"; break;
+    case MWMActionKindPush: action.a = @"left"; break;   // keeps the window's size
     case MWMActionKindHint: action.a = @"ASDFJKLQWERUIOP"; break;
     case MWMActionKindSnapshot: action.b = @"save-to-disk"; break;
     default: break;

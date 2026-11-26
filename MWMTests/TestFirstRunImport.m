@@ -17,7 +17,7 @@
 //  You should have received a copy of the GNU General Public License
 
 #import <XCTest/XCTest.h>
-#import "MWMConfigurations.h"
+#import "MWMProfiles.h"
 #import "MWMConfigDocument.h"
 #import "MWMLegacyMigration.h"
 
@@ -33,11 +33,11 @@ static NSString *const kYML = @"version: 2\nsettings:\n  keyboardLayout: colemak
 - (void)setUp {
   self.home = [NSTemporaryDirectory() stringByAppendingPathComponent:[[NSUUID UUID] UUIDString]];
   [[NSFileManager defaultManager] createDirectoryAtPath:self.home withIntermediateDirectories:YES attributes:nil error:nil];
-  [MWMConfigurations setHomeDirectory:self.home];
+  [MWMProfiles setHomeDirectory:self.home];
 }
 
 - (void)tearDown {
-  [MWMConfigurations setHomeDirectory:nil];
+  [MWMProfiles setHomeDirectory:nil];
   [[NSFileManager defaultManager] removeItemAtPath:self.home error:nil];
 }
 
@@ -47,18 +47,18 @@ static NSString *const kYML = @"version: 2\nsettings:\n  keyboardLayout: colemak
 - (BOOL)exists:(NSString *)name { return [[NSFileManager defaultManager] fileExistsAtPath:[self file:name]]; }
 
 - (void)testNothingToImportCreatesNothing {
-  XCTAssertNil([MWMLegacyMigration importFirstRunConfigurations]);
-  XCTAssertFalse([MWMConfigurations folderExists]);
+  XCTAssertNil([MWMLegacyMigration importFirstRunProfiles]);
+  XCTAssertFalse([MWMProfiles folderExists]);
 }
 
 - (void)testSlateFilesAreConvertedAndLeftExactlyAsTheyWere {
   [self write:kSlate to:@".slate"];
-  NSDictionary *result = [MWMLegacyMigration importFirstRunConfigurations];
+  NSDictionary *result = [MWMLegacyMigration importFirstRunProfiles];
   XCTAssertEqualObjects(result[@"importedName"], @"default");
   XCTAssertFalse([result[@"moved"] boolValue]);
-  XCTAssertEqualObjects([MWMConfigurations names], (@[@"default"]));
-  XCTAssertEqualObjects([MWMConfigurations activeName], @"default");
-  MWMConfigDocument *doc = [MWMConfigDocument documentWithContentsOfFile:[MWMConfigurations pathForName:@"default"] error:nil];
+  XCTAssertEqualObjects([MWMProfiles names], (@[@"default"]));
+  XCTAssertEqualObjects([MWMProfiles activeName], @"default");
+  MWMConfigDocument *doc = [MWMConfigDocument documentWithContentsOfFile:[MWMProfiles pathForName:@"default"] error:nil];
   XCTAssertEqualObjects([doc.bindings valueForKey:@"key"], (@[@"r"]));
   XCTAssertEqualObjects([self read:[self file:@".slate"]], kSlate, @"~/.slate is untouched");
   XCTAssertEqualObjects([[NSFileManager defaultManager] contentsOfDirectoryAtPath:self.home error:nil].count > 0 ? @"ok" : @"", @"ok");
@@ -69,37 +69,37 @@ static NSString *const kYML = @"version: 2\nsettings:\n  keyboardLayout: colemak
 
 - (void)testAnExistingMWMYMLMovesIn {
   [self write:kYML to:@".mwm.yml"];
-  NSDictionary *result = [MWMLegacyMigration importFirstRunConfigurations];
+  NSDictionary *result = [MWMLegacyMigration importFirstRunProfiles];
   XCTAssertTrue([result[@"moved"] boolValue]);
   XCTAssertNil(result[@"importedName"]);
   XCTAssertFalse([self exists:@".mwm.yml"], @"moved, not copied");
-  XCTAssertEqualObjects([self read:[MWMConfigurations pathForName:@"default"]], kYML);
-  XCTAssertEqualObjects([MWMConfigurations activeName], @"default");
+  XCTAssertEqualObjects([self read:[MWMProfiles pathForName:@"default"]], kYML);
+  XCTAssertEqualObjects([MWMProfiles activeName], @"default");
 }
 
-- (void)testBothGiveTwoConfigurationsAndTheMovedOneStaysActive {
+- (void)testBothGiveTwoProfilesAndTheMovedOneStaysActive {
   [self write:kYML to:@".mwm.yml"];
   [self write:kSlate to:@".slate"];
-  NSDictionary *result = [MWMLegacyMigration importFirstRunConfigurations];
+  NSDictionary *result = [MWMLegacyMigration importFirstRunProfiles];
   XCTAssertEqualObjects(result[@"importedName"], @"slate-import");
-  XCTAssertEqualObjects([MWMConfigurations names], (@[@"default", @"slate-import"]));
-  XCTAssertEqualObjects([MWMConfigurations activeName], @"default");
-  XCTAssertEqualObjects([self read:[MWMConfigurations pathForName:@"default"]], kYML, @"the moved file is exactly as it was");
+  XCTAssertEqualObjects([MWMProfiles names], (@[@"default", @"slate-import"]));
+  XCTAssertEqualObjects([MWMProfiles activeName], @"default");
+  XCTAssertEqualObjects([self read:[MWMProfiles pathForName:@"default"]], kYML, @"the moved file is exactly as it was");
   XCTAssertEqualObjects([self read:[self file:@".slate"]], kSlate);
 }
 
 - (void)testItOnlyHappensTheFirstTime {
   [self write:kSlate to:@".slate"];
-  XCTAssertNotNil([MWMLegacyMigration importFirstRunConfigurations]);
-  XCTAssertNil([MWMLegacyMigration importFirstRunConfigurations], @"the folder exists now");
-  [MWMConfigurations deleteNamed:@"default" error:nil];   // the last one can't go; the folder stays
+  XCTAssertNotNil([MWMLegacyMigration importFirstRunProfiles]);
+  XCTAssertNil([MWMLegacyMigration importFirstRunProfiles], @"the folder exists now");
+  [MWMProfiles deleteNamed:@"default" error:nil];   // the last one can't go; the folder stays
   [self write:@"bind z:cmd relaunch\n" to:@".slate"];
-  XCTAssertNil([MWMLegacyMigration importFirstRunConfigurations], @"a changed ~/.slate isn't imported again");
+  XCTAssertNil([MWMLegacyMigration importFirstRunProfiles], @"a changed ~/.slate isn't imported again");
 }
 
 - (void)testASlateFileThatCantBeConvertedIsReportedAndStillUntouched {
   [self write:@"bind r:${nope} relaunch\n" to:@".slate"];
-  NSDictionary *result = [MWMLegacyMigration importFirstRunConfigurations];
+  NSDictionary *result = [MWMLegacyMigration importFirstRunProfiles];
   XCTAssertNil(result[@"importedName"]);
   XCTAssertNotNil(result[@"slateProblem"]);
   XCTAssertEqualObjects([self read:[self file:@".slate"]], @"bind r:${nope} relaunch\n");
@@ -108,18 +108,18 @@ static NSString *const kYML = @"version: 2\nsettings:\n  keyboardLayout: colemak
 - (void)testASymlinkedMWMYMLMovesAsASymlink {
   [self write:kYML to:@"dotfiles-mwm.yml"];
   [[NSFileManager defaultManager] createSymbolicLinkAtPath:[self file:@".mwm.yml"] withDestinationPath:[self file:@"dotfiles-mwm.yml"] error:nil];
-  XCTAssertTrue([[MWMLegacyMigration importFirstRunConfigurations][@"moved"] boolValue]);
-  XCTAssertEqualObjects([self read:[MWMConfigurations pathForName:@"default"]], kYML, @"still reads through to the dotfiles copy");
+  XCTAssertTrue([[MWMLegacyMigration importFirstRunProfiles][@"moved"] boolValue]);
+  XCTAssertEqualObjects([self read:[MWMProfiles pathForName:@"default"]], kYML, @"still reads through to the dotfiles copy");
   XCTAssertTrue([self exists:@"dotfiles-mwm.yml"]);
 }
 
-- (void)testTheActiveConfigurationIsWhatLoads {
+- (void)testTheActiveProfileIsWhatLoads {
   [self write:kYML to:@".mwm.yml"];
-  [MWMLegacyMigration importFirstRunConfigurations];
-  XCTAssertEqualObjects([MWMConfigDocument defaultPath], [MWMConfigurations pathForName:@"default"]);
-  [MWMConfigurations createNamed:@"desk" text:@"version: 2\n" error:nil];
-  [MWMConfigurations setActiveName:@"desk"];
-  XCTAssertEqualObjects([MWMConfigDocument defaultPath], [MWMConfigurations pathForName:@"desk"]);
+  [MWMLegacyMigration importFirstRunProfiles];
+  XCTAssertEqualObjects([MWMConfigDocument defaultPath], [MWMProfiles pathForName:@"default"]);
+  [MWMProfiles createNamed:@"desk" text:@"version: 2\n" error:nil];
+  [MWMProfiles setActiveName:@"desk"];
+  XCTAssertEqualObjects([MWMConfigDocument defaultPath], [MWMProfiles pathForName:@"desk"]);
 }
 
 @end

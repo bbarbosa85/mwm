@@ -204,10 +204,10 @@ static NSString *const kConfig =
   for (NSInteger row = 0; row < [sidebar numberOfRows]; row++) {
     if ([form tableView:sidebar isGroupRow:row]) [headers addObject:@(row)];
   }
-  XCTAssertEqualObjects(headers, (@[@0, @3, @7]), @"Shortcuts, Screens and Settings headings");
+  XCTAssertEqualObjects(headers, (@[@0, @3, @6, @10]), @"Keyboard, Screens, Options and Other headings");
   XCTAssertFalse([form tableView:sidebar shouldSelectRow:0], @"headings can't be selected");
   XCTAssertEqual(form.selectedSection, ConfigurationFormSectionKeyboard, @"opens on the keyboard page");
-  XCTAssertEqual([sidebar selectedRow], 1);
+  XCTAssertEqual([sidebar selectedRow], 2, @"Modifiers comes first, then Bindings");
 }
 
 - (void)testClickingAPageShowsIt {

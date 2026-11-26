@@ -140,40 +140,52 @@ static NSString *gMemoryGist;
   }];
 }
 
-#pragma mark - Environments
+#pragma mark - Files
 
-+ (void)listEnvironments:(void (^)(NSArray<MWMBackupEnvironment *> *, NSString *))done {
+// Reads the text of one gist file (a truncated one is fetched from its raw_url).
++ (void)textOfFile:(NSDictionary *)file token:(NSString *)token completion:(void (^)(NSString *text, NSString *problem))done {
+  if ([file[@"truncated"] boolValue] && [file[@"raw_url"] isKindOfClass:[NSString class]]) {
+    [self send:@"GET" path:file[@"raw_url"] body:nil token:token completion:^(id raw, NSInteger status, NSString *problem) {
+      if (problem != nil) { done(nil, problem); return; }
+      if ([raw isKindOfClass:[NSString class]]) done(raw, nil);
+      else if ([raw isKindOfClass:[NSDictionary class]]) done([[NSString alloc] initWithData:[NSJSONSerialization dataWithJSONObject:raw options:0 error:nil] encoding:NSUTF8StringEncoding], nil);
+      else done(nil, nil);
+    }];
+    return;
+  }
+  done([file[@"content"] isKindOfClass:[NSString class]] ? file[@"content"] : nil, nil);
+}
+
++ (void)fetchFiles:(void (^)(NSDictionary<NSString *, NSString *> *, BOOL, NSString *))done {
   NSString *token = [self token];
   [self findGistWithToken:token completion:^(NSDictionary *gist, NSString *problem) {
-    if (problem != nil || gist == nil) { done(@[], problem); return; }
+    if (problem != nil) { done(@{}, NO, problem); return; }
+    if (gist == nil) { done(@{}, NO, nil); return; }
     NSDictionary *files = [gist[@"files"] isKindOfClass:[NSDictionary class]] ? gist[@"files"] : @{};
-    NSMutableArray *environments = [NSMutableArray array];
+    NSMutableDictionary *texts = [NSMutableDictionary dictionary];
     dispatch_group_t group = dispatch_group_create();
     __block NSString *firstProblem = nil;
-    for (NSString *fileName in [[files allKeys] sortedArrayUsingSelector:@selector(compare:)]) {
-      if (![MWMBackupEnvironment isEnvironmentFileName:fileName] || ![files[fileName] isKindOfClass:[NSDictionary class]]) continue;
-      NSDictionary *file = files[fileName];
-      void (^take)(NSString *) = ^(NSString *content) {
-        MWMBackupEnvironment *environment = [MWMBackupEnvironment environmentFromFileData:[content dataUsingEncoding:NSUTF8StringEncoding]];
-        if (environment != nil) [environments addObject:environment];
-      };
-      if ([file[@"truncated"] boolValue] && [file[@"raw_url"] isKindOfClass:[NSString class]]) {
-        dispatch_group_enter(group);
-        [self send:@"GET" path:file[@"raw_url"] body:nil token:token completion:^(id raw, NSInteger status, NSString *rawProblem) {
-          if (rawProblem != nil) firstProblem = firstProblem ?: rawProblem;
-          else if ([raw isKindOfClass:[NSString class]]) take(raw);
-          else if ([raw isKindOfClass:[NSDictionary class]]) take([[NSString alloc] initWithData:[NSJSONSerialization dataWithJSONObject:raw options:0 error:nil] encoding:NSUTF8StringEncoding]);
-          dispatch_group_leave(group);
-        }];
-      } else if ([file[@"content"] isKindOfClass:[NSString class]]) {
-        take(file[@"content"]);
-      }
+    for (NSString *fileName in files) {
+      if (![files[fileName] isKindOfClass:[NSDictionary class]]) continue;
+      dispatch_group_enter(group);
+      [self textOfFile:files[fileName] token:token completion:^(NSString *text, NSString *fileProblem) {
+        if (fileProblem != nil) firstProblem = firstProblem ?: fileProblem;
+        else if (text != nil) texts[fileName] = text;
+        dispatch_group_leave(group);
+      }];
     }
-    dispatch_group_notify(group, dispatch_get_main_queue(), ^{
-      [environments sortUsingComparator:^NSComparisonResult(MWMBackupEnvironment *a, MWMBackupEnvironment *b) { return [b.savedAt compare:a.savedAt]; }];
-      done(environments, firstProblem);
-    });
+    dispatch_group_notify(group, dispatch_get_main_queue(), ^{ done(firstProblem == nil ? texts : @{}, YES, firstProblem); });
   }];
+}
+
++ (void)updateFiles:(NSDictionary<NSString *, id> *)files completion:(void (^)(NSString *))done {
+  NSMutableDictionary *body = [NSMutableDictionary dictionary];
+  BOOL adds = NO;
+  for (NSString *name in files) {
+    if ([files[name] isKindOfClass:[NSString class]]) { body[name] = @{@"content": files[name]}; adds = YES; }
+    else body[name] = [NSNull null];
+  }
+  [self changeFiles:body createIfMissing:adds completion:done];
 }
 
 + (void)changeFiles:(NSDictionary *)files createIfMissing:(BOOL)create completion:(void (^)(NSString *))done {
@@ -190,15 +202,6 @@ static NSString *gMemoryGist;
     }
     [self send:@"PATCH" path:[@"/gists/" stringByAppendingString:gist[@"id"]] body:@{@"files": files} token:token completion:^(id json, NSInteger status, NSString *patchProblem) { done(patchProblem); }];
   }];
-}
-
-+ (void)saveEnvironment:(MWMBackupEnvironment *)environment completion:(void (^)(NSString *))done {
-  NSString *content = [[NSString alloc] initWithData:[environment fileData] encoding:NSUTF8StringEncoding];
-  [self changeFiles:@{[MWMBackupEnvironment fileNameForName:environment.name]: @{@"content": content}} createIfMissing:YES completion:done];
-}
-
-+ (void)deleteEnvironmentNamed:(NSString *)name completion:(void (^)(NSString *))done {
-  [self changeFiles:@{[MWMBackupEnvironment fileNameForName:name]: [NSNull null]} createIfMissing:NO completion:done];
 }
 
 @end

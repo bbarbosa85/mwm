@@ -205,7 +205,7 @@ typedef NS_OPTIONS(NSUInteger, SlotEdges) {
 
 - (void)mouseDragged:(NSEvent *)event {
   NSPoint point = [self convertPoint:[event locationInWindow] fromView:nil];
-  [self dragTo:point free:([event modifierFlags] & NSEventModifierFlagOption) != 0];
+  [self dragTo:point free:([event modifierFlags] & NSEventModifierFlagOption) != 0 proportional:([event modifierFlags] & NSEventModifierFlagShift) != 0];
 }
 
 - (void)mouseUp:(NSEvent *)event {
@@ -223,8 +223,11 @@ static CGFloat NearLine(CGFloat v, CGFloat tolerance, NSInteger divisions) {
   return fabs(v - line) <= tolerance ? line : NAN;
 }
 
-// Moves the sides being dragged. They snap to the grid unless free (⌥).
-- (void)dragTo:(NSPoint)point free:(BOOL)free {
+- (void)dragTo:(NSPoint)point free:(BOOL)free { [self dragTo:point free:free proportional:NO]; }
+
+// Moves the sides being dragged. They snap to the grid unless free (⌥), and a resize keeps the slot's proportions
+// when proportional (⇧).
+- (void)dragTo:(NSPoint)point free:(BOOL)free proportional:(BOOL)proportional {
   if (self.dragging == SlotEdgeNone) return;
   NSRect screen = [self screenRect];
   CGFloat dx = (point.x - self.mouseDownPoint.x) / NSWidth(screen);
@@ -256,17 +259,38 @@ static CGFloat NearLine(CGFloat v, CGFloat tolerance, NSInteger divisions) {
     if (self.dragging & SlotEdgeTop) top = MIN(MAX(snap(top + dy, toleranceY), 0), bottom - kMinimumSize);
     if (self.dragging & SlotEdgeBottom) bottom = MAX(MIN(snap(bottom + dy, toleranceY), 1), top + kMinimumSize);
   }
+  if (proportional && self.dragging != SlotEdgeAll) {
+    CGFloat w0 = CGRectGetWidth(start), h0 = CGRectGetHeight(start);
+    BOOL horizontal = (self.dragging & (SlotEdgeLeft | SlotEdgeRight)) != 0, vertical = (self.dragging & (SlotEdgeTop | SlotEdgeBottom)) != 0;
+    BOOL fromLeft = (self.dragging & SlotEdgeLeft) != 0, fromTop = (self.dragging & SlotEdgeTop) != 0;
+    // The scale the drag asks for: along the side moved, or the bigger change at a corner.
+    CGFloat sx = (right - left) / w0, sy = (bottom - top) / h0;
+    CGFloat scale = !vertical ? sx : !horizontal ? sy : (fabs(sx - 1) >= fabs(sy - 1) ? sx : sy);
+    // The most it can grow before it leaves the screen: the sides not being dragged stay put, or the slot grows from its middle.
+    CGFloat cx = CGRectGetMidX(start), cy = CGRectGetMidY(start);
+    CGFloat roomX = horizontal ? (fromLeft ? CGRectGetMaxX(start) : 1 - CGRectGetMinX(start)) : 2 * MIN(cx, 1 - cx);
+    CGFloat roomY = vertical ? (fromTop ? CGRectGetMaxY(start) : 1 - CGRectGetMinY(start)) : 2 * MIN(cy, 1 - cy);
+    scale = MIN(scale, MIN(roomX / w0, roomY / h0));
+    scale = MAX(scale, kMinimumSize / MIN(w0, h0));
+    CGFloat w = round(w0 * scale * 1000) / 1000, h = round(h0 * scale * 1000) / 1000;
+    if (horizontal) { if (fromLeft) { right = CGRectGetMaxX(start); left = right - w; } else { left = CGRectGetMinX(start); right = left + w; } }
+    else { left = cx - w / 2; right = cx + w / 2; }
+    if (vertical) { if (fromTop) { bottom = CGRectGetMaxY(start); top = bottom - h; } else { top = CGRectGetMinY(start); bottom = top + h; } }
+    else { top = cy - h / 2; bottom = cy + h / 2; }
+  }
   CGRect updated = CGRectMake(left, top, right - left, bottom - top);
   if (CGRectEqualToRect(updated, self.rect)) return;
   self.rect = updated;
   [self.delegate slotCanvas:self didChangeRect:updated];
 }
 
-- (void)dragFrom:(NSPoint)from to:(NSPoint)to free:(BOOL)free {
+- (void)dragFrom:(NSPoint)from to:(NSPoint)to free:(BOOL)free { [self dragFrom:from to:to free:free proportional:NO]; }
+
+- (void)dragFrom:(NSPoint)from to:(NSPoint)to free:(BOOL)free proportional:(BOOL)proportional {
   self.dragging = [self edgesAtPoint:from];
   self.rectAtMouseDown = self.rect;
   self.mouseDownPoint = from;
-  [self dragTo:to free:free];
+  [self dragTo:to free:free proportional:proportional];
   self.dragging = SlotEdgeNone;
 }
 

@@ -151,18 +151,18 @@ static MWMConfig *_instance = nil;
   BOOL loadedYAML = hasYAML && [self loadYAMLConfigAtPath:ymlPath error:&yamlError];
 
   if (yamlError != nil || !loadedYAML) {
-    NSString *message = yamlError ? [NSString stringWithFormat:@"%@ has an error", shownPath] : @"No configuration yet";
+    NSString *message = yamlError ? [NSString stringWithFormat:@"%@ has an error", shownPath] : @"No profile yet";
     MWMLogger(@"  ERROR %@: %@", message, [yamlError localizedDescription]);
     MWMAlert *alert = [MWMAlert alert];
     [alert setShowsAppIcon:YES];
     alert.kind = MWMAlertKindWarning;
     alert.messageText = message;
-    alert.informativeText = [NSString stringWithFormat:@"%@MWM will use its default configuration. Choose Open configuration to %@.",
+    alert.informativeText = [NSString stringWithFormat:@"%@MWM will use its default settings. Choose Open Settings to %@.",
                              yamlError ? [NSString stringWithFormat:@"%@\n\n", [yamlError localizedDescription]] : @"",
                              yamlError ? @"see the problem" : [NSString stringWithFormat:@"create %@ from the defaults and edit it", shownPath]];
     [[alert addButtonWithTitle:@"Continue"] setKeyEquivalent:@"\r"];
     [[alert addButtonWithTitle:@"Quit"] setKeyEquivalent:@"q"];
-    [[alert addButtonWithTitle:@"Open configuration"] setKeyEquivalent:@"o"];
+    [[alert addButtonWithTitle:@"Open Settings"] setKeyEquivalent:@"o"];
     NSModalResponse response = [alert runModal];
     if (response == NSAlertSecondButtonReturn) {
       MWMLogger(@"User selected exit");

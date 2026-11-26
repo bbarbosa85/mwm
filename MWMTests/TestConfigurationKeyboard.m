@@ -19,8 +19,10 @@
 #import "ConfigurationKeyboardView.h"
 #import "ConfigurationShortcutListView.h"
 #import "ConfigurationKeyboardMapView.h"
+#import "ConfigurationMacKeyboard.h"
 #import "ConfigurationShortcutEditorView.h"
 #import "MWMConfigDocument.h"
+#import "MWMDisplays.h"
 #import "MWMShortcutIndex.h"
 
 @interface TestConfigurationKeyboard : XCTestCase <ConfigurationKeyboardViewDelegate, ConfigurationKeyboardMapViewDelegate>
@@ -170,6 +172,29 @@ static NSString *const kConfig =
   XCTAssertNotNil([self viewIn:map identifier:@"key-pad8"], @"the numpad is on the map");
 }
 
+- (MapKeyState)stateOfModifier:(NSString *)name in:(NSView *)map {
+  return [(ConfigurationMapKey *)[self viewIn:map identifier:[@"modifier-" stringByAppendingString:name]] state];
+}
+
+- (void)testTheSelectedGroupsLeftModifierKeysAreHighlighted {
+  MWMConfigDocument *doc;
+  ConfigurationKeyboardMapView *map = [self mapWith:&doc];
+  XCTAssertEqualObjects(map.groupName, @"hyper");   // ctrl, alt, cmd
+  for (NSString *name in @[@"ctrlL", @"optL", @"cmdL"]) XCTAssertEqual([self stateOfModifier:name in:map], MapKeyStateGroup, @"%@", name);
+  for (NSString *name in @[@"optR", @"cmdR"]) XCTAssertNotEqual([self stateOfModifier:name in:map], MapKeyStateGroup, @"only the left keys are lit: %@", name);
+  for (NSString *name in @[@"shiftL", @"shiftR", @"fn"]) XCTAssertNotEqual([self stateOfModifier:name in:map], MapKeyStateGroup, @"%@ isn't in hyper", name);
+  XCTAssertTrue([(ConfigurationMapKey *)[self viewIn:map identifier:@"modifier-cmdL"] modifier], @"still a modifier, drawn dashed");
+}
+
+- (void)testChangingTheGroupMovesTheHighlight {
+  MWMConfigDocument *doc;
+  ConfigurationKeyboardMapView *map = [self mapWith:&doc];
+  map.groupName = @"shyper";   // shift, ctrl, alt, cmd
+  XCTAssertEqual([self stateOfModifier:@"shiftL" in:map], MapKeyStateGroup);
+  map.groupName = @"Custom";
+  for (NSString *name in @[@"ctrlL", @"optL", @"cmdL", @"shiftL"]) XCTAssertNotEqual([self stateOfModifier:name in:map], MapKeyStateGroup, @"Custom has no modifiers: %@", name);
+}
+
 - (void)testClickingAKeyShowsWhatItDoes {
   MWMConfigDocument *doc;
   ConfigurationKeyboardMapView *map = [self mapWith:&doc];
@@ -242,14 +267,85 @@ static NSString *const kConfig =
 // Lets the editor's deferred refresh run.
 - (void)settle { [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.05]]; }
 
+- (NSView *)cardFor:(MWMActionKind)kind in:(ConfigurationShortcutEditorView *)editor {
+  return [self viewIn:editor identifier:[NSString stringWithFormat:@"kind-%ld", (long)kind]];
+}
+
+- (void)testTheActionListIsShortWithTheRestUnderMoreActions {
+  MWMConfigDocument *doc;
+  ConfigurationShortcutEditorView *editor = [self editorWith:&doc];
+  [editor startNewWithGroup:nil keyName:nil];
+  [self settle];
+  XCTAssertNotNil([self cardFor:MWMActionKindFocusApp in:editor]);
+  XCTAssertNotNil([self cardFor:MWMActionKindMove in:editor]);
+  XCTAssertNotNil([self cardFor:MWMActionKindThrow in:editor]);
+  XCTAssertNotNil([self cardFor:MWMActionKindPush in:editor]);
+  XCTAssertNil([self cardFor:MWMActionKindResize in:editor], @"the rest are hidden");
+  XCTAssertNotNil([self viewIn:editor identifier:@"kind-more"]);
+  [editor selectKind:MWMActionKindResize];
+  [self settle];
+  XCTAssertNotNil([self cardFor:MWMActionKindResize in:editor], @"a chosen lesser action gets its card too");
+}
+
+- (void)testEveryConnectedDisplayIsAnOptionAndGetsANameWhenSaved {
+  [MWMDisplays setConnectedOverride:@[[MWMDisplay displayNamed:@"Built-in" width:1512 height:982 builtIn:YES x:0 y:0],
+                                      [MWMDisplay displayNamed:@"Odyssey" width:5120 height:1440 builtIn:NO x:1512 y:0]]];
+  [self addTeardownBlock:^{ [MWMDisplays setConnectedOverride:nil]; }];
+  MWMConfigDocument *doc;
+  ConfigurationShortcutEditorView *editor = [self editorWith:&doc];
+  NSUInteger before = [doc.monitors count];
+  [editor startNewWithGroup:nil keyName:nil];
+  [editor selectKind:MWMActionKindThrow];
+  [self settle];
+  NSPopUpButton *screen = [self popupIn:[self viewIn:editor identifier:@"row-throw"]];
+  NSArray *titles = [screen itemTitles];
+  XCTAssertTrue([titles containsObject:@"Built-in · 1512x982 (new)"], @"%@", titles);
+  XCTAssertTrue([titles containsObject:@"Odyssey · 5120x1440 (new)"], @"%@", titles);
+  XCTAssertEqualObjects([titles lastObject], @"Manage displays…");
+  [screen selectItemWithTitle:@"Odyssey · 5120x1440 (new)"];
+  [NSApp sendAction:[screen action] to:[screen target] from:screen];
+  [self settle];
+  [editor useKeyName:@"t" modifierNames:@[@"ctrl"] groupName:nil];
+  [editor save];
+  XCTAssertEqual([doc.monitors count], before + 1, @"the display chosen is named in the file");
+  XCTAssertTrue([[[doc.bindings lastObject] action] containsString:@"${"], @"%@", [[doc.bindings lastObject] action]);
+}
+
+- (void)testThrowOffersTheWindowSizeAsCards {
+  MWMConfigDocument *doc;
+  ConfigurationShortcutEditorView *editor = [self editorWith:&doc];
+  [editor startNewWithGroup:nil keyName:nil];
+  [editor selectKind:MWMActionKindThrow];
+  [self settle];
+  XCTAssertNotNil([self viewIn:editor identifier:@"throw-style"]);
+  XCTAssertEqualObjects(editor.draftAction.b, @"resize", @"fills the screen to begin with");
+  XCTAssertNil([self viewIn:editor identifier:@"throw-width"], @"the size fields are only for a custom size");
+  [[self viewIn:editor identifier:@"option-1"] mouseDown:nil];   // Keep its size
+  [self settle];
+  XCTAssertEqualObjects(editor.draftAction.b, @"noresize");
+  [[self viewIn:editor identifier:@"option-2"] mouseDown:nil];   // Custom size
+  [self settle];
+  XCTAssertTrue([editor.draftAction.b hasPrefix:@"resize:"], @"%@", editor.draftAction.b);
+  NSTextField *width = (NSTextField *)[self viewIn:editor identifier:@"throw-width"];
+  XCTAssertNotNil(width);
+  [width setStringValue:@"screenSizeX/3"];
+  [NSApp sendAction:[width action] to:[width target] from:width];
+  [self settle];
+  XCTAssertEqualObjects(editor.draftAction.b, @"resize:screenSizeX/3;screenSizeY");
+}
+
 - (void)testPushShowsItsStyleThicknessAndScreenAsControls {
   MWMConfigDocument *doc;
   ConfigurationShortcutEditorView *editor = [self editorWith:&doc];
   [editor startNewWithGroup:nil keyName:nil];
   [editor selectKind:MWMActionKindPush];
   [self settle];
-  XCTAssertEqualObjects(editor.draftAction.b, @"bar-resize:screenSizeX/2");
+  XCTAssertEqualObjects(editor.draftAction.b, @"", @"keeps the window's size to begin with");
   XCTAssertNotNil([self viewIn:editor identifier:@"push-style"]);
+  XCTAssertNil([self viewIn:editor identifier:@"row-thickness"], @"only a bar with a set thickness has one");
+  [[self viewIn:editor identifier:@"option-3"] mouseDown:nil];   // Set thickness
+  [self settle];
+  XCTAssertEqualObjects(editor.draftAction.b, @"bar-resize:screenSizeX/2");
   XCTAssertNotNil([self viewIn:editor identifier:@"row-thickness"]);
   XCTAssertNil([self viewIn:editor identifier:@"row-options"], @"the text field is only for text the controls can't show");
   NSSegmentedControl *unit = (NSSegmentedControl *)[self viewIn:editor identifier:@"push-unit"];
@@ -269,6 +365,8 @@ static NSString *const kConfig =
   ConfigurationShortcutEditorView *editor = [self editorWith:&doc];
   [editor startNewWithGroup:nil keyName:nil];
   [editor selectKind:MWMActionKindPush];
+  [self settle];
+  [[self viewIn:editor identifier:@"option-3"] mouseDown:nil];   // a bar with a set thickness
   [self settle];
   NSPopUpButton *direction = [self popupIn:[self viewIn:editor identifier:@"row-direction"]];
   XCTAssertNotNil(direction);

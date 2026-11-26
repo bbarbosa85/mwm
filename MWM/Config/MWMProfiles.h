@@ -1,9 +1,9 @@
 //
-//  MWMConfigurations.h
+//  MWMProfiles.h
 //
-//  The configurations MWM keeps on this computer: one file for each, named <name>.mwm.yaml, in the
+//  The profiles MWM keeps on this computer: one file for each, named <name>.mwm.yaml, in the
 //  ~/.mwm folder. Exactly one is active; MWM loads that one. The name of the active one is kept in
-//  ~/.mwm/active. Snapshots are shared by every configuration.
+//  ~/.mwm/active. Snapshots are shared by every profile.
 //
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -22,7 +22,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface MWMConfigurations : NSObject
+@interface MWMProfiles : NSObject
 
 // Tests use another home folder, so they never touch the real one. nil goes back to the real one (or to the
 // folder in the MWM_HOME environment variable, which development builds use to try things safely).
@@ -35,7 +35,7 @@ NS_ASSUME_NONNULL_BEGIN
 // Makes the folder if it isn't there.
 + (BOOL)createFolder:(NSError **)error;
 
-// Every configuration, sorted by name. Files ending in .mwm.yaml or .mwm.yml count.
+// Every profile, sorted by name. Files ending in .mwm.yaml or .mwm.yml count.
 + (NSArray<NSString *> *)names;
 // The file for a name: the existing one, or where a new one would go (<name>.mwm.yaml).
 + (NSString *)pathForName:(NSString *)name;
@@ -52,6 +52,8 @@ NS_ASSUME_NONNULL_BEGIN
 + (NSString *)trimmedName:(NSString *)name;
 // A name that is free: this one, or this one followed by 2, 3 ...
 + (NSString *)freeNameFrom:(NSString *)name;
+// A name that is free: this one with the date after it, like "desk (2026-11-25)" (and a number if that is taken too).
++ (NSString *)datedNameFrom:(NSString *)name date:(NSDate *)date;
 // A backup's name made safe to use as a file name.
 + (NSString *)fileSafeName:(NSString *)name;
 
@@ -61,9 +63,9 @@ NS_ASSUME_NONNULL_BEGIN
 + (BOOL)renameNamed:(NSString *)name to:(NSString *)newName error:(NSError **)error;
 // Moves it to the Trash. The active one, and the last one, can't be deleted.
 + (BOOL)deleteNamed:(NSString *)name error:(NSError **)error;
-// Copies a configuration file in under a free name, which it answers.
+// Copies a profile file in under a free name, which it answers.
 + (nullable NSString *)importFileAtPath:(NSString *)path error:(NSError **)error;
-// Puts text in the configuration of this name (replacing it, keeping the old one as <file>.bak).
+// Puts text in the profile of this name (replacing it, keeping the old one as <file>.bak).
 + (BOOL)writeText:(NSString *)text named:(NSString *)name error:(NSError **)error;
 
 @end

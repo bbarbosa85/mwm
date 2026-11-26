@@ -47,6 +47,22 @@
 
 - (void)addPublicGistNamed:(NSString *)description { [self makeGistWithDescription:description public:YES files:@{}]; }
 
+- (void)addBackupGistWithFiles:(NSDictionary<NSString *, NSString *> *)files {
+  NSMutableDictionary *wrapped = [NSMutableDictionary dictionary];
+  for (NSString *name in files) wrapped[name] = @{@"content": files[name]};
+  [self makeGistWithDescription:@"MWM backup" public:NO files:wrapped];
+}
+
+- (NSDictionary<NSString *, NSString *> *)backupFiles {
+  for (NSDictionary *gist in [self.gists allValues]) {
+    if (![gist[@"description"] isEqual:@"MWM backup"] || [gist[@"public"] boolValue]) continue;
+    NSMutableDictionary *files = [NSMutableDictionary dictionary];
+    for (NSString *name in gist[@"files"]) files[name] = gist[@"files"][name][@"content"];
+    return files;
+  }
+  return @{};
+}
+
 - (NSData *)json:(id)object { return [NSJSONSerialization dataWithJSONObject:object options:0 error:nil]; }
 
 - (void)install {

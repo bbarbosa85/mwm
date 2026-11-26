@@ -88,6 +88,11 @@ static EventHandlerRef modifiersEvent;
   [[ConfigurationWindowController sharedController] showConfiguration];
 }
 
+// The menu bar's Settings…: always on the General options page.
+- (IBAction)showGeneralSettings {
+  [[ConfigurationWindowController sharedController] showConfigurationSection:ConfigurationFormSectionGeneral];
+}
+
 - (void)loadConfig {
   [self setHasUndoOperation:NO];
   [[MWMConfig getInstance] load];
@@ -484,27 +489,28 @@ OSStatus OnModifiersChangedEvent(EventHandlerCallRef nextHandler, EventRef theEv
   return item;
 }
 
-// The status bar menu, most used first: what MWM does (Snapshots, Keyboard Shortcuts), the configuration
-// window and housekeeping, then About and Quit.
+// The status bar menu, in the order of the Settings sidebar: Keyboard, then what is shared by every profile (Snapshots,
+// Profiles, Backup), housekeeping, Settings, then About and Quit.
 - (NSMenu *)buildStatusMenu {
   NSMenu *menu = [[NSMenu alloc] initWithTitle:@"MWM"];
   MWMStatusMenus *menus = [MWMStatusMenus shared];
-  [self addSubmenu:[menus snapshotsMenu] title:@"Snapshots" symbol:@"camera" to:menu];
-  [self addSubmenu:[menus keyboardMenu] title:@"Keyboard Shortcuts" symbol:@"keyboard" to:menu];
+  [self addSubmenu:[menus keyboardMenu] title:@"Keyboard" symbol:@"keyboard" to:menu];
   [menu addItem:[NSMenuItem separatorItem]];
+  [self addSubmenu:[menus snapshotsMenu] title:@"Snapshots" symbol:@"camera" to:menu];
+  [self addSubmenu:[menus profilesMenu] title:@"Profiles" symbol:@"square.stack.3d.up" to:menu];
+  [self addSubmenu:[menus backupMenu] title:@"Backup" symbol:@"clock.arrow.circlepath" to:menu];
+  [menu addItem:[NSMenuItem separatorItem]];
+  NSMenuItem *reload = [self addItem:@"Reload Configuration" action:@selector(relaunch) key:@"" to:menu];
+  [reload setToolTip:@"Restart MWM to load the configuration file again"];
+  [self setSymbol:@"arrow.clockwise" on:reload];
   launchOnLoginItem = [self addItem:@"Launch MWM at Login" action:@selector(updateLaunchState) key:@"" to:menu];
   [self setSymbol:@"power" on:launchOnLoginItem];
   [self setLaunchOnLoginItemStatus];
   [menu addItem:[NSMenuItem separatorItem]];
-  [self setSymbol:@"gearshape" on:[self addItem:@"Settings…" action:@selector(configureMWM) key:@"," to:menu]];
+  [self setSymbol:@"gearshape" on:[self addItem:@"Settings…" action:@selector(showGeneralSettings) key:@"," to:menu]];
   NSMenuItem *gallery = [self addItem:@"Design System…" action:@selector(showDesignGallery) key:@"," to:menu];   // shown while Option is held
   [gallery setKeyEquivalentModifierMask:NSEventModifierFlagCommand | NSEventModifierFlagOption];
   [gallery setAlternate:YES];
-  [self addSubmenu:[menus configurationsMenu] title:@"Configurations" symbol:@"square.stack.3d.up" to:menu];
-  [self addSubmenu:[menus restoreMenu] title:@"Backup" symbol:@"clock.arrow.circlepath" to:menu];
-  NSMenuItem *reload = [self addItem:@"Reload Configuration" action:@selector(relaunch) key:@"" to:menu];
-  [reload setToolTip:@"Restart MWM to load the configuration file again"];
-  [self setSymbol:@"arrow.clockwise" on:reload];
   [menu addItem:[NSMenuItem separatorItem]];
   [self setSymbol:@"info.circle" on:[self addItem:@"About MWM" action:@selector(aboutWindow) key:@"" to:menu]];
   [self setSymbol:@"arrow.down.circle" on:[self addItem:@"Check for Updates…" action:@selector(checkForUpdates:) key:@"" to:menu]];
